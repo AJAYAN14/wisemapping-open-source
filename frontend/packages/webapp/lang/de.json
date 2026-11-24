@@ -1002,7 +1002,7 @@
     "defaultMessage": "Kopie"
   },
   "editor.conflict.description": {
-    "defaultMessage": "Eine neuere Version dieser Mindmap wurde auf einem anderen Gerät gespeichert. Aktualisieren Sie die Seite, um die neueste Version zu laden und ein Überschreiben zu vermeiden."
+    "defaultMessage": "Eine neuere Version dieser Mindmap wurde auf einem anderen Gerät gespeichert. Aktualisiere die Seite, um die neueste Version zu laden und ein Überschreiben zu vermeiden."
   },
   "editor.conflict.refresh": {
     "defaultMessage": "Seite aktualisieren"

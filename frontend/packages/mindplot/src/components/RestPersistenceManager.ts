@@ -141,6 +141,7 @@ class RESTPersistenceManager extends PersistenceManager {
     this._lastSaveStartedAt = Date.now();
 
     const { mapId, data, saveHistory, urgent, events } = pending;
+    let droppedEvents: SaveEvents[] = [];
     const query = `minor=${!saveHistory}`;
     const currentVersion = this.getVersion(mapId);
     const headers = this._buildHttpHeader('application/json; charset=utf-8', 'application/json');
@@ -179,7 +180,11 @@ class RESTPersistenceManager extends PersistenceManager {
           case 409: {
             console.warn(`Saving error: 409 - version conflict for map ${mapId}`);
             this._conflictedMaps.add(mapId);
-            this._pendingSaves.delete(mapId);
+            const queued = this._pendingSaves.get(mapId);
+            if (queued) {
+              droppedEvents = queued.events;
+              this._pendingSaves.delete(mapId);
+            }
             if (this._pendingSaves.size === 0 && this._saveTimer) {
               clearTimeout(this._saveTimer);
               this._saveTimer = undefined;
@@ -201,7 +206,7 @@ class RESTPersistenceManager extends PersistenceManager {
         this._saveInFlight = false;
         try {
           if (error) {
-            this._handleError(error, events);
+            this._handleError(error, [...events, ...droppedEvents]);
           } else {
             events.forEach((e) => e.onSuccess());
           }

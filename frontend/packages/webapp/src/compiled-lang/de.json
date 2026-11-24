@@ -2290,7 +2290,7 @@
   "editor.conflict.description": [
     {
       "type": 0,
-      "value": "Eine neuere Version dieser Mindmap wurde auf einem anderen Gerät gespeichert. Aktualisieren Sie die Seite, um die neueste Version zu laden und ein Überschreiben zu vermeiden."
+      "value": "Eine neuere Version dieser Mindmap wurde auf einem anderen Gerät gespeichert. Aktualisiere die Seite, um die neueste Version zu laden und ein Überschreiben zu vermeiden."
     }
   ],
   "editor.conflict.refresh": [

@@ -34,6 +34,11 @@
    - Upstream `Editor.stopSaving()` calls `flushPendingChangesOnce()` before detaching `beforeunload`. Adding a non-flushing `Editor.haltSaving()` (triggered by `persistenceManager?.addErrorHandler?.(...)` on `errorType === 'conflict'`) stops 15s autosave and detaches `beforeunload` immediately so clicking "Refresh Page" never triggers a stale `keepalive` `PUT`.
 4. **Local Git Identity for Annotated Tag & Commits**
    - Configured repository-local `user.name` (`AJAYAN14`) and `user.email` (`AJAYAN14@users.noreply.github.com`) in `.git/config` to match sibling repo settings for creating `backup-java-original-tag` and M1 commit.
+5. **M1 Remediation Hardening (i18n Informal Address, `package.json` Cleanliness, Queued `409` Events & `.env` Exception)**
+   - Updated German `editor.conflict.description` in `frontend/packages/webapp/lang/de.json` and `src/compiled-lang/de.json` to informal `"Aktualisiere die Seite..."` (matching `form-of-address.test.ts`), and updated `mindplot/src/components/lang/es.ts` `SAVE_CONFLICT` to informal `"recarga"`.
+   - Removed accidental `"wisemapping-personal": "file:"` self-dependency from root `package.json` and regenerated `package-lock.json`.
+   - Updated `RestPersistenceManager._sendSave` `case 409:` to settle queued `PendingSave.events` (`onError`) alongside the in-flight save without duplicating `triggerError`, and added unit tests in `rest-client.test.ts` (`x-mindmap-version` fallback) and `rest-persistence-manager.test.ts`.
+   - Added `!frontend/packages/webapp/.env` in root `.gitignore` so upstream `frontend/packages/webapp/.env` stays tracked 1:1 with `fb15a53` while root/other `.env*` files remain ignored.
 
 ---
 

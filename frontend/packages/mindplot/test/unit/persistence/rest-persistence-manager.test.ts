@@ -447,6 +447,9 @@ describe('RESTPersistenceManager', () => {
         errorType: 'conflict',
         message: 'Mindmap version conflict. Please refresh.',
       });
+      expect(queued.onError).toHaveBeenCalledTimes(1);
+      expect(queued.onError.mock.calls[0][0]).toEqual(first.onError.mock.calls[0][0]);
+      expect(queued.onSuccess).not.toHaveBeenCalled();
       expect(errorHandler).toHaveBeenCalledTimes(1);
 
       jest.advanceTimersByTime(60000);

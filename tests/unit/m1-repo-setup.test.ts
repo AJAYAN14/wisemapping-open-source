@@ -171,4 +171,54 @@ describe('M1 repository restructuring, backup, frontend R1 & R4 integration', ()
       expect(envExample).toContain(key);
     }
   });
+
+  it('has no self-referential dependency in root package.json', () => {
+    const pkg = JSON.parse(readText('package.json')) as {
+      name: string;
+      dependencies?: Record<string, string>;
+      devDependencies?: Record<string, string>;
+    };
+    expect(pkg.dependencies?.[pkg.name]).toBeUndefined();
+    expect(pkg.devDependencies?.[pkg.name]).toBeUndefined();
+  });
+
+  it('satisfies informal form-of-address rules for de and es messages', () => {
+    const formalRegexes: Record<string, RegExp> = {
+      de: /\b(Sie|Ihnen|Ihr|Ihre|Ihren|Ihrem|Ihrer|Ihres)\b/,
+      es: /\b(usted|ustedes|Ingrese|Introduzca|Seleccione|Haga|Inténtelo|Regístrese|Contáctenos|Contacte|Espere|Use|Utilice|Elija|Escriba|Revise|Vuelva|Proporcione|Complete|Le|le enviaremos|le hemos)\b/,
+    };
+    for (const locale of ['de', 'es']) {
+      const re = formalRegexes[locale]!;
+      const raw = JSON.parse(readText(`frontend/packages/webapp/lang/${locale}.json`)) as Record<
+        string,
+        { defaultMessage: string }
+      >;
+      const compiled = JSON.parse(
+        readText(`frontend/packages/webapp/src/compiled-lang/${locale}.json`),
+      ) as Record<string, Array<{ type: number; value: string }>>;
+
+      for (const [id, entry] of Object.entries(raw)) {
+        expect(re.test(entry.defaultMessage), `${locale}.json ${id}`).toBe(false);
+      }
+      for (const key of ['editor.conflict.title', 'editor.conflict.description', 'editor.conflict.refresh']) {
+        expect(re.test(compiled[key]?.[0]?.value ?? ''), `compiled-lang/${locale}.json ${key}`).toBe(
+          false,
+        );
+      }
+    }
+  });
+
+  it('tracks frontend/packages/webapp/.env in git while ignoring root .env files', () => {
+    const tracked = execFileSync('git', ['ls-files', 'frontend/packages/webapp/.env'], {
+      cwd: ROOT,
+      encoding: 'utf8',
+    }).trim();
+    expect(tracked).toBe('frontend/packages/webapp/.env');
+
+    const rootEnvIgnored = execFileSync('git', ['check-ignore', '.env'], {
+      cwd: ROOT,
+      encoding: 'utf8',
+    }).trim();
+    expect(rootEnvIgnored).toBe('.env');
+  });
 });

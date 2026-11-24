@@ -120,6 +120,25 @@ describe('RestClient maps', () => {
     });
   });
 
+  it('fetchMapMetadata reads version from body, falls back to x-mindmap-version header, and omits when absent', async () => {
+    const { client } = newClient([
+      {
+        data: { title: 'body-zero', locked: false, version: 0 },
+        headers: { 'x-mindmap-version': '9' },
+      },
+      {
+        data: { title: 'header-fallback', locked: false },
+        headers: { 'x-mindmap-version': '7' },
+      },
+      { data: { title: 'no-version', locked: false } },
+    ]);
+
+    await expect(client.fetchMapMetadata(3)).resolves.toMatchObject({ id: 3, version: 0 });
+    await expect(client.fetchMapMetadata(3)).resolves.toMatchObject({ id: 3, version: 7 });
+    const withoutVersion = await client.fetchMapMetadata(3);
+    expect(withoutVersion).not.toHaveProperty('version');
+  });
+
   it('fetchAllMaps maps the server fields onto MapInfo', async () => {
     const { client, calls } = newClient([
       {
