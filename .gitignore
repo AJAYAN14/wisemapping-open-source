@@ -1,24 +1,46 @@
-*/target
-*/*.iml
-wisemapping.ipr
-wisemapping.iws
-wisemapping.iml
-wisemapping.ids
-wise-webapp/wisemapping.log*
-wise-webapp/velocity.log
-wisemapping.log*
-*/.DS_Store
-.DS_Store
-target
-.idea
-wise-webapp/src/main/webapp/react/*
+# Environment variables & local secrets
+.env
+.env.local
+.env.*.local
+!.env.example
 
-# IDE and AI tools
+# Root Node / TypeScript / Netlify / Test artifacts
+node_modules/
+dist/
+.netlify/
+coverage/
+test-output/
+*.tsbuildinfo
+.eslintcache
+*.log
+npm-debug.log*
+
+# Frontend (frontend/) Yarn 4 / Vite / Cypress / Storybook artifacts
+frontend/node_modules/
+frontend/packages/*/node_modules/
+frontend/packages/*/dist/
+frontend/.webpack-cache/
+frontend/.cache/
+frontend/.eslintcache
+frontend/cypress/screenshots
+frontend/cypress/videos
+frontend/cypress/downloads
+frontend/storybook-static
+frontend/test-results.json
+frontend/.yarn/*
+!frontend/.yarn/releases
+!frontend/.yarn/plugins
+frontend/.yarn/install-state.gz
+frontend/.pnp.*
+frontend/packages/**/.yalc/
+frontend/packages/**/yalc.lock
+frontend/*.tgz
+
+# OS & IDE
+.DS_Store
+*/.DS_Store
+Thumbs.db
+.idea
 .vscode
 .claude
 .cursor
-
-# Build and test artifacts
-coverage/
-test-output/
-*.class

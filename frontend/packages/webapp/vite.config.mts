@@ -1,0 +1,166 @@
+/*
+ *    Copyright [2007-2025] [wisemapping]
+ *
+ *   Licensed under WiseMapping Public License, Version 1.0 (the "License").
+ *   It is basically the Apache License, Version 2.0 (the "License") plus the
+ *   "powered by wisemapping" text requirement on every single page;
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the license at
+ *
+ *       https://github.com/wisemapping/wisemapping-open-source/blob/main/LICENSE.md
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
+import { defineConfig, loadEnv } from 'vite';
+import react from '@vitejs/plugin-react';
+import path from 'path';
+import { buildStaticUrls, generateSitemapXml } from './src/components/sitemap/utils';
+import { resolveBootstrapConfig } from './src/utils/bootstrap-config-source';
+import { createRequire } from 'module';
+import { readFileSync } from 'fs';
+
+const requireJson = createRequire(import.meta.url);
+
+const htmlTemplatePlugin = (data: Record<string, unknown>) => ({
+  name: 'html-template',
+  transformIndexHtml(html: string) {
+    return html.replace(/<%= (\w+) %>/g, (_, key) => String(data[key] ?? ''));
+  },
+});
+
+const wxmlLoader = () => {
+  return {
+    name: 'wxml-loader',
+    transform(code: string, id: string) {
+      if (id.endsWith('.wxml')) {
+        return {
+          code: `export default ${JSON.stringify(code)};`,
+          map: null,
+        };
+      }
+    },
+  };
+};
+
+const sitemapMiddleware = () => ({
+  name: 'sitemap-dev-middleware',
+  configureServer(server) {
+    server.middlewares.use('/sitemap.xml', (req, res, next) => {
+      if (req.method && req.method !== 'GET') {
+        return next();
+      }
+
+      try {
+        const forwardedProto = req.headers['x-forwarded-proto'];
+        const forwardedValue = Array.isArray(forwardedProto) ? forwardedProto[0] : forwardedProto;
+        const protocol =
+          forwardedValue ||
+          ((req.socket as { encrypted?: boolean } | undefined)?.encrypted ? 'https' : 'http');
+        const host = req.headers.host;
+
+        if (!host) {
+          return next();
+        }
+
+        const baseUrl = `${protocol}://${host}`;
+        const urls = buildStaticUrls({ baseUrl });
+        const xml = generateSitemapXml(urls);
+
+        res.statusCode = 200;
+        res.setHeader('Content-Type', 'application/xml');
+        res.end(xml);
+      } catch (error) {
+        console.error('Failed to generate sitemap.xml in dev server', error);
+        next(error);
+      }
+    });
+  },
+});
+
+export default defineConfig(({ mode }) => {
+  // The config reads process.env directly, so the returned values are unused. The call stays for its
+  // side effect: it copies NODE_ENV, BROWSER and BROWSER_ARGS from the .env files into process.env.
+  loadEnv(mode, process.cwd(), '');
+
+  const bootstrapConfig = resolveBootstrapConfig({
+    env: process.env,
+    production: mode === 'production',
+    readJson: requireJson,
+    warn: (message) => console.warn(`\n⚠ ${message}\n`),
+  });
+
+  return {
+    plugins: [
+      react(),
+      wxmlLoader(),
+      sitemapMiddleware(),
+      htmlTemplatePlugin({
+        GOOGLE_ADDS_ENABLED: process.env.GOOGLE_ADDS_ENABLED || false,
+        NEW_RELIC_SNIPPET:
+          process.env.NEW_RELIC_ENABLED && !['false', '0'].includes(process.env.NEW_RELIC_ENABLED)
+            ? readFileSync(path.resolve(import.meta.dirname, 'newrelic-snippet.html'), 'utf8')
+            : '',
+      }),
+    ],
+    resolve: {
+      tsconfigPaths: true,
+      alias: [
+        {
+          find: /^@wisemapping\/editor\/src\/(.*)/,
+          replacement: path.resolve(import.meta.dirname, '../editor/src/$1'),
+        },
+        {
+          // An editor module imported by path (`@wisemapping/editor/theme/dialog`), as tsconfig
+          // and jest resolve it. The barrel can not be tree-shaken: importing anything from it
+          // pulls in the whole editor and mindplot, so code outside the editor page imports by path.
+          find: /^@wisemapping\/editor\/(.+)/,
+          replacement: path.resolve(import.meta.dirname, '../editor/src/$1'),
+        },
+        {
+          find: /^@wisemapping\/editor$/,
+          replacement: path.resolve(import.meta.dirname, '../editor/src/index.ts'),
+        },
+        {
+          find: /^@wisemapping\/mindplot\/src\/(.*)/,
+          replacement: path.resolve(import.meta.dirname, '../mindplot/src/$1'),
+        },
+        {
+          find: /^@wisemapping\/mindplot$/,
+          replacement: path.resolve(import.meta.dirname, '../mindplot/src/index.ts'),
+        },
+        {
+          find: /^@wisemapping\/web2d\/src\/(.*)/,
+          replacement: path.resolve(import.meta.dirname, '../web2d/src/$1'),
+        },
+        {
+          find: /^@wisemapping\/web2d$/,
+          replacement: path.resolve(import.meta.dirname, '../web2d/src/index.ts'),
+        },
+      ],
+    },
+    define: {
+      VITE_BOOTSTRAP_CONFIG: JSON.stringify(bootstrapConfig),
+    },
+    server: {
+      port: 3000,
+      proxy: {
+        '/api': {
+          target: 'http://localhost:8080',
+          changeOrigin: true,
+        },
+      },
+    },
+    build: {
+      outDir: 'dist',
+      sourcemap: true,
+      minify: 'esbuild', // Vite uses esbuild by default which is faster, but we can be explicit
+      chunkSizeWarningLimit: 2000, // Adjust as needed based on webpack performance hints
+    },
+    // Mimic webpack's production mode optimization where appropriate
+    // Vite handles minification and tree-shaking automatically in build mode
+  };
+});

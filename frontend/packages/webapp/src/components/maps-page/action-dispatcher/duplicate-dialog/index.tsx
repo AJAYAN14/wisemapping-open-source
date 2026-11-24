@@ -1,0 +1,240 @@
+/*
+ *    Copyright [2007-2025] [wisemapping]
+ *
+ *   Licensed under WiseMapping Public License, Version 1.0 (the "License").
+ *   It is basically the Apache License, Version 2.0 (the "License") plus the
+ *   "powered by wisemapping" text requirement on every single page;
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the license at
+ *
+ *       https://github.com/wisemapping/wisemapping-open-source/blob/main/LICENSE.md
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
+
+import React, { use } from 'react';
+import { useIntl } from 'react-intl';
+import { useMutation } from '@tanstack/react-query';
+import FormControl from '@mui/material/FormControl';
+
+import {
+  BasicMapInfo,
+  ErrorInfo,
+  MAP_DESCRIPTION_MAX_LENGTH,
+  MAP_TITLE_MAX_LENGTH,
+} from '../../../../classes/client';
+import Input from '../../../form/input';
+import { SimpleDialogProps } from '..';
+import BaseDialog from '../base-dialog';
+import { useFetchMapById } from '../../../../classes/middleware';
+import { ClientContext } from '../../../../classes/provider/client-context';
+
+export type DuplicateModel = {
+  id: number;
+  title: string;
+  description?: string | undefined;
+};
+
+const defaultModel: DuplicateModel = { title: '', description: '', id: -1 };
+const DuplicateDialog = ({ mapId, onClose }: SimpleDialogProps): React.ReactElement => {
+  const client = use(ClientContext);
+  const [model, setModel] = React.useState<DuplicateModel>(defaultModel);
+  const [error, setError] = React.useState<ErrorInfo>();
+
+  const intl = useIntl();
+
+  const mutation = useMutation<number, ErrorInfo, DuplicateModel>({
+    mutationFn: (model: DuplicateModel) => {
+      const { id, title, description } = model;
+      // Convert to BasicMapInfo format
+      const basicInfo: BasicMapInfo = {
+        title: title,
+        ...(description !== undefined && { description }),
+      };
+      return client.duplicateMap(id, basicInfo);
+    },
+    onSuccess: (mapId) => {
+      window.location.href = `/c/maps/${mapId}/edit`;
+    },
+    onError: (error) => {
+      setError(error);
+    },
+  });
+
+  const handleOnClose = (): void => {
+    onClose();
+  };
+
+  const handleOnSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
+    event.preventDefault();
+    setError(undefined);
+
+    // Validate that mapId is valid (0 is a valid ID)
+    if (Number.isNaN(mapId)) {
+      setError({
+        msg: intl.formatMessage({
+          id: 'error.invalid-map-id',
+          defaultMessage: 'Invalid map ID',
+        }),
+      });
+      return;
+    }
+
+    // Validate that title is not empty or just whitespace
+    const trimmedTitle = model.title?.trim();
+    if (!trimmedTitle || trimmedTitle.length === 0) {
+      setError({
+        fields: {
+          title: intl.formatMessage({
+            id: 'validation.title-required',
+            defaultMessage: 'Title is required',
+          }),
+        },
+      });
+      return;
+    }
+
+    // Ensure title is never undefined - use trimmed version
+    // Use mapId from props, not model.id, to ensure it's always valid
+    const validatedModel: DuplicateModel = {
+      id: mapId,
+      title: trimmedTitle,
+      description: model.description,
+    };
+
+    mutation.mutate(validatedModel);
+  };
+
+  // Stable, so that a key re-renders only the field typed in (see Input).
+  const handleOnChange = React.useCallback((event: React.ChangeEvent<HTMLInputElement>): void => {
+    const name = event.target.name;
+    const value = event.target.value;
+
+    // Clear any previous errors when user starts typing
+    setError(undefined);
+
+    // Update the model with the correct field name
+    // Only update title and description, preserve id from mapId prop
+    if (name === 'title') {
+      setModel((current) => ({ ...current, title: value }));
+    } else if (name === 'description') {
+      setModel((current) => ({ ...current, description: value }));
+    }
+  }, []);
+
+  const { data: map } = useFetchMapById(mapId);
+
+  // An invalid id (0 is a valid one) is an error for as long as it is invalid: derived, so typing
+  // in the form can not clear it.
+  const invalidMapIdError: ErrorInfo | undefined = Number.isNaN(mapId)
+    ? {
+        msg: intl.formatMessage({ id: 'error.invalid-map-id', defaultMessage: 'Invalid map ID' }),
+      }
+    : undefined;
+  const shownError = error ?? invalidMapIdError;
+
+  // The form starts from each map fetched (and is retitled in the current language). Adjusted while
+  // rendering, not in an effect, so the form never shows a frame of the previous values.
+  const [seenInputs, setSeenInputs] = React.useState<{
+    map: typeof map;
+    mapId: number;
+    intl: typeof intl;
+  }>();
+  // Object.is: an invalid id can be NaN, which is never === itself.
+  if (
+    !seenInputs ||
+    seenInputs.map !== map ||
+    !Object.is(seenInputs.mapId, mapId) ||
+    seenInputs.intl !== intl
+  ) {
+    setSeenInputs({ map, mapId, intl });
+    if (map) {
+      // Validate that map.title exists and is not empty
+      if (!map.title || map.title.trim().length === 0) {
+        setError({
+          msg: intl.formatMessage({
+            id: 'error.map-title-required',
+            defaultMessage: 'Map title is required and cannot be empty',
+          }),
+        });
+      } else {
+        // Clear any previous errors when model is successfully initialized
+        setError(undefined);
+
+        // Translated "Copy of {title}": each language places the title where its phrase needs it.
+        const copyTitle = intl.formatMessage(
+          {
+            id: 'duplicate.copy-title',
+            defaultMessage: 'Copy of {title}',
+          },
+          { title: map.title.trim() },
+        );
+
+        setModel({
+          title: copyTitle,
+          description: map.description ?? '',
+          id: mapId,
+        });
+      }
+    }
+  }
+
+  return (
+    <div>
+      <BaseDialog
+        onClose={handleOnClose}
+        onSubmit={handleOnSubmit}
+        error={shownError}
+        isLoading={mutation.isPending}
+        title={intl.formatMessage({ id: 'duplicate.title', defaultMessage: 'Duplicate' })}
+        description={intl.formatMessage({
+          id: 'rename.description',
+          defaultMessage: 'Please, fill the new map name and description.',
+        })}
+        submitButton={intl.formatMessage({
+          id: 'duplicate.title',
+          defaultMessage: 'Duplicate',
+        })}
+      >
+        <FormControl fullWidth={true}>
+          <Input
+            name="title"
+            type="text"
+            label={intl.formatMessage({
+              id: 'action.rename-name-placeholder',
+              defaultMessage: 'Name',
+            })}
+            value={model.title}
+            onChange={handleOnChange}
+            error={shownError}
+            fullWidth={true}
+            required={true}
+            minLength={1}
+            maxLength={MAP_TITLE_MAX_LENGTH}
+          />
+
+          <Input
+            name="description"
+            type="text"
+            label={intl.formatMessage({
+              id: 'action.rename-description-placeholder',
+              defaultMessage: 'Description',
+            })}
+            value={model.description || ''}
+            onChange={handleOnChange}
+            error={shownError}
+            required={false}
+            fullWidth={true}
+            maxLength={MAP_DESCRIPTION_MAX_LENGTH}
+          />
+        </FormControl>
+      </BaseDialog>
+    </div>
+  );
+};
+
+export default DuplicateDialog;

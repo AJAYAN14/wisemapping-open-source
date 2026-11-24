@@ -1,0 +1,242 @@
+/*
+ *    Copyright [2007-2025] [wisemapping]
+ *
+ *   Licensed under WiseMapping Public License, Version 1.0 (the "License").
+ *   It is basically the Apache License, Version 2.0 (the "License") plus the
+ *   "powered by wisemapping" text requirement on every single page;
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the license at
+ *
+ *       https://github.com/wisemapping/wisemapping-open-source/blob/main/LICENSE.md
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
+import type { Workspace as Workspace2D } from '@wisemapping/web2d';
+import { $assert } from './util/assert';
+import EventManager from './util/EventManager';
+import type PositionType from './PositionType';
+
+class ScreenManager {
+  private _divContainer: HTMLDivElement;
+
+  private _clickEvents: EventListener[];
+
+  // The workspace drawn in the container, which maps mouse positions (see setWorkspace).
+  private _workspace: Workspace2D | undefined;
+
+  constructor(divElement: HTMLElement) {
+    $assert(divElement, 'can not be null');
+    this._divContainer = divElement as HTMLDivElement;
+
+    // Prevent pull-to-refresh while allowing all zoom gestures
+    // We rely on preventDefault() in touch event handlers to block pull-to-refresh
+    // while keeping pinch-zoom and double-tap zoom enabled
+    this._divContainer.style.touchAction = 'auto';
+    this._divContainer.style.overscrollBehavior = 'none';
+
+    // Ignore default click event propagation. Prevent 'click' event on drag.
+    this._clickEvents = [];
+    EventManager.bind(this._divContainer, 'click', (event: Event) => {
+      event.stopPropagation();
+    });
+
+    EventManager.bind(this._divContainer, 'dblclick', (event: Event) => {
+      event.stopPropagation();
+      event.preventDefault();
+    });
+  }
+
+  /**
+   * Return the current visible area in the browser.
+   */
+  getVisibleBrowserSize(): { width: number; height: number } {
+    return {
+      width: window.innerWidth,
+      height: window.innerHeight,
+    };
+  }
+
+  /**
+   * The workspace drawn in the container. Mouse positions are mapped through its SVG screen matrix
+   * (Workspace.clientToWorld), which applies the zoom, the pan and where the SVG really is on the
+   * page (a container border or padding, a CSS transform). Null maps them from the container.
+   */
+  setWorkspace(workspace: Workspace2D | undefined): void {
+    this._workspace = workspace;
+  }
+
+  addEvent(eventType: string, listener: EventListener) {
+    if (eventType === 'click') {
+      this._clickEvents.push(listener);
+    } else {
+      // Use non-passive listeners for touch events to allow preventDefault()
+      const isTouchEvent = ['touchstart', 'touchmove', 'touchend'].includes(eventType);
+      const options = isTouchEvent ? { passive: false } : undefined;
+      EventManager.bind(this._divContainer, eventType, listener, options);
+    }
+  }
+
+  removeEvent(event: string, listener: EventListener) {
+    if (event === 'click') {
+      const index = this._clickEvents.indexOf(listener);
+      if (index > -1) {
+        this._clickEvents.splice(index, 1);
+      }
+    } else {
+      // Use non-passive listeners for touch events to match addEvent
+      const isTouchEvent = ['touchstart', 'touchmove', 'touchend'].includes(event);
+      const options = isTouchEvent ? { passive: false } : undefined;
+      EventManager.unbind(this._divContainer, event, listener, options);
+    }
+  }
+
+  /**
+   * Fires `type` on the container. A 'click' goes to the listeners added for it: the click on the
+   * background the canvas sends when a press ends with no move. It carries the modifiers of
+   * `event`, the press, so that a Ctrl or Cmd click on the background can keep the selection.
+   */
+  fireEvent(type: string, event?: UIEvent): void {
+    if (type === 'click') {
+      const modifiers = event as Partial<MouseEvent> | undefined;
+      this._clickEvents.forEach((listener) => {
+        const syntheticEvent = new MouseEvent('click', {
+          bubbles: true,
+          cancelable: true,
+          ctrlKey: modifiers?.ctrlKey ?? false,
+          metaKey: modifiers?.metaKey ?? false,
+          shiftKey: modifiers?.shiftKey ?? false,
+          altKey: modifiers?.altKey ?? false,
+        });
+        listener.call(this._divContainer, syntheticEvent);
+      });
+    } else {
+      EventManager.trigger(this._divContainer, type, event);
+    }
+  }
+
+  private mouseEvents = ['mousedown', 'mouseup', 'mousemove', 'dblclick', 'click'];
+
+  private tocuchEvents = ['touchstart', 'touchend', 'touchmove'];
+
+  /** The viewport (client) position of a mouse or touch event. */
+  getClientPosition(event: MouseEvent | TouchEvent): PositionType {
+    let x: number | undefined;
+    let y: number | undefined;
+
+    if (this.mouseEvents.includes(event.type)) {
+      x = (event as MouseEvent).clientX;
+      y = (event as MouseEvent).clientY;
+    } else if (this.tocuchEvents.includes(event.type)) {
+      // On touchend the lifted finger is no longer in touches, only in changedTouches.
+      const touchEvent = event as TouchEvent;
+      const touch = touchEvent.touches[0] ?? touchEvent.changedTouches?.[0];
+      if (touch) {
+        x = touch.clientX;
+        y = touch.clientY;
+      }
+    }
+
+    if (x === undefined || y === undefined) {
+      throw new Error(`Coordinated can not be null, eventType= ${event.type}`);
+    }
+    return { x, y };
+  }
+
+  getWorkspaceMousePosition(event: MouseEvent | TouchEvent): PositionType {
+    let x: number | undefined;
+    let y: number | undefined;
+
+    if (this.mouseEvents.includes(event.type)) {
+      // Retrieve current mouse position.
+      x = (event as MouseEvent).clientX;
+      y = (event as MouseEvent).clientY;
+    } else if (this.tocuchEvents.includes(event.type)) {
+      // On touchend the lifted finger is no longer in touches, only in changedTouches.
+      const touchEvent = event as TouchEvent;
+      const touch = touchEvent.touches[0] ?? touchEvent.changedTouches?.[0];
+      if (touch) {
+        x = touch.clientX;
+        y = touch.clientY;
+      }
+    }
+
+    // if value is zero assert throws error
+    if (x === undefined || y === undefined) {
+      throw new Error(`Coordinated can not be null, eventType= ${event.type}`);
+    }
+
+    // Through the SVG screen matrix, which applies the zoom, the pan and where the SVG is ...
+    if (this._workspace) {
+      return this._workspace.clientToWorld(x, y);
+    }
+
+    // Without a workspace: from the container. clientX/clientY and the bounding rect are both
+    // viewport relative, so the page scroll must not be applied here ...
+    const containerRect = this._divContainer.getBoundingClientRect();
+    return { x: x - containerRect.left, y: y - containerRect.top };
+  }
+
+  getContainer(): HTMLDivElement {
+    return this._divContainer;
+  }
+
+  getContainerCss(property: string): string {
+    return getComputedStyle(this._divContainer).getPropertyValue(property);
+  }
+
+  getContainerWidth(): number {
+    // Try offsetWidth first, fallback to CSS width, then default to 800
+    const { offsetWidth } = this._divContainer;
+    if (offsetWidth > 0) {
+      return offsetWidth;
+    }
+
+    const cssWidth = this.getContainerCss('width');
+    if (cssWidth && cssWidth !== 'auto') {
+      const parsedWidth = Number.parseInt(cssWidth, 10);
+      if (!Number.isNaN(parsedWidth) && parsedWidth > 0) {
+        return parsedWidth;
+      }
+    }
+
+    // Fallback to a reasonable default for Storybook
+    return 800;
+  }
+
+  getContainerHeight(): number {
+    // Try offsetHeight first, fallback to CSS height, then default to 600
+    const { offsetHeight } = this._divContainer;
+    if (offsetHeight > 0) {
+      return offsetHeight;
+    }
+
+    const cssHeight = this.getContainerCss('height');
+    if (cssHeight && cssHeight !== 'auto') {
+      const parsedHeight = Number.parseInt(cssHeight, 10);
+      if (!Number.isNaN(parsedHeight) && parsedHeight > 0) {
+        return parsedHeight;
+      }
+    }
+
+    // Fallback to a reasonable default for Storybook
+    return 600;
+  }
+
+  getContainerPosition(): { top: number; left: number } {
+    const rect = this._divContainer.getBoundingClientRect();
+    return {
+      top: rect.top + window.scrollY,
+      left: rect.left + window.scrollX,
+    };
+  }
+
+  findInContainer(selector: string): HTMLElement | undefined {
+    return this._divContainer.querySelector<HTMLElement>(selector) ?? undefined;
+  }
+}
+
+export default ScreenManager;

@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <title>WiseMapping - Free & Open-Source Mind Mapping</title>
+    <meta charset="utf-8" />
+    <!-- The theme's background from the first paint, before the app loads: the mode the user
+         chose (ThemeContext stores it), or the system's. Without it every full page load, as
+         signing in has, flashed white in dark mode. The colours are the theme's
+         background.default (src/theme), which a unit test keeps in sync. -->
+    <script id="theme-preload">
+      (function () {
+        var mode;
+        try {
+          mode = localStorage.getItem('themeMode');
+        } catch (e) {}
+        if (mode !== 'light' && mode !== 'dark') {
+          mode =
+            window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+              ? 'dark'
+              : 'light';
+        }
+        var root = document.documentElement;
+        root.style.colorScheme = mode;
+        root.style.backgroundColor = mode === 'dark' ? '#2a2a2a' : '#fafafa';
+      })();
+    </script>
+    <link rel="icon" href="/favicon.ico" />
+
+    <!-- Preconnect to font domains for faster font loading -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://api.wisemapping.com" />
+
+    <!-- Load fonts asynchronously with font-display: swap to prevent render blocking -->
+    <link
+      rel="preload"
+      href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&display=swap"
+      as="style"
+      onload="
+        this.onload = null;
+        this.rel = 'stylesheet';
+      "
+      crossorigin
+    />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&display=swap"
+      />
+    </noscript>
+    <!-- Noto Sans JP (about 150 KB of font rules) only for Japanese and Chinese: same order as
+         AppI18n (URL prefix, saved choice, browser language). -->
+    <script>
+      (function () {
+        var prefix = /^\/(ja|zh|zh-CN)\//.exec(window.location.pathname);
+        var saved = null;
+        try {
+          saved = localStorage.getItem('user.locale');
+        } catch (e) {}
+        var locale = (prefix && prefix[1]) || saved || navigator.language || '';
+        if (/^(ja|zh)/i.test(locale)) {
+          var link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.href =
+            'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap';
+          document.head.appendChild(link);
+        }
+      })();
+    </script>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#000000" />
+    <meta
+      name="description"
+      content="WiseMapping is a free, fast and simple online mind mapping editor for individuals and business. Sign up to start organizing and sharing your ideas and thoughts."
+    />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://app.wisemapping.com/" />
+    <meta property="og:title" content="WiseMapping - Free Online Mind Mapping App" />
+    <meta
+      property="og:description"
+      content="Create, share and collaborate on visual mind maps for free. Sign up and start organizing your ideas with WiseMapping."
+    />
+    <meta property="og:image" content="https://www.wisemapping.com/img/icon-wise.png" />
+    <meta property="og:site_name" content="WiseMapping" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@WiseMapping" />
+    <meta name="twitter:title" content="WiseMapping - Free Online Mind Mapping App" />
+    <meta
+      name="twitter:description"
+      content="Create, share and collaborate on visual mind maps for free. Sign up and start organizing your ideas with WiseMapping."
+    />
+    <meta name="twitter:image" content="https://www.wisemapping.com/img/icon-wise.png" />
+
+    <!-- Critical CSS for LCP element (Welcome heading) to reduce render delay -->
+    <style>
+      /* Critical styles for LCP element - prevents render blocking */
+      h1.MuiTypography-h4 {
+        font-family:
+          'Figtree',
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          'Roboto',
+          'Oxygen',
+          'Ubuntu',
+          'Cantarell',
+          'Fira Sans',
+          'Droid Sans',
+          'Helvetica Neue',
+          sans-serif;
+        font-weight: 400;
+        font-size: 2.125rem;
+        line-height: 1.235;
+        letter-spacing: 0.00735em;
+        margin: 0;
+      }
+
+      /* Prevent layout shift during font load */
+      body {
+        font-family:
+          'Figtree',
+          -apple-system,
+          BlinkMacSystemFont,
+          'Segoe UI',
+          'Roboto',
+          'Oxygen',
+          'Ubuntu',
+          'Cantarell',
+          'Fira Sans',
+          'Droid Sans',
+          'Helvetica Neue',
+          sans-serif;
+      }
+    </style>
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- SEO meta tags are now handled dynamically by React components -->
+
+    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
+    <link rel="apple-touch-icon" href="/favicon.png" />
+    <link rel="shortcut icon" href="/favicon.ico" type="image/x-icon" />
+
+    <!-- Mobile Web App Capable -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="WiseMapping" />
+
+    <!-- Google Consent Mode v2 + Funding Choices CMP + AdSense -->
+    <script type="text/javascript">
+      if (<%= GOOGLE_ADDS_ENABLED %> && !/\/maps\/[^/]+\/(edit|print|view|public|embed|try)/.test(window.location.pathname)) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('consent', 'default', { ad_storage: 'denied', ad_user_data: 'denied', ad_personalization: 'denied', analytics_storage: 'denied', wait_for_update: 500 });
+
+        window.googlefc = window.googlefc || {};
+        window.googlefc.callbackQueue = window.googlefc.callbackQueue || [];
+
+        var fc = document.createElement('script');
+        fc.src = 'https://fundingchoicesmessages.google.com/i/pub-6240866993689964?ers=1';
+        fc.async = true;
+        document.head.appendChild(fc);
+
+        // Logging gated by loglevel convention. Enable in the console:
+        //   localStorage.setItem('loglevel:ads', 'DEBUG')
+        // then reload. Set to 'WARN' (or remove) to silence.
+        var _adsLevel = 5; // SILENT by default
+        try { var _l = localStorage.getItem('loglevel:ads'); if (_l) { var _m = {TRACE:0,DEBUG:1,INFO:2,WARN:3,ERROR:4,SILENT:5}; _adsLevel = _m[_l.toUpperCase()] !== undefined ? _m[_l.toUpperCase()] : 5; } } catch(e) {}
+        function _adLog() { if (_adsLevel <= 2) console.log.apply(console, ['[Ads]'].concat([].slice.call(arguments))); }
+        function _adWarn() { if (_adsLevel <= 3) console.warn.apply(console, ['[Ads]'].concat([].slice.call(arguments))); }
+
+        // AdSense injection — gated by CONSENT_MODE_DATA_READY.
+        // Funding Choices owns consent signals (gtag consent update) — we do NOT
+        // call gtag('consent','update') manually. That was causing a race condition
+        // where __tcfapi.getTCData failed (CMP not ready) and consent was granted
+        // to all users including GDPR.
+        var adsenseLoaded = false;
+        function loadAdSense() {
+          if (adsenseLoaded) return;
+          adsenseLoaded = true;
+          _adLog('loadAdSense(): injecting AdSense script.');
+          var s = document.createElement('script');
+          s.setAttribute('data-ad-client', 'ca-pub-6240866993689964');
+          s.async = true;
+          s.src = 'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js';
+          s.onload = function() { _adLog('AdSense script loaded successfully.'); };
+          s.onerror = function() { _adWarn('AdSense script FAILED to load.'); };
+          document.body.appendChild(s);
+        }
+
+        var consentFired = false;
+        function onConsentReady(source) {
+          if (consentFired) { _adLog('onConsentReady(' + source + '): already fired, skipping.'); return; }
+          consentFired = true;
+          _adLog('onConsentReady(' + source + '): loading AdSense. Funding Choices manages consent.');
+          loadAdSense();
+        }
+
+        window.googlefc.callbackQueue.push({ 'CONSENT_MODE_DATA_READY': function() { onConsentReady('CONSENT_MODE_DATA_READY'); } });
+        // Fallback: if Funding Choices is blocked/slow, load AdSense after 3s.
+        // Consent stays at defaults (denied) — non-personalized ads only.
+        setTimeout(function() {
+          _adLog('3s fallback timer fired.', consentFired ? 'CONSENT_MODE_DATA_READY already ran.' : 'Never fired — loading AdSense with default (denied) consent.');
+          onConsentReady('3s-fallback');
+        }, 3000);
+      }
+    </script>
+
+    <!--
+      New Relic Browser Monitoring: vite.config.mts injects newrelic-snippet.html here when
+      NEW_RELIC_ENABLED is set. Kept out of this file, it no longer adds 76 KB to every page.
+    -->
+    <%= NEW_RELIC_SNIPPET %>
+
+    <!--
+      Notice the use of %PUBLIC_URL% in the tags above.
+      It will be replaced with the URL of the `public` folder during the build.
+      Only files inside the `public` folder can be referenced from the HTML.
+
+      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
+      work correctly both with client-side routing and a non-root public URL.
+      Learn how to configure a non-root public URL by running `npm run build`.
+    -->
+  </head>
+
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root" class="mindplot-div-container"></div>
+    <script type="module" src="/src/index.tsx"></script>
+    <!--
+      This HTML file is a template.
+      If you open it directly in the browser, you will see an empty page.
+
+      You can add webfonts, meta tags, or analytics to this file.
+      The build step will place the bundled scripts into the <body> tag.
+
+      To begin the development, run `npm start` or `yarn start`.
+      To create a production bundle, use `npm run build` or `yarn build`.
+    -->
+  </body>
+</html>

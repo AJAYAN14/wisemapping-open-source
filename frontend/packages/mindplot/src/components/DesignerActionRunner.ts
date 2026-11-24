@@ -1,0 +1,76 @@
+/*
+ *    Copyright [2007-2025] [wisemapping]
+ *
+ *   Licensed under WiseMapping Public License, Version 1.0 (the "License").
+ *   It is basically the Apache License, Version 2.0 (the "License") plus the
+ *   "powered by wisemapping" text requirement on every single page;
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the license at
+ *
+ *       https://github.com/wisemapping/wisemapping-open-source/blob/main/LICENSE.md
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
+import { $assert } from './util/assert';
+import type ActionDispatcher from './ActionDispatcher';
+import type Command from './Command';
+import type CommandContext from './CommandContext';
+import DesignerUndoManager from './DesignerUndoManager';
+
+class DesignerActionRunner {
+  private _undoManager: DesignerUndoManager;
+
+  private _context: CommandContext;
+
+  private _actionDisplatcher: ActionDispatcher;
+
+  constructor(commandContext: CommandContext, notifier: ActionDispatcher) {
+    $assert(commandContext, 'commandContext can not be null');
+
+    this._undoManager = new DesignerUndoManager();
+    this._context = commandContext;
+    this._actionDisplatcher = notifier;
+  }
+
+  getCommandContext(): CommandContext {
+    return this._context;
+  }
+
+  execute(command: Command): void {
+    $assert(command, 'command can not be null');
+    command.execute(this._context);
+    this._undoManager.enqueue(command);
+    this.fireChangeEvent();
+    this._context.designer.getLayoutEventBus().fireEvent('forceLayout');
+  }
+
+  undo(): void {
+    // Nothing changed: do not report an update, it would mark the map dirty and autosave ...
+    if (!this._undoManager.canUndo()) {
+      return;
+    }
+    this._undoManager.execUndo(this._context);
+    this.fireChangeEvent();
+    this._context.designer.getLayoutEventBus().fireEvent('forceLayout');
+  }
+
+  redo(): void {
+    if (!this._undoManager.canRedo()) {
+      return;
+    }
+    this._undoManager.execRedo(this._context);
+    this.fireChangeEvent();
+    this._context.designer.getLayoutEventBus().fireEvent('forceLayout');
+  }
+
+  fireChangeEvent(): void {
+    const event = this._undoManager.buildEvent();
+    this._actionDisplatcher.fireEvent('modelUpdate', event);
+  }
+}
+
+export default DesignerActionRunner;

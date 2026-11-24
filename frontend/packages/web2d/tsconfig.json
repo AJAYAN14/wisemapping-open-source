@@ -1,0 +1,20 @@
+{
+  "extends": "../../tsconfig.strict.json",
+  "compilerOptions": {
+    "outDir": "./dist/",
+    "sourceMap": true,
+    "module": "es2020",
+    "moduleResolution": "bundler",
+    "target": "es2022",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    // Every exported function, method and property has an explicit type, so declarations can be
+    // emitted file by file without type checking.
+    "isolatedDeclarations": true,
+    "verbatimModuleSyntax": true,
+    "rootDirs": ["src"]
+  },
+  "include": ["src/**/*"],
+  "exclude": ["./node_modules", "./dist"]
+}

@@ -1,0 +1,82 @@
+/*
+ *    Copyright [2007-2025] [wisemapping]
+ *
+ *   Licensed under WiseMapping Public License, Version 1.0 (the "License").
+ *   It is basically the Apache License, Version 2.0 (the "License") plus the
+ *   "powered by wisemapping" text requirement on every single page;
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the license at
+ *
+ *       https://github.com/wisemapping/wisemapping-open-source/blob/main/LICENSE.md
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
+
+import TextField from '@mui/material/TextField';
+import React, { ChangeEvent } from 'react';
+import { ErrorInfo } from '../../../classes/client';
+
+type InputProps = {
+  name: string;
+  error?: ErrorInfo | undefined;
+  onChange?: (event: ChangeEvent<HTMLInputElement>) => void;
+  label: string;
+  required?: boolean;
+  type: string;
+  value?: string | undefined;
+  autoComplete?: string;
+  fullWidth?: boolean;
+  disabled?: boolean;
+  minLength?: number;
+  maxLength?: number;
+  rows?: number;
+};
+
+/**
+ * A memoised text field: a form that re-renders on every key re-renders only the field typed
+ * in, as long as it passes a stable `onChange`. In development MUI's FormControl (inside each
+ * TextField) gives its input a new context on every render, and the field then updates the
+ * FormControl again from an effect: with every field of the form re-rendered on each key,
+ * characters typed in one burst (as Cypress types them) add up to React's nested-update limit.
+ */
+const Input = React.memo(function Input({
+  name,
+  error,
+  onChange,
+  required = true,
+  type,
+  value,
+  label,
+  autoComplete,
+  fullWidth = true,
+  disabled = false,
+  minLength,
+  maxLength = 254,
+}: InputProps): React.ReactElement {
+  const fieldError = error?.fields?.[name];
+  return (
+    <TextField
+      name={name}
+      type={type}
+      label={label}
+      value={value}
+      onChange={onChange}
+      error={Boolean(fieldError)}
+      helperText={fieldError}
+      variant="outlined"
+      required={required}
+      fullWidth={fullWidth}
+      margin="dense"
+      disabled={disabled}
+      autoComplete={autoComplete}
+      slotProps={{
+        htmlInput: { minLength: minLength, maxLength: maxLength },
+      }}
+    />
+  );
+});
+export default Input;

@@ -1,0 +1,1375 @@
+/*
+ *    Copyright [2007-2025] [wisemapping]
+ *
+ *   Licensed under WiseMapping Public License, Version 1.0 (the "License").
+ *   It is basically the Apache License, Version 2.0 (the "License") plus the
+ *   "powered by wisemapping" text requirement on every single page;
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the license at
+ *
+ *       https://github.com/wisemapping/wisemapping-open-source/blob/main/LICENSE.md
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
+
+import React, { ReactElement, useState, useEffect } from 'react';
+import { FormattedMessage, useIntl } from 'react-intl';
+import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
+import TableCell from '@mui/material/TableCell';
+import TableContainer from '@mui/material/TableContainer';
+import TableHead from '@mui/material/TableHead';
+import TableRow from '@mui/material/TableRow';
+import Paper from '@mui/material/Paper';
+import TextField from '@mui/material/TextField';
+import InputAdornment from '@mui/material/InputAdornment';
+import IconButton from '@mui/material/IconButton';
+import Chip from '@mui/material/Chip';
+import Button from '@mui/material/Button';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
+import Alert from '@mui/material/Alert';
+import CircularProgress from '@mui/material/CircularProgress';
+import TableSortLabel from '@mui/material/TableSortLabel';
+import FormControl from '@mui/material/FormControl';
+import InputLabel from '@mui/material/InputLabel';
+import Select from '@mui/material/Select';
+import MenuItem from '@mui/material/MenuItem';
+import Pagination from '@mui/material/Pagination';
+import Tooltip from '@mui/material/Tooltip';
+import LinearProgress from '@mui/material/LinearProgress';
+import SearchIcon from '@mui/icons-material/Search';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import PublicIcon from '@mui/icons-material/Public';
+import LockIcon from '@mui/icons-material/Lock';
+import StarIcon from '@mui/icons-material/Star';
+import CodeIcon from '@mui/icons-material/Code';
+import FlagIcon from '@mui/icons-material/Flag';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import BlockIcon from '@mui/icons-material/Block';
+import PersonOffIcon from '@mui/icons-material/PersonOff';
+import TagIcon from '@mui/icons-material/Tag';
+import EmailIcon from '@mui/icons-material/Email';
+import { AdminMapsParams, AdminUser } from '../../../classes/client/admin-client';
+import AppConfig from '../../../classes/app-config';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import UserMapsDialog from '../shared/UserMapsDialog';
+import SpamStatusChip from '../shared/SpamStatusChip';
+import EditMapDialog, { MapFormData } from './EditMapDialog';
+import { copyText } from '../../../utils/clipboard';
+import { useAdminPage, useClampedPage } from '../shared/useAdminPage';
+import { errorMessage } from '../shared/errorMessage';
+import { CellButton, FilterBar, MapLink, PaginationBar, SectionHeader } from '../styled';
+import { XmlInput } from './styled';
+import { useDate } from '../../../classes/app-i18n/dates';
+
+// XML formatting utility
+const formatXml = (xml: string): string => {
+  if (!xml || xml.trim() === '') return '';
+
+  try {
+    // Basic XML formatting with proper indentation
+    let formatted = xml;
+    let indent = 0;
+    const tab = '  '; // 2 spaces for indentation
+
+    // Split by tags and process each part
+    formatted = formatted.replace(/></g, '>\n<');
+    const lines = formatted.split('\n');
+
+    const formattedLines = lines.map((line) => {
+      const trimmed = line.trim();
+      if (!trimmed) return '';
+
+      // Decrease indent for closing tags
+      if (trimmed.startsWith('</')) {
+        indent = Math.max(0, indent - 1);
+      }
+
+      const indentedLine = tab.repeat(indent) + trimmed;
+
+      // Increase indent for opening tags (but not self-closing, nor a whole element such as
+      // `<text>Idea</text>`, nor a declaration or comment)
+      if (
+        trimmed.startsWith('<') &&
+        !trimmed.startsWith('</') &&
+        !trimmed.startsWith('<?') &&
+        !trimmed.startsWith('<!') &&
+        !trimmed.endsWith('/>') &&
+        !trimmed.includes('</')
+      ) {
+        indent++;
+      }
+
+      return indentedLine;
+    });
+
+    return formattedLines.join('\n');
+  } catch (error) {
+    // If formatting fails, return original XML
+    console.warn('Failed to format XML:', error);
+    return xml;
+  }
+};
+
+// Types for maps management
+interface AdminMap {
+  id: number;
+  title: string;
+  description: string;
+  createdBy: string;
+  createdById: number;
+  creationTime: string;
+  lastModificationBy: string;
+  lastModificationById: number;
+  lastModificationTime: string;
+  public: boolean;
+  isLocked: boolean;
+  isLockedBy?: string;
+  starred: boolean;
+  labels: string[];
+  spam?: boolean;
+  spamType?: string | undefined;
+  spamDetectedDate?: string | undefined;
+  spamDescription?: string | undefined;
+  creatorSuspended?: boolean;
+  collaboratorCount: number;
+}
+
+type SortField =
+  'title' | 'id' | 'createdBy' | 'createdById' | 'creationTime' | 'lastModificationTime' | 'public';
+type SortDirection = 'asc' | 'desc';
+
+// Detect search type
+const getSearchType = (term: string): 'id' | 'email' | 'text' | undefined => {
+  if (!term || term.trim() === '') return undefined;
+  const trimmed = term.trim();
+
+  // Check for ID search (starts with #)
+  if (trimmed.startsWith('#')) {
+    const idStr = trimmed.substring(1);
+    if (/^\d+$/.test(idStr)) {
+      return 'id';
+    }
+  }
+
+  // Check for email search (contains @ and .)
+  if (trimmed.includes('@') && trimmed.includes('.')) {
+    return 'email';
+  }
+
+  return 'text';
+};
+
+/**
+ * The search box. It keeps what is typed and reports it, debounced, through `onSearch`: a key
+ * re-renders only this field, not the page and its filter selects (in development a re-rendered
+ * MUI FormControl updates itself from an effect, and characters typed in one burst, as Cypress
+ * types them, add up to React's nested-update limit).
+ *
+ * It stays enabled while its search loads, so the user can keep typing (a disabled field loses
+ * the focus): the load shows as a spinner at its end. Each search term is its own query, so a late
+ * response to an older term never replaces the results of a newer one.
+ */
+const MapSearchField = React.memo(function MapSearchField({
+  onSearch,
+  isFetching,
+}: {
+  onSearch: (term: string) => void;
+  isFetching: boolean;
+}): ReactElement {
+  const intl = useIntl();
+  const [searchTerm, setSearchTerm] = useState('');
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      onSearch(searchTerm);
+    }, 500); // 500ms debounce
+
+    return () => clearTimeout(timer);
+  }, [searchTerm, onSearch]);
+
+  const searchType = getSearchType(searchTerm);
+
+  return (
+    <TextField
+      placeholder={intl.formatMessage({
+        id: 'admin.maps.search',
+        defaultMessage: 'Search maps... (#123 for ID, email for creator)',
+      })}
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+      helperText={
+        searchType === 'id'
+          ? intl.formatMessage({
+              id: 'admin.maps.search-by-id',
+              defaultMessage: '🔍 Searching by Map ID',
+            })
+          : searchType === 'email'
+            ? intl.formatMessage({
+                id: 'admin.maps.search-by-email',
+                defaultMessage: '🔍 Searching by Creator Email',
+              })
+            : searchType === 'text'
+              ? intl.formatMessage({
+                  id: 'admin.maps.search-by-text',
+                  defaultMessage: '🔍 Searching in titles and descriptions',
+                })
+              : ' '
+      }
+      sx={{ minWidth: 300 }}
+      slotProps={{
+        input: {
+          startAdornment: (
+            <InputAdornment position="start">
+              {searchType === 'id' ? (
+                <TagIcon color="primary" />
+              ) : searchType === 'email' ? (
+                <EmailIcon color="primary" />
+              ) : (
+                <SearchIcon />
+              )}
+            </InputAdornment>
+          ),
+          endAdornment: isFetching ? (
+            <InputAdornment position="end">
+              <CircularProgress size={20} />
+            </InputAdornment>
+          ) : null,
+        },
+      }}
+    />
+  );
+});
+
+const MapsManagement = (): ReactElement => {
+  const intl = useIntl();
+  const date = useDate();
+  const client = AppConfig.getAdminClient();
+  const queryClient = useQueryClient();
+
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
+  const [sortField, setSortField] = useState<SortField>('title');
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
+  const [pageSize] = useState(50);
+  const [filterPublic, setFilterPublic] = useState<string>('all');
+  const [filterLocked, setFilterLocked] = useState<string>('all');
+  const [filterSpam, setFilterSpam] = useState<string>('all');
+  const [dateFilter, setDateFilter] = useState<string>('1');
+  const [editingMap, setEditingMap] = useState<AdminMap>();
+
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  // A new key opens the edit dialog with a fresh form.
+  const [editDialogKey, setEditDialogKey] = useState(0);
+
+  // XML Viewer state
+  const [viewingMap, setViewingMap] = useState<AdminMap>();
+  const [isXmlViewerOpen, setIsXmlViewerOpen] = useState(false);
+  const [xmlContent, setXmlContent] = useState<string>('');
+  const [isPendingXml, setIsPendingXml] = useState(false);
+
+  // User suspension state
+  const [isSuspensionDialogOpen, setIsSuspensionDialogOpen] = useState(false);
+  const [suspendingUser, setSuspendingUser] = useState<{ userId: number; userName: string }>();
+
+  // Owner maps dialog state
+  const [isOwnerMapsDialogOpen, setIsOwnerMapsDialogOpen] = useState(false);
+  const [selectedOwnerId, setSelectedOwnerId] = useState<number>();
+  const [selectedOwnerName, setSelectedOwnerName] = useState<string>('');
+  const [selectedOwnerUser, setSelectedOwnerUser] = useState<AdminUser>();
+  const [ownerMaps, setOwnerMaps] = useState<AdminMap[]>([]);
+  const [isPendingOwnerMaps, setIsPendingOwnerMaps] = useState(false);
+  const [isPendingOwnerInfo, setIsPendingOwnerInfo] = useState(false);
+
+  // Fetch maps with pagination and filters
+  const [currentPage, setCurrentPage] = useAdminPage([
+    debouncedSearchTerm,
+    sortField,
+    sortDirection,
+    filterPublic,
+    filterLocked,
+    filterSpam,
+    dateFilter,
+  ]);
+  const {
+    data: mapsResponse,
+    isPending,
+    isFetching,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: [
+      'adminMaps',
+      currentPage,
+      pageSize,
+      debouncedSearchTerm,
+      sortField,
+      sortDirection,
+      filterPublic,
+      filterLocked,
+      filterSpam,
+      dateFilter,
+    ],
+    queryFn: () => {
+      const params: AdminMapsParams = {
+        page: currentPage - 1, // Convert to 0-based indexing for backend
+        pageSize,
+        search: debouncedSearchTerm || undefined,
+        sortBy: sortField,
+        sortOrder: sortDirection,
+        filterPublic: filterPublic !== 'all' ? filterPublic === 'public' : undefined,
+        filterLocked: filterLocked !== 'all' ? filterLocked === 'locked' : undefined,
+        filterSpam: filterSpam !== 'all' ? filterSpam === 'spam' : undefined,
+        dateFilter: dateFilter,
+      };
+      return client.getAdminMaps(params);
+    },
+    retry: 1,
+    staleTime: 0, // Always refetch when query key changes
+  });
+
+  const maps = mapsResponse?.data || [];
+  const totalPages = mapsResponse?.totalPages || 0;
+  useClampedPage(currentPage, setCurrentPage, mapsResponse?.totalPages);
+
+  // Update map mutation
+  const updateMapMutation = useMutation({
+    mutationFn: (mapData: MapFormData & { id: number }) =>
+      client.updateAdminMap(mapData.id, mapData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminMaps'] });
+      setIsEditDialogOpen(false);
+      setEditingMap(undefined);
+    },
+    onError: (error: Error) => {
+      console.error('Failed to update map:', error);
+    },
+  });
+
+  // Delete map mutation
+  const deleteMapMutation = useMutation({
+    mutationFn: (mapId: number) => client.deleteAdminMap(mapId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminMaps'] });
+    },
+    onError: (error: Error) => {
+      console.error('Failed to delete map:', error);
+    },
+  });
+
+  // Update spam status mutation
+  const updateSpamStatusMutation = useMutation({
+    mutationFn: ({ mapId, spam }: { mapId: number; spam: boolean }) =>
+      client.updateMapSpamStatus(mapId, { spam }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminMaps'] });
+    },
+    onError: (error: Error) => {
+      console.error('Failed to update spam status:', error);
+    },
+  });
+
+  // Suspend user mutation
+  const suspendUserMutation = useMutation({
+    mutationFn: ({ userId }: { userId: number }) => {
+      const suspensionData: { suspended: boolean; suspensionReason: string } = {
+        suspended: true,
+        suspensionReason: 'MANUAL_REVIEW',
+      };
+
+      return client.updateUserSuspension(userId, suspensionData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminMaps'] });
+      setIsSuspensionDialogOpen(false);
+      setSuspendingUser(undefined);
+      // Refresh owner user info if in owner maps dialog
+      if (selectedOwnerId !== undefined) {
+        loadOwnerInfo(selectedOwnerId);
+      }
+    },
+    onError: (error: Error) => {
+      console.error('Failed to suspend user:', error);
+    },
+  });
+
+  // Unsuspend user mutation
+  const unsuspendUserMutation = useMutation({
+    mutationFn: ({ userId }: { userId: number }) =>
+      client.updateUserSuspension(userId, { suspended: false }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminMaps'] });
+      // Refresh owner user info if in owner maps dialog
+      if (selectedOwnerId !== undefined) {
+        loadOwnerInfo(selectedOwnerId);
+      }
+    },
+    onError: (error: Error) => {
+      console.error('Failed to unsuspend user:', error);
+    },
+  });
+
+  const handleEditMap = (map: AdminMap) => {
+    setEditingMap(map);
+    setEditDialogKey((key) => key + 1);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleSaveMap = (mapData: MapFormData): Promise<string | undefined> => {
+    if (!editingMap) return Promise.resolve(undefined);
+    return updateMapMutation.mutateAsync({ ...mapData, id: editingMap.id }).then(
+      () => undefined,
+      () =>
+        intl.formatMessage({
+          id: 'admin.error.update-map-failed',
+          defaultMessage: 'Failed to update map. Please try again.',
+        }),
+    );
+  };
+
+  const handleDeleteMap = (mapId: number, mapTitle: string) => {
+    if (
+      window.confirm(
+        intl.formatMessage(
+          {
+            id: 'admin.confirm.delete-map',
+            defaultMessage: 'Are you sure you want to delete the map "{title}"?',
+          },
+          { title: mapTitle },
+        ),
+      )
+    ) {
+      deleteMapMutation.mutate(mapId);
+    }
+  };
+
+  const handleToggleSpamStatus = (mapId: number, currentSpamStatus: boolean) => {
+    const newSpamStatus = !currentSpamStatus;
+    const action = newSpamStatus
+      ? intl.formatMessage({ id: 'admin.action.mark-as-spam', defaultMessage: 'mark as spam' })
+      : intl.formatMessage({
+          id: 'admin.action.mark-as-not-spam',
+          defaultMessage: 'mark as not spam',
+        });
+    if (
+      window.confirm(
+        intl.formatMessage(
+          {
+            id: 'admin.confirm.spam-action',
+            defaultMessage: 'Are you sure you want to {action} this map?',
+          },
+          { action },
+        ),
+      )
+    ) {
+      updateSpamStatusMutation.mutate({ mapId, spam: newSpamStatus });
+    }
+  };
+
+  const handleSuspendUser = (userId: number, userName: string) => {
+    setSuspendingUser({ userId, userName });
+    setIsSuspensionDialogOpen(true);
+  };
+
+  const handleConfirmSuspension = () => {
+    if (suspendingUser) {
+      suspendUserMutation.mutate({
+        userId: suspendingUser.userId,
+      });
+    }
+  };
+
+  const handleUnsuspendUserFromDialog = (userId: number) => {
+    unsuspendUserMutation.mutate({ userId });
+  };
+
+  const loadOwnerInfo = async (userId: number) => {
+    setIsPendingOwnerInfo(true);
+    try {
+      const userInfo = await client.getAdminUser(userId);
+      setSelectedOwnerUser(userInfo);
+    } catch (error) {
+      console.error('Failed to fetch owner info:', error);
+    } finally {
+      setIsPendingOwnerInfo(false);
+    }
+  };
+
+  const handleViewXml = async (map: AdminMap) => {
+    setViewingMap(map);
+    setIsXmlViewerOpen(true);
+    setIsPendingXml(true);
+    setXmlContent('');
+
+    try {
+      const xml = await client.getAdminMapXml(map.id);
+      setXmlContent(xml);
+    } catch (error: unknown) {
+      console.error('Failed to fetch map XML:', error);
+      setXmlContent(
+        intl.formatMessage(
+          { id: 'admin.maps.xml-viewer.error', defaultMessage: 'Error loading XML: {message}' },
+          {
+            message:
+              errorMessage(error) ||
+              intl.formatMessage({ id: 'admin.error.unknown', defaultMessage: 'Unknown error' }),
+          },
+        ),
+      );
+    } finally {
+      setIsPendingXml(false);
+    }
+  };
+
+  const formatDate = (dateString: string) => date(dateString).format('L');
+
+  const getPublicChip = (isPublic: boolean) => (
+    <Tooltip
+      title={
+        isPublic
+          ? intl.formatMessage({
+              id: 'admin.maps.public-tooltip',
+              defaultMessage: 'Anyone can view this map',
+            })
+          : intl.formatMessage({
+              id: 'admin.maps.private-tooltip',
+              defaultMessage: 'Only collaborators can view this map',
+            })
+      }
+    >
+      <Chip
+        icon={isPublic ? <PublicIcon /> : <LockIcon />}
+        label={
+          isPublic
+            ? intl.formatMessage({ id: 'admin.public', defaultMessage: 'Public' })
+            : intl.formatMessage({ id: 'admin.private', defaultMessage: 'Private' })
+        }
+        color={isPublic ? 'success' : 'default'}
+        size="small"
+      />
+    </Tooltip>
+  );
+
+  const getLockedChip = (isLocked: boolean, lockedBy?: string) => (
+    <Tooltip
+      title={
+        isLocked
+          ? intl.formatMessage(
+              {
+                id: 'admin.maps.locked-tooltip',
+                defaultMessage: 'Currently being edited by {user}',
+              },
+              {
+                user:
+                  lockedBy ||
+                  intl.formatMessage({
+                    id: 'admin.maps.unknown-user',
+                    defaultMessage: 'unknown user',
+                  }),
+              },
+            )
+          : intl.formatMessage({
+              id: 'admin.maps.unlocked-tooltip',
+              defaultMessage: 'Not currently being edited',
+            })
+      }
+    >
+      <Chip
+        label={
+          isLocked
+            ? intl.formatMessage(
+                { id: 'admin.maps.locked-by', defaultMessage: 'Locked by {user}' },
+                {
+                  user:
+                    lockedBy ||
+                    intl.formatMessage({
+                      id: 'admin.maps.unknown-user',
+                      defaultMessage: 'unknown user',
+                    }),
+                },
+              )
+            : intl.formatMessage({ id: 'admin.unlocked', defaultMessage: 'Unlocked' })
+        }
+        color={isLocked ? 'warning' : 'default'}
+        size="small"
+      />
+    </Tooltip>
+  );
+
+  const getSpamChip = (
+    spam: boolean,
+    spamType?: string,
+    spamDetectedDate?: string,
+    spamDescription?: string,
+  ) => {
+    return (
+      <SpamStatusChip
+        spam={spam}
+        spamType={spamType}
+        spamDetectedDate={spamDetectedDate}
+        spamDescription={spamDescription}
+        onToggleSpam={(_newSpamStatus) => {
+          // This callback is not used in the main table since we have separate action buttons
+          // But we pass it for consistency with the dialog
+        }}
+        formatDate={formatDate}
+        loading={updateSpamStatusMutation.isPending}
+        showToggleButton={false}
+      />
+    );
+  };
+
+  const getSuspendedUserChip = (isSuspended: boolean) => {
+    if (isSuspended) {
+      return (
+        <Tooltip
+          title={intl.formatMessage({
+            id: 'admin.maps.creator-suspended-tooltip',
+            defaultMessage: 'Map creator account has been suspended by an administrator',
+          })}
+        >
+          <Chip
+            label={intl.formatMessage({
+              id: 'admin.status-suspended',
+              defaultMessage: 'Suspended',
+            })}
+            color="error"
+            size="small"
+            icon={<PersonOffIcon />}
+          />
+        </Tooltip>
+      );
+    }
+    return null;
+  };
+
+  const handleSort = (field: SortField) => {
+    if (sortField === field) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortField(field);
+      setSortDirection('asc');
+    }
+  };
+
+  const handleViewOwnerMaps = async (ownerId: number, ownerName: string) => {
+    setSelectedOwnerId(ownerId);
+    setSelectedOwnerName(ownerName);
+    setSelectedOwnerUser(undefined);
+    setIsOwnerMapsDialogOpen(true);
+    setIsPendingOwnerMaps(true);
+    setIsPendingOwnerInfo(true);
+    setOwnerMaps([]);
+
+    try {
+      // Fetch user info and maps in parallel
+      const [userInfo, maps] = await Promise.all([
+        client.getAdminUser(ownerId),
+        client.getUserMaps(ownerId),
+      ]);
+      setSelectedOwnerUser(userInfo);
+      setOwnerMaps(maps);
+    } catch (err) {
+      console.error('Failed to load owner info/maps:', err);
+    } finally {
+      setIsPendingOwnerMaps(false);
+      setIsPendingOwnerInfo(false);
+    }
+  };
+
+  return (
+    <Box>
+      <SectionHeader>
+        <Typography variant="h5" component="h2">
+          {intl.formatMessage({
+            id: 'admin.maps.page-title',
+            defaultMessage: 'Maps Management',
+          })}
+        </Typography>
+        <IconButton
+          onClick={() => refetch()}
+          aria-label={intl.formatMessage({ id: 'admin.refresh', defaultMessage: 'Refresh' })}
+        >
+          <RefreshIcon />
+        </IconButton>
+      </SectionHeader>
+      {/* Search and Filters */}
+      <FilterBar gutter={3}>
+        <MapSearchField onSearch={setDebouncedSearchTerm} isFetching={isFetching} />
+
+        <FormControl sx={{ minWidth: 120 }}>
+          <InputLabel>
+            <FormattedMessage id="admin.public" defaultMessage="Public" />
+          </InputLabel>
+          <Select
+            value={filterPublic}
+            label={intl.formatMessage({ id: 'admin.public', defaultMessage: 'Public' })}
+            onChange={(e) => setFilterPublic(e.target.value)}
+            disabled={isFetching}
+            endAdornment={isFetching ? <CircularProgress size={20} /> : null}
+          >
+            <MenuItem value="all">
+              <FormattedMessage id="admin.filter.all" defaultMessage="All" />
+            </MenuItem>
+            <MenuItem value="public">
+              <FormattedMessage id="admin.public" defaultMessage="Public" />
+            </MenuItem>
+            <MenuItem value="private">
+              <FormattedMessage id="admin.private" defaultMessage="Private" />
+            </MenuItem>
+          </Select>
+        </FormControl>
+
+        <FormControl sx={{ minWidth: 120 }}>
+          <InputLabel>
+            <FormattedMessage id="admin.locked" defaultMessage="Locked" />
+          </InputLabel>
+          <Select
+            value={filterLocked}
+            label={intl.formatMessage({ id: 'admin.locked', defaultMessage: 'Locked' })}
+            onChange={(e) => setFilterLocked(e.target.value)}
+            disabled={isFetching}
+            endAdornment={isFetching ? <CircularProgress size={20} /> : null}
+          >
+            <MenuItem value="all">
+              <FormattedMessage id="admin.filter.all" defaultMessage="All" />
+            </MenuItem>
+            <MenuItem value="locked">
+              <FormattedMessage id="admin.locked" defaultMessage="Locked" />
+            </MenuItem>
+            <MenuItem value="unlocked">
+              <FormattedMessage id="admin.unlocked" defaultMessage="Unlocked" />
+            </MenuItem>
+          </Select>
+        </FormControl>
+
+        <FormControl sx={{ minWidth: 120 }}>
+          <InputLabel>
+            {intl.formatMessage({
+              id: 'admin.maps.filter.spam',
+              defaultMessage: 'Spam',
+            })}
+          </InputLabel>
+          <Select
+            value={filterSpam}
+            label={intl.formatMessage({
+              id: 'admin.maps.filter.spam',
+              defaultMessage: 'Spam',
+            })}
+            onChange={(e) => setFilterSpam(e.target.value)}
+            disabled={isFetching}
+            endAdornment={isFetching ? <CircularProgress size={20} /> : null}
+          >
+            <MenuItem value="all">
+              <FormattedMessage id="admin.filter.all" defaultMessage="All" />
+            </MenuItem>
+            <MenuItem value="spam">
+              <FormattedMessage id="admin.maps.filter.spam" defaultMessage="Spam" />
+            </MenuItem>
+            <MenuItem value="not-spam">
+              <FormattedMessage id="admin.maps.filter.not-spam" defaultMessage="Not Spam" />
+            </MenuItem>
+          </Select>
+        </FormControl>
+
+        {/* Date Filter */}
+        <FormControl size="small" sx={{ minWidth: 120 }}>
+          <InputLabel id="date-filter-label">
+            {intl.formatMessage({
+              id: 'admin.maps.filter.date',
+              defaultMessage: 'Date Range',
+            })}
+          </InputLabel>
+          <Select
+            labelId="date-filter-label"
+            value={dateFilter}
+            label={intl.formatMessage({
+              id: 'admin.maps.filter.date',
+              defaultMessage: 'Date Range',
+            })}
+            onChange={(e) => setDateFilter(e.target.value)}
+            disabled={isFetching}
+            endAdornment={isFetching ? <CircularProgress size={20} /> : null}
+          >
+            {[1, 3, 6].map((months) => (
+              <MenuItem key={months} value={String(months)}>
+                <FormattedMessage
+                  id="admin.maps.filter.last-months"
+                  defaultMessage="{count, plural, one {Last # Month} other {Last # Months}}"
+                  values={{ count: months }}
+                />
+              </MenuItem>
+            ))}
+            <MenuItem value="all">
+              <FormattedMessage id="admin.maps.filter.all-time" defaultMessage="All Time" />
+            </MenuItem>
+          </Select>
+        </FormControl>
+      </FilterBar>
+      {/* Maps Table */}
+      {/* Inline, so the search, filters and Refresh stay to recover with. */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 2 }}>
+          {intl.formatMessage(
+            { id: 'admin.error.load-maps', defaultMessage: 'Failed to load maps: {message}' },
+            {
+              message:
+                errorMessage(error) ||
+                intl.formatMessage({ id: 'admin.error.unknown', defaultMessage: 'Unknown error' }),
+            },
+          )}
+        </Alert>
+      )}
+      <TableContainer component={Paper}>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell>
+                <TableSortLabel
+                  active={sortField === 'id'}
+                  direction={sortField === 'id' ? sortDirection : 'asc'}
+                  onClick={() => handleSort('id')}
+                >
+                  {intl.formatMessage({
+                    id: 'admin.maps.table.id',
+                    defaultMessage: 'Map ID',
+                  })}
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={sortField === 'title'}
+                  direction={sortField === 'title' ? sortDirection : 'asc'}
+                  onClick={() => handleSort('title')}
+                >
+                  <FormattedMessage id="admin.maps.table.title" defaultMessage="Title" />
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>
+                <FormattedMessage id="admin.maps.table.description" defaultMessage="Description" />
+              </TableCell>
+              <TableCell>
+                <FormattedMessage id="admin.maps.table.created-by" defaultMessage="Created By" />
+              </TableCell>
+              <TableCell align="center">
+                <FormattedMessage
+                  id="admin.maps.table.collaborators"
+                  defaultMessage="Collaborators"
+                />
+              </TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={sortField === 'creationTime'}
+                  direction={sortField === 'creationTime' ? sortDirection : 'asc'}
+                  onClick={() => handleSort('creationTime')}
+                >
+                  <FormattedMessage id="admin.maps.table.created" defaultMessage="Created" />
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>
+                <TableSortLabel
+                  active={sortField === 'lastModificationTime'}
+                  direction={sortField === 'lastModificationTime' ? sortDirection : 'asc'}
+                  onClick={() => handleSort('lastModificationTime')}
+                >
+                  <FormattedMessage id="admin.maps.table.modified" defaultMessage="Modified" />
+                </TableSortLabel>
+              </TableCell>
+              <TableCell>
+                <FormattedMessage id="admin.maps.table.status" defaultMessage="Status" />
+              </TableCell>
+              <TableCell>
+                {intl.formatMessage({
+                  id: 'admin.maps.table.spam',
+                  defaultMessage: 'Spam',
+                })}
+              </TableCell>
+              <TableCell align="center">
+                <FormattedMessage id="admin.maps.table.actions" defaultMessage="Actions" />
+              </TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {isPending ? (
+              <TableRow>
+                <TableCell colSpan={10} align="center">
+                  <CircularProgress />
+                </TableCell>
+              </TableRow>
+            ) : maps.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={10} align="center">
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      color: 'text.secondary',
+                    }}
+                  >
+                    {intl.formatMessage({
+                      id: 'admin.maps.no-maps',
+                      defaultMessage: 'No maps found',
+                    })}
+                  </Typography>
+                </TableCell>
+              </TableRow>
+            ) : (
+              maps.map((map) => (
+                <TableRow key={map.id} hover>
+                  <TableCell>
+                    <MapLink
+                      variant="body2"
+                      color="primary"
+                      component="a"
+                      href={`/c/maps/${map.id}/public`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      #{map.id}
+                    </MapLink>
+                  </TableCell>
+                  <TableCell>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1,
+                      }}
+                    >
+                      {map.starred && <StarIcon color="primary" fontSize="small" />}
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          fontWeight: map.starred ? 'bold' : 'normal',
+                        }}
+                      >
+                        {map.title}
+                      </Typography>
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    <Typography
+                      variant="body2"
+                      sx={{
+                        color: 'text.secondary',
+                      }}
+                    >
+                      {map.description || (
+                        <FormattedMessage
+                          id="admin.maps.no-description"
+                          defaultMessage="No description"
+                        />
+                      )}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <CellButton
+                      variant="text"
+                      color="primary"
+                      size="small"
+                      onClick={() => handleViewOwnerMaps(map.createdById, map.createdBy)}
+                    >
+                      {map.createdBy}
+                    </CellButton>
+                  </TableCell>
+                  <TableCell align="center">
+                    <Typography variant="body2">{map.collaboratorCount}</Typography>
+                  </TableCell>
+                  <TableCell>{formatDate(map.creationTime)}</TableCell>
+                  <TableCell>{formatDate(map.lastModificationTime)}</TableCell>
+                  <TableCell>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        gap: 1,
+                        flexWrap: 'wrap',
+                      }}
+                    >
+                      {getPublicChip(map.public)}
+                      {getLockedChip(map.isLocked, map.isLockedBy)}
+                      {getSuspendedUserChip(map.creatorSuspended || false)}
+                    </Box>
+                  </TableCell>
+                  <TableCell>
+                    {getSpamChip(
+                      map.spam || false,
+                      map.spamType,
+                      map.spamDetectedDate,
+                      map.spamDescription,
+                    )}
+                  </TableCell>
+                  <TableCell align="center">
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        gap: 0.5,
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Tooltip
+                        title={intl.formatMessage({
+                          id: 'admin.maps.view-xml',
+                          defaultMessage: 'View XML',
+                        })}
+                      >
+                        <IconButton
+                          onClick={() => handleViewXml(map)}
+                          aria-label={intl.formatMessage({
+                            id: 'admin.view-xml',
+                            defaultMessage: 'View XML',
+                          })}
+                          color="info"
+                          size="small"
+                        >
+                          <CodeIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip
+                        title={intl.formatMessage({
+                          id: 'admin.maps.edit',
+                          defaultMessage: 'Edit map',
+                        })}
+                      >
+                        <IconButton
+                          onClick={() => handleEditMap(map)}
+                          aria-label={intl.formatMessage({
+                            id: 'admin.edit',
+                            defaultMessage: 'Edit',
+                          })}
+                          color="primary"
+                          size="small"
+                        >
+                          <EditIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip
+                        title={
+                          map.spam
+                            ? intl.formatMessage({
+                                id: 'admin.maps.mark-as-not-spam',
+                                defaultMessage: 'Mark as not spam',
+                              })
+                            : intl.formatMessage({
+                                id: 'admin.maps.mark-as-spam',
+                                defaultMessage: 'Mark as spam',
+                              })
+                        }
+                      >
+                        <span>
+                          <IconButton
+                            onClick={() => handleToggleSpamStatus(map.id, map.spam || false)}
+                            aria-label={
+                              map.spam
+                                ? intl.formatMessage({
+                                    id: 'admin.maps.mark-as-not-spam',
+                                    defaultMessage: 'Mark as not spam',
+                                  })
+                                : intl.formatMessage({
+                                    id: 'admin.maps.mark-as-spam',
+                                    defaultMessage: 'Mark as spam',
+                                  })
+                            }
+                            color={map.spam ? 'success' : 'warning'}
+                            size="small"
+                            disabled={updateSpamStatusMutation.isPending}
+                          >
+                            {map.spam ? <CheckCircleIcon /> : <FlagIcon />}
+                          </IconButton>
+                        </span>
+                      </Tooltip>
+                      {!map.creatorSuspended && (
+                        <Tooltip
+                          title={intl.formatMessage({
+                            id: 'admin.maps.suspend-user',
+                            defaultMessage: 'Suspend user account',
+                          })}
+                        >
+                          <span>
+                            <IconButton
+                              onClick={() => handleSuspendUser(map.createdById, map.createdBy)}
+                              aria-label={intl.formatMessage({
+                                id: 'admin.suspend-user',
+                                defaultMessage: 'Suspend user',
+                              })}
+                              color="warning"
+                              size="small"
+                              disabled={suspendUserMutation.isPending}
+                            >
+                              <BlockIcon />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
+                      )}
+                      <Tooltip
+                        title={intl.formatMessage({
+                          id: 'admin.maps.delete',
+                          defaultMessage: 'Delete map',
+                        })}
+                      >
+                        <IconButton
+                          onClick={() => handleDeleteMap(map.id, map.title)}
+                          aria-label={intl.formatMessage({
+                            id: 'admin.delete',
+                            defaultMessage: 'Delete',
+                          })}
+                          color="error"
+                          size="small"
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Tooltip>
+                    </Box>
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </TableContainer>
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <PaginationBar>
+          <Pagination
+            count={totalPages}
+            page={currentPage}
+            onChange={(_event, page) => setCurrentPage(page)}
+            color="primary"
+            variant="outlined"
+            shape="rounded"
+            showFirstButton
+            showLastButton
+            disabled={isFetching}
+          />
+          {isFetching && <CircularProgress size={24} />}
+        </PaginationBar>
+      )}
+      {/* Edit Map Dialog */}
+      <EditMapDialog
+        key={editDialogKey}
+        open={isEditDialogOpen}
+        initialData={
+          editingMap
+            ? {
+                title: editingMap.title,
+                description: editingMap.description,
+                public: editingMap.public,
+                isLocked: editingMap.isLocked,
+              }
+            : { title: '', description: '', public: false, isLocked: false }
+        }
+        isPending={updateMapMutation.isPending}
+        onClose={() => setIsEditDialogOpen(false)}
+        onSubmit={handleSaveMap}
+      />
+      {/* XML Viewer Dialog */}
+      <Dialog
+        open={isXmlViewerOpen}
+        onClose={() => setIsXmlViewerOpen(false)}
+        maxWidth="lg"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 1,
+            }}
+          >
+            <CodeIcon color="primary" />
+            {intl.formatMessage({
+              id: 'admin.maps.xml-viewer.title',
+              defaultMessage: 'Map XML Content',
+            })}
+          </Box>
+          {viewingMap && (
+            <Typography
+              variant="body2"
+              sx={{
+                color: 'text.secondary',
+                mt: 1,
+              }}
+            >
+              <FormattedMessage
+                id="admin.maps.xml-viewer.subtitle"
+                defaultMessage="{title} (ID: {id})"
+                values={{ title: viewingMap.title, id: viewingMap.id }}
+              />
+            </Typography>
+          )}
+        </DialogTitle>
+        <DialogContent>
+          {isPendingXml ? (
+            <Box sx={{ p: 3 }}>
+              <LinearProgress sx={{ mb: 2 }} />
+              <Typography
+                variant="body2"
+                sx={{
+                  color: 'text.secondary',
+                }}
+              >
+                {intl.formatMessage({
+                  id: 'admin.maps.xml-viewer.loading',
+                  defaultMessage: 'Loading XML content...',
+                })}
+              </Typography>
+            </Box>
+          ) : (
+            <Box sx={{ mt: 1 }}>
+              <Alert severity="info" sx={{ mb: 2 }}>
+                <Typography variant="body2">
+                  {intl.formatMessage({
+                    id: 'admin.maps.xml-viewer.info',
+                    defaultMessage:
+                      'This is the raw XML content of the mindmap. You can copy this content for backup or analysis purposes.',
+                  })}
+                </Typography>
+              </Alert>
+
+              <TextField
+                multiline
+                rows={20}
+                fullWidth
+                value={formatXml(xmlContent)}
+                variant="outlined"
+                placeholder={intl.formatMessage({
+                  id: 'admin.maps.xml-viewer.no-content',
+                  defaultMessage: 'No XML content available',
+                })}
+                slots={{ input: XmlInput }}
+                slotProps={{ input: { readOnly: true } }}
+              />
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsXmlViewerOpen(false)}>
+            {intl.formatMessage({
+              id: 'common.close',
+              defaultMessage: 'Close',
+            })}
+          </Button>
+          <Button
+            variant="contained"
+            onClick={() => {
+              if (xmlContent) {
+                copyText(formatXml(xmlContent));
+              }
+            }}
+            disabled={!xmlContent || isPendingXml}
+            startIcon={<CodeIcon />}
+          >
+            {intl.formatMessage({
+              id: 'admin.maps.xml-viewer.copy',
+              defaultMessage: 'Copy Formatted XML',
+            })}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      {/* User Suspension Dialog */}
+      <Dialog
+        open={isSuspensionDialogOpen}
+        onClose={() => setIsSuspensionDialogOpen(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          {intl.formatMessage({
+            id: 'admin.maps.suspend-user.title',
+            defaultMessage: 'Suspend User Account',
+          })}
+        </DialogTitle>
+        <DialogContent>
+          <Alert severity="warning" sx={{ mb: 2 }}>
+            <Typography variant="body2">
+              {intl.formatMessage({
+                id: 'admin.maps.suspend-user.warning',
+                defaultMessage:
+                  'This action will suspend the user account, preventing them from accessing the system.',
+              })}
+            </Typography>
+          </Alert>
+
+          <Typography variant="body1" sx={{ mb: 2 }}>
+            {intl.formatMessage(
+              {
+                id: 'admin.maps.suspend-user.confirm',
+                defaultMessage:
+                  'Are you sure you want to suspend the account for user "{userName}" (ID: {userId})? This will be marked as a manual review suspension.',
+              },
+              {
+                userName: suspendingUser?.userName || '',
+                userId: suspendingUser?.userId || '',
+              },
+            )}
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsSuspensionDialogOpen(false)}>
+            {intl.formatMessage({
+              id: 'common.cancel',
+              defaultMessage: 'Cancel',
+            })}
+          </Button>
+          <Button
+            variant="contained"
+            color="error"
+            onClick={handleConfirmSuspension}
+            disabled={suspendUserMutation.isPending}
+            startIcon={<BlockIcon />}
+          >
+            {suspendUserMutation.isPending ? (
+              <CircularProgress size={20} />
+            ) : (
+              intl.formatMessage({
+                id: 'admin.maps.suspend-user.confirm-button',
+                defaultMessage: 'Suspend User',
+              })
+            )}
+          </Button>
+        </DialogActions>
+      </Dialog>
+      {/* Owner Maps Dialog */}
+      <UserMapsDialog
+        open={isOwnerMapsDialogOpen}
+        onClose={() => setIsOwnerMapsDialogOpen(false)}
+        user={selectedOwnerUser}
+        maps={ownerMaps}
+        isLoadingUser={isPendingOwnerInfo}
+        isLoadingMaps={isPendingOwnerMaps}
+        onSuspend={() => {
+          setIsOwnerMapsDialogOpen(false);
+          if (selectedOwnerId !== undefined) {
+            handleSuspendUser(selectedOwnerId, selectedOwnerName);
+          }
+        }}
+        onUnsuspend={() => {
+          if (selectedOwnerId !== undefined) {
+            handleUnsuspendUserFromDialog(selectedOwnerId);
+          }
+        }}
+        onViewXml={handleViewXml}
+        onEditMap={handleEditMap}
+        onToggleSpam={handleToggleSpamStatus}
+        onDeleteMap={handleDeleteMap}
+        getPublicChip={getPublicChip}
+        getLockedChip={getLockedChip}
+        getSuspendedUserChip={getSuspendedUserChip}
+        formatDate={formatDate}
+        updateSpamStatusLoading={updateSpamStatusMutation.isPending}
+        deleteMapLoading={deleteMapMutation.isPending}
+      />
+    </Box>
+  );
+};
+
+export default MapsManagement;

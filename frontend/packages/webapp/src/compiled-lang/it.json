@@ -1,0 +1,3764 @@
+{
+  "account.delete-challenge": [
+    {
+      "type": 0,
+      "value": "ELIMINA IL MIO ACCOUNT"
+    }
+  ],
+  "account.delete-challenge-error": [
+    {
+      "type": 0,
+      "value": "Digita \""
+    },
+    {
+      "type": 1,
+      "value": "challengePhrase"
+    },
+    {
+      "type": 0,
+      "value": "\" per confermare l'eliminazione dell'account."
+    }
+  ],
+  "account.delete-confirm": [
+    {
+      "type": 0,
+      "value": "Elimina Account"
+    }
+  ],
+  "account.delete-confirmation-instruction": [
+    {
+      "type": 0,
+      "value": "Digita "
+    },
+    {
+      "type": 1,
+      "value": "challengePhrase"
+    },
+    {
+      "type": 0,
+      "value": " per confermare:"
+    }
+  ],
+  "account.delete-confirmation-label": [
+    {
+      "type": 0,
+      "value": "Digita \""
+    },
+    {
+      "type": 1,
+      "value": "challengePhrase"
+    },
+    {
+      "type": 0,
+      "value": "\" per confermare"
+    }
+  ],
+  "account.delete-confirmation-title": [
+    {
+      "type": 0,
+      "value": "Ne sei assolutamente sicuro?"
+    }
+  ],
+  "account.delete-confirmation-warning": [
+    {
+      "type": 0,
+      "value": "Questa azione non può essere annullata. Il tuo account verrà eliminato definitivamente e tutti i dati verranno rimossi dai nostri server."
+    }
+  ],
+  "account.delete-warning-collaborations": [
+    {
+      "type": 0,
+      "value": "Tutte le mappe mentali e le collaborazioni condivise"
+    }
+  ],
+  "account.delete-warning-consequences": [
+    {
+      "type": 0,
+      "value": "Questo eliminerà definitivamente:"
+    }
+  ],
+  "account.delete-warning-data": [
+    {
+      "type": 0,
+      "value": "Tutti i tuoi dati personali e le informazioni del tuo account"
+    }
+  ],
+  "account.delete-warning-description": [
+    {
+      "type": 0,
+      "value": "Una volta eliminato il tuo account, non potrai più tornare indietro. Si prega di essere certi."
+    }
+  ],
+  "account.delete-warning-history": [
+    {
+      "type": 0,
+      "value": "Tutta la cronologia dell'account e i log delle attività"
+    }
+  ],
+  "account.delete-warning-mindmaps": [
+    {
+      "type": 0,
+      "value": "Tutte le tue mappe mentali e il loro contenuto"
+    }
+  ],
+  "account.delete-warning-title": [
+    {
+      "type": 0,
+      "value": "Elimina Account"
+    }
+  ],
+  "accountinfo.account-settings": [
+    {
+      "type": 0,
+      "value": "Impostazioni account"
+    }
+  ],
+  "accountinfo.button": [
+    {
+      "type": 0,
+      "value": "Salva modifiche"
+    }
+  ],
+  "accountinfo.deleteaccount": [
+    {
+      "type": 0,
+      "value": "Elimina Account"
+    }
+  ],
+  "accountinfo.email": [
+    {
+      "type": 0,
+      "value": "Email"
+    }
+  ],
+  "accountinfo.firstname": [
+    {
+      "type": 0,
+      "value": "Nome"
+    }
+  ],
+  "accountinfo.lastname": [
+    {
+      "type": 0,
+      "value": "Cognome"
+    }
+  ],
+  "accountinfo.personal-details": [
+    {
+      "type": 0,
+      "value": "Dettagli personali"
+    }
+  ],
+  "accountinfo.personal-info": [
+    {
+      "type": 0,
+      "value": "Informazioni personali"
+    }
+  ],
+  "accountinfo.tabs": [
+    {
+      "type": 0,
+      "value": "Sezioni dell'account"
+    }
+  ],
+  "accountinfo.title": [
+    {
+      "type": 0,
+      "value": "Informazioni account"
+    }
+  ],
+  "action.cancel-button": [
+    {
+      "type": 0,
+      "value": "Annulla"
+    }
+  ],
+  "action.close-button": [
+    {
+      "type": 0,
+      "value": "Chiudi"
+    }
+  ],
+  "action.delete": [
+    {
+      "type": 0,
+      "value": "Elimina"
+    }
+  ],
+  "action.delete-description": [
+    {
+      "type": 0,
+      "value": "Le mappe mentali eliminate non possono essere recuperate. Vuoi continuare?"
+    }
+  ],
+  "action.delete-title": [
+    {
+      "type": 0,
+      "value": "Elimina"
+    }
+  ],
+  "action.duplicate": [
+    {
+      "type": 0,
+      "value": "Duplica"
+    }
+  ],
+  "action.export": [
+    {
+      "type": 0,
+      "value": "Esporta"
+    }
+  ],
+  "action.history": [
+    {
+      "type": 0,
+      "value": "Cronologia"
+    }
+  ],
+  "action.history-description": [
+    {
+      "type": 0,
+      "value": "Elenco delle modifiche introdotte negli ultimi 90 giorni."
+    }
+  ],
+  "action.history-title": [
+    {
+      "type": 0,
+      "value": "Cronologia versioni"
+    }
+  ],
+  "action.import": [
+    {
+      "type": 0,
+      "value": "Importa"
+    }
+  ],
+  "action.info": [
+    {
+      "type": 0,
+      "value": "Info"
+    }
+  ],
+  "action.label": [
+    {
+      "type": 0,
+      "value": "Aggiungi Etichetta"
+    }
+  ],
+  "action.new": [
+    {
+      "type": 0,
+      "value": "Nuova mappa"
+    }
+  ],
+  "action.open": [
+    {
+      "type": 0,
+      "value": "Apri"
+    }
+  ],
+  "action.print": [
+    {
+      "type": 0,
+      "value": "Stampa"
+    }
+  ],
+  "action.publish": [
+    {
+      "type": 0,
+      "value": "Pubblica"
+    }
+  ],
+  "action.rename": [
+    {
+      "type": 0,
+      "value": "Rinomina"
+    }
+  ],
+  "action.rename-description-placeholder": [
+    {
+      "type": 0,
+      "value": "Descrizione"
+    }
+  ],
+  "action.rename-name-placeholder": [
+    {
+      "type": 0,
+      "value": "Nome"
+    }
+  ],
+  "action.share": [
+    {
+      "type": 0,
+      "value": "Condividi"
+    }
+  ],
+  "activation.error.message": [
+    {
+      "type": 0,
+      "value": "Non siamo riusciti ad attivare il tuo account. Il link di attivazione potrebbe non essere valido o essere scaduto. Contatta il supporto per assistenza."
+    }
+  ],
+  "activation.error.title": [
+    {
+      "type": 0,
+      "value": "Attivazione non riuscita"
+    }
+  ],
+  "activation.invalid-link": [
+    {
+      "type": 0,
+      "value": "Link di attivazione non valido"
+    }
+  ],
+  "activation.loading.desc": [
+    {
+      "type": 0,
+      "value": "Attendi mentre attiviamo il tuo account..."
+    }
+  ],
+  "activation.loading.title": [
+    {
+      "type": 0,
+      "value": "Attivazione del tuo account"
+    }
+  ],
+  "activation.page-title": [
+    {
+      "type": 0,
+      "value": "Attivazione account | WiseMapping"
+    }
+  ],
+  "activation.success.message": [
+    {
+      "type": 0,
+      "value": "Il tuo account è stato attivato. Ora puoi accedere e iniziare a creare mappe mentali."
+    }
+  ],
+  "activation.success.title": [
+    {
+      "type": 0,
+      "value": "Account attivato correttamente"
+    }
+  ],
+  "admin.accounts.activate-dialog.button": [
+    {
+      "type": 0,
+      "value": "Attiva utente"
+    }
+  ],
+  "admin.accounts.activate-dialog.confirm": [
+    {
+      "type": 0,
+      "value": "Sei sicuro di voler attivare manualmente l'utente \""
+    },
+    {
+      "type": 1,
+      "value": "email"
+    },
+    {
+      "type": 0,
+      "value": "\"?"
+    }
+  ],
+  "admin.accounts.activate-dialog.info": [
+    {
+      "type": 0,
+      "value": "L'utente potrà accedere subito, senza confermare il proprio indirizzo email."
+    }
+  ],
+  "admin.accounts.activate-dialog.pending": [
+    {
+      "type": 0,
+      "value": "Attivazione..."
+    }
+  ],
+  "admin.accounts.activate-dialog.title": [
+    {
+      "type": 0,
+      "value": "Attiva utente"
+    }
+  ],
+  "admin.accounts.add-user": [
+    {
+      "type": 0,
+      "value": "Aggiungi nuovo utente"
+    }
+  ],
+  "admin.accounts.create": [
+    {
+      "type": 0,
+      "value": "Crea utente"
+    }
+  ],
+  "admin.accounts.create-user": [
+    {
+      "type": 0,
+      "value": "Crea utente"
+    }
+  ],
+  "admin.accounts.delete-dialog.button": [
+    {
+      "type": 0,
+      "value": "Elimina utente"
+    }
+  ],
+  "admin.accounts.delete-dialog.confirm": [
+    {
+      "type": 0,
+      "value": "Sei sicuro di voler eliminare l'utente \""
+    },
+    {
+      "type": 1,
+      "value": "email"
+    },
+    {
+      "type": 0,
+      "value": "\"?"
+    }
+  ],
+  "admin.accounts.delete-dialog.pending": [
+    {
+      "type": 0,
+      "value": "Eliminazione..."
+    }
+  ],
+  "admin.accounts.delete-dialog.title": [
+    {
+      "type": 0,
+      "value": "Elimina utente"
+    }
+  ],
+  "admin.accounts.delete-dialog.warning": [
+    {
+      "type": 0,
+      "value": "Questa azione non può essere annullata!"
+    }
+  ],
+  "admin.accounts.edit-user": [
+    {
+      "type": 0,
+      "value": "Modifica utente"
+    }
+  ],
+  "admin.accounts.filter.not-suspended": [
+    {
+      "type": 0,
+      "value": "Non sospesi"
+    }
+  ],
+  "admin.accounts.filter.suspended-only": [
+    {
+      "type": 0,
+      "value": "Solo sospesi"
+    }
+  ],
+  "admin.accounts.filter.suspension-all": [
+    {
+      "type": 0,
+      "value": "Tutti (sospesi + attivi)"
+    }
+  ],
+  "admin.accounts.filters": [
+    {
+      "type": 0,
+      "value": "Ricerca e filtri"
+    }
+  ],
+  "admin.accounts.no-users": [
+    {
+      "type": 0,
+      "value": "Nessun utente trovato"
+    }
+  ],
+  "admin.accounts.refresh": [
+    {
+      "type": 0,
+      "value": "Aggiorna"
+    }
+  ],
+  "admin.accounts.refresh-tooltip": [
+    {
+      "type": 0,
+      "value": "Aggiorna dati"
+    }
+  ],
+  "admin.accounts.search": [
+    {
+      "type": 0,
+      "value": "Cerca utenti..."
+    }
+  ],
+  "admin.accounts.subtitle": [
+    {
+      "type": 0,
+      "value": "Gestisci account utente, permessi e impostazioni"
+    }
+  ],
+  "admin.accounts.suspend-dialog.button": [
+    {
+      "type": 0,
+      "value": "Sospendi utente"
+    }
+  ],
+  "admin.accounts.suspend-dialog.confirm": [
+    {
+      "type": 0,
+      "value": "Sei sicuro di voler sospendere l'utente \""
+    },
+    {
+      "type": 1,
+      "value": "email"
+    },
+    {
+      "type": 0,
+      "value": "\"?"
+    }
+  ],
+  "admin.accounts.suspend-dialog.pending": [
+    {
+      "type": 0,
+      "value": "Sospensione..."
+    }
+  ],
+  "admin.accounts.suspend-dialog.title": [
+    {
+      "type": 0,
+      "value": "Sospendi utente"
+    }
+  ],
+  "admin.accounts.table.actions": [
+    {
+      "type": 0,
+      "value": "Azioni"
+    }
+  ],
+  "admin.accounts.table.auth": [
+    {
+      "type": 0,
+      "value": "Autenticazione"
+    }
+  ],
+  "admin.accounts.table.created": [
+    {
+      "type": 0,
+      "value": "Creato"
+    }
+  ],
+  "admin.accounts.table.id": [
+    {
+      "type": 0,
+      "value": "ID"
+    }
+  ],
+  "admin.accounts.table.name": [
+    {
+      "type": 0,
+      "value": "Nome"
+    }
+  ],
+  "admin.accounts.table.status": [
+    {
+      "type": 0,
+      "value": "Stato"
+    }
+  ],
+  "admin.accounts.title": [
+    {
+      "type": 0,
+      "value": "Gestione utenti"
+    }
+  ],
+  "admin.accounts.unsuspend-dialog.button": [
+    {
+      "type": 0,
+      "value": "Ripristina utente"
+    }
+  ],
+  "admin.accounts.unsuspend-dialog.confirm": [
+    {
+      "type": 0,
+      "value": "Sei sicuro di voler ripristinare l'utente \""
+    },
+    {
+      "type": 1,
+      "value": "email"
+    },
+    {
+      "type": 0,
+      "value": "\"?"
+    }
+  ],
+  "admin.accounts.unsuspend-dialog.pending": [
+    {
+      "type": 0,
+      "value": "Ripristino..."
+    }
+  ],
+  "admin.accounts.unsuspend-dialog.reason": [
+    {
+      "type": 0,
+      "value": "Motivo attuale della sospensione: "
+    },
+    {
+      "type": 1,
+      "value": "reason"
+    }
+  ],
+  "admin.accounts.unsuspend-dialog.title": [
+    {
+      "type": 0,
+      "value": "Ripristina utente"
+    }
+  ],
+  "admin.action.mark-as-not-spam": [
+    {
+      "type": 0,
+      "value": "contrassegnare come non spam"
+    }
+  ],
+  "admin.action.mark-as-spam": [
+    {
+      "type": 0,
+      "value": "contrassegnare come spam"
+    }
+  ],
+  "admin.activate-user": [
+    {
+      "type": 0,
+      "value": "Attiva utente"
+    }
+  ],
+  "admin.auth-type": [
+    {
+      "type": 0,
+      "value": "Tipo di autenticazione"
+    }
+  ],
+  "admin.auth.database": [
+    {
+      "type": 0,
+      "value": "Database"
+    }
+  ],
+  "admin.auth.facebook": [
+    {
+      "type": 0,
+      "value": "Facebook"
+    }
+  ],
+  "admin.auth.google": [
+    {
+      "type": 0,
+      "value": "Google"
+    }
+  ],
+  "admin.auth.ldap": [
+    {
+      "type": 0,
+      "value": "LDAP"
+    }
+  ],
+  "admin.button.creating": [
+    {
+      "type": 0,
+      "value": "Creazione..."
+    }
+  ],
+  "admin.button.update-user": [
+    {
+      "type": 0,
+      "value": "Aggiorna utente"
+    }
+  ],
+  "admin.button.updating": [
+    {
+      "type": 0,
+      "value": "Aggiornamento..."
+    }
+  ],
+  "admin.cancel": [
+    {
+      "type": 0,
+      "value": "Annulla"
+    }
+  ],
+  "admin.change-password": [
+    {
+      "type": 0,
+      "value": "Cambia password"
+    }
+  ],
+  "admin.change-password-button": [
+    {
+      "type": 0,
+      "value": "Cambia Password"
+    }
+  ],
+  "admin.change-password-description": [
+    {
+      "type": 0,
+      "value": "Cambia password per l'utente: "
+    },
+    {
+      "type": 1,
+      "value": "email"
+    }
+  ],
+  "admin.change-password-title": [
+    {
+      "type": 0,
+      "value": "Cambia Password"
+    }
+  ],
+  "admin.close": [
+    {
+      "type": 0,
+      "value": "Chiudi"
+    }
+  ],
+  "admin.confirm-password": [
+    {
+      "type": 0,
+      "value": "Conferma Password"
+    }
+  ],
+  "admin.confirm.delete-map": [
+    {
+      "type": 0,
+      "value": "Sei sicuro di voler eliminare la mappa \""
+    },
+    {
+      "type": 1,
+      "value": "title"
+    },
+    {
+      "type": 0,
+      "value": "\"?"
+    }
+  ],
+  "admin.confirm.spam-action": [
+    {
+      "type": 0,
+      "value": "Sei sicuro di voler "
+    },
+    {
+      "type": 1,
+      "value": "action"
+    },
+    {
+      "type": 0,
+      "value": " questa mappa?"
+    }
+  ],
+  "admin.console.description": [
+    {
+      "type": 0,
+      "value": "Gestisci utenti, impostazioni di sistema e configurazione dell'applicazione."
+    }
+  ],
+  "admin.console.page-title": [
+    {
+      "type": 0,
+      "value": "Console Admin | WiseMapping"
+    }
+  ],
+  "admin.console.subtitle": [
+    {
+      "type": 0,
+      "value": "Amministrazione di sistema"
+    }
+  ],
+  "admin.console.title": [
+    {
+      "type": 0,
+      "value": "Console Admin"
+    }
+  ],
+  "admin.delete": [
+    {
+      "type": 0,
+      "value": "Elimina"
+    }
+  ],
+  "admin.delete-user": [
+    {
+      "type": 0,
+      "value": "Elimina utente"
+    }
+  ],
+  "admin.edit": [
+    {
+      "type": 0,
+      "value": "Modifica"
+    }
+  ],
+  "admin.edit-user": [
+    {
+      "type": 0,
+      "value": "Modifica utente"
+    }
+  ],
+  "admin.error.access-denied": [
+    {
+      "type": 0,
+      "value": "Accesso negato. Sono richiesti permessi di amministratore."
+    }
+  ],
+  "admin.error.create-user-failed": [
+    {
+      "type": 0,
+      "value": "Impossibile creare l'utente. Riprova."
+    }
+  ],
+  "admin.error.load-maps": [
+    {
+      "type": 0,
+      "value": "Impossibile caricare le mappe: "
+    },
+    {
+      "type": 1,
+      "value": "message"
+    }
+  ],
+  "admin.error.load-users": [
+    {
+      "type": 0,
+      "value": "Impossibile caricare gli utenti: "
+    },
+    {
+      "type": 1,
+      "value": "message"
+    }
+  ],
+  "admin.error.unknown": [
+    {
+      "type": 0,
+      "value": "Errore sconosciuto"
+    }
+  ],
+  "admin.error.update-map-failed": [
+    {
+      "type": 0,
+      "value": "Impossibile aggiornare la mappa. Riprova."
+    }
+  ],
+  "admin.error.update-user-failed": [
+    {
+      "type": 0,
+      "value": "Impossibile aggiornare l'utente. Riprova."
+    }
+  ],
+  "admin.facebook.filter-tooltip": [
+    {
+      "type": 0,
+      "value": "Ricerca per eliminazione dati Facebook"
+    }
+  ],
+  "admin.facebook.id-label": [
+    {
+      "type": 0,
+      "value": "ID utente Facebook"
+    }
+  ],
+  "admin.facebook.lookup-button": [
+    {
+      "type": 0,
+      "value": "Trova account"
+    }
+  ],
+  "admin.facebook.lookup-not-found": [
+    {
+      "type": 0,
+      "value": "Nessun account trovato per questo ID utente Facebook."
+    }
+  ],
+  "admin.facebook.remove": [
+    {
+      "type": 0,
+      "value": "Rimuovi"
+    }
+  ],
+  "admin.facebook.remove-button": [
+    {
+      "type": 0,
+      "value": "Rimuovi account Facebook"
+    }
+  ],
+  "admin.facebook.remove-confirm": [
+    {
+      "type": 0,
+      "value": "Rimuovere l'associazione Facebook per \""
+    },
+    {
+      "type": 1,
+      "value": "email"
+    },
+    {
+      "type": 0,
+      "value": "\"?"
+    }
+  ],
+  "admin.facebook.remove-dialog-title": [
+    {
+      "type": 0,
+      "value": "Rimuovi account Facebook"
+    }
+  ],
+  "admin.facebook.remove-warning": [
+    {
+      "type": 0,
+      "value": "Questa operazione scollegherà l'autenticazione Facebook da questo account. L'utente riceverà un'email di reimpostazione della password per riottenere l'accesso."
+    }
+  ],
+  "admin.facebook.removing": [
+    {
+      "type": 0,
+      "value": "Rimozione..."
+    }
+  ],
+  "admin.filter.all": [
+    {
+      "type": 0,
+      "value": "Tutti"
+    }
+  ],
+  "admin.lock-status": [
+    {
+      "type": 0,
+      "value": "Stato blocco"
+    }
+  ],
+  "admin.locked": [
+    {
+      "type": 0,
+      "value": "Bloccato"
+    }
+  ],
+  "admin.maps.clean-tooltip": [
+    {
+      "type": 0,
+      "value": "Non contrassegnata come spam"
+    }
+  ],
+  "admin.maps.creator-suspended-tooltip": [
+    {
+      "type": 0,
+      "value": "L'account del creatore della mappa è stato sospeso da un amministratore"
+    }
+  ],
+  "admin.maps.delete": [
+    {
+      "type": 0,
+      "value": "Elimina mappa"
+    }
+  ],
+  "admin.maps.description": [
+    {
+      "type": 0,
+      "value": "Descrizione"
+    }
+  ],
+  "admin.maps.edit": [
+    {
+      "type": 0,
+      "value": "Modifica mappa"
+    }
+  ],
+  "admin.maps.edit-title": [
+    {
+      "type": 0,
+      "value": "Modifica mappa"
+    }
+  ],
+  "admin.maps.filter.all-time": [
+    {
+      "type": 0,
+      "value": "Sempre"
+    }
+  ],
+  "admin.maps.filter.date": [
+    {
+      "type": 0,
+      "value": "Intervallo di date"
+    }
+  ],
+  "admin.maps.filter.last-months": [
+    {
+      "type": 6,
+      "value": "count",
+      "options": {
+        "one": {
+          "value": [
+            {
+              "type": 0,
+              "value": "Ultimo "
+            },
+            {
+              "type": 7
+            },
+            {
+              "type": 0,
+              "value": " mese"
+            }
+          ]
+        },
+        "other": {
+          "value": [
+            {
+              "type": 0,
+              "value": "Ultimi "
+            },
+            {
+              "type": 7
+            },
+            {
+              "type": 0,
+              "value": " mesi"
+            }
+          ]
+        }
+      },
+      "offset": 0,
+      "pluralType": "cardinal"
+    }
+  ],
+  "admin.maps.filter.not-spam": [
+    {
+      "type": 0,
+      "value": "Non spam"
+    }
+  ],
+  "admin.maps.filter.spam": [
+    {
+      "type": 0,
+      "value": "Spam"
+    }
+  ],
+  "admin.maps.locked-by": [
+    {
+      "type": 0,
+      "value": "Bloccata da "
+    },
+    {
+      "type": 1,
+      "value": "user"
+    }
+  ],
+  "admin.maps.locked-tooltip": [
+    {
+      "type": 0,
+      "value": "Attualmente in modifica da parte di "
+    },
+    {
+      "type": 1,
+      "value": "user"
+    }
+  ],
+  "admin.maps.mark-as-not-spam": [
+    {
+      "type": 0,
+      "value": "Contrassegna come non spam"
+    }
+  ],
+  "admin.maps.mark-as-spam": [
+    {
+      "type": 0,
+      "value": "Contrassegna come spam"
+    }
+  ],
+  "admin.maps.no-description": [
+    {
+      "type": 0,
+      "value": "Nessuna descrizione"
+    }
+  ],
+  "admin.maps.no-maps": [
+    {
+      "type": 0,
+      "value": "Nessuna mappa trovata"
+    }
+  ],
+  "admin.maps.page-title": [
+    {
+      "type": 0,
+      "value": "Gestione mappe"
+    }
+  ],
+  "admin.maps.private-tooltip": [
+    {
+      "type": 0,
+      "value": "Solo i collaboratori possono visualizzare questa mappa"
+    }
+  ],
+  "admin.maps.public-tooltip": [
+    {
+      "type": 0,
+      "value": "Chiunque può visualizzare questa mappa"
+    }
+  ],
+  "admin.maps.search": [
+    {
+      "type": 0,
+      "value": "Cerca mappe... (#123 per ID, email per creatore)"
+    }
+  ],
+  "admin.maps.search-by-email": [
+    {
+      "type": 0,
+      "value": "🔍 Ricerca per email del creatore"
+    }
+  ],
+  "admin.maps.search-by-id": [
+    {
+      "type": 0,
+      "value": "🔍 Ricerca per ID mappa"
+    }
+  ],
+  "admin.maps.search-by-text": [
+    {
+      "type": 0,
+      "value": "🔍 Ricerca in titoli e descrizioni"
+    }
+  ],
+  "admin.maps.spam-label": [
+    {
+      "type": 0,
+      "value": "Spam ("
+    },
+    {
+      "type": 1,
+      "value": "type"
+    },
+    {
+      "type": 0,
+      "value": ")"
+    }
+  ],
+  "admin.maps.spam-tooltip": [
+    {
+      "type": 0,
+      "value": "Rilevata come spam il "
+    },
+    {
+      "type": 1,
+      "value": "date"
+    }
+  ],
+  "admin.maps.spam-tooltip-no-date": [
+    {
+      "type": 0,
+      "value": "Contrassegnata come spam"
+    }
+  ],
+  "admin.maps.spam-type-unknown": [
+    {
+      "type": 0,
+      "value": "Sconosciuto"
+    }
+  ],
+  "admin.maps.suspend-user": [
+    {
+      "type": 0,
+      "value": "Sospendi account utente"
+    }
+  ],
+  "admin.maps.suspend-user.confirm": [
+    {
+      "type": 0,
+      "value": "Sei sicuro di voler sospendere l'account dell'utente \""
+    },
+    {
+      "type": 1,
+      "value": "userName"
+    },
+    {
+      "type": 0,
+      "value": "\" (ID: "
+    },
+    {
+      "type": 1,
+      "value": "userId"
+    },
+    {
+      "type": 0,
+      "value": ")? La sospensione verrà registrata come revisione manuale."
+    }
+  ],
+  "admin.maps.suspend-user.confirm-button": [
+    {
+      "type": 0,
+      "value": "Sospendi utente"
+    }
+  ],
+  "admin.maps.suspend-user.title": [
+    {
+      "type": 0,
+      "value": "Sospendi account utente"
+    }
+  ],
+  "admin.maps.suspend-user.warning": [
+    {
+      "type": 0,
+      "value": "Questa azione sospenderà l'account utente, impedendogli di accedere al sistema."
+    }
+  ],
+  "admin.maps.table.actions": [
+    {
+      "type": 0,
+      "value": "Azioni"
+    }
+  ],
+  "admin.maps.table.collaborators": [
+    {
+      "type": 0,
+      "value": "Collaboratori"
+    }
+  ],
+  "admin.maps.table.created": [
+    {
+      "type": 0,
+      "value": "Creata"
+    }
+  ],
+  "admin.maps.table.created-by": [
+    {
+      "type": 0,
+      "value": "Creata da"
+    }
+  ],
+  "admin.maps.table.description": [
+    {
+      "type": 0,
+      "value": "Descrizione"
+    }
+  ],
+  "admin.maps.table.id": [
+    {
+      "type": 0,
+      "value": "ID mappa"
+    }
+  ],
+  "admin.maps.table.modified": [
+    {
+      "type": 0,
+      "value": "Modificata"
+    }
+  ],
+  "admin.maps.table.spam": [
+    {
+      "type": 0,
+      "value": "Spam"
+    }
+  ],
+  "admin.maps.table.spam-status": [
+    {
+      "type": 0,
+      "value": "Stato spam"
+    }
+  ],
+  "admin.maps.table.status": [
+    {
+      "type": 0,
+      "value": "Stato"
+    }
+  ],
+  "admin.maps.table.title": [
+    {
+      "type": 0,
+      "value": "Titolo"
+    }
+  ],
+  "admin.maps.title": [
+    {
+      "type": 0,
+      "value": "Titolo"
+    }
+  ],
+  "admin.maps.unknown-user": [
+    {
+      "type": 0,
+      "value": "utente sconosciuto"
+    }
+  ],
+  "admin.maps.unlocked-tooltip": [
+    {
+      "type": 0,
+      "value": "Attualmente non in modifica"
+    }
+  ],
+  "admin.maps.view-xml": [
+    {
+      "type": 0,
+      "value": "Visualizza XML"
+    }
+  ],
+  "admin.maps.xml-viewer.copy": [
+    {
+      "type": 0,
+      "value": "Copia XML formattato"
+    }
+  ],
+  "admin.maps.xml-viewer.error": [
+    {
+      "type": 0,
+      "value": "Errore durante il caricamento dell'XML: "
+    },
+    {
+      "type": 1,
+      "value": "message"
+    }
+  ],
+  "admin.maps.xml-viewer.info": [
+    {
+      "type": 0,
+      "value": "Questo è il contenuto XML grezzo della mappa mentale. Puoi copiarlo a scopo di backup o di analisi."
+    }
+  ],
+  "admin.maps.xml-viewer.loading": [
+    {
+      "type": 0,
+      "value": "Caricamento del contenuto XML..."
+    }
+  ],
+  "admin.maps.xml-viewer.no-content": [
+    {
+      "type": 0,
+      "value": "Nessun contenuto XML disponibile"
+    }
+  ],
+  "admin.maps.xml-viewer.subtitle": [
+    {
+      "type": 1,
+      "value": "title"
+    },
+    {
+      "type": 0,
+      "value": " (ID: "
+    },
+    {
+      "type": 1,
+      "value": "id"
+    },
+    {
+      "type": 0,
+      "value": ")"
+    }
+  ],
+  "admin.maps.xml-viewer.title": [
+    {
+      "type": 0,
+      "value": "Contenuto XML della mappa"
+    }
+  ],
+  "admin.menu.accounts": [
+    {
+      "type": 0,
+      "value": "Account"
+    }
+  ],
+  "admin.menu.maps": [
+    {
+      "type": 0,
+      "value": "Mappe"
+    }
+  ],
+  "admin.menu.system": [
+    {
+      "type": 0,
+      "value": "Sistema"
+    }
+  ],
+  "admin.new-password": [
+    {
+      "type": 0,
+      "value": "Nuova Password"
+    }
+  ],
+  "admin.password-error-facebook": [
+    {
+      "type": 0,
+      "value": "Questo utente è autenticato tramite Facebook. La modifica della password non è disponibile per gli account Facebook. Chiedi all'utente di gestire la propria password tramite il proprio account Facebook."
+    }
+  ],
+  "admin.password-error-failed": [
+    {
+      "type": 0,
+      "value": "Impossibile modificare la password"
+    }
+  ],
+  "admin.password-error-google": [
+    {
+      "type": 0,
+      "value": "Questo utente è autenticato tramite Google. La modifica della password non è disponibile per gli account Google. Chiedi all'utente di gestire la propria password tramite il proprio account Google."
+    }
+  ],
+  "admin.password-error-length": [
+    {
+      "type": 0,
+      "value": "La password deve contenere almeno 6 caratteri"
+    }
+  ],
+  "admin.password-error-mismatch": [
+    {
+      "type": 0,
+      "value": "Le password non corrispondono"
+    }
+  ],
+  "admin.private": [
+    {
+      "type": 0,
+      "value": "Privato"
+    }
+  ],
+  "admin.prompt.new-user-password": [
+    {
+      "type": 0,
+      "value": "Inserisci la password per il nuovo utente:"
+    }
+  ],
+  "admin.public": [
+    {
+      "type": 0,
+      "value": "Pubblico"
+    }
+  ],
+  "admin.public-access": [
+    {
+      "type": 0,
+      "value": "Accesso pubblico"
+    }
+  ],
+  "admin.refresh": [
+    {
+      "type": 0,
+      "value": "Aggiorna"
+    }
+  ],
+  "admin.status-active": [
+    {
+      "type": 0,
+      "value": "Attivo"
+    }
+  ],
+  "admin.status-active-tooltip": [
+    {
+      "type": 0,
+      "value": "L'account è attivato e in regola"
+    }
+  ],
+  "admin.status-active-tooltip-interactive": [
+    {
+      "type": 0,
+      "value": "L'account è attivato e in regola | Fai clic per cambiare lo stato"
+    }
+  ],
+  "admin.status-clean": [
+    {
+      "type": 0,
+      "value": "Non spam"
+    }
+  ],
+  "admin.status-not-activated": [
+    {
+      "type": 0,
+      "value": "Non attivato"
+    }
+  ],
+  "admin.status-not-activated-tooltip": [
+    {
+      "type": 0,
+      "value": "L'utente non ha ancora confermato il proprio indirizzo email"
+    }
+  ],
+  "admin.status-not-activated-tooltip-interactive": [
+    {
+      "type": 0,
+      "value": "L'utente non ha ancora confermato il proprio indirizzo email | Fai clic per cambiare lo stato"
+    }
+  ],
+  "admin.status-suspended": [
+    {
+      "type": 0,
+      "value": "Sospeso"
+    }
+  ],
+  "admin.status.click-to-change": [
+    {
+      "type": 0,
+      "value": "Fai clic per cambiare lo stato"
+    }
+  ],
+  "admin.status.reason": [
+    {
+      "type": 0,
+      "value": "Motivo: "
+    },
+    {
+      "type": 1,
+      "value": "reason"
+    }
+  ],
+  "admin.status.suspended-on": [
+    {
+      "type": 0,
+      "value": "Sospeso il: "
+    },
+    {
+      "type": 1,
+      "value": "date"
+    }
+  ],
+  "admin.suspend-user": [
+    {
+      "type": 0,
+      "value": "Sospendi utente"
+    }
+  ],
+  "admin.suspension-reason": [
+    {
+      "type": 0,
+      "value": "Motivo sospensione"
+    }
+  ],
+  "admin.suspension-status": [
+    {
+      "type": 0,
+      "value": "Stato sospensione"
+    }
+  ],
+  "admin.suspension.abuse": [
+    {
+      "type": 0,
+      "value": "Abuso"
+    }
+  ],
+  "admin.suspension.inactivity": [
+    {
+      "type": 0,
+      "value": "Inattività"
+    }
+  ],
+  "admin.suspension.manual-review": [
+    {
+      "type": 0,
+      "value": "Revisione manuale"
+    }
+  ],
+  "admin.suspension.other": [
+    {
+      "type": 0,
+      "value": "Altro"
+    }
+  ],
+  "admin.suspension.security-concern": [
+    {
+      "type": 0,
+      "value": "Preoccupazione di sicurezza"
+    }
+  ],
+  "admin.suspension.terms-violation": [
+    {
+      "type": 0,
+      "value": "Violazione dei termini"
+    }
+  ],
+  "admin.system.app.name": [
+    {
+      "type": 0,
+      "value": "Nome"
+    }
+  ],
+  "admin.system.app.port": [
+    {
+      "type": 0,
+      "value": "Porta"
+    }
+  ],
+  "admin.system.application": [
+    {
+      "type": 0,
+      "value": "Applicazione"
+    }
+  ],
+  "admin.system.database": [
+    {
+      "type": 0,
+      "value": "Database"
+    }
+  ],
+  "admin.system.database.info": [
+    {
+      "type": 0,
+      "value": "Database"
+    }
+  ],
+  "admin.system.db.ddl": [
+    {
+      "type": 0,
+      "value": "Hibernate DDL"
+    }
+  ],
+  "admin.system.db.driver": [
+    {
+      "type": 0,
+      "value": "Driver"
+    }
+  ],
+  "admin.system.db.url": [
+    {
+      "type": 0,
+      "value": "URL"
+    }
+  ],
+  "admin.system.db.username": [
+    {
+      "type": 0,
+      "value": "Nome utente"
+    }
+  ],
+  "admin.system.error": [
+    {
+      "type": 0,
+      "value": "Impossibile caricare le informazioni di sistema"
+    }
+  ],
+  "admin.system.health": [
+    {
+      "type": 0,
+      "value": "Stato del sistema"
+    }
+  ],
+  "admin.system.health.down": [
+    {
+      "type": 0,
+      "value": "Non attivo"
+    }
+  ],
+  "admin.system.health.unknown": [
+    {
+      "type": 0,
+      "value": "Sconosciuto"
+    }
+  ],
+  "admin.system.health.up": [
+    {
+      "type": 0,
+      "value": "Attivo"
+    }
+  ],
+  "admin.system.health.warning": [
+    {
+      "type": 0,
+      "value": "Avviso"
+    }
+  ],
+  "admin.system.jvm": [
+    {
+      "type": 0,
+      "value": "JVM"
+    }
+  ],
+  "admin.system.jvm.load": [
+    {
+      "type": 0,
+      "value": "Carico del sistema"
+    }
+  ],
+  "admin.system.jvm.processors": [
+    {
+      "type": 0,
+      "value": "Processori"
+    }
+  ],
+  "admin.system.jvm.start": [
+    {
+      "type": 0,
+      "value": "Ora di avvio"
+    }
+  ],
+  "admin.system.jvm.uptime": [
+    {
+      "type": 0,
+      "value": "Tempo di attività"
+    }
+  ],
+  "admin.system.jvm.vendor": [
+    {
+      "type": 0,
+      "value": "Fornitore"
+    }
+  ],
+  "admin.system.jvm.version": [
+    {
+      "type": 0,
+      "value": "Versione Java"
+    }
+  ],
+  "admin.system.loading": [
+    {
+      "type": 0,
+      "value": "Caricamento delle informazioni di sistema..."
+    }
+  ],
+  "admin.system.memory": [
+    {
+      "type": 0,
+      "value": "Memoria"
+    }
+  ],
+  "admin.system.memory.info": [
+    {
+      "type": 0,
+      "value": "Memoria"
+    }
+  ],
+  "admin.system.memory.max": [
+    {
+      "type": 0,
+      "value": "Memoria massima"
+    }
+  ],
+  "admin.system.memory.total": [
+    {
+      "type": 0,
+      "value": "Memoria totale"
+    }
+  ],
+  "admin.system.memory.usage": [
+    {
+      "type": 0,
+      "value": "Utilizzo memoria"
+    }
+  ],
+  "admin.system.memory.used": [
+    {
+      "type": 0,
+      "value": "Memoria utilizzata"
+    }
+  ],
+  "admin.system.mindmapMetrics.collaborations": [
+    {
+      "type": 0,
+      "value": "Collaborazioni considerate"
+    }
+  ],
+  "admin.system.mindmapMetrics.disabled": [
+    {
+      "type": 0,
+      "value": "Imposta `app.monitoring.performance.log-mindmap-listing` a true per raccogliere le metriche."
+    }
+  ],
+  "admin.system.mindmapMetrics.entityLoads": [
+    {
+      "type": 0,
+      "value": "Caricamenti di entità"
+    }
+  ],
+  "admin.system.mindmapMetrics.executedStatements": [
+    {
+      "type": 0,
+      "value": "Prepared statement"
+    }
+  ],
+  "admin.system.mindmapMetrics.lastUpdated": [
+    {
+      "type": 0,
+      "value": "Ultimo aggiornamento"
+    }
+  ],
+  "admin.system.mindmapMetrics.mapCount": [
+    {
+      "type": 0,
+      "value": "Mappe restituite"
+    }
+  ],
+  "admin.system.mindmapMetrics.pending": [
+    {
+      "type": 0,
+      "value": "In attesa della prossima richiesta di elenco delle mappe mentali per raccogliere le metriche."
+    }
+  ],
+  "admin.system.mindmapMetrics.segments": [
+    {
+      "type": 0,
+      "value": "Segmenti di esecuzione"
+    }
+  ],
+  "admin.system.mindmapMetrics.title": [
+    {
+      "type": 0,
+      "value": "Prestazioni dell'elenco delle mappe mentali"
+    }
+  ],
+  "admin.system.mindmapMetrics.topQueries": [
+    {
+      "type": 0,
+      "value": "Query principali"
+    }
+  ],
+  "admin.system.mindmapMetrics.totalTime": [
+    {
+      "type": 0,
+      "value": "Tempo totale (ms)"
+    }
+  ],
+  "admin.system.refresh": [
+    {
+      "type": 0,
+      "value": "Aggiorna"
+    }
+  ],
+  "admin.system.statistics": [
+    {
+      "type": 0,
+      "value": "Statistiche"
+    }
+  ],
+  "admin.system.stats.mindmaps": [
+    {
+      "type": 0,
+      "value": "Mappe mentali totali"
+    }
+  ],
+  "admin.system.stats.users": [
+    {
+      "type": 0,
+      "value": "Utenti totali"
+    }
+  ],
+  "admin.system.title": [
+    {
+      "type": 0,
+      "value": "Informazioni di sistema"
+    }
+  ],
+  "admin.unlocked": [
+    {
+      "type": 0,
+      "value": "Sbloccato"
+    }
+  ],
+  "admin.unsuspend-user": [
+    {
+      "type": 0,
+      "value": "Ripristina utente"
+    }
+  ],
+  "admin.user-info.auth-type": [
+    {
+      "type": 0,
+      "value": "Autenticazione"
+    }
+  ],
+  "admin.user-info.created": [
+    {
+      "type": 0,
+      "value": "Creato"
+    }
+  ],
+  "admin.user-info.status": [
+    {
+      "type": 0,
+      "value": "Stato"
+    }
+  ],
+  "admin.user-info.suspension-reason-value": [
+    {
+      "type": 0,
+      "value": "Motivo della sospensione: "
+    },
+    {
+      "type": 1,
+      "value": "reason"
+    }
+  ],
+  "admin.user-info.title": [
+    {
+      "type": 0,
+      "value": "Informazioni utente"
+    }
+  ],
+  "admin.user-info.total-maps": [
+    {
+      "type": 0,
+      "value": "Mappe totali"
+    }
+  ],
+  "admin.user-maps-dialog.loading": [
+    {
+      "type": 0,
+      "value": "Caricamento utente..."
+    }
+  ],
+  "admin.user-maps-dialog.no-maps": [
+    {
+      "type": 0,
+      "value": "Questo utente non ha mappe."
+    }
+  ],
+  "admin.user-maps-dialog.title": [
+    {
+      "type": 0,
+      "value": "Mappe di proprietà di "
+    },
+    {
+      "type": 1,
+      "value": "name"
+    },
+    {
+      "type": 0,
+      "value": " (ID: #"
+    },
+    {
+      "type": 1,
+      "value": "id"
+    },
+    {
+      "type": 0,
+      "value": ")"
+    }
+  ],
+  "admin.validation.email-invalid": [
+    {
+      "type": 0,
+      "value": "Formato email non valido"
+    }
+  ],
+  "admin.validation.email-required": [
+    {
+      "type": 0,
+      "value": "L'email è obbligatoria"
+    }
+  ],
+  "admin.validation.firstname-required": [
+    {
+      "type": 0,
+      "value": "Il nome è obbligatorio"
+    }
+  ],
+  "admin.validation.lastname-required": [
+    {
+      "type": 0,
+      "value": "Il cognome è obbligatorio"
+    }
+  ],
+  "admin.validation.title-required": [
+    {
+      "type": 0,
+      "value": "Il titolo è obbligatorio"
+    }
+  ],
+  "admin.view-user-maps": [
+    {
+      "type": 0,
+      "value": "Visualizza mappe dell'utente"
+    }
+  ],
+  "admin.view-xml": [
+    {
+      "type": 0,
+      "value": "Visualizza XML"
+    }
+  ],
+  "changepwd.confirm-password": [
+    {
+      "type": 0,
+      "value": "Conferma Password"
+    }
+  ],
+  "changepwd.description": [
+    {
+      "type": 0,
+      "value": "Per favore, fornisci la nuova password per il tuo account."
+    }
+  ],
+  "changepwd.password": [
+    {
+      "type": 0,
+      "value": "Password"
+    }
+  ],
+  "changepwd.password-match": [
+    {
+      "type": 0,
+      "value": "Le password non corrispondono. Per favore, riprova."
+    }
+  ],
+  "changepwd.password-max-length": [
+    {
+      "type": 0,
+      "value": "La password non può superare i 39 caratteri."
+    }
+  ],
+  "changepwd.password-min-length": [
+    {
+      "type": 0,
+      "value": "La password deve contenere almeno 8 caratteri."
+    }
+  ],
+  "changepwd.password-required": [
+    {
+      "type": 0,
+      "value": "La password non può essere vuota."
+    }
+  ],
+  "changepwd.title": [
+    {
+      "type": 0,
+      "value": "Cambia Password"
+    }
+  ],
+  "common.allow-email-notifications": [
+    {
+      "type": 0,
+      "value": "Consenti notifiche email"
+    }
+  ],
+  "common.cancel": [
+    {
+      "type": 0,
+      "value": "Annulla"
+    }
+  ],
+  "common.close": [
+    {
+      "type": 0,
+      "value": "Chiudi"
+    }
+  ],
+  "common.delete": [
+    {
+      "type": 0,
+      "value": "Elimina"
+    }
+  ],
+  "common.delete-tag": [
+    {
+      "type": 0,
+      "value": "Elimina tag"
+    }
+  ],
+  "common.disabled": [
+    {
+      "type": 0,
+      "value": "Disabilitato"
+    }
+  ],
+  "common.email": [
+    {
+      "type": 0,
+      "value": "Email"
+    }
+  ],
+  "common.emails": [
+    {
+      "type": 0,
+      "value": "Email"
+    }
+  ],
+  "common.enabled": [
+    {
+      "type": 0,
+      "value": "Abilitato"
+    }
+  ],
+  "common.first-name": [
+    {
+      "type": 0,
+      "value": "Nome"
+    }
+  ],
+  "common.last-name": [
+    {
+      "type": 0,
+      "value": "Cognome"
+    }
+  ],
+  "common.loading": [
+    {
+      "type": 0,
+      "value": "Caricamento..."
+    }
+  ],
+  "common.locale": [
+    {
+      "type": 0,
+      "value": "Lingua"
+    }
+  ],
+  "common.login-form": [
+    {
+      "type": 0,
+      "value": "Modulo di accesso"
+    }
+  ],
+  "common.logo": [
+    {
+      "type": 0,
+      "value": "Logo di WiseMapping"
+    }
+  ],
+  "common.maps-list": [
+    {
+      "type": 0,
+      "value": "Elenco mappe"
+    }
+  ],
+  "common.na": [
+    {
+      "type": 0,
+      "value": "N/D"
+    }
+  ],
+  "common.open-drawer": [
+    {
+      "type": 0,
+      "value": "Apri menu"
+    }
+  ],
+  "common.others": [
+    {
+      "type": 0,
+      "value": "Altri"
+    }
+  ],
+  "common.refresh": [
+    {
+      "type": 0,
+      "value": "Aggiorna"
+    }
+  ],
+  "common.registration-form": [
+    {
+      "type": 0,
+      "value": "Modulo di registrazione"
+    }
+  ],
+  "common.retry": [
+    {
+      "type": 0,
+      "value": "Riprova"
+    }
+  ],
+  "common.save": [
+    {
+      "type": 0,
+      "value": "Salva"
+    }
+  ],
+  "common.settings": [
+    {
+      "type": 0,
+      "value": "Impostazioni"
+    }
+  ],
+  "common.terms-notice": [
+    {
+      "type": 0,
+      "value": "Continuando, accetti i nostri "
+    },
+    {
+      "type": 8,
+      "value": "termsLink",
+      "children": [
+        {
+          "type": 0,
+          "value": "Termini di servizio"
+        }
+      ]
+    },
+    {
+      "type": 0,
+      "value": " e la nostra "
+    },
+    {
+      "type": 8,
+      "value": "privacyLink",
+      "children": [
+        {
+          "type": 0,
+          "value": "Informativa sulla privacy"
+        }
+      ]
+    },
+    {
+      "type": 0,
+      "value": "."
+    }
+  ],
+  "common.wait": [
+    {
+      "type": 0,
+      "value": "Per favore attendi..."
+    }
+  ],
+  "create.button": [
+    {
+      "type": 0,
+      "value": "Crea"
+    }
+  ],
+  "create.description": [
+    {
+      "type": 0,
+      "value": "Per favore, inserisci il nome e la descrizione della nuova mappa."
+    }
+  ],
+  "create.title": [
+    {
+      "type": 0,
+      "value": "Crea una nuova mappa mentale"
+    }
+  ],
+  "deletem.count-title": [
+    {
+      "type": 6,
+      "value": "count",
+      "options": {
+        "one": {
+          "value": [
+            {
+              "type": 0,
+              "value": "Verrà eliminata "
+            },
+            {
+              "type": 7
+            },
+            {
+              "type": 0,
+              "value": " mappa"
+            }
+          ]
+        },
+        "other": {
+          "value": [
+            {
+              "type": 0,
+              "value": "Verranno eliminate "
+            },
+            {
+              "type": 7
+            },
+            {
+              "type": 0,
+              "value": " mappe"
+            }
+          ]
+        }
+      },
+      "offset": 0,
+      "pluralType": "cardinal"
+    }
+  ],
+  "deletem.more": [
+    {
+      "type": 0,
+      "value": "e altre "
+    },
+    {
+      "type": 1,
+      "value": "count"
+    }
+  ],
+  "dialog.close": [
+    {
+      "type": 0,
+      "value": "Chiudi la finestra"
+    }
+  ],
+  "duplicate.copy-title": [
+    {
+      "type": 0,
+      "value": "Copia di "
+    },
+    {
+      "type": 1,
+      "value": "title"
+    }
+  ],
+  "duplicate.title": [
+    {
+      "type": 0,
+      "value": "Duplica"
+    }
+  ],
+  "editor.conflict.description": [
+    {
+      "type": 0,
+      "value": "Una versione più recente di questa mappa mentale è stata salvata su un altro dispositivo. Aggiorna la pagina per caricare la versione più recente ed evitare di sovrascrivere le modifiche recenti."
+    }
+  ],
+  "editor.conflict.refresh": [
+    {
+      "type": 0,
+      "value": "Aggiorna pagina"
+    }
+  ],
+  "editor.conflict.title": [
+    {
+      "type": 0,
+      "value": "Mappa mentale aggiornata altrove"
+    }
+  ],
+  "error.contact-support": [
+    {
+      "type": 0,
+      "value": "Hai bisogno di aiuto? Contattaci all'indirizzo "
+    },
+    {
+      "type": 1,
+      "value": "support"
+    }
+  ],
+  "error.generic-message": [
+    {
+      "type": 0,
+      "value": "Riprova più tardi o contatta il supporto se il problema continua."
+    }
+  ],
+  "error.generic-title": [
+    {
+      "type": 0,
+      "value": "Abbiamo riscontrato un problema."
+    }
+  ],
+  "error.go-back": [
+    {
+      "type": 0,
+      "value": "Torna indietro"
+    }
+  ],
+  "error.go-home": [
+    {
+      "type": 0,
+      "value": "Vai alla home"
+    }
+  ],
+  "error.go-to-login": [
+    {
+      "type": 0,
+      "value": "Accedi"
+    }
+  ],
+  "error.invalid-map-id": [
+    {
+      "type": 0,
+      "value": "ID mappa non valido"
+    }
+  ],
+  "error.map-title-required": [
+    {
+      "type": 0,
+      "value": "Il titolo della mappa è obbligatorio e non può essere vuoto"
+    }
+  ],
+  "error.map-unavailable-message": [
+    {
+      "type": 0,
+      "value": "Questa mappa mentale non è disponibile per la visualizzazione pubblica perché viola le nostre politiche del sito. Se hai bisogno di ulteriore assistenza, contatta support@wisemapping.com."
+    }
+  ],
+  "error.map-unavailable-title": [
+    {
+      "type": 0,
+      "value": "Questa mappa mentale non è disponibile per la visualizzazione pubblica."
+    }
+  ],
+  "error.not-found-message": [
+    {
+      "type": 0,
+      "value": "La pagina che stai cercando potrebbe essere stata rimossa, rinominata o essere temporaneamente non disponibile."
+    }
+  ],
+  "error.not-found-title": [
+    {
+      "type": 0,
+      "value": "Non riusciamo a trovare questa pagina."
+    }
+  ],
+  "error.page-title": [
+    {
+      "type": 0,
+      "value": "Errore imprevisto | WiseMapping"
+    }
+  ],
+  "error.permission-denied-message": [
+    {
+      "type": 0,
+      "value": "Se ritieni di dover avere accesso, contatta il tuo amministratore."
+    }
+  ],
+  "error.permission-denied-title": [
+    {
+      "type": 0,
+      "value": "Non hai accesso a questa pagina."
+    }
+  ],
+  "expired.description": [
+    {
+      "type": 0,
+      "value": "La tua sessione corrente è scaduta. Per favore, accedi e riprova."
+    }
+  ],
+  "expired.title": [
+    {
+      "type": 0,
+      "value": "La tua sessione è scaduta"
+    }
+  ],
+  "export.desc": [
+    {
+      "type": 0,
+      "value": "Esporta questa mappa nel formato che preferisci e inizia a usarla nelle tue presentazioni o condividila via email"
+    }
+  ],
+  "export.document": [
+    {
+      "type": 0,
+      "value": "Strumenti Mappa Mentale: Esporta la tua mappa mentale nei formati di strumenti di terze parti"
+    }
+  ],
+  "export.document-label": [
+    {
+      "type": 0,
+      "value": "Documento: Esporta la tua mappa mentale in un documento autonomo pronto da condividere"
+    }
+  ],
+  "export.image": [
+    {
+      "type": 0,
+      "value": "Immagine: Ottieni una rappresentazione grafica della tua mappa inclusi tutti i colori e le forme."
+    }
+  ],
+  "export.img-center": [
+    {
+      "type": 0,
+      "value": "Centra e adatta allo zoom"
+    }
+  ],
+  "export.title": [
+    {
+      "type": 0,
+      "value": "Esporta"
+    }
+  ],
+  "export.warning": [
+    {
+      "type": 0,
+      "value": "L'esportazione in Immagine (SVG,PNG,JPEG,PDF) è disponibile solo nella barra degli strumenti dell'editor."
+    }
+  ],
+  "footer.aboutus": [
+    {
+      "type": 0,
+      "value": "Chi Siamo"
+    }
+  ],
+  "footer.col-community": [
+    {
+      "type": 0,
+      "value": "Comunità"
+    }
+  ],
+  "footer.col-company": [
+    {
+      "type": 0,
+      "value": "Azienda"
+    }
+  ],
+  "footer.col-support": [
+    {
+      "type": 0,
+      "value": "Supporto"
+    }
+  ],
+  "footer.contactus": [
+    {
+      "type": 0,
+      "value": "Contattaci"
+    }
+  ],
+  "footer.copyright": [
+    {
+      "type": 0,
+      "value": "© "
+    },
+    {
+      "type": 1,
+      "value": "year"
+    },
+    {
+      "type": 0,
+      "value": " WiseMapping LLC"
+    }
+  ],
+  "footer.donations": [
+    {
+      "type": 0,
+      "value": "Donazioni"
+    }
+  ],
+  "footer.faq": [
+    {
+      "type": 0,
+      "value": "F.A.Q."
+    }
+  ],
+  "footer.feedback": [
+    {
+      "type": 0,
+      "value": "Feedback"
+    }
+  ],
+  "footer.news": [
+    {
+      "type": 0,
+      "value": "Novità"
+    }
+  ],
+  "footer.opensource": [
+    {
+      "type": 0,
+      "value": "Open Source"
+    }
+  ],
+  "footer.powered-by": [
+    {
+      "type": 0,
+      "value": "Realizzato con WiseMapping"
+    }
+  ],
+  "footer.privacypolicy": [
+    {
+      "type": 0,
+      "value": "Informativa sulla privacy"
+    }
+  ],
+  "footer.termsandconditions": [
+    {
+      "type": 0,
+      "value": "Termini e Condizioni"
+    }
+  ],
+  "footer.twitter": [
+    {
+      "type": 0,
+      "value": "X"
+    }
+  ],
+  "forgot.desc": [
+    {
+      "type": 0,
+      "value": "Ti invieremo un'email per reimpostare la tua password."
+    }
+  ],
+  "forgot.email": [
+    {
+      "type": 0,
+      "value": "Email"
+    }
+  ],
+  "forgot.oauth.back": [
+    {
+      "type": 0,
+      "value": "Torna al login"
+    }
+  ],
+  "forgot.oauth.message": [
+    {
+      "type": 0,
+      "value": "Non hai bisogno di una password, per favore accedi usando Facebook o Google."
+    }
+  ],
+  "forgot.page-title": [
+    {
+      "type": 0,
+      "value": "Password Dimenticata | WiseMapping"
+    }
+  ],
+  "forgot.register": [
+    {
+      "type": 0,
+      "value": "Invia link di recupero"
+    }
+  ],
+  "forgot.success.desc": [
+    {
+      "type": 0,
+      "value": "Ti abbiamo inviato via email un link per reimpostare la password. Il link scade tra 1 ora. La tua password attuale resta invariata finché non usi il link."
+    }
+  ],
+  "forgot.success.title": [
+    {
+      "type": 0,
+      "value": "Controlla la tua email."
+    }
+  ],
+  "forgot.title": [
+    {
+      "type": 0,
+      "value": "Reimposta la tua password"
+    }
+  ],
+  "forgotsuccess.page-title": [
+    {
+      "type": 0,
+      "value": "Password Recuperata | WiseMapping"
+    }
+  ],
+  "header.donthaveaccount": [
+    {
+      "type": 0,
+      "value": "Non hai un account?"
+    }
+  ],
+  "header.haveaccount": [
+    {
+      "type": 0,
+      "value": "Hai già un account?"
+    }
+  ],
+  "help.support": [
+    {
+      "type": 0,
+      "value": "Supporto"
+    }
+  ],
+  "history.no-changes": [
+    {
+      "type": 0,
+      "value": "Non ci sono modifiche disponibili"
+    }
+  ],
+  "import.button": [
+    {
+      "type": 0,
+      "value": "Importa"
+    }
+  ],
+  "import.description": [
+    {
+      "type": 0,
+      "value": "Puoi importare mappe WiseMapping, FreeMind, Freeplane, XMind, MindManager e OPML nella tua lista di mappe. Seleziona il file che vuoi importare."
+    }
+  ],
+  "import.error-file": [
+    {
+      "type": 0,
+      "value": "Errore di importazione "
+    },
+    {
+      "type": 1,
+      "value": "error"
+    }
+  ],
+  "import.error-unsupported-file": [
+    {
+      "type": 0,
+      "value": "Il tipo di file non è supportato. Puoi importare mappe WiseMapping, FreeMind, Freeplane, XMind, MindManager e OPML."
+    }
+  ],
+  "import.title": [
+    {
+      "type": 0,
+      "value": "Importa mappa mentale esistente"
+    }
+  ],
+  "info.basic-info": [
+    {
+      "type": 0,
+      "value": "Informazioni Base"
+    }
+  ],
+  "info.creation-time": [
+    {
+      "type": 0,
+      "value": "Data di Creazione"
+    }
+  ],
+  "info.creator": [
+    {
+      "type": 0,
+      "value": "Creatore"
+    }
+  ],
+  "info.modified-time": [
+    {
+      "type": 0,
+      "value": "Data Ultima Modifica"
+    }
+  ],
+  "info.modified-tny": [
+    {
+      "type": 0,
+      "value": "Ultima Modifica Di"
+    }
+  ],
+  "info.no-description": [
+    {
+      "type": 0,
+      "value": "Nessuna descrizione"
+    }
+  ],
+  "info.private": [
+    {
+      "type": 0,
+      "value": "Privata"
+    }
+  ],
+  "info.public": [
+    {
+      "type": 0,
+      "value": "Pubblica"
+    }
+  ],
+  "info.starred": [
+    {
+      "type": 0,
+      "value": "Preferiti"
+    }
+  ],
+  "info.subtitle": [
+    {
+      "type": 0,
+      "value": "Dettagli di questa mappa e delle persone che ci lavorano."
+    }
+  ],
+  "info.title": [
+    {
+      "type": 0,
+      "value": "Info"
+    }
+  ],
+  "label.add-button": [
+    {
+      "type": 0,
+      "value": "Aggiungi etichetta"
+    }
+  ],
+  "label.add-for": [
+    {
+      "type": 0,
+      "value": "Modifica etichette per"
+    }
+  ],
+  "label.add-placeholder": [
+    {
+      "type": 0,
+      "value": "Titolo etichetta"
+    }
+  ],
+  "label.change-color": [
+    {
+      "type": 0,
+      "value": "Cambia colore etichetta"
+    }
+  ],
+  "label.delete-description": [
+    {
+      "type": 0,
+      "value": "verrà eliminata, incluse le sue associazioni a tutte le mappe esistenti. Vuoi continuare?"
+    }
+  ],
+  "label.delete-title": [
+    {
+      "type": 0,
+      "value": "Conferma eliminazione etichetta"
+    }
+  ],
+  "label.description": [
+    {
+      "type": 0,
+      "value": "Usa le etichette per organizzare le tue mappe."
+    }
+  ],
+  "label.maps-count": [
+    {
+      "type": 1,
+      "value": "count"
+    },
+    {
+      "type": 0,
+      "value": " mappe"
+    }
+  ],
+  "label.title": [
+    {
+      "type": 0,
+      "value": "Aggiungi un'etichetta"
+    }
+  ],
+  "language.change": [
+    {
+      "type": 0,
+      "value": "Cambia Lingua"
+    }
+  ],
+  "language.help": [
+    {
+      "type": 0,
+      "value": "Aiuta a Tradurre"
+    }
+  ],
+  "language.help-dialog.description": [
+    {
+      "type": 0,
+      "value": "Abbiamo bisogno del tuo aiuto! Se ti interessa, inviaci un'email a "
+    },
+    {
+      "type": 1,
+      "value": "email"
+    },
+    {
+      "type": 0,
+      "value": "."
+    }
+  ],
+  "language.help-dialog.title": [
+    {
+      "type": 0,
+      "value": "Aiutaci a supportare più lingue!"
+    }
+  ],
+  "login.desc": [
+    {
+      "type": 0,
+      "value": "Accedi al tuo account"
+    }
+  ],
+  "login.division": [
+    {
+      "type": 0,
+      "value": "o"
+    }
+  ],
+  "login.email": [
+    {
+      "type": 0,
+      "value": "Email"
+    }
+  ],
+  "login.error": [
+    {
+      "type": 0,
+      "value": "L'indirizzo email o la password inseriti non sono validi."
+    }
+  ],
+  "login.facebook.button": [
+    {
+      "type": 0,
+      "value": "Accedi con Facebook"
+    }
+  ],
+  "login.forgotpwd": [
+    {
+      "type": 0,
+      "value": "Password Dimenticata?"
+    }
+  ],
+  "login.generic-error": [
+    {
+      "type": 0,
+      "value": "Si è verificato un errore durante l'autenticazione. Riprova."
+    }
+  ],
+  "login.google.button": [
+    {
+      "type": 0,
+      "value": "Accedi con Google"
+    }
+  ],
+  "login.oauth-error": [
+    {
+      "type": 0,
+      "value": "Autenticazione OAuth non riuscita. Riprova o usa un altro metodo di accesso."
+    }
+  ],
+  "login.oidc.button": [
+    {
+      "type": 0,
+      "value": "Accedi con "
+    },
+    {
+      "type": 1,
+      "value": "provider"
+    }
+  ],
+  "login.page-title": [
+    {
+      "type": 0,
+      "value": "Login | WiseMapping"
+    }
+  ],
+  "login.password": [
+    {
+      "type": 0,
+      "value": "Password"
+    }
+  ],
+  "login.server-error": [
+    {
+      "type": 0,
+      "value": "Si è verificato un errore imprevisto. Riprova più tardi."
+    }
+  ],
+  "login.shared-map-notice": [
+    {
+      "type": 0,
+      "value": "Una mappa mentale è stata condivisa con te. Effettua il login per accedervi. Non hai un account? Registrati gratuitamente o usa il tuo account Google/Facebook."
+    }
+  ],
+  "login.shared-map-notice.signin-only": [
+    {
+      "type": 0,
+      "value": "Una mappa mentale è stata condivisa con te. Effettua il login per accedervi."
+    }
+  ],
+  "login.signin": [
+    {
+      "type": 0,
+      "value": "Accedi"
+    }
+  ],
+  "login.signup": [
+    {
+      "type": 0,
+      "value": "Registrati"
+    }
+  ],
+  "login.title": [
+    {
+      "type": 0,
+      "value": "Benvenuto"
+    }
+  ],
+  "map.actions": [
+    {
+      "type": 0,
+      "value": "Azioni"
+    }
+  ],
+  "map.creator": [
+    {
+      "type": 0,
+      "value": "Creatore"
+    }
+  ],
+  "map.delete-selected": [
+    {
+      "type": 0,
+      "value": "Elimina selezionati"
+    }
+  ],
+  "map.labels": [
+    {
+      "type": 0,
+      "value": "Etichette"
+    }
+  ],
+  "map.last-update": [
+    {
+      "type": 0,
+      "value": "Ultimo Aggiornamento"
+    }
+  ],
+  "map.more-actions": [
+    {
+      "type": 0,
+      "value": "Altre Azioni"
+    }
+  ],
+  "map.name": [
+    {
+      "type": 0,
+      "value": "Nome"
+    }
+  ],
+  "map.tooltip-add": [
+    {
+      "type": 0,
+      "value": "Aggiungi etichetta ai selezionati"
+    }
+  ],
+  "maps.auth-required-default-message": [
+    {
+      "type": 0,
+      "value": "Devi accedere per visualizzare le tue mappe."
+    }
+  ],
+  "maps.auth-required-heading": [
+    {
+      "type": 0,
+      "value": "Accedi per consultare le tue mappe"
+    }
+  ],
+  "maps.auth-required-login": [
+    {
+      "type": 0,
+      "value": "Vai al login"
+    }
+  ],
+  "maps.auth-required-title": [
+    {
+      "type": 0,
+      "value": "Accesso richiesto | WiseMapping"
+    }
+  ],
+  "maps.choose-file": [
+    {
+      "type": 0,
+      "value": "Scegli un file"
+    }
+  ],
+  "maps.copilot-button": [
+    {
+      "type": 0,
+      "value": "Copilot IA"
+    }
+  ],
+  "maps.copilot-dialog.continue": [
+    {
+      "type": 0,
+      "value": "Apri Copilot"
+    }
+  ],
+  "maps.copilot-dialog.description": [
+    {
+      "type": 0,
+      "value": "Il Copilot IA è un assistente di brainstorming basato su ChatGPT che trasforma i tuoi prompt in mappe mentali strutturate. Lo apriremo in una nuova scheda così potrai ampliare le idee, generare argomenti e riportare il meglio in WiseMapping."
+    }
+  ],
+  "maps.copilot-dialog.title": [
+    {
+      "type": 0,
+      "value": "Copilot per mappe mentali con tecnologia ChatGPT"
+    }
+  ],
+  "maps.copilot-tooltip": [
+    {
+      "type": 0,
+      "value": "Avvia una mappa mentale con Copilot IA"
+    }
+  ],
+  "maps.create-tooltip": [
+    {
+      "type": 0,
+      "value": "Crea una nuova mappa mentale"
+    }
+  ],
+  "maps.empty-result": [
+    {
+      "type": 0,
+      "value": "Nessuna mappa mentale trovata con i criteri di filtro correnti."
+    }
+  ],
+  "maps.import-desc": [
+    {
+      "type": 0,
+      "value": "Importa da altri strumenti"
+    }
+  ],
+  "maps.load-error": [
+    {
+      "type": 0,
+      "value": "Non è stato possibile caricare le tue mappe. Riprova più tardi."
+    }
+  ],
+  "maps.modified-by-desc": [
+    {
+      "type": 0,
+      "value": "Modificato da "
+    },
+    {
+      "type": 1,
+      "value": "by"
+    },
+    {
+      "type": 0,
+      "value": " il "
+    },
+    {
+      "type": 1,
+      "value": "on"
+    }
+  ],
+  "maps.nav-all": [
+    {
+      "type": 0,
+      "value": "Tutte"
+    }
+  ],
+  "maps.nav-onwned": [
+    {
+      "type": 0,
+      "value": "Le mie mappe"
+    }
+  ],
+  "maps.nav-public": [
+    {
+      "type": 0,
+      "value": "Pubbliche"
+    }
+  ],
+  "maps.nav-shared": [
+    {
+      "type": 0,
+      "value": "Condivise con me"
+    }
+  ],
+  "maps.nav-starred": [
+    {
+      "type": 0,
+      "value": "Preferiti"
+    }
+  ],
+  "maps.page-title": [
+    {
+      "type": 0,
+      "value": "Le Mie Mappe | WiseMapping"
+    }
+  ],
+  "maps.revert": [
+    {
+      "type": 0,
+      "value": "Ripristina"
+    }
+  ],
+  "maps.search-action": [
+    {
+      "type": 0,
+      "value": "Cerca..."
+    }
+  ],
+  "maps.search-label": [
+    {
+      "type": 0,
+      "value": "Cerca mappe"
+    }
+  ],
+  "maps.select-all": [
+    {
+      "type": 0,
+      "value": "Seleziona tutto"
+    }
+  ],
+  "maps.select-map": [
+    {
+      "type": 0,
+      "value": "Seleziona "
+    },
+    {
+      "type": 1,
+      "value": "title"
+    }
+  ],
+  "maps.sorted-ascending": [
+    {
+      "type": 0,
+      "value": "ordine crescente"
+    }
+  ],
+  "maps.sorted-descending": [
+    {
+      "type": 0,
+      "value": "ordine decrescente"
+    }
+  ],
+  "maps.tooltip-open": [
+    {
+      "type": 0,
+      "value": "Apri per modificare"
+    }
+  ],
+  "maps.tooltip-starred": [
+    {
+      "type": 0,
+      "value": "Preferiti"
+    }
+  ],
+  "maps.view": [
+    {
+      "type": 0,
+      "value": "Visualizza"
+    }
+  ],
+  "menu.account": [
+    {
+      "type": 0,
+      "value": "Account"
+    }
+  ],
+  "menu.admin-console": [
+    {
+      "type": 0,
+      "value": "Console Admin"
+    }
+  ],
+  "menu.change-password": [
+    {
+      "type": 0,
+      "value": "Cambia password"
+    }
+  ],
+  "menu.signout": [
+    {
+      "type": 0,
+      "value": "Esci"
+    }
+  ],
+  "oauth.error": [
+    {
+      "type": 0,
+      "value": "Errore OAuth: "
+    },
+    {
+      "type": 1,
+      "value": "error"
+    }
+  ],
+  "oauth.missing-code": [
+    {
+      "type": 0,
+      "value": "La risposta di accesso non conteneva né un codice né un token."
+    }
+  ],
+  "publish.checkbox": [
+    {
+      "type": 0,
+      "value": "Abilita condivisione pubblica"
+    }
+  ],
+  "publish.copied": [
+    {
+      "type": 0,
+      "value": "Copiato negli appunti!"
+    }
+  ],
+  "publish.description": [
+    {
+      "type": 0,
+      "value": "Rendi pubblica la tua mappa. Chiunque abbia il link può vederla."
+    }
+  ],
+  "publish.embedded": [
+    {
+      "type": 0,
+      "value": "Incorporato"
+    }
+  ],
+  "publish.embedded-msg": [
+    {
+      "type": 0,
+      "value": "Fai clic sul codice per copiarlo negli appunti:"
+    }
+  ],
+  "publish.public-url": [
+    {
+      "type": 0,
+      "value": "URL Pubblico"
+    }
+  ],
+  "publish.public-url-msg": [
+    {
+      "type": 0,
+      "value": "Fai clic sul link per copiarlo negli appunti:"
+    }
+  ],
+  "publish.title": [
+    {
+      "type": 0,
+      "value": "Pubblica"
+    }
+  ],
+  "registation.success-title": [
+    {
+      "type": 0,
+      "value": "Registrazione Riuscita | WiseMapping"
+    }
+  ],
+  "registration.callback.back": [
+    {
+      "type": 0,
+      "value": "Torna al login"
+    }
+  ],
+  "registration.callback.confirm-signin.account": [
+    {
+      "type": 0,
+      "value": "Stai per accedere a WiseMapping con "
+    },
+    {
+      "type": 1,
+      "value": "provider"
+    },
+    {
+      "type": 0,
+      "value": " come "
+    },
+    {
+      "type": 1,
+      "value": "email"
+    },
+    {
+      "type": 0,
+      "value": ". Continua solo se hai avviato tu questo accesso."
+    }
+  ],
+  "registration.callback.confirm-signin.description": [
+    {
+      "type": 0,
+      "value": "Stai per accedere a WiseMapping con "
+    },
+    {
+      "type": 1,
+      "value": "provider"
+    },
+    {
+      "type": 0,
+      "value": ". Continua solo se hai avviato tu questo accesso."
+    }
+  ],
+  "registration.callback.confirm-signin.title": [
+    {
+      "type": 0,
+      "value": "Continuare l'accesso?"
+    }
+  ],
+  "registration.callback.confirm.description": [
+    {
+      "type": 0,
+      "value": "Un account con la stessa email è stato registrato in precedenza. Vuoi collegare il tuo account "
+    },
+    {
+      "type": 1,
+      "value": "provider"
+    },
+    {
+      "type": 0,
+      "value": " a quell'account WiseMapping?"
+    }
+  ],
+  "registration.callback.confirm.title": [
+    {
+      "type": 0,
+      "value": "Conferma"
+    }
+  ],
+  "registration.callback.continue": [
+    {
+      "type": 0,
+      "value": "Continua"
+    }
+  ],
+  "registration.callback.invalid": [
+    {
+      "type": 0,
+      "value": "Questo link di accesso non è valido. Accedi di nuovo."
+    }
+  ],
+  "registration.callback.sync": [
+    {
+      "type": 0,
+      "value": "Sincronizza account"
+    }
+  ],
+  "registration.callback.waiting.description": [
+    {
+      "type": 0,
+      "value": "Per favore attendi mentre convalidiamo la tua identità"
+    }
+  ],
+  "registration.callback.waiting.title": [
+    {
+      "type": 0,
+      "value": "Sto finalizzando..."
+    }
+  ],
+  "registration.desc": [
+    {
+      "type": 0,
+      "value": "La registrazione è gratuita e richiede solo un momento"
+    }
+  ],
+  "registration.division": [
+    {
+      "type": 0,
+      "value": "o"
+    }
+  ],
+  "registration.email": [
+    {
+      "type": 0,
+      "value": "Email"
+    }
+  ],
+  "registration.error.title": [
+    {
+      "type": 0,
+      "value": "Registrazione Fallita"
+    }
+  ],
+  "registration.facebook.button": [
+    {
+      "type": 0,
+      "value": "Registrati con Facebook"
+    }
+  ],
+  "registration.firstname": [
+    {
+      "type": 0,
+      "value": "Nome"
+    }
+  ],
+  "registration.form-legend": [
+    {
+      "type": 0,
+      "value": "Informazioni Account"
+    }
+  ],
+  "registration.google.button": [
+    {
+      "type": 0,
+      "value": "Registrati con Google"
+    }
+  ],
+  "registration.lastname": [
+    {
+      "type": 0,
+      "value": "Cognome"
+    }
+  ],
+  "registration.oidc.button": [
+    {
+      "type": 0,
+      "value": "Registrati con "
+    },
+    {
+      "type": 1,
+      "value": "provider"
+    }
+  ],
+  "registration.page-title": [
+    {
+      "type": 0,
+      "value": "Registrazione | WiseMapping"
+    }
+  ],
+  "registration.password": [
+    {
+      "type": 0,
+      "value": "Password"
+    }
+  ],
+  "registration.recaptcha-notice": [
+    {
+      "type": 0,
+      "value": "Questo sito è protetto da reCAPTCHA e si applicano le "
+    },
+    {
+      "type": 8,
+      "value": "privacyLink",
+      "children": [
+        {
+          "type": 0,
+          "value": "Norme sulla privacy"
+        }
+      ]
+    },
+    {
+      "type": 0,
+      "value": " e i "
+    },
+    {
+      "type": 8,
+      "value": "termsLink",
+      "children": [
+        {
+          "type": 0,
+          "value": "Termini di servizio"
+        }
+      ]
+    },
+    {
+      "type": 0,
+      "value": " di Google."
+    }
+  ],
+  "registration.register": [
+    {
+      "type": 0,
+      "value": "Registrati"
+    }
+  ],
+  "registration.success.already-activated": [
+    {
+      "type": 0,
+      "value": "Hai già attivato il tuo account?"
+    }
+  ],
+  "registration.success.check-spam": [
+    {
+      "type": 0,
+      "value": "Se non vedi l'email, controlla la cartella dello spam."
+    }
+  ],
+  "registration.success.email-sent": [
+    {
+      "type": 0,
+      "value": "Ti abbiamo inviato un'email di attivazione. Controlla la tua casella di posta e fai clic sul link di attivazione per attivare il tuo account."
+    }
+  ],
+  "registration.success.title": [
+    {
+      "type": 0,
+      "value": "Registrazione completata!"
+    }
+  ],
+  "registration.title": [
+    {
+      "type": 0,
+      "value": "Diventa un membro"
+    }
+  ],
+  "rename.description": [
+    {
+      "type": 0,
+      "value": "Per favore, inserisci il nuovo nome e descrizione della mappa."
+    }
+  ],
+  "rename.title": [
+    {
+      "type": 0,
+      "value": "Rinomina"
+    }
+  ],
+  "reset-password.confirm-password": [
+    {
+      "type": 0,
+      "value": "Conferma la nuova password"
+    }
+  ],
+  "reset-password.desc": [
+    {
+      "type": 0,
+      "value": "Inserisci qui sotto la tua nuova password."
+    }
+  ],
+  "reset-password.invalid-link": [
+    {
+      "type": 0,
+      "value": "Link di reimpostazione della password non valido. Richiedine uno nuovo."
+    }
+  ],
+  "reset-password.mismatch": [
+    {
+      "type": 0,
+      "value": "Le password non corrispondono."
+    }
+  ],
+  "reset-password.page-title": [
+    {
+      "type": 0,
+      "value": "Reimposta password | WiseMapping"
+    }
+  ],
+  "reset-password.password": [
+    {
+      "type": 0,
+      "value": "Nuova password"
+    }
+  ],
+  "reset-password.request-new": [
+    {
+      "type": 0,
+      "value": "Richiedi un nuovo link"
+    }
+  ],
+  "reset-password.submit": [
+    {
+      "type": 0,
+      "value": "Imposta nuova password"
+    }
+  ],
+  "reset-password.title": [
+    {
+      "type": 0,
+      "value": "Imposta una nuova password"
+    }
+  ],
+  "reset-password.too-long": [
+    {
+      "type": 0,
+      "value": "La password deve contenere meno di 40 caratteri."
+    }
+  ],
+  "reset-password.too-short": [
+    {
+      "type": 0,
+      "value": "La password deve contenere almeno 8 caratteri."
+    }
+  ],
+  "role.editor": [
+    {
+      "type": 0,
+      "value": "Editor"
+    }
+  ],
+  "role.owner": [
+    {
+      "type": 0,
+      "value": "Proprietario"
+    }
+  ],
+  "role.viewer": [
+    {
+      "type": 0,
+      "value": "Visualizzatore"
+    }
+  ],
+  "seo.activation.description": [
+    {
+      "type": 0,
+      "value": "Attiva il tuo account WiseMapping per creare mappe mentali, organizzare le idee e collaborare con altri. Completa la configurazione in pochi secondi."
+    }
+  ],
+  "seo.forgot-password-success.description": [
+    {
+      "type": 0,
+      "value": "Un'e-mail di recupero è stata inviata alla tua casella di posta. Controllala per reimpostare la password del tuo account WiseMapping e tornare alle tue mappe mentali."
+    }
+  ],
+  "seo.forgot-password.description": [
+    {
+      "type": 0,
+      "value": "Reimposta la password del tuo account WiseMapping. Inserisci il tuo indirizzo e-mail e ti invieremo un link di recupero."
+    }
+  ],
+  "seo.login.description": [
+    {
+      "type": 0,
+      "value": "Accedi al tuo account WiseMapping per consultare le tue mappe mentali, crearne di nuove e collaborare con altri. Strumento gratuito di mappe mentali online."
+    }
+  ],
+  "seo.maps.description": [
+    {
+      "type": 0,
+      "value": "Accedi alle tue mappe mentali in WiseMapping e gestiscile. Crea, modifica, condividi e collabora ai tuoi progetti di pensiero visivo. Organizza le idee con un potente strumento di mappe mentali."
+    }
+  ],
+  "seo.maps.title": [
+    {
+      "type": 0,
+      "value": "Le mie mappe | WiseMapping"
+    }
+  ],
+  "seo.registration-success.description": [
+    {
+      "type": 0,
+      "value": "La registrazione del tuo account WiseMapping è completata. Controlla l'e-mail con il link di attivazione per completare la configurazione e iniziare a creare mappe mentali."
+    }
+  ],
+  "seo.registration-success.title": [
+    {
+      "type": 0,
+      "value": "Registrazione completata | WiseMapping"
+    }
+  ],
+  "seo.registration.description": [
+    {
+      "type": 0,
+      "value": "Crea il tuo account WiseMapping gratuito per creare mappe mentali, organizzare le idee e collaborare con altri. Unisciti a migliaia di utenti in tutto il mondo."
+    }
+  ],
+  "seo.reset-password.description": [
+    {
+      "type": 0,
+      "value": "Imposta una nuova password per il tuo account WiseMapping."
+    }
+  ],
+  "share.add-button": [
+    {
+      "type": 0,
+      "value": "Condividi"
+    }
+  ],
+  "share.add-message": [
+    {
+      "type": 0,
+      "value": "Aggiungi messaggio"
+    }
+  ],
+  "share.adding-button": [
+    {
+      "type": 0,
+      "value": "Condivisione..."
+    }
+  ],
+  "share.can-edit": [
+    {
+      "type": 0,
+      "value": "Può modificare"
+    }
+  ],
+  "share.delete": [
+    {
+      "type": 0,
+      "value": "Elimina collaboratore"
+    }
+  ],
+  "share.delete-description": [
+    {
+      "type": 0,
+      "value": "Aggiungi collaboratori. Riceveranno accesso istantaneo via email per modificare insieme."
+    }
+  ],
+  "share.delete-title": [
+    {
+      "type": 0,
+      "value": "Condividi con persone"
+    }
+  ],
+  "share.emails-placeholder": [
+    {
+      "type": 0,
+      "value": "Aggiungi persone tramite e-mail, separate da virgole"
+    }
+  ],
+  "share.message": [
+    {
+      "type": 0,
+      "value": "Messaggio"
+    }
+  ],
+  "share.people-with-access": [
+    {
+      "type": 0,
+      "value": "Persone con accesso"
+    }
+  ],
+  "theme.dark": [
+    {
+      "type": 0,
+      "value": "Scuro"
+    }
+  ],
+  "theme.light": [
+    {
+      "type": 0,
+      "value": "Chiaro"
+    }
+  ],
+  "theme.toggle": [
+    {
+      "type": 0,
+      "value": "Cambia Tema"
+    }
+  ],
+  "validation.title-required": [
+    {
+      "type": 0,
+      "value": "Il titolo è obbligatorio"
+    }
+  ]
+}

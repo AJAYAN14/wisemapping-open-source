@@ -1,0 +1,779 @@
+{
+  "action.accept": {
+    "defaultMessage": "موافق"
+  },
+  "action.delete": {
+    "defaultMessage": "حذف"
+  },
+  "appbar.back-to-map-list": {
+    "defaultMessage": "العودة إلى قائمة الخرائط"
+  },
+  "appbar.button-signup": {
+    "defaultMessage": "إنشاء حساب"
+  },
+  "appbar.shared-button": {
+    "defaultMessage": "مشاركة"
+  },
+  "appbar.tooltip-export": {
+    "defaultMessage": "تصدير"
+  },
+  "appbar.tooltip-history": {
+    "defaultMessage": "سجل التغييرات"
+  },
+  "appbar.tooltip-info": {
+    "defaultMessage": "معلومات"
+  },
+  "appbar.tooltip-print": {
+    "defaultMessage": "طباعة"
+  },
+  "appbar.tooltip-publish": {
+    "defaultMessage": "نشر"
+  },
+  "appbar.tooltip-redo": {
+    "defaultMessage": "إعادة"
+  },
+  "appbar.tooltip-save": {
+    "defaultMessage": "حفظ"
+  },
+  "appbar.tooltip-shared": {
+    "defaultMessage": "المشاركة للتعاون"
+  },
+  "appbar.tooltip-signup": {
+    "defaultMessage": "إنشاء حساب"
+  },
+  "appbar.tooltip-starred": {
+    "defaultMessage": "مميزة بنجمة"
+  },
+  "appbar.tooltip-undo": {
+    "defaultMessage": "تراجع"
+  },
+  "appbar.tooltip-change-layout": {
+    "defaultMessage": "تغيير التخطيط"
+  },
+  "outline.empty": {
+    "defaultMessage": "لا يوجد محتوى للعرض"
+  },
+  "outline.expand": {
+    "defaultMessage": "توسيع"
+  },
+  "outline.collapse": {
+    "defaultMessage": "طي"
+  },
+  "outline.expand-all": {
+    "defaultMessage": "توسيع الكل"
+  },
+  "outline.collapse-all": {
+    "defaultMessage": "طي الكل"
+  },
+  "outline.has-note": {
+    "defaultMessage": "يحتوي على ملاحظة"
+  },
+  "outline.link": {
+    "defaultMessage": "رابط"
+  },
+  "outline.note": {
+    "defaultMessage": "ملاحظة"
+  },
+  "editor-panel.link-panel-title": {
+    "defaultMessage": "رابط"
+  },
+  "editor-panel.note-panel-title": {
+    "defaultMessage": "ملاحظة"
+  },
+  "editor-panel.tooltip-add-icon": {
+    "defaultMessage": "إضافة أيقونة"
+  },
+  "editor-panel.tooltip-add-link": {
+    "defaultMessage": "إضافة رابط"
+  },
+  "editor-panel.tooltip-add-note": {
+    "defaultMessage": "إضافة ملاحظة"
+  },
+  "editor-panel.tooltip-add-relationship": {
+    "defaultMessage": "إضافة علاقة"
+  },
+  "editor-panel.tooltip-topic-font-style": {
+    "defaultMessage": "نمط الخط"
+  },
+  "editor-panel.font-family-default": {
+    "defaultMessage": "افتراضي"
+  },
+  "editor-panel.font-family-mixed": {
+    "defaultMessage": "مختلط"
+  },
+  "editor.edit-description-mobile": {
+    "defaultMessage": "تتوفر إمكانيات تعديل محدودة للخرائط الذهنية على الأجهزة المحمولة. استخدم متصفح سطح المكتب للحصول على كامل إمكانيات المحرر."
+  },
+  "editor.try-welcome": {
+    "defaultMessage": "تعرض هذه المساحة بعض إمكانيات محرر الخرائط الذهنية!"
+  },
+  "editor.try-welcome-description": {
+    "defaultMessage": "سجّل الآن لإنشاء ومشاركة ونشر عدد غير محدود من الخرائط الذهنية مجانًا."
+  },
+  "editor.try-welcome-description-mobile": {
+    "defaultMessage": "سجّل الآن لإنشاء ومشاركة ونشر عدد غير محدود من الخرائط الذهنية مجانًا. تتوفر إمكانيات تعديل محدودة على الأجهزة المحمولة. استخدم متصفح سطح المكتب للحصول على كامل إمكانيات المحرر."
+  },
+  "editor.try-welcome-mobile": {
+    "defaultMessage": "تعرض هذه المساحة بعض إمكانيات محرر الخرائط الذهنية!"
+  },
+  "icon-picker.show-images": {
+    "defaultMessage": "إظهار الصور"
+  },
+  "link.help_text": {
+    "defaultMessage": "العنوان غير صالح"
+  },
+  "link.placeholder": {
+    "defaultMessage": "https://www.example.com"
+  },
+  "shortcut-help-pane.action": {
+    "defaultMessage": "الإجراء"
+  },
+  "shortcut-help-pane.add-child": {
+    "defaultMessage": "إضافة موضوع فرعي"
+  },
+  "shortcut-help-pane.add-link": {
+    "defaultMessage": "إضافة رابط"
+  },
+  "shortcut-help-pane.add-note": {
+    "defaultMessage": "إضافة ملاحظة"
+  },
+  "shortcut-help-pane.add-sibling": {
+    "defaultMessage": "إضافة موضوع شقيق"
+  },
+  "shortcut-help-pane.cancel-text-changes": {
+    "defaultMessage": "إلغاء تغييرات النص"
+  },
+  "shortcut-help-pane.category-editing": {
+    "defaultMessage": "التحرير"
+  },
+  "shortcut-help-pane.category-format": {
+    "defaultMessage": "التنسيق"
+  },
+  "shortcut-help-pane.category-navigation": {
+    "defaultMessage": "التنقل"
+  },
+  "shortcut-help-pane.category-view": {
+    "defaultMessage": "العرض"
+  },
+  "shortcut-help-pane.change-font-bold": {
+    "defaultMessage": "تغيير النص إلى غامق"
+  },
+  "shortcut-help-pane.change-font-italic": {
+    "defaultMessage": "تغيير النص إلى مائل"
+  },
+  "shortcut-help-pane.collapse-children": {
+    "defaultMessage": "طي العناصر الفرعية"
+  },
+  "shortcut-help-pane.indent-topic": {
+    "defaultMessage": "زيادة مستوى الموضوع (الإرفاق بالشقيق السابق)"
+  },
+  "shortcut-help-pane.move-topic-down": {
+    "defaultMessage": "تحريك الموضوع للأسفل بين الأشقاء"
+  },
+  "shortcut-help-pane.move-topic-up": {
+    "defaultMessage": "تحريك الموضوع للأعلى بين الأشقاء"
+  },
+  "shortcut-help-pane.outdent-topic": {
+    "defaultMessage": "تقليل مستوى الموضوع (الإرفاق بالجدّ)"
+  },
+  "shortcut-help-pane.copy-and-text": {
+    "defaultMessage": "نسخ ولصق المواضيع/نسخ صورة الخريطة الذهنية إلى الحافظة."
+  },
+  "shortcut-help-pane.delete-topic": {
+    "defaultMessage": "حذف الموضوع"
+  },
+  "shortcut-help-pane.deselect-all-topics": {
+    "defaultMessage": "إلغاء تحديد جميع المواضيع"
+  },
+  "shortcut-help-pane.diagram-aria": {
+    "defaultMessage": "ينتقل السهم الأيسر إلى الموضوع الأصل، والسهم الأيمن إلى موضوع فرعي، والسهمان لأعلى ولأسفل بين المواضيع الشقيقة."
+  },
+  "shortcut-help-pane.diagram-caption": {
+    "defaultMessage": "في النصف الأيسر من الخريطة، يتبادل ← و → دوريهما."
+  },
+  "shortcut-help-pane.diagram-child": {
+    "defaultMessage": "فرعي"
+  },
+  "shortcut-help-pane.diagram-parent": {
+    "defaultMessage": "أصل"
+  },
+  "shortcut-help-pane.diagram-selected": {
+    "defaultMessage": "محدد"
+  },
+  "shortcut-help-pane.diagram-sibling": {
+    "defaultMessage": "شقيق"
+  },
+  "shortcut-help-pane.drag-disconnect": {
+    "defaultMessage": "فصل الموضوع"
+  },
+  "shortcut-help-pane.drag-disconnect-key": {
+    "defaultMessage": "اسحب الموضوع"
+  },
+  "shortcut-help-pane.edit-multiline": {
+    "defaultMessage": "إضافة نص موضوع متعدد الأسطر"
+  },
+  "shortcut-help-pane.edit-topic": {
+    "defaultMessage": "تعديل نص الموضوع"
+  },
+  "shortcut-help-pane.edit-topic-key": {
+    "defaultMessage": "F2 أو نقر مزدوج"
+  },
+  "shortcut-help-pane.navigation": {
+    "defaultMessage": "التنقل"
+  },
+  "shortcut-help-pane.navigation-keys": {
+    "defaultMessage": "مفاتيح الأسهم"
+  },
+  "shortcut-help-pane.overwrite-edit-topic": {
+    "defaultMessage": "استبدال نص الموضوع"
+  },
+  "shortcut-help-pane.overwrite-edit-topic-key": {
+    "defaultMessage": "اكتب على موضوع محدد"
+  },
+  "shortcut-help-pane.redo": {
+    "defaultMessage": "إعادة التعديل"
+  },
+  "shortcut-help-pane.save-changes": {
+    "defaultMessage": "حفظ التغييرات"
+  },
+  "shortcut-help-pane.select-all-topics": {
+    "defaultMessage": "تحديد جميع المواضيع"
+  },
+  "shortcut-help-pane.select-topics": {
+    "defaultMessage": "تحديد عدة مواضيع"
+  },
+  "shortcut-help-pane.select-topics-keys": {
+    "defaultMessage": "نقرة الفأرة"
+  },
+  "shortcut-help-pane.undo": {
+    "defaultMessage": "التراجع عن التعديل"
+  },
+  "creator-info-pane.description": {
+    "defaultMessage": "الوصف"
+  },
+  "creator-info-pane.creator": {
+    "defaultMessage": "المُنشئ"
+  },
+  "editor-panel.tooltip-canvas-style": {
+    "defaultMessage": "الخلفية"
+  },
+  "layout-selector.description": {
+    "defaultMessage": "اختر نمط التخطيط"
+  },
+  "canvas-style.background-color": {
+    "defaultMessage": "لون الخلفية"
+  },
+  "canvas-style.pattern-solid": {
+    "defaultMessage": "لون صلب"
+  },
+  "canvas-style.pattern-grid": {
+    "defaultMessage": "خطوط شبكية"
+  },
+  "canvas-style.pattern-dots": {
+    "defaultMessage": "نقاط"
+  },
+  "canvas-style.grid-style": {
+    "defaultMessage": "حجم الشبكة"
+  },
+  "canvas-style.grid-size-xs": {
+    "defaultMessage": "صغير جدًا"
+  },
+  "canvas-style.grid-size-s": {
+    "defaultMessage": "صغير"
+  },
+  "canvas-style.grid-size-m": {
+    "defaultMessage": "متوسط"
+  },
+  "canvas-style.grid-size-l": {
+    "defaultMessage": "كبير"
+  },
+  "canvas-style.grid-size-xl": {
+    "defaultMessage": "كبير جدًا"
+  },
+  "canvas-style.grid-color": {
+    "defaultMessage": "لون الشبكة"
+  },
+  "theme.dark": {
+    "defaultMessage": "داكن"
+  },
+  "theme.light": {
+    "defaultMessage": "فاتح"
+  },
+  "rich-text-editor.insert-link": {
+    "defaultMessage": "إدراج رابط"
+  },
+  "rich-text-editor.insert-icon": {
+    "defaultMessage": "إدراج أيقونة"
+  },
+  "rich-text-editor.bold": {
+    "defaultMessage": "غامق"
+  },
+  "rich-text-editor.italic": {
+    "defaultMessage": "مائل"
+  },
+  "rich-text-editor.underline": {
+    "defaultMessage": "تسطير"
+  },
+  "rich-text-editor.strikethrough": {
+    "defaultMessage": "يتوسطه خط"
+  },
+  "rich-text-editor.bullet-list": {
+    "defaultMessage": "قائمة نقطية"
+  },
+  "rich-text-editor.numbered-list": {
+    "defaultMessage": "قائمة مرقّمة"
+  },
+  "emoji-picker.search-placeholder": {
+    "defaultMessage": "ابحث عن الرموز التعبيرية..."
+  },
+  "icon-picker.search-placeholder": {
+    "defaultMessage": "ابحث عن الأيقونات..."
+  },
+  "icon-picker.frequently-used": {
+    "defaultMessage": "الأكثر استخدامًا"
+  },
+  "icon-picker.no-results": {
+    "defaultMessage": "لا توجد أيقونات"
+  },
+  "common.close": {
+    "defaultMessage": "إغلاق"
+  },
+  "editor-panel.tooltip-add-topic-image": {
+    "defaultMessage": "إضافة صورة للموضوع"
+  },
+  "appbar.error-saving-title": {
+    "defaultMessage": "خطأ في الحفظ"
+  },
+  "appbar.logo-aria-label": {
+    "defaultMessage": "شعار WiseMapping"
+  },
+  "appbar.title-renamed": {
+    "defaultMessage": "تمت إعادة تسمية الخريطة الذهنية"
+  },
+  "appbar.tooltip-rename": {
+    "defaultMessage": "إعادة تسمية"
+  },
+  "appbar.tooltip-theme": {
+    "defaultMessage": "السمة"
+  },
+  "editor-panel.tooltip-relationship-style": {
+    "defaultMessage": "نمط العلاقة"
+  },
+  "editor-panel.tooltip-unified-styling": {
+    "defaultMessage": "تنسيق الموضوع والاتصالات"
+  },
+  "color-picker.color": {
+    "defaultMessage": "اللون"
+  },
+  "color-picker.default-color": {
+    "defaultMessage": "اللون الافتراضي"
+  },
+  "relationship-style-editor.color": {
+    "defaultMessage": "لون العلاقة"
+  },
+  "relationship-style-editor.line-arrows": {
+    "defaultMessage": "نمط الخط والأسهم"
+  },
+  "relationship-style-editor.solid-line": {
+    "defaultMessage": "خط متصل"
+  },
+  "relationship-style-editor.solid-line-tooltip": {
+    "defaultMessage": "نمط خط متصل"
+  },
+  "relationship-style-editor.dashed-line": {
+    "defaultMessage": "خط متقطع"
+  },
+  "relationship-style-editor.dashed-line-tooltip": {
+    "defaultMessage": "نمط خط متقطع"
+  },
+  "relationship-style-editor.dotted-line": {
+    "defaultMessage": "خط منقّط"
+  },
+  "relationship-style-editor.dotted-line-tooltip": {
+    "defaultMessage": "نمط خط منقّط"
+  },
+  "relationship-style-editor.end-arrow": {
+    "defaultMessage": "سهم النهاية"
+  },
+  "relationship-style-editor.end-arrow-tooltip": {
+    "defaultMessage": "تبديل سهم النهاية"
+  },
+  "relationship-style-editor.start-arrow": {
+    "defaultMessage": "سهم البداية"
+  },
+  "relationship-style-editor.start-arrow-tooltip": {
+    "defaultMessage": "تبديل سهم البداية"
+  },
+  "topic-font-editor.font-color": {
+    "defaultMessage": "لون الخط"
+  },
+  "topic-font-editor.font-family": {
+    "defaultMessage": "نوع الخط"
+  },
+  "topic-font-editor.font-size-style": {
+    "defaultMessage": "حجم الخط ونمطه"
+  },
+  "topic-font-editor.increase-size": {
+    "defaultMessage": "أكبر"
+  },
+  "topic-font-editor.increase-size-tooltip": {
+    "defaultMessage": "زيادة حجم الخط"
+  },
+  "topic-font-editor.decrease-size": {
+    "defaultMessage": "أصغر"
+  },
+  "topic-font-editor.decrease-size-tooltip": {
+    "defaultMessage": "تصغير حجم الخط"
+  },
+  "topic-font-editor.bold": {
+    "defaultMessage": "غامق"
+  },
+  "topic-font-editor.bold-tooltip": {
+    "defaultMessage": "تبديل الخط الغامق"
+  },
+  "topic-font-editor.italic": {
+    "defaultMessage": "مائل"
+  },
+  "topic-font-editor.italic-tooltip": {
+    "defaultMessage": "تبديل الخط المائل"
+  },
+  "topic-font-editor.active": {
+    "defaultMessage": "نشط"
+  },
+  "icon-collection.shape.none": {
+    "defaultMessage": "بدون"
+  },
+  "icon-collection.shape.none-tooltip": {
+    "defaultMessage": "بدون - لا توجد خلفية شكل ظاهرة"
+  },
+  "icon-collection.shape.line": {
+    "defaultMessage": "خط"
+  },
+  "icon-collection.shape.rectangle": {
+    "defaultMessage": "مستطيل"
+  },
+  "icon-collection.shape.rounded": {
+    "defaultMessage": "دائري الزوايا"
+  },
+  "icon-collection.shape.ellipse": {
+    "defaultMessage": "بيضاوي"
+  },
+  "icon-collection.border.solid": {
+    "defaultMessage": "متصل"
+  },
+  "icon-collection.border.dashed": {
+    "defaultMessage": "متقطع"
+  },
+  "icon-collection.border.dotted": {
+    "defaultMessage": "منقّط"
+  },
+  "icon-collection.connection.thick-curved": {
+    "defaultMessage": "منحنى سميك"
+  },
+  "icon-collection.connection.thick-curved-tooltip": {
+    "defaultMessage": "خط منحنٍ سميك بمنحنيات بيزييه ناعمة - رائع لإبراز الفروع الرئيسية"
+  },
+  "icon-collection.connection.arc": {
+    "defaultMessage": "قوس"
+  },
+  "icon-collection.connection.arc-tooltip": {
+    "defaultMessage": "اتصال قوسي دائري - مثالي للتخطيطات الشعاعية والتدفق العضوي"
+  },
+  "icon-collection.connection.heartbeat": {
+    "defaultMessage": "نبضة قلب"
+  },
+  "icon-collection.connection.heartbeat-tooltip": {
+    "defaultMessage": "موجة مستوحاة من تخطيط القلب بقمم حادة - مثالية لإيصال الطاقة أو الاستعجال أو إشارات الحياة"
+  },
+  "icon-collection.connection.neuron": {
+    "defaultMessage": "خلية عصبية"
+  },
+  "icon-collection.connection.neuron-tooltip": {
+    "defaultMessage": "خط نبضي عضوي بنبضات متفرّعة – مثالي للعلوم والشبكات العصبية وأي أسلوب مستقبلي"
+  },
+  "icon-collection.connection.thin-curved": {
+    "defaultMessage": "منحنى رفيع"
+  },
+  "icon-collection.connection.thin-curved-tooltip": {
+    "defaultMessage": "خط منحنٍ رفيع بمنحنيات بيزييه أنيقة - مثالي للخرائط الذهنية التفصيلية أو الكثيفة"
+  },
+  "icon-collection.connection.simple-polyline": {
+    "defaultMessage": "خط متعدد بسيط"
+  },
+  "icon-collection.connection.simple-polyline-tooltip": {
+    "defaultMessage": "اتصال خط مستقيم مباشر - نمط نظيف وبسيط للعلاقات البسيطة"
+  },
+  "icon-collection.connection.curved-polyline": {
+    "defaultMessage": "خط متعدد منحنٍ"
+  },
+  "icon-collection.connection.curved-polyline-tooltip": {
+    "defaultMessage": "خط متعدد القطع بزوايا ناعمة - الأفضل للتخطيطات المنظمة والمسارات الواضحة"
+  },
+  "icon-collection.connection.default-tooltip": {
+    "defaultMessage": "افتراضي - سيتم اختيار نمط الاتصال تلقائيًا بناءً على السمة"
+  },
+  "icon-picker.emojis": {
+    "defaultMessage": "الرموز التعبيرية"
+  },
+  "icon-picker.icons": {
+    "defaultMessage": "معرض الأيقونات"
+  },
+  "note.character.count": {
+    "defaultMessage": "{remaining} متبقي"
+  },
+  "note.character.limit.warning": {
+    "defaultMessage": "(الاقتراب من الحد الأقصى)"
+  },
+  "theme-editor.accept": {
+    "defaultMessage": "تطبيق السمة"
+  },
+  "theme-editor.cancel": {
+    "defaultMessage": "إلغاء"
+  },
+  "theme-editor.description": {
+    "defaultMessage": "تحدد السمة الأسلوب البصري لخريطتك الذهنية، بما في ذلك الألوان والخطوط والمظهر العام. اختر سمة تناسب محتواك وجمهورك."
+  },
+  "theme-editor.title": {
+    "defaultMessage": "اختر السمة"
+  },
+  "theme.classic.description": {
+    "defaultMessage": "تصميم نظيف ومهني بلمسات زرقاء. مثالي للعروض التقديمية للأعمال والوثائق الرسمية."
+  },
+  "theme.classic.name": {
+    "defaultMessage": "كلاسيكي"
+  },
+  "theme.aurora.description": {
+    "defaultMessage": "سمة بتدرجات نيون مع تأثيرات توهج وخطوط جريئة وروابط عالية التباين، مصممة للسرد الغامر."
+  },
+  "theme.aurora.name": {
+    "defaultMessage": "أورورا"
+  },
+  "theme.retro.description": {
+    "defaultMessage": "لوحة ألوان سينث-ويف من الثمانينيات بأطر نيون وتدرجات كروم وخلفيات شبكية مستوحاة من ليالي الريترو."
+  },
+  "theme.retro.name": {
+    "defaultMessage": "ليلة ريترو الثمانينيات"
+  },
+  "theme.ocean.description": {
+    "defaultMessage": "سمة زرقاء مستوحاة من المحيط بإصدارات فاتحة/داكنة. ألوان هادئة ومهنية مثالية للأعمال والمشاريع الإبداعية."
+  },
+  "theme.ocean.name": {
+    "defaultMessage": "محيط"
+  },
+  "theme.robot.description": {
+    "defaultMessage": "سمة خضراء مستوحاة من التكنولوجيا. مثالية للوثائق التقنية والعروض المستقبلية."
+  },
+  "theme.robot.name": {
+    "defaultMessage": "روبوت"
+  },
+  "theme.summer.description": {
+    "defaultMessage": "سمة برتقالية زاهية ونابضة بالحياة. رائعة للمشاريع الإبداعية والعروض الحماسية."
+  },
+  "theme.summer.name": {
+    "defaultMessage": "صيف"
+  },
+  "theme.sunrise.description": {
+    "defaultMessage": "سمة الشروق مع إصدارات فاتحة/داكنة. ألوان وتباين محسّنان لقراءة أفضل."
+  },
+  "theme.sunrise.name": {
+    "defaultMessage": "شروق"
+  },
+  "theme.switch-to-dark": {
+    "defaultMessage": "التبديل إلى الوضع الداكن"
+  },
+  "theme.switch-to-light": {
+    "defaultMessage": "التبديل إلى الوضع الفاتح"
+  },
+  "canvas-style.tab-color": {
+    "defaultMessage": "اللون"
+  },
+  "canvas-style.tab-grid": {
+    "defaultMessage": "لون الشبكة"
+  },
+  "canvas-style.background-style": {
+    "defaultMessage": "نمط الخلفية"
+  },
+  "canvas-style.pattern-default-tooltip": {
+    "defaultMessage": "افتراضي - سيتم اختيار جميع الأنماط تلقائيًا بناءً على السمة"
+  },
+  "icon-collection.shape.default": {
+    "defaultMessage": "افتراضي"
+  },
+  "icon-collection.border.default": {
+    "defaultMessage": "افتراضي"
+  },
+  "icon-collection.border.default-tooltip": {
+    "defaultMessage": "افتراضي - سيتم أخذ الألوان تلقائيًا بناءً على السمة المحددة"
+  },
+  "icon-collection.connection.default": {
+    "defaultMessage": "افتراضي"
+  },
+  "icon-collection.default-tooltip": {
+    "defaultMessage": "افتراضي - سيتم اختيار جميع الأنماط تلقائيًا بناءً على السمة"
+  },
+  "unified-styling.shape-type": {
+    "defaultMessage": "نوع الشكل"
+  },
+  "unified-styling.background-color": {
+    "defaultMessage": "لون الخلفية"
+  },
+  "topic-font-editor.reset-to-default": {
+    "defaultMessage": "إعادة التعيين إلى الافتراضي"
+  },
+  "appbar.tooltip-theme-toggle": {
+    "defaultMessage": "تبديل السمة"
+  },
+  "layout-selector.accept": {
+    "defaultMessage": "موافق"
+  },
+  "layout-selector.cancel": {
+    "defaultMessage": "إلغاء"
+  },
+  "layout-selector.title": {
+    "defaultMessage": "اختر التخطيط"
+  },
+  "layout.mindmap.description": {
+    "defaultMessage": "تخطيط أفقي بفروع متوازنة على الجانبين. الأفضل لرسم الخرائط الذهنية التقليدية والعصف الذهني."
+  },
+  "layout.mindmap.name": {
+    "defaultMessage": "خريطة ذهنية"
+  },
+  "layout.tree.description": {
+    "defaultMessage": "تسلسل هرمي عمودي يتدفق من الأعلى إلى الأسفل. رائع للهياكل التنظيمية والتسلسلات الهرمية."
+  },
+  "layout.tree.name": {
+    "defaultMessage": "شجرة"
+  },
+  "shortcut-help-pane.expand-by-level": {
+    "defaultMessage": "توسيع المواضيع حسب المستوى"
+  },
+  "shortcut-help-pane.expand-collapse-all": {
+    "defaultMessage": "توسيع/طي جميع المواضيع"
+  },
+  "shortcut-help-pane.outline-view": {
+    "defaultMessage": "فتح عرض المخطط"
+  },
+  "shortcut-help-pane.zoom-in": {
+    "defaultMessage": "تكبير"
+  },
+  "shortcut-help-pane.zoom-out": {
+    "defaultMessage": "تصغير"
+  },
+  "shortcut-help-pane.zoom-to-fit": {
+    "defaultMessage": "ضبط للملاءمة"
+  },
+  "unified-styling.border-color": {
+    "defaultMessage": "لون الحدود"
+  },
+  "unified-styling.border-style": {
+    "defaultMessage": "نمط الحدود"
+  },
+  "unified-styling.connection-style": {
+    "defaultMessage": "نمط الاتصال"
+  },
+  "unified-styling.connector-style": {
+    "defaultMessage": "نمط الموصل"
+  },
+  "unified-styling.tab.border": {
+    "defaultMessage": "الحدود"
+  },
+  "unified-styling.tab.connector": {
+    "defaultMessage": "الموصل"
+  },
+  "unified-styling.tab.shape": {
+    "defaultMessage": "الشكل"
+  },
+  "visualization-toolbar.tooltip-collapse-all": {
+    "defaultMessage": "طي جميع العقد"
+  },
+  "visualization-toolbar.tooltip-expand-all": {
+    "defaultMessage": "توسيع جميع العقد"
+  },
+  "visualization-toolbar.tooltip-expand-level": {
+    "defaultMessage": "توسيع حسب المستوى"
+  },
+  "visualization-toolbar.tooltip-expand-level-current": {
+    "defaultMessage": "توسيع حسب المستوى (المستوى {level})"
+  },
+  "visualization-toolbar.tooltip-keyboard": {
+    "defaultMessage": "اختصارات لوحة المفاتيح"
+  },
+  "visualization-toolbar.tooltip-outline-view": {
+    "defaultMessage": "عرض المخطط"
+  },
+  "visualization-toolbar.tooltip-theme-toggle": {
+    "defaultMessage": "تبديل السمة"
+  },
+  "visualization-toolbar.tooltip-switch-to-dark": {
+    "defaultMessage": "التبديل إلى الوضع الداكن"
+  },
+  "visualization-toolbar.tooltip-switch-to-light": {
+    "defaultMessage": "التبديل إلى الوضع الفاتح"
+  },
+  "visualization-toolbar.tooltip-zoom-in": {
+    "defaultMessage": "تكبير"
+  },
+  "visualization-toolbar.tooltip-zoom-out": {
+    "defaultMessage": "تصغير"
+  },
+  "visualization-toolbar.tooltip-zoom-to-fit": {
+    "defaultMessage": "ضبط للملاءمة"
+  },
+  "editor-panel.deeplink-copied": {
+    "defaultMessage": "تم نسخ رابط الموضوع إلى الحافظة"
+  },
+  "editor-panel.deeplink-copy-failed": {
+    "defaultMessage": "تعذّر نسخ الرابط إلى الحافظة"
+  },
+  "editor-panel.tooltip-copy-node-link": {
+    "defaultMessage": "نسخ رابط الموضوع"
+  },
+  "shortcut-help-pane.find-in-map": {
+    "defaultMessage": "البحث عن موضوع في الخريطة"
+  },
+  "shortcut-help-pane.pan-canvas": {
+    "defaultMessage": "تحريك مساحة الرسم"
+  },
+  "shortcut-help-pane.pan-canvas-keys": {
+    "defaultMessage": "التمرير بإصبعين أو عجلة الفأرة"
+  },
+  "shortcut-help-pane.paste-as-child": {
+    "defaultMessage": "لصق كعنصر فرعي للموضوع المحدد"
+  },
+  "shortcut-help-pane.zoom-wheel": {
+    "defaultMessage": "التكبير والتصغير بعجلة الفأرة"
+  },
+  "visualization-toolbar.tooltip-find-in-map": {
+    "defaultMessage": "البحث في الخريطة"
+  },
+  "find-in-map.placeholder": {
+    "defaultMessage": "البحث عن موضوع..."
+  },
+  "find-in-map.clear": {
+    "defaultMessage": "محو البحث"
+  },
+  "find-in-map.previous": {
+    "defaultMessage": "المطابقة السابقة"
+  },
+  "find-in-map.next": {
+    "defaultMessage": "المطابقة التالية"
+  },
+  "find-in-map.match-counter": {
+    "defaultMessage": "{current} من {total}"
+  },
+  "find-in-map.no-results": {
+    "defaultMessage": "لا توجد مطابقات"
+  },
+  "find-in-map.empty-state": {
+    "defaultMessage": "لا يوجد موضوع يطابق «{query}»."
+  },
+  "rich-text-editor.indent": {
+    "defaultMessage": "زيادة المسافة البادئة (Tab)"
+  },
+  "rich-text-editor.outdent": {
+    "defaultMessage": "إنقاص المسافة البادئة (Shift+Tab)"
+  },
+  "outline.untitled-map": {
+    "defaultMessage": "خريطة بدون عنوان"
+  }
+}

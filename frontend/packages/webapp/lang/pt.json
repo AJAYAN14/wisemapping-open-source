@@ -1,0 +1,1685 @@
+{
+  "account.delete-challenge": {
+    "defaultMessage": "EXCLUIR MINHA CONTA"
+  },
+  "account.delete-challenge-error": {
+    "defaultMessage": "Digite \"{challengePhrase}\" para confirmar a exclusão da conta."
+  },
+  "account.delete-confirm": {
+    "defaultMessage": "Excluir conta"
+  },
+  "account.delete-confirmation-instruction": {
+    "defaultMessage": "Digite {challengePhrase} para confirmar:"
+  },
+  "account.delete-confirmation-label": {
+    "defaultMessage": "Digite \"{challengePhrase}\" para confirmar"
+  },
+  "account.delete-confirmation-title": {
+    "defaultMessage": "Você tem certeza absoluta?"
+  },
+  "account.delete-confirmation-warning": {
+    "defaultMessage": "Esta ação não pode ser desfeita. Ela excluirá permanentemente sua conta e removerá todos os dados de nossos servidores."
+  },
+  "account.delete-warning-collaborations": {
+    "defaultMessage": "Todos os mapas mentais compartilhados e colaborações"
+  },
+  "account.delete-warning-consequences": {
+    "defaultMessage": "Isto excluirá permanentemente:"
+  },
+  "account.delete-warning-data": {
+    "defaultMessage": "Todos os seus dados pessoais e informações da conta"
+  },
+  "account.delete-warning-description": {
+    "defaultMessage": "Depois de excluir sua conta, não há como voltar atrás. Tenha certeza."
+  },
+  "account.delete-warning-history": {
+    "defaultMessage": "Todo o histórico da conta e registros de atividade"
+  },
+  "account.delete-warning-mindmaps": {
+    "defaultMessage": "Todos os seus mapas mentais e o conteúdo deles"
+  },
+  "account.delete-warning-title": {
+    "defaultMessage": "Excluir conta"
+  },
+  "accountinfo.account-settings": {
+    "defaultMessage": "Configurações da conta"
+  },
+  "accountinfo.button": {
+    "defaultMessage": "Salvar alterações"
+  },
+  "accountinfo.deleteaccount": {
+    "defaultMessage": "Excluir conta"
+  },
+  "accountinfo.email": {
+    "defaultMessage": "E-mail"
+  },
+  "accountinfo.firstname": {
+    "defaultMessage": "Nome"
+  },
+  "accountinfo.lastname": {
+    "defaultMessage": "Sobrenome"
+  },
+  "accountinfo.personal-details": {
+    "defaultMessage": "Dados pessoais"
+  },
+  "accountinfo.personal-info": {
+    "defaultMessage": "Informações pessoais"
+  },
+  "accountinfo.tabs": {
+    "defaultMessage": "Seções da conta"
+  },
+  "accountinfo.title": {
+    "defaultMessage": "Informações da conta"
+  },
+  "action.cancel-button": {
+    "defaultMessage": "Cancelar"
+  },
+  "action.close-button": {
+    "defaultMessage": "Fechar"
+  },
+  "action.delete": {
+    "defaultMessage": "Excluir"
+  },
+  "action.delete-description": {
+    "defaultMessage": "O mapa mental excluído não poderá ser recuperado. Deseja continuar?"
+  },
+  "action.delete-title": {
+    "defaultMessage": "Excluir"
+  },
+  "action.duplicate": {
+    "defaultMessage": "Duplicar"
+  },
+  "action.export": {
+    "defaultMessage": "Exportar"
+  },
+  "action.history": {
+    "defaultMessage": "Histórico"
+  },
+  "action.history-description": {
+    "defaultMessage": "Lista de alterações introduzidas nos últimos 90 dias."
+  },
+  "action.history-title": {
+    "defaultMessage": "Histórico de versões"
+  },
+  "action.import": {
+    "defaultMessage": "Importar"
+  },
+  "action.info": {
+    "defaultMessage": "Informações"
+  },
+  "action.label": {
+    "defaultMessage": "Adicionar rótulo"
+  },
+  "action.new": {
+    "defaultMessage": "Novo mapa"
+  },
+  "action.open": {
+    "defaultMessage": "Abrir"
+  },
+  "action.print": {
+    "defaultMessage": "Imprimir"
+  },
+  "action.publish": {
+    "defaultMessage": "Publicar"
+  },
+  "action.rename": {
+    "defaultMessage": "Renomear"
+  },
+  "action.rename-description-placeholder": {
+    "defaultMessage": "Descrição"
+  },
+  "action.rename-name-placeholder": {
+    "defaultMessage": "Nome"
+  },
+  "action.share": {
+    "defaultMessage": "Compartilhar"
+  },
+  "activation.error.message": {
+    "defaultMessage": "Não foi possível ativar sua conta. O link de ativação pode ser inválido ou ter expirado. Entre em contato com o suporte para obter ajuda."
+  },
+  "activation.error.title": {
+    "defaultMessage": "Falha na ativação"
+  },
+  "activation.invalid-link": {
+    "defaultMessage": "Link de ativação inválido"
+  },
+  "activation.loading.desc": {
+    "defaultMessage": "Aguarde enquanto ativamos sua conta..."
+  },
+  "activation.loading.title": {
+    "defaultMessage": "Ativando sua conta"
+  },
+  "activation.page-title": {
+    "defaultMessage": "Ativação da conta | WiseMapping"
+  },
+  "activation.success.message": {
+    "defaultMessage": "Sua conta foi ativada. Agora você pode entrar e começar a criar mapas mentais."
+  },
+  "activation.success.title": {
+    "defaultMessage": "Conta ativada com sucesso"
+  },
+  "admin.accounts.activate-dialog.button": {
+    "defaultMessage": "Ativar usuário"
+  },
+  "admin.accounts.activate-dialog.confirm": {
+    "defaultMessage": "Tem certeza de que deseja ativar manualmente o usuário \"{email}\"?"
+  },
+  "admin.accounts.activate-dialog.info": {
+    "defaultMessage": "O usuário poderá entrar imediatamente, sem confirmar o e-mail."
+  },
+  "admin.accounts.activate-dialog.pending": {
+    "defaultMessage": "Ativando..."
+  },
+  "admin.accounts.activate-dialog.title": {
+    "defaultMessage": "Ativar usuário"
+  },
+  "admin.accounts.add-user": {
+    "defaultMessage": "Adicionar novo usuário"
+  },
+  "admin.accounts.create": {
+    "defaultMessage": "Criar usuário"
+  },
+  "admin.accounts.create-user": {
+    "defaultMessage": "Criar usuário"
+  },
+  "admin.accounts.delete-dialog.button": {
+    "defaultMessage": "Excluir usuário"
+  },
+  "admin.accounts.delete-dialog.confirm": {
+    "defaultMessage": "Tem certeza de que deseja excluir o usuário \"{email}\"?"
+  },
+  "admin.accounts.delete-dialog.pending": {
+    "defaultMessage": "Excluindo..."
+  },
+  "admin.accounts.delete-dialog.title": {
+    "defaultMessage": "Excluir usuário"
+  },
+  "admin.accounts.delete-dialog.warning": {
+    "defaultMessage": "Esta ação não pode ser desfeita!"
+  },
+  "admin.accounts.edit-user": {
+    "defaultMessage": "Editar usuário"
+  },
+  "admin.accounts.filter.not-suspended": {
+    "defaultMessage": "Não suspensos"
+  },
+  "admin.accounts.filter.suspended-only": {
+    "defaultMessage": "Somente suspensos"
+  },
+  "admin.accounts.filter.suspension-all": {
+    "defaultMessage": "Todos (suspensos + ativos)"
+  },
+  "admin.accounts.filters": {
+    "defaultMessage": "Pesquisa e filtros"
+  },
+  "admin.accounts.no-users": {
+    "defaultMessage": "Nenhum usuário encontrado"
+  },
+  "admin.accounts.refresh": {
+    "defaultMessage": "Atualizar"
+  },
+  "admin.accounts.refresh-tooltip": {
+    "defaultMessage": "Atualizar dados"
+  },
+  "admin.accounts.search": {
+    "defaultMessage": "Pesquisar usuários..."
+  },
+  "admin.accounts.subtitle": {
+    "defaultMessage": "Gerencie contas de usuário, permissões e configurações"
+  },
+  "admin.accounts.suspend-dialog.button": {
+    "defaultMessage": "Suspender usuário"
+  },
+  "admin.accounts.suspend-dialog.confirm": {
+    "defaultMessage": "Tem certeza de que deseja suspender o usuário \"{email}\"?"
+  },
+  "admin.accounts.suspend-dialog.pending": {
+    "defaultMessage": "Suspendendo..."
+  },
+  "admin.accounts.suspend-dialog.title": {
+    "defaultMessage": "Suspender usuário"
+  },
+  "admin.accounts.table.actions": {
+    "defaultMessage": "Ações"
+  },
+  "admin.accounts.table.auth": {
+    "defaultMessage": "Autenticação"
+  },
+  "admin.accounts.table.created": {
+    "defaultMessage": "Criado"
+  },
+  "admin.accounts.table.id": {
+    "defaultMessage": "ID"
+  },
+  "admin.accounts.table.name": {
+    "defaultMessage": "Nome"
+  },
+  "admin.accounts.table.status": {
+    "defaultMessage": "Status"
+  },
+  "admin.accounts.title": {
+    "defaultMessage": "Gerenciamento de usuários"
+  },
+  "admin.accounts.unsuspend-dialog.button": {
+    "defaultMessage": "Reativar usuário"
+  },
+  "admin.accounts.unsuspend-dialog.confirm": {
+    "defaultMessage": "Tem certeza de que deseja reativar o usuário \"{email}\"?"
+  },
+  "admin.accounts.unsuspend-dialog.pending": {
+    "defaultMessage": "Reativando..."
+  },
+  "admin.accounts.unsuspend-dialog.reason": {
+    "defaultMessage": "Motivo atual da suspensão: {reason}"
+  },
+  "admin.accounts.unsuspend-dialog.title": {
+    "defaultMessage": "Reativar usuário"
+  },
+  "admin.action.mark-as-not-spam": {
+    "defaultMessage": "marcar como não spam"
+  },
+  "admin.action.mark-as-spam": {
+    "defaultMessage": "marcar como spam"
+  },
+  "admin.activate-user": {
+    "defaultMessage": "Ativar usuário"
+  },
+  "admin.auth-type": {
+    "defaultMessage": "Tipo de autenticação"
+  },
+  "admin.auth.database": {
+    "defaultMessage": "Banco de dados"
+  },
+  "admin.auth.facebook": {
+    "defaultMessage": "Facebook"
+  },
+  "admin.auth.google": {
+    "defaultMessage": "Google"
+  },
+  "admin.auth.ldap": {
+    "defaultMessage": "LDAP"
+  },
+  "admin.button.creating": {
+    "defaultMessage": "Criando..."
+  },
+  "admin.button.update-user": {
+    "defaultMessage": "Atualizar usuário"
+  },
+  "admin.button.updating": {
+    "defaultMessage": "Atualizando..."
+  },
+  "admin.cancel": {
+    "defaultMessage": "Cancelar"
+  },
+  "admin.change-password": {
+    "defaultMessage": "Alterar senha"
+  },
+  "admin.change-password-button": {
+    "defaultMessage": "Alterar senha"
+  },
+  "admin.change-password-description": {
+    "defaultMessage": "Alterar a senha do usuário: {email}"
+  },
+  "admin.change-password-title": {
+    "defaultMessage": "Alterar senha"
+  },
+  "admin.close": {
+    "defaultMessage": "Fechar"
+  },
+  "admin.confirm-password": {
+    "defaultMessage": "Confirmar senha"
+  },
+  "admin.confirm.delete-map": {
+    "defaultMessage": "Tem certeza de que deseja excluir o mapa \"{title}\"?"
+  },
+  "admin.confirm.spam-action": {
+    "defaultMessage": "Tem certeza de que deseja {action} este mapa?"
+  },
+  "admin.console.description": {
+    "defaultMessage": "Gerencie usuários, configurações do sistema e a configuração do aplicativo."
+  },
+  "admin.console.page-title": {
+    "defaultMessage": "Console de administração | WiseMapping"
+  },
+  "admin.console.subtitle": {
+    "defaultMessage": "Administração do sistema"
+  },
+  "admin.console.title": {
+    "defaultMessage": "Console de administração"
+  },
+  "admin.delete": {
+    "defaultMessage": "Excluir"
+  },
+  "admin.delete-user": {
+    "defaultMessage": "Excluir usuário"
+  },
+  "admin.edit": {
+    "defaultMessage": "Editar"
+  },
+  "admin.edit-user": {
+    "defaultMessage": "Editar usuário"
+  },
+  "admin.error.access-denied": {
+    "defaultMessage": "Acesso negado. São necessárias permissões de administrador."
+  },
+  "admin.error.create-user-failed": {
+    "defaultMessage": "Falha ao criar o usuário. Tente novamente."
+  },
+  "admin.error.load-maps": {
+    "defaultMessage": "Falha ao carregar os mapas: {message}"
+  },
+  "admin.error.load-users": {
+    "defaultMessage": "Falha ao carregar os usuários: {message}"
+  },
+  "admin.error.unknown": {
+    "defaultMessage": "Erro desconhecido"
+  },
+  "admin.error.update-map-failed": {
+    "defaultMessage": "Falha ao atualizar o mapa. Tente novamente."
+  },
+  "admin.error.update-user-failed": {
+    "defaultMessage": "Falha ao atualizar o usuário. Tente novamente."
+  },
+  "admin.facebook.filter-tooltip": {
+    "defaultMessage": "Consulta de exclusão de dados do Facebook"
+  },
+  "admin.facebook.id-label": {
+    "defaultMessage": "ID de usuário do Facebook"
+  },
+  "admin.facebook.lookup-button": {
+    "defaultMessage": "Encontrar conta"
+  },
+  "admin.facebook.lookup-not-found": {
+    "defaultMessage": "Nenhuma conta encontrada para este ID de usuário do Facebook."
+  },
+  "admin.facebook.remove": {
+    "defaultMessage": "Remover"
+  },
+  "admin.facebook.remove-button": {
+    "defaultMessage": "Remover conta do Facebook"
+  },
+  "admin.facebook.remove-confirm": {
+    "defaultMessage": "Remover a associação com o Facebook de \"{email}\"?"
+  },
+  "admin.facebook.remove-dialog-title": {
+    "defaultMessage": "Remover conta do Facebook"
+  },
+  "admin.facebook.remove-warning": {
+    "defaultMessage": "Isto desconectará a autenticação do Facebook desta conta. O usuário receberá um e-mail de redefinição de senha para recuperar o acesso."
+  },
+  "admin.facebook.removing": {
+    "defaultMessage": "Removendo..."
+  },
+  "admin.filter.all": {
+    "defaultMessage": "Todos"
+  },
+  "admin.lock-status": {
+    "defaultMessage": "Status de bloqueio"
+  },
+  "admin.locked": {
+    "defaultMessage": "Bloqueado"
+  },
+  "admin.maps.clean-tooltip": {
+    "defaultMessage": "Não marcado como spam"
+  },
+  "admin.maps.creator-suspended-tooltip": {
+    "defaultMessage": "A conta do criador do mapa foi suspensa por um administrador"
+  },
+  "admin.maps.delete": {
+    "defaultMessage": "Excluir mapa"
+  },
+  "admin.maps.description": {
+    "defaultMessage": "Descrição"
+  },
+  "admin.maps.edit": {
+    "defaultMessage": "Editar mapa"
+  },
+  "admin.maps.edit-title": {
+    "defaultMessage": "Editar mapa"
+  },
+  "admin.maps.filter.all-time": {
+    "defaultMessage": "Todo o período"
+  },
+  "admin.maps.filter.date": {
+    "defaultMessage": "Intervalo de datas"
+  },
+  "admin.maps.filter.last-months": {
+    "defaultMessage": "{count, plural, one {Último # mês} other {Últimos # meses}}"
+  },
+  "admin.maps.filter.not-spam": {
+    "defaultMessage": "Não spam"
+  },
+  "admin.maps.filter.spam": {
+    "defaultMessage": "Spam"
+  },
+  "admin.maps.locked-by": {
+    "defaultMessage": "Bloqueado por {user}"
+  },
+  "admin.maps.locked-tooltip": {
+    "defaultMessage": "Sendo editado por {user} no momento"
+  },
+  "admin.maps.mark-as-not-spam": {
+    "defaultMessage": "Marcar como não spam"
+  },
+  "admin.maps.mark-as-spam": {
+    "defaultMessage": "Marcar como spam"
+  },
+  "admin.maps.no-description": {
+    "defaultMessage": "Sem descrição"
+  },
+  "admin.maps.no-maps": {
+    "defaultMessage": "Nenhum mapa encontrado"
+  },
+  "admin.maps.page-title": {
+    "defaultMessage": "Gerenciamento de mapas"
+  },
+  "admin.maps.private-tooltip": {
+    "defaultMessage": "Somente colaboradores podem visualizar este mapa"
+  },
+  "admin.maps.public-tooltip": {
+    "defaultMessage": "Qualquer pessoa pode visualizar este mapa"
+  },
+  "admin.maps.search": {
+    "defaultMessage": "Pesquisar mapas... (#123 para ID, e-mail para criador)"
+  },
+  "admin.maps.search-by-email": {
+    "defaultMessage": "🔍 Pesquisando pelo e-mail do criador"
+  },
+  "admin.maps.search-by-id": {
+    "defaultMessage": "🔍 Pesquisando pelo ID do mapa"
+  },
+  "admin.maps.search-by-text": {
+    "defaultMessage": "🔍 Pesquisando em títulos e descrições"
+  },
+  "admin.maps.spam-label": {
+    "defaultMessage": "Spam ({type})"
+  },
+  "admin.maps.spam-tooltip": {
+    "defaultMessage": "Detectado como spam em {date}"
+  },
+  "admin.maps.spam-tooltip-no-date": {
+    "defaultMessage": "Marcado como spam"
+  },
+  "admin.maps.spam-type-unknown": {
+    "defaultMessage": "Desconhecido"
+  },
+  "admin.maps.suspend-user": {
+    "defaultMessage": "Suspender conta do usuário"
+  },
+  "admin.maps.suspend-user.confirm": {
+    "defaultMessage": "Tem certeza de que deseja suspender a conta do usuário \"{userName}\" (ID: {userId})? A suspensão será registrada como revisão manual."
+  },
+  "admin.maps.suspend-user.confirm-button": {
+    "defaultMessage": "Suspender usuário"
+  },
+  "admin.maps.suspend-user.title": {
+    "defaultMessage": "Suspender conta do usuário"
+  },
+  "admin.maps.suspend-user.warning": {
+    "defaultMessage": "Esta ação suspenderá a conta do usuário, impedindo-o de acessar o sistema."
+  },
+  "admin.maps.table.actions": {
+    "defaultMessage": "Ações"
+  },
+  "admin.maps.table.collaborators": {
+    "defaultMessage": "Colaboradores"
+  },
+  "admin.maps.table.created": {
+    "defaultMessage": "Criado"
+  },
+  "admin.maps.table.created-by": {
+    "defaultMessage": "Criado por"
+  },
+  "admin.maps.table.description": {
+    "defaultMessage": "Descrição"
+  },
+  "admin.maps.table.id": {
+    "defaultMessage": "ID do mapa"
+  },
+  "admin.maps.table.modified": {
+    "defaultMessage": "Modificado"
+  },
+  "admin.maps.table.spam": {
+    "defaultMessage": "Spam"
+  },
+  "admin.maps.table.spam-status": {
+    "defaultMessage": "Status de spam"
+  },
+  "admin.maps.table.status": {
+    "defaultMessage": "Status"
+  },
+  "admin.maps.table.title": {
+    "defaultMessage": "Título"
+  },
+  "admin.maps.title": {
+    "defaultMessage": "Título"
+  },
+  "admin.maps.unknown-user": {
+    "defaultMessage": "usuário desconhecido"
+  },
+  "admin.maps.unlocked-tooltip": {
+    "defaultMessage": "Não está sendo editado no momento"
+  },
+  "admin.maps.view-xml": {
+    "defaultMessage": "Ver XML"
+  },
+  "admin.maps.xml-viewer.copy": {
+    "defaultMessage": "Copiar XML formatado"
+  },
+  "admin.maps.xml-viewer.error": {
+    "defaultMessage": "Erro ao carregar o XML: {message}"
+  },
+  "admin.maps.xml-viewer.info": {
+    "defaultMessage": "Este é o conteúdo XML bruto do mapa mental. Você pode copiar este conteúdo para fins de backup ou análise."
+  },
+  "admin.maps.xml-viewer.loading": {
+    "defaultMessage": "Carregando conteúdo XML..."
+  },
+  "admin.maps.xml-viewer.no-content": {
+    "defaultMessage": "Nenhum conteúdo XML disponível"
+  },
+  "admin.maps.xml-viewer.subtitle": {
+    "defaultMessage": "{title} (ID: {id})"
+  },
+  "admin.maps.xml-viewer.title": {
+    "defaultMessage": "Conteúdo XML do mapa"
+  },
+  "admin.menu.accounts": {
+    "defaultMessage": "Contas"
+  },
+  "admin.menu.maps": {
+    "defaultMessage": "Mapas"
+  },
+  "admin.menu.system": {
+    "defaultMessage": "Sistema"
+  },
+  "admin.new-password": {
+    "defaultMessage": "Nova senha"
+  },
+  "admin.password-error-facebook": {
+    "defaultMessage": "Este usuário é autenticado pelo Facebook. A alteração de senha não está disponível para contas do Facebook. Peça ao usuário que gerencie a senha pela conta do Facebook."
+  },
+  "admin.password-error-failed": {
+    "defaultMessage": "Falha ao alterar a senha"
+  },
+  "admin.password-error-google": {
+    "defaultMessage": "Este usuário é autenticado pelo Google. A alteração de senha não está disponível para contas do Google. Peça ao usuário que gerencie a senha pela conta do Google."
+  },
+  "admin.password-error-length": {
+    "defaultMessage": "A senha deve ter pelo menos 6 caracteres"
+  },
+  "admin.password-error-mismatch": {
+    "defaultMessage": "As senhas não coincidem"
+  },
+  "admin.private": {
+    "defaultMessage": "Privado"
+  },
+  "admin.prompt.new-user-password": {
+    "defaultMessage": "Digite a senha do novo usuário:"
+  },
+  "admin.public": {
+    "defaultMessage": "Público"
+  },
+  "admin.public-access": {
+    "defaultMessage": "Acesso público"
+  },
+  "admin.refresh": {
+    "defaultMessage": "Atualizar"
+  },
+  "admin.status-active": {
+    "defaultMessage": "Ativo"
+  },
+  "admin.status-active-tooltip": {
+    "defaultMessage": "A conta está ativada e em situação regular"
+  },
+  "admin.status-active-tooltip-interactive": {
+    "defaultMessage": "A conta está ativada e em situação regular | Clique para alterar o status"
+  },
+  "admin.status-clean": {
+    "defaultMessage": "Sem spam"
+  },
+  "admin.status-not-activated": {
+    "defaultMessage": "Não ativado"
+  },
+  "admin.status-not-activated-tooltip": {
+    "defaultMessage": "O usuário ainda não confirmou o endereço de e-mail"
+  },
+  "admin.status-not-activated-tooltip-interactive": {
+    "defaultMessage": "O usuário ainda não confirmou o endereço de e-mail | Clique para alterar o status"
+  },
+  "admin.status-suspended": {
+    "defaultMessage": "Suspenso"
+  },
+  "admin.status.click-to-change": {
+    "defaultMessage": "Clique para alterar o status"
+  },
+  "admin.status.reason": {
+    "defaultMessage": "Motivo: {reason}"
+  },
+  "admin.status.suspended-on": {
+    "defaultMessage": "Suspenso em: {date}"
+  },
+  "admin.suspend-user": {
+    "defaultMessage": "Suspender usuário"
+  },
+  "admin.suspension-reason": {
+    "defaultMessage": "Motivo da suspensão"
+  },
+  "admin.suspension-status": {
+    "defaultMessage": "Status de suspensão"
+  },
+  "admin.suspension.abuse": {
+    "defaultMessage": "Abuso"
+  },
+  "admin.suspension.inactivity": {
+    "defaultMessage": "Inatividade"
+  },
+  "admin.suspension.manual-review": {
+    "defaultMessage": "Revisão manual"
+  },
+  "admin.suspension.other": {
+    "defaultMessage": "Outro"
+  },
+  "admin.suspension.security-concern": {
+    "defaultMessage": "Preocupação de segurança"
+  },
+  "admin.suspension.terms-violation": {
+    "defaultMessage": "Violação de termos"
+  },
+  "admin.system.app.name": {
+    "defaultMessage": "Nome"
+  },
+  "admin.system.app.port": {
+    "defaultMessage": "Porta"
+  },
+  "admin.system.application": {
+    "defaultMessage": "Aplicativo"
+  },
+  "admin.system.database": {
+    "defaultMessage": "Banco de dados"
+  },
+  "admin.system.database.info": {
+    "defaultMessage": "Banco de dados"
+  },
+  "admin.system.db.ddl": {
+    "defaultMessage": "Hibernate DDL"
+  },
+  "admin.system.db.driver": {
+    "defaultMessage": "Driver"
+  },
+  "admin.system.db.url": {
+    "defaultMessage": "URL"
+  },
+  "admin.system.db.username": {
+    "defaultMessage": "Nome de usuário"
+  },
+  "admin.system.error": {
+    "defaultMessage": "Falha ao carregar as informações do sistema"
+  },
+  "admin.system.health": {
+    "defaultMessage": "Integridade do sistema"
+  },
+  "admin.system.health.down": {
+    "defaultMessage": "Fora do ar"
+  },
+  "admin.system.health.unknown": {
+    "defaultMessage": "Desconhecido"
+  },
+  "admin.system.health.up": {
+    "defaultMessage": "No ar"
+  },
+  "admin.system.health.warning": {
+    "defaultMessage": "Alerta"
+  },
+  "admin.system.jvm": {
+    "defaultMessage": "JVM"
+  },
+  "admin.system.jvm.load": {
+    "defaultMessage": "Carga do sistema"
+  },
+  "admin.system.jvm.processors": {
+    "defaultMessage": "Processadores"
+  },
+  "admin.system.jvm.start": {
+    "defaultMessage": "Hora de início"
+  },
+  "admin.system.jvm.uptime": {
+    "defaultMessage": "Tempo de atividade"
+  },
+  "admin.system.jvm.vendor": {
+    "defaultMessage": "Fornecedor"
+  },
+  "admin.system.jvm.version": {
+    "defaultMessage": "Versão do Java"
+  },
+  "admin.system.loading": {
+    "defaultMessage": "Carregando informações do sistema..."
+  },
+  "admin.system.memory": {
+    "defaultMessage": "Memória"
+  },
+  "admin.system.memory.info": {
+    "defaultMessage": "Memória"
+  },
+  "admin.system.memory.max": {
+    "defaultMessage": "Memória máxima"
+  },
+  "admin.system.memory.total": {
+    "defaultMessage": "Memória total"
+  },
+  "admin.system.memory.usage": {
+    "defaultMessage": "Uso de memória"
+  },
+  "admin.system.memory.used": {
+    "defaultMessage": "Memória usada"
+  },
+  "admin.system.mindmapMetrics.collaborations": {
+    "defaultMessage": "Colaborações consideradas"
+  },
+  "admin.system.mindmapMetrics.disabled": {
+    "defaultMessage": "Defina `app.monitoring.performance.log-mindmap-listing` como true para capturar métricas."
+  },
+  "admin.system.mindmapMetrics.entityLoads": {
+    "defaultMessage": "Carregamentos de entidades"
+  },
+  "admin.system.mindmapMetrics.executedStatements": {
+    "defaultMessage": "Instruções preparadas"
+  },
+  "admin.system.mindmapMetrics.lastUpdated": {
+    "defaultMessage": "Última atualização"
+  },
+  "admin.system.mindmapMetrics.mapCount": {
+    "defaultMessage": "Mapas retornados"
+  },
+  "admin.system.mindmapMetrics.pending": {
+    "defaultMessage": "Aguardando a próxima solicitação de listagem de mapas mentais para capturar métricas."
+  },
+  "admin.system.mindmapMetrics.segments": {
+    "defaultMessage": "Segmentos de execução"
+  },
+  "admin.system.mindmapMetrics.title": {
+    "defaultMessage": "Desempenho da listagem de mapas mentais"
+  },
+  "admin.system.mindmapMetrics.topQueries": {
+    "defaultMessage": "Principais consultas"
+  },
+  "admin.system.mindmapMetrics.totalTime": {
+    "defaultMessage": "Tempo total (ms)"
+  },
+  "admin.system.refresh": {
+    "defaultMessage": "Atualizar"
+  },
+  "admin.system.statistics": {
+    "defaultMessage": "Estatísticas"
+  },
+  "admin.system.stats.mindmaps": {
+    "defaultMessage": "Total de mapas mentais"
+  },
+  "admin.system.stats.users": {
+    "defaultMessage": "Total de usuários"
+  },
+  "admin.system.title": {
+    "defaultMessage": "Informações do sistema"
+  },
+  "admin.unlocked": {
+    "defaultMessage": "Desbloqueado"
+  },
+  "admin.unsuspend-user": {
+    "defaultMessage": "Reativar usuário"
+  },
+  "admin.user-info.auth-type": {
+    "defaultMessage": "Autenticação"
+  },
+  "admin.user-info.created": {
+    "defaultMessage": "Criado"
+  },
+  "admin.user-info.status": {
+    "defaultMessage": "Status"
+  },
+  "admin.user-info.suspension-reason-value": {
+    "defaultMessage": "Motivo da suspensão: {reason}"
+  },
+  "admin.user-info.title": {
+    "defaultMessage": "Informações do usuário"
+  },
+  "admin.user-info.total-maps": {
+    "defaultMessage": "Total de mapas"
+  },
+  "admin.user-maps-dialog.loading": {
+    "defaultMessage": "Carregando usuário..."
+  },
+  "admin.user-maps-dialog.no-maps": {
+    "defaultMessage": "Este usuário não tem mapas."
+  },
+  "admin.user-maps-dialog.title": {
+    "defaultMessage": "Mapas de {name} (ID: #{id})"
+  },
+  "admin.validation.email-invalid": {
+    "defaultMessage": "Formato de e-mail inválido"
+  },
+  "admin.validation.email-required": {
+    "defaultMessage": "O e-mail é obrigatório"
+  },
+  "admin.validation.firstname-required": {
+    "defaultMessage": "O nome é obrigatório"
+  },
+  "admin.validation.lastname-required": {
+    "defaultMessage": "O sobrenome é obrigatório"
+  },
+  "admin.validation.title-required": {
+    "defaultMessage": "O título é obrigatório"
+  },
+  "admin.view-user-maps": {
+    "defaultMessage": "Ver mapas do usuário"
+  },
+  "admin.view-xml": {
+    "defaultMessage": "Ver XML"
+  },
+  "changepwd.confirm-password": {
+    "defaultMessage": "Confirmar senha"
+  },
+  "changepwd.description": {
+    "defaultMessage": "Por favor, forneça a nova senha para sua conta."
+  },
+  "changepwd.password": {
+    "defaultMessage": "Senha"
+  },
+  "changepwd.password-match": {
+    "defaultMessage": "As senhas não coincidem. Tente novamente."
+  },
+  "changepwd.password-max-length": {
+    "defaultMessage": "A senha não pode ter mais de 39 caracteres."
+  },
+  "changepwd.password-min-length": {
+    "defaultMessage": "A senha deve ter pelo menos 8 caracteres."
+  },
+  "changepwd.password-required": {
+    "defaultMessage": "A senha não pode ficar em branco."
+  },
+  "changepwd.title": {
+    "defaultMessage": "Alterar senha"
+  },
+  "common.allow-email-notifications": {
+    "defaultMessage": "Permitir notificações por e-mail"
+  },
+  "common.cancel": {
+    "defaultMessage": "Cancelar"
+  },
+  "common.close": {
+    "defaultMessage": "Fechar"
+  },
+  "common.delete": {
+    "defaultMessage": "Excluir"
+  },
+  "common.delete-tag": {
+    "defaultMessage": "Excluir tag"
+  },
+  "common.disabled": {
+    "defaultMessage": "Desativado"
+  },
+  "common.email": {
+    "defaultMessage": "E-mail"
+  },
+  "common.emails": {
+    "defaultMessage": "E-mails"
+  },
+  "common.enabled": {
+    "defaultMessage": "Ativado"
+  },
+  "common.first-name": {
+    "defaultMessage": "Primeiro Nome"
+  },
+  "common.last-name": {
+    "defaultMessage": "Sobrenome"
+  },
+  "common.loading": {
+    "defaultMessage": "Carregando..."
+  },
+  "common.locale": {
+    "defaultMessage": "Idioma"
+  },
+  "common.login-form": {
+    "defaultMessage": "Formulário de login"
+  },
+  "common.logo": {
+    "defaultMessage": "Logotipo do WiseMapping"
+  },
+  "common.maps-list": {
+    "defaultMessage": "Lista de mapas"
+  },
+  "common.na": {
+    "defaultMessage": "N/D"
+  },
+  "common.open-drawer": {
+    "defaultMessage": "Abrir menu"
+  },
+  "common.others": {
+    "defaultMessage": "Outros"
+  },
+  "common.refresh": {
+    "defaultMessage": "Atualizar"
+  },
+  "common.registration-form": {
+    "defaultMessage": "Formulário de registro"
+  },
+  "common.retry": {
+    "defaultMessage": "Tentar novamente"
+  },
+  "common.save": {
+    "defaultMessage": "Salvar"
+  },
+  "common.settings": {
+    "defaultMessage": "Configurações"
+  },
+  "common.terms-notice": {
+    "defaultMessage": "Ao continuar, você concorda com os nossos <termsLink>Termos de Serviço</termsLink> e a nossa <privacyLink>Política de Privacidade</privacyLink>."
+  },
+  "common.wait": {
+    "defaultMessage": "Aguarde..."
+  },
+  "create.button": {
+    "defaultMessage": "Criar"
+  },
+  "create.description": {
+    "defaultMessage": "Por favor, preencha o nome e descrição do novo mapa."
+  },
+  "create.title": {
+    "defaultMessage": "Criar um novo mapa mental"
+  },
+  "deletem.count-title": {
+    "defaultMessage": "{count, plural, one {# mapa será excluído} other {# mapas serão excluídos}}"
+  },
+  "deletem.more": {
+    "defaultMessage": "e mais {count}"
+  },
+  "dialog.close": {
+    "defaultMessage": "Fechar a caixa de diálogo"
+  },
+  "duplicate.copy-title": {
+    "defaultMessage": "Cópia de {title}"
+  },
+  "duplicate.title": {
+    "defaultMessage": "Duplicar"
+  },
+  "editor.conflict.description": {
+    "defaultMessage": "Uma versão mais recente deste mapa mental foi salva em outro dispositivo. Atualize a página para carregar a versão mais recente e evitar sobrescrever alterações recentes."
+  },
+  "editor.conflict.refresh": {
+    "defaultMessage": "Atualizar página"
+  },
+  "editor.conflict.title": {
+    "defaultMessage": "Mapa mental atualizado em outro lugar"
+  },
+  "error.contact-support": {
+    "defaultMessage": "Precisa de ajuda? Entre em contato conosco em {support}"
+  },
+  "error.generic-message": {
+    "defaultMessage": "Tente novamente mais tarde ou contate o suporte se o problema continuar."
+  },
+  "error.generic-title": {
+    "defaultMessage": "Encontramos um problema."
+  },
+  "error.go-back": {
+    "defaultMessage": "Voltar"
+  },
+  "error.go-home": {
+    "defaultMessage": "Ir para o início"
+  },
+  "error.go-to-login": {
+    "defaultMessage": "Entrar"
+  },
+  "error.invalid-map-id": {
+    "defaultMessage": "ID de mapa inválido"
+  },
+  "error.map-title-required": {
+    "defaultMessage": "O título do mapa é obrigatório e não pode estar vazio"
+  },
+  "error.map-unavailable-message": {
+    "defaultMessage": "Este mapa mental não está disponível para exibição pública porque viola nossas políticas do site. Se precisar de mais ajuda, entre em contato com support@wisemapping.com."
+  },
+  "error.map-unavailable-title": {
+    "defaultMessage": "Este mapa mental não está disponível para exibição pública."
+  },
+  "error.not-found-message": {
+    "defaultMessage": "A página que você procura pode ter sido removida, renomeada ou estar temporariamente indisponível."
+  },
+  "error.not-found-title": {
+    "defaultMessage": "Não encontramos essa página."
+  },
+  "error.page-title": {
+    "defaultMessage": "Erro inesperado | WiseMapping"
+  },
+  "error.permission-denied-message": {
+    "defaultMessage": "Se você acha que deveria ter acesso, entre em contato com o seu administrador."
+  },
+  "error.permission-denied-title": {
+    "defaultMessage": "Você não tem acesso a esta página."
+  },
+  "expired.description": {
+    "defaultMessage": "Sua sessão atual expirou. Faça login e tente novamente."
+  },
+  "expired.title": {
+    "defaultMessage": "Sua sessão expirou"
+  },
+  "export.desc": {
+    "defaultMessage": "Exporte este mapa no formato desejado e comece a usá-lo em suas apresentações ou compartilhando por e-mail"
+  },
+  "export.document": {
+    "defaultMessage": "Ferramentas de mapa mental: exporte seu mapa mental em formatos de ferramentas de mapa mental de terceiros"
+  },
+  "export.document-label": {
+    "defaultMessage": "Documento: exporte seu mapa mental em um documento independente pronto para compartilhar"
+  },
+  "export.image": {
+    "defaultMessage": "Imagem: obtenha uma representação gráfica do seu mapa, incluindo todas as cores e formas."
+  },
+  "export.img-center": {
+    "defaultMessage": "Centralizar e ajustar"
+  },
+  "export.title": {
+    "defaultMessage": "Exportar"
+  },
+  "export.warning": {
+    "defaultMessage": "A exportação para imagem (SVG, PNG, JPEG, PDF) está disponível apenas na barra de ferramentas do editor."
+  },
+  "footer.aboutus": {
+    "defaultMessage": "Sobre nós"
+  },
+  "footer.col-community": {
+    "defaultMessage": "Comunidade"
+  },
+  "footer.col-company": {
+    "defaultMessage": "Empresa"
+  },
+  "footer.col-support": {
+    "defaultMessage": "Suporte"
+  },
+  "footer.contactus": {
+    "defaultMessage": "Entre em contato"
+  },
+  "footer.copyright": {
+    "defaultMessage": "© {year} WiseMapping LLC"
+  },
+  "footer.donations": {
+    "defaultMessage": "Doações"
+  },
+  "footer.faq": {
+    "defaultMessage": "Perguntas frequentes"
+  },
+  "footer.feedback": {
+    "defaultMessage": "Feedback"
+  },
+  "footer.news": {
+    "defaultMessage": "Notícias"
+  },
+  "footer.opensource": {
+    "defaultMessage": "Código aberto"
+  },
+  "footer.powered-by": {
+    "defaultMessage": "Desenvolvido com WiseMapping"
+  },
+  "footer.privacypolicy": {
+    "defaultMessage": "Política de Privacidade"
+  },
+  "footer.termsandconditions": {
+    "defaultMessage": "Termos e condições"
+  },
+  "footer.twitter": {
+    "defaultMessage": "X"
+  },
+  "forgot.desc": {
+    "defaultMessage": "Enviaremos um e-mail para redefinir sua senha."
+  },
+  "forgot.email": {
+    "defaultMessage": "E-mail"
+  },
+  "forgot.oauth.back": {
+    "defaultMessage": "Voltar ao login"
+  },
+  "forgot.oauth.message": {
+    "defaultMessage": "Você não precisa de senha, faça login usando Facebook ou Google"
+  },
+  "forgot.page-title": {
+    "defaultMessage": "Esqueci minha senha | WiseMapping"
+  },
+  "forgot.register": {
+    "defaultMessage": "Enviar link de recuperação"
+  },
+  "forgot.success.desc": {
+    "defaultMessage": "Enviamos um link de redefinição de senha para o seu e-mail. O link expira em 1 hora. Sua senha atual permanece inalterada até que você use o link."
+  },
+  "forgot.success.title": {
+    "defaultMessage": "Verifique seu e-mail."
+  },
+  "forgot.title": {
+    "defaultMessage": "Redefinir sua senha"
+  },
+  "forgotsuccess.page-title": {
+    "defaultMessage": "Senha recuperada | WiseMapping"
+  },
+  "header.donthaveaccount": {
+    "defaultMessage": "Não tem uma conta?"
+  },
+  "header.haveaccount": {
+    "defaultMessage": "Já tem uma conta?"
+  },
+  "help.support": {
+    "defaultMessage": "Suporte"
+  },
+  "history.no-changes": {
+    "defaultMessage": "Não há alterações disponíveis"
+  },
+  "import.button": {
+    "defaultMessage": "Importar"
+  },
+  "import.description": {
+    "defaultMessage": "Você pode importar mapas do WiseMapping, FreeMind, Freeplane, XMind, MindManager e OPML para sua lista de mapas. Selecione o arquivo que deseja importar."
+  },
+  "import.error-file": {
+    "defaultMessage": "Erro de importação {error}"
+  },
+  "import.error-unsupported-file": {
+    "defaultMessage": "O tipo de arquivo não é suportado. Você pode importar mapas do WiseMapping, FreeMind, Freeplane, XMind, MindManager e OPML."
+  },
+  "import.title": {
+    "defaultMessage": "Importar mapa mental existente"
+  },
+  "info.basic-info": {
+    "defaultMessage": "Informações básicas"
+  },
+  "info.creation-time": {
+    "defaultMessage": "Data de criação"
+  },
+  "info.creator": {
+    "defaultMessage": "Criador"
+  },
+  "info.modified-time": {
+    "defaultMessage": "Data da última modificação"
+  },
+  "info.modified-tny": {
+    "defaultMessage": "Última modificação por"
+  },
+  "info.no-description": {
+    "defaultMessage": "Sem descrição"
+  },
+  "info.private": {
+    "defaultMessage": "Privado"
+  },
+  "info.public": {
+    "defaultMessage": "Público"
+  },
+  "info.starred": {
+    "defaultMessage": "Favoritos"
+  },
+  "info.subtitle": {
+    "defaultMessage": "Detalhes deste mapa e das pessoas que trabalham nele."
+  },
+  "info.title": {
+    "defaultMessage": "Informações"
+  },
+  "label.add-button": {
+    "defaultMessage": "Adicionar rótulo"
+  },
+  "label.add-for": {
+    "defaultMessage": "Editando rótulos para o mapa:"
+  },
+  "label.add-placeholder": {
+    "defaultMessage": "Título do rótulo"
+  },
+  "label.change-color": {
+    "defaultMessage": "Alterar cor do rótulo"
+  },
+  "label.delete-description": {
+    "defaultMessage": "será excluído, incluindo suas associações com todos os mapas existentes. Deseja continuar?"
+  },
+  "label.delete-title": {
+    "defaultMessage": "Confirmar exclusão do rótulo"
+  },
+  "label.description": {
+    "defaultMessage": "Use rótulos para organizar seus mapas."
+  },
+  "label.maps-count": {
+    "defaultMessage": "{count} mapas"
+  },
+  "label.title": {
+    "defaultMessage": "Adicionar um rótulo"
+  },
+  "language.change": {
+    "defaultMessage": "Alterar idioma"
+  },
+  "language.help": {
+    "defaultMessage": "Ajudar a traduzir"
+  },
+  "language.help-dialog.description": {
+    "defaultMessage": "Precisamos da sua ajuda! Se tiver interesse, envie-nos um e-mail para {email}."
+  },
+  "language.help-dialog.title": {
+    "defaultMessage": "Ajude-nos a oferecer suporte a mais idiomas!"
+  },
+  "login.desc": {
+    "defaultMessage": "Faça login em sua conta"
+  },
+  "login.division": {
+    "defaultMessage": "ou"
+  },
+  "login.email": {
+    "defaultMessage": "E-mail"
+  },
+  "login.error": {
+    "defaultMessage": "O endereço de e-mail ou senha inseridos não são válidos."
+  },
+  "login.facebook.button": {
+    "defaultMessage": "Entrar com Facebook"
+  },
+  "login.forgotpwd": {
+    "defaultMessage": "Esqueci minha senha?"
+  },
+  "login.generic-error": {
+    "defaultMessage": "Ocorreu um erro durante a autenticação. Tente novamente."
+  },
+  "login.google.button": {
+    "defaultMessage": "Entrar com Google"
+  },
+  "login.oauth-error": {
+    "defaultMessage": "Falha na autenticação OAuth. Tente novamente ou use outro método de login."
+  },
+  "login.oidc.button": {
+    "defaultMessage": "Entrar com {provider}"
+  },
+  "login.page-title": {
+    "defaultMessage": "Entrar | WiseMapping"
+  },
+  "login.password": {
+    "defaultMessage": "Senha"
+  },
+  "login.server-error": {
+    "defaultMessage": "Ocorreu um erro inesperado. Tente novamente mais tarde."
+  },
+  "login.shared-map-notice": {
+    "defaultMessage": "Um mapa mental foi compartilhado com você. Por favor, faça login para acessá-lo. Não tem uma conta? Registre-se gratuitamente ou use sua conta do Google/Facebook."
+  },
+  "login.shared-map-notice.signin-only": {
+    "defaultMessage": "Um mapa mental foi compartilhado com você. Por favor, faça login para acessá-lo."
+  },
+  "login.signin": {
+    "defaultMessage": "Entrar"
+  },
+  "login.signup": {
+    "defaultMessage": "Cadastrar"
+  },
+  "login.title": {
+    "defaultMessage": "Bem-vindo"
+  },
+  "map.actions": {
+    "defaultMessage": "Ações"
+  },
+  "map.creator": {
+    "defaultMessage": "Criador"
+  },
+  "map.delete-selected": {
+    "defaultMessage": "Excluir selecionado"
+  },
+  "map.labels": {
+    "defaultMessage": "Rótulos"
+  },
+  "map.last-update": {
+    "defaultMessage": "Última atualização"
+  },
+  "map.more-actions": {
+    "defaultMessage": "Mais ações"
+  },
+  "map.name": {
+    "defaultMessage": "Nome"
+  },
+  "map.tooltip-add": {
+    "defaultMessage": "Adicionar rótulo ao selecionado"
+  },
+  "maps.auth-required-default-message": {
+    "defaultMessage": "Você precisa fazer login para ver seus mapas."
+  },
+  "maps.auth-required-heading": {
+    "defaultMessage": "Faça login para acessar seus mapas"
+  },
+  "maps.auth-required-login": {
+    "defaultMessage": "Ir para o login"
+  },
+  "maps.auth-required-title": {
+    "defaultMessage": "Login necessário | WiseMapping"
+  },
+  "maps.choose-file": {
+    "defaultMessage": "Escolher um arquivo"
+  },
+  "maps.copilot-button": {
+    "defaultMessage": "Copiloto IA"
+  },
+  "maps.copilot-dialog.continue": {
+    "defaultMessage": "Abrir Copiloto"
+  },
+  "maps.copilot-dialog.description": {
+    "defaultMessage": "O Copiloto IA é um assistente de brainstorming alimentado pelo ChatGPT que transforma seus prompts em mapas mentais estruturados. Vamos abri-lo em uma nova aba para que você possa ampliar ideias, gerar tópicos e trazer o melhor de volta para o WiseMapping."
+  },
+  "maps.copilot-dialog.title": {
+    "defaultMessage": "Copiloto de mapas mentais com tecnologia ChatGPT"
+  },
+  "maps.copilot-tooltip": {
+    "defaultMessage": "Inicie um mapa mental com o Copiloto IA"
+  },
+  "maps.create-tooltip": {
+    "defaultMessage": "Criar um novo mapa mental"
+  },
+  "maps.empty-result": {
+    "defaultMessage": "Nenhum mapa mental correspondente encontrado com os critérios de filtro atuais."
+  },
+  "maps.import-desc": {
+    "defaultMessage": "Importar de outras ferramentas"
+  },
+  "maps.load-error": {
+    "defaultMessage": "Não foi possível carregar seus mapas. Tente novamente mais tarde."
+  },
+  "maps.modified-by-desc": {
+    "defaultMessage": "Modificado por {by} em {on}"
+  },
+  "maps.nav-all": {
+    "defaultMessage": "Todos"
+  },
+  "maps.nav-onwned": {
+    "defaultMessage": "Meus mapas"
+  },
+  "maps.nav-public": {
+    "defaultMessage": "Públicos"
+  },
+  "maps.nav-shared": {
+    "defaultMessage": "Compartilhados comigo"
+  },
+  "maps.nav-starred": {
+    "defaultMessage": "Favoritos"
+  },
+  "maps.page-title": {
+    "defaultMessage": "Meus mapas | WiseMapping"
+  },
+  "maps.revert": {
+    "defaultMessage": "Reverter"
+  },
+  "maps.search-action": {
+    "defaultMessage": "Pesquisar..."
+  },
+  "maps.search-label": {
+    "defaultMessage": "Pesquisar mapas"
+  },
+  "maps.select-all": {
+    "defaultMessage": "Selecionar tudo"
+  },
+  "maps.select-map": {
+    "defaultMessage": "Selecionar {title}"
+  },
+  "maps.sorted-ascending": {
+    "defaultMessage": "ordem crescente"
+  },
+  "maps.sorted-descending": {
+    "defaultMessage": "ordem decrescente"
+  },
+  "maps.tooltip-open": {
+    "defaultMessage": "Abrir para edição"
+  },
+  "maps.tooltip-starred": {
+    "defaultMessage": "Favoritos"
+  },
+  "maps.view": {
+    "defaultMessage": "Visualizar"
+  },
+  "menu.account": {
+    "defaultMessage": "Conta"
+  },
+  "menu.admin-console": {
+    "defaultMessage": "Console de administração"
+  },
+  "menu.change-password": {
+    "defaultMessage": "Alterar senha"
+  },
+  "menu.signout": {
+    "defaultMessage": "Sair"
+  },
+  "oauth.error": {
+    "defaultMessage": "Erro de OAuth: {error}"
+  },
+  "oauth.missing-code": {
+    "defaultMessage": "A resposta do login não incluiu um código nem um token."
+  },
+  "publish.checkbox": {
+    "defaultMessage": "Habilitar compartilhamento público"
+  },
+  "publish.copied": {
+    "defaultMessage": "Copiado para a área de transferência!"
+  },
+  "publish.description": {
+    "defaultMessage": "Torne seu mapa público. Qualquer pessoa com o link pode visualizá-lo."
+  },
+  "publish.embedded": {
+    "defaultMessage": "Incorporado"
+  },
+  "publish.embedded-msg": {
+    "defaultMessage": "Clique no código para copiá-lo para a área de transferência:"
+  },
+  "publish.public-url": {
+    "defaultMessage": "URL pública"
+  },
+  "publish.public-url-msg": {
+    "defaultMessage": "Clique no link para copiá-lo para a área de transferência:"
+  },
+  "publish.title": {
+    "defaultMessage": "Publicar"
+  },
+  "registation.success-title": {
+    "defaultMessage": "Cadastro bem-sucedido | WiseMapping"
+  },
+  "registration.callback.back": {
+    "defaultMessage": "Voltar ao login"
+  },
+  "registration.callback.confirm-signin.account": {
+    "defaultMessage": "Você está prestes a entrar no WiseMapping com {provider} como {email}. Continue apenas se você mesmo iniciou este acesso."
+  },
+  "registration.callback.confirm-signin.description": {
+    "defaultMessage": "Você está prestes a entrar no WiseMapping com {provider}. Continue apenas se você mesmo iniciou este acesso."
+  },
+  "registration.callback.confirm-signin.title": {
+    "defaultMessage": "Continuar o início de sessão?"
+  },
+  "registration.callback.confirm.description": {
+    "defaultMessage": "Uma conta com o mesmo e-mail foi registrada anteriormente. Deseja vincular sua conta do {provider} a essa conta do WiseMapping?"
+  },
+  "registration.callback.confirm.title": {
+    "defaultMessage": "Confirmar"
+  },
+  "registration.callback.continue": {
+    "defaultMessage": "Continuar"
+  },
+  "registration.callback.invalid": {
+    "defaultMessage": "Este link de acesso não é válido. Entre novamente."
+  },
+  "registration.callback.sync": {
+    "defaultMessage": "Sincronizar conta"
+  },
+  "registration.callback.waiting.description": {
+    "defaultMessage": "Aguarde enquanto validamos sua identidade"
+  },
+  "registration.callback.waiting.title": {
+    "defaultMessage": "Finalizando..."
+  },
+  "registration.desc": {
+    "defaultMessage": "O cadastro é gratuito e leva apenas um momento"
+  },
+  "registration.division": {
+    "defaultMessage": "ou"
+  },
+  "registration.email": {
+    "defaultMessage": "E-mail"
+  },
+  "registration.error.title": {
+    "defaultMessage": "Falha no Registro"
+  },
+  "registration.facebook.button": {
+    "defaultMessage": "Registrar com Facebook"
+  },
+  "registration.firstname": {
+    "defaultMessage": "Nome"
+  },
+  "registration.form-legend": {
+    "defaultMessage": "Informações da conta"
+  },
+  "registration.google.button": {
+    "defaultMessage": "Cadastrar com Google"
+  },
+  "registration.lastname": {
+    "defaultMessage": "Sobrenome"
+  },
+  "registration.oidc.button": {
+    "defaultMessage": "Cadastrar-se com {provider}"
+  },
+  "registration.page-title": {
+    "defaultMessage": "Cadastro | WiseMapping"
+  },
+  "registration.password": {
+    "defaultMessage": "Senha"
+  },
+  "registration.recaptcha-notice": {
+    "defaultMessage": "Este site é protegido pelo reCAPTCHA e aplicam-se a <privacyLink>Política de Privacidade</privacyLink> e os <termsLink>Termos de Serviço</termsLink> do Google."
+  },
+  "registration.register": {
+    "defaultMessage": "Cadastrar"
+  },
+  "registration.success.already-activated": {
+    "defaultMessage": "Já ativou sua conta?"
+  },
+  "registration.success.check-spam": {
+    "defaultMessage": "Se você não encontrar o e-mail, verifique sua pasta de spam."
+  },
+  "registration.success.email-sent": {
+    "defaultMessage": "Enviamos um e-mail de ativação para sua caixa de entrada. Verifique seu e-mail e clique no link de ativação para ativar sua conta."
+  },
+  "registration.success.title": {
+    "defaultMessage": "Cadastro concluído!"
+  },
+  "registration.title": {
+    "defaultMessage": "Tornar-se membro"
+  },
+  "rename.description": {
+    "defaultMessage": "Por favor, preencha o nome e descrição do novo mapa."
+  },
+  "rename.title": {
+    "defaultMessage": "Renomear"
+  },
+  "reset-password.confirm-password": {
+    "defaultMessage": "Confirmar nova senha"
+  },
+  "reset-password.desc": {
+    "defaultMessage": "Digite sua nova senha abaixo."
+  },
+  "reset-password.invalid-link": {
+    "defaultMessage": "Link de redefinição de senha inválido. Solicite um novo."
+  },
+  "reset-password.mismatch": {
+    "defaultMessage": "As senhas não coincidem."
+  },
+  "reset-password.page-title": {
+    "defaultMessage": "Redefinir senha | WiseMapping"
+  },
+  "reset-password.password": {
+    "defaultMessage": "Nova senha"
+  },
+  "reset-password.request-new": {
+    "defaultMessage": "Solicitar novo link"
+  },
+  "reset-password.submit": {
+    "defaultMessage": "Definir nova senha"
+  },
+  "reset-password.title": {
+    "defaultMessage": "Defina uma nova senha"
+  },
+  "reset-password.too-long": {
+    "defaultMessage": "A senha deve ter menos de 40 caracteres."
+  },
+  "reset-password.too-short": {
+    "defaultMessage": "A senha deve ter pelo menos 8 caracteres."
+  },
+  "role.editor": {
+    "defaultMessage": "Editor"
+  },
+  "role.owner": {
+    "defaultMessage": "Proprietário"
+  },
+  "role.viewer": {
+    "defaultMessage": "Visualizador"
+  },
+  "seo.activation.description": {
+    "defaultMessage": "Ative sua conta do WiseMapping para começar a criar mapas mentais, organizar ideias e colaborar com outras pessoas. Conclua a configuração em segundos."
+  },
+  "seo.forgot-password-success.description": {
+    "defaultMessage": "Um e-mail de recuperação foi enviado para sua caixa de entrada. Confira-o para redefinir a senha da sua conta do WiseMapping e voltar aos seus mapas mentais."
+  },
+  "seo.forgot-password.description": {
+    "defaultMessage": "Redefina a senha da sua conta do WiseMapping. Informe seu e-mail e enviaremos um link de recuperação."
+  },
+  "seo.login.description": {
+    "defaultMessage": "Entre na sua conta do WiseMapping para acessar seus mapas mentais, criar novos e colaborar com outras pessoas. Ferramenta gratuita de mapas mentais online."
+  },
+  "seo.maps.description": {
+    "defaultMessage": "Acesse e gerencie seus mapas mentais no WiseMapping. Crie, edite, compartilhe e colabore em seus projetos de pensamento visual. Organize suas ideias com uma poderosa ferramenta de mapas mentais."
+  },
+  "seo.maps.title": {
+    "defaultMessage": "Meus mapas | WiseMapping"
+  },
+  "seo.registration-success.description": {
+    "defaultMessage": "O cadastro da sua conta do WiseMapping foi concluído. Confira o e-mail com o link de ativação para finalizar a configuração e começar a criar mapas mentais."
+  },
+  "seo.registration-success.title": {
+    "defaultMessage": "Cadastro concluído | WiseMapping"
+  },
+  "seo.registration.description": {
+    "defaultMessage": "Crie sua conta gratuita do WiseMapping para começar a criar mapas mentais, organizar ideias e colaborar com outras pessoas. Junte-se a milhares de usuários no mundo todo."
+  },
+  "seo.reset-password.description": {
+    "defaultMessage": "Defina uma nova senha para a sua conta do WiseMapping."
+  },
+  "share.add-button": {
+    "defaultMessage": "Compartilhar"
+  },
+  "share.add-message": {
+    "defaultMessage": "Adicionar mensagem"
+  },
+  "share.adding-button": {
+    "defaultMessage": "Compartilhando..."
+  },
+  "share.can-edit": {
+    "defaultMessage": "Pode editar"
+  },
+  "share.delete": {
+    "defaultMessage": "Excluir colaborador"
+  },
+  "share.delete-description": {
+    "defaultMessage": "Adicione colaboradores. Eles receberão acesso instantâneo por e-mail para editar juntos."
+  },
+  "share.delete-title": {
+    "defaultMessage": "Compartilhar com pessoas"
+  },
+  "share.emails-placeholder": {
+    "defaultMessage": "Adicione pessoas por e-mail, separadas por vírgulas"
+  },
+  "share.message": {
+    "defaultMessage": "Mensagem"
+  },
+  "share.people-with-access": {
+    "defaultMessage": "Pessoas com acesso"
+  },
+  "theme.dark": {
+    "defaultMessage": "Escuro"
+  },
+  "theme.light": {
+    "defaultMessage": "Claro"
+  },
+  "theme.toggle": {
+    "defaultMessage": "Alternar Tema"
+  },
+  "validation.title-required": {
+    "defaultMessage": "Título é obrigatório"
+  }
+}

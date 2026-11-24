@@ -1,0 +1,181 @@
+/*
+ *    Copyright [2007-2025] [wisemapping]
+ *
+ *   Licensed under WiseMapping Public License, Version 1.0 (the "License").
+ *   It is basically the Apache License, Version 2.0 (the "License") plus the
+ *   "powered by wisemapping" text requirement on every single page;
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the license at
+ *
+ *       https://github.com/wisemapping/wisemapping-open-source/blob/main/LICENSE.md
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
+
+import React, { use } from 'react';
+import { useIntl } from 'react-intl';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  ErrorInfo,
+  MAP_DESCRIPTION_MAX_LENGTH,
+  MAP_TITLE_MAX_LENGTH,
+} from '../../../../classes/client';
+import { SimpleDialogProps, handleOnMutationSuccess } from '..';
+import Input from '../../../form/input';
+import BaseDialog from '../base-dialog';
+import FormControl from '@mui/material/FormControl';
+import { useFetchMapById } from '../../../../classes/middleware';
+import { ClientContext } from '../../../../classes/provider/client-context';
+
+export type RenameModel = {
+  id: number;
+  title?: string;
+  description?: string;
+};
+
+const defaultModel: RenameModel = { title: '', description: '', id: -1 };
+const RenameDialog = ({ mapId, onClose }: SimpleDialogProps): React.ReactElement => {
+  const client = use(ClientContext);
+  const [model, setModel] = React.useState<RenameModel>(defaultModel);
+  const [isInitialized, setIsInitialized] = React.useState<boolean>(false);
+  const [error, setError] = React.useState<ErrorInfo>();
+
+  const intl = useIntl();
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation<RenameModel, ErrorInfo, RenameModel>({
+    mutationFn: (model: RenameModel) => {
+      const { id, ...rest } = model;
+      return client.renameMap(id, rest).then(() => model);
+    },
+    onSuccess: () => {
+      handleOnMutationSuccess(onClose, queryClient);
+    },
+    onError: (error) => {
+      setError(error);
+    },
+  });
+
+  const handleOnClose = (): void => {
+    onClose();
+    setModel(defaultModel);
+    setIsInitialized(false);
+    setError(undefined);
+  };
+
+  const handleOnSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
+    event.preventDefault();
+    setError(undefined);
+
+    // Validate that mapId is valid (0 is a valid ID)
+    if (Number.isNaN(mapId)) {
+      setError({
+        msg: intl.formatMessage({
+          id: 'error.invalid-map-id',
+          defaultMessage: 'Invalid map ID',
+        }),
+      });
+      return;
+    }
+
+    // Use mapId from props, not model.id, to ensure it's always valid. Only the fields that
+    // changed are sent: the backend refuses the map's own, unchanged title as a duplicate.
+    const validatedModel: RenameModel = { id: mapId };
+    if (model.title !== undefined && model.title !== map?.title) {
+      validatedModel.title = model.title;
+    }
+    if (model.description !== undefined && model.description !== map?.description) {
+      validatedModel.description = model.description;
+    }
+
+    mutation.mutate(validatedModel);
+  };
+
+  // Stable, so that a key re-renders only the field typed in (see Input).
+  const handleOnChange = React.useCallback((event: React.ChangeEvent<HTMLInputElement>): void => {
+    const name = event.target.name;
+    const value = event.target.value;
+
+    // Clear any previous errors when user starts typing
+    setError(undefined);
+
+    // Update the model with the correct field name
+    // Only update title and description, preserve id from mapId prop
+    if (name === 'title') {
+      setModel((current) => ({ ...current, title: value }));
+    } else if (name === 'description') {
+      setModel((current) => ({ ...current, description: value }));
+    }
+  }, []);
+
+  const { data: map } = useFetchMapById(mapId);
+
+  // An invalid id (0 is a valid one) is an error for as long as it is invalid: derived, so typing
+  // in the form can not clear it.
+  const invalidMapIdError: ErrorInfo | undefined = Number.isNaN(mapId)
+    ? {
+        msg: intl.formatMessage({ id: 'error.invalid-map-id', defaultMessage: 'Invalid map ID' }),
+      }
+    : undefined;
+  const shownError = error ?? invalidMapIdError;
+
+  // Only set model from map data on initial load. Adjusted while rendering, not in an effect, so
+  // the form never shows a frame of empty fields once the map is there.
+  if (map && !isInitialized) {
+    setModel(map);
+    setIsInitialized(true);
+  }
+
+  return (
+    <div>
+      <BaseDialog
+        onClose={handleOnClose}
+        onSubmit={handleOnSubmit}
+        error={shownError}
+        isLoading={mutation.isPending}
+        title={intl.formatMessage({ id: 'rename.title', defaultMessage: 'Rename' })}
+        description={intl.formatMessage({
+          id: 'rename.description',
+          defaultMessage: 'Please, fill the new map name and description.',
+        })}
+        submitButton={intl.formatMessage({ id: 'rename.title', defaultMessage: 'Rename' })}
+      >
+        <FormControl fullWidth={true}>
+          <Input
+            name="title"
+            type="text"
+            label={intl.formatMessage({
+              id: 'action.rename-name-placeholder',
+              defaultMessage: 'Name',
+            })}
+            value={model.title}
+            onChange={handleOnChange}
+            error={shownError}
+            fullWidth={true}
+            maxLength={MAP_TITLE_MAX_LENGTH}
+          />
+
+          <Input
+            name="description"
+            type="text"
+            label={intl.formatMessage({
+              id: 'action.rename-description-placeholder',
+              defaultMessage: 'Description',
+            })}
+            value={model.description}
+            onChange={handleOnChange}
+            required={false}
+            fullWidth={true}
+            maxLength={MAP_DESCRIPTION_MAX_LENGTH}
+          />
+        </FormControl>
+      </BaseDialog>
+    </div>
+  );
+};
+
+export default RenameDialog;

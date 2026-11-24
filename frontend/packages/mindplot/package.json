@@ -1,0 +1,93 @@
+{
+  "name": "@wisemapping/mindplot",
+  "version": "6.0.1",
+  "description": "WiseMapping - Mindplot Canvas Library",
+  "homepage": "https://www.wisemapping.com/opensource/",
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:wisemapping/wisemapping-frontend.git"
+  },
+  "main": "dist/index.cjs",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "sideEffects": [
+    "./src/index.ts",
+    "./dist/index.js",
+    "./dist/index.cjs"
+  ],
+  "directories": {
+    "lib": "src",
+    "test": "__tests__"
+  },
+  "author": "Paulo Veiga <pveiga@wisemapping.com>",
+  "files": [
+    "dist",
+    "assets"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "build-storybook": "storybook build",
+    "clean": "rm -rf dist node_modules/.cache storybook-static cypress/screenshots cypress/videos debug-storybook.log .eslintcache",
+    "cy:open": "cypress open",
+    "cy:run": "cypress run --browser chrome",
+    "dev": "vite build --watch",
+    "lint": "eslint src test cypress eslint.config.mjs vite.config.mts cypress.config.js .storybook --ext js,ts",
+    "lint:fix": "eslint src test cypress eslint.config.mjs vite.config.mts cypress.config.js .storybook --ext js,ts --fix",
+    "storybook": "STORYBOOK_DISABLE_TELEMETRY=1 storybook dev -p ${PORT:-6006} --quiet",
+    "test": "yarn test:unit && yarn test:integration",
+    "test:integration": "PORT=6107 node ../../scripts/run-storybook-cypress.js",
+    "test:unit": "jest ./test/unit --coverage --silent --detectOpenHandles",
+    "test:visual": "VISUAL_SNAPSHOTS=verify yarn test:integration",
+    "test:visual:update": "VISUAL_SNAPSHOTS=update yarn test:integration"
+  },
+  "dependencies": {
+    "@wisemapping/web2d": "*",
+    "fflate": "^0.8.3",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
+    "lodash": "^4.18.1",
+    "xml-formatter": "^3.7.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.29.7",
+    "@babel/preset-env": "^7.29.7",
+    "@babel/preset-typescript": "^7.29.7",
+    "@eslint/js": "^10.0.1",
+    "@jest/globals": "^30.5.2",
+    "@simonsmith/cypress-image-snapshot": "^11.0.0",
+    "@storybook/addon-docs": "^10.6.1",
+    "@storybook/addon-links": "^10.6.1",
+    "@storybook/html-vite": "^10.6.1",
+    "@types/jest": "^30.0.0",
+    "@types/lodash": "^4.17.25",
+    "@types/node": "^26.6.4",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "babel-jest": "^30.5.2",
+    "blob-polyfill": "^9.0.20240710",
+    "cypress": "^16.1.1",
+    "eslint": "^10.12.0",
+    "eslint-plugin-cypress": "^7.0.2",
+    "eslint-plugin-import-x": "^4.17.1",
+    "globals": "^17.13.0",
+    "jest": "^30.5.2",
+    "jest-diff": "^30.5.2",
+    "jest-environment-jsdom": "^30.5.2",
+    "raphael": "^2.3.0",
+    "storybook": "^10.6.1",
+    "ts-jest": "^29.4.14",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.71.1",
+    "vite": "^8.3.2"
+  },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.com"
+  }
+}

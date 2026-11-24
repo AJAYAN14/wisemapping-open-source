@@ -1,0 +1,84 @@
+import type { StorybookConfig } from '@storybook/react-vite';
+import path, { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const getAbsolutePath = (value: string) =>
+  dirname(fileURLToPath(import.meta.resolve(`${value}/package.json`)));
+
+const config: StorybookConfig = {
+  stories: ['../src/**/*.mdx', '../src/**/*.stories.@(js|jsx|ts|tsx)'],
+  addons: [getAbsolutePath('@storybook/addon-docs'), getAbsolutePath('@storybook/addon-links')],
+  framework: {
+    name: getAbsolutePath('@storybook/react-vite'),
+    options: {},
+  },
+  core: {
+    disableTelemetry: true,
+  },
+  async viteFinal(config) {
+    // Add wxml loader plugin
+    const wxmlLoader = () => {
+      return {
+        name: 'wxml-loader',
+        transform(code: string, id: string) {
+          if (id.endsWith('.wxml')) {
+            return {
+              code: `export default ${JSON.stringify(code)};`,
+              map: null,
+            };
+          }
+          return null;
+        },
+      };
+    };
+
+    config.plugins = config.plugins || [];
+    config.plugins.push(wxmlLoader());
+
+    // Include .wxml files as assets
+    config.assetsInclude = config.assetsInclude || [];
+    if (Array.isArray(config.assetsInclude)) {
+      config.assetsInclude.push('**/*.wxml');
+    }
+
+    config.resolve = config.resolve || {};
+    // vite.config.ts gives its aliases as an array of { find, replacement }: spreading it into an
+    // object made entries whose replacement is an object, which Vite can not apply. The aliases
+    // below come first so that they win over the vite.config.ts ones.
+    const existingAliases = config.resolve.alias ?? [];
+    config.resolve.alias = [
+      // Resolve workspace packages directly to source to avoid build order issues in storybook
+      {
+        find: /^@wisemapping\/mindplot$/,
+        replacement: path.resolve(__dirname, '../../mindplot/src/index.ts'),
+      },
+      {
+        find: /^@wisemapping\/web2d$/,
+        replacement: path.resolve(__dirname, '../../web2d/src/index.ts'),
+      },
+      // Add explicit alias for MUI icons to fix workspace resolution
+      {
+        find: '@mui/icons-material',
+        replacement: path.resolve(__dirname, '../../../node_modules/@mui/icons-material'),
+      },
+      ...(Array.isArray(existingAliases)
+        ? existingAliases
+        : Object.entries(existingAliases).map(([find, replacement]) => ({ find, replacement }))),
+    ];
+
+    // Add dedupe for MUI packages to fix workspace resolution
+    config.resolve.dedupe = config.resolve.dedupe || [];
+    config.resolve.dedupe.push(
+      '@mui/material',
+      '@mui/icons-material',
+      '@emotion/react',
+      '@emotion/styled',
+    );
+
+    return config;
+  },
+};
+
+export default config;

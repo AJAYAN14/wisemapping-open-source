@@ -1,0 +1,284 @@
+/*
+ *    Copyright [2007-2025] [wisemapping]
+ *
+ *   Licensed under WiseMapping Public License, Version 1.0 (the "License").
+ *   It is basically the Apache License, Version 2.0 (the "License") plus the
+ *   "powered by wisemapping" text requirement on every single page;
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the license at
+ *
+ *       https://github.com/wisemapping/wisemapping-open-source/blob/main/LICENSE.md
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
+import { $assert } from './util/assert';
+import type CentralTopic from './CentralTopic';
+import type { DesignerOptions } from './DesignerOptionsBuilder';
+import type Relationship from './Relationship';
+import type Topic from './Topic';
+import type NodeModel from './model/NodeModel';
+import { $notify } from './model/ToolbarNotifier';
+
+class DesignerModel {
+  private _zoom: number;
+
+  private _topics: Topic[];
+
+  private _relationships: Relationship[];
+
+  // Topics by id, authoritative: a topic missing from it is not in _topics, so a miss needs no
+  // scan. A topic's id changes through NodeGraph.setId, which calls reindexTopic; an entry whose
+  // topic has another id all the same is repaired when a lookup meets it.
+  private _topicsById: Map<number, Topic>;
+
+  // The selected topics, kept by Topic.setOnFocus, so that counting them needs no scan. A topic is
+  // added unselected: the designer adds each topic it builds before anything can select it.
+  private _selectedTopics = new Set<Topic>();
+
+  // The selected relationships, kept by Relationship.setOnFocus, like _selectedTopics.
+  private _selectedRelationships = new Set<Relationship>();
+
+  constructor(options: DesignerOptions) {
+    this._zoom = options.zoom;
+    this._topics = [];
+    this._relationships = [];
+    this._topicsById = new Map();
+  }
+
+  getZoom(): number {
+    return this._zoom;
+  }
+
+  setZoom(zoom: number): void {
+    this._zoom = zoom;
+  }
+
+  /**
+   * removeTopic replaces this array, so read it when needed instead of keeping it.
+   */
+  getTopics(): Topic[] {
+    return this._topics;
+  }
+
+  getRelationships(): Relationship[] {
+    return this._relationships;
+  }
+
+  getCentralTopic(): CentralTopic {
+    const topics = this.getTopics();
+    const centralTopic = topics[0] as unknown as CentralTopic;
+    if (!centralTopic) {
+      throw new Error('Central topic not found. Mindmap must have at least one topic.');
+    }
+    return centralTopic;
+  }
+
+  filterSelectedTopics(): Topic[] {
+    return this._topics.filter((t) => t.isOnFocus());
+  }
+
+  /** The number of selected topics: the length of filterSelectedTopics(), without the scan. */
+  countSelectedTopics(): number {
+    return this._selectedTopics.size;
+  }
+
+  /**
+   * Records that a topic of this model was selected or unselected.
+   * @internal Called by Topic.setOnFocus.
+   */
+  setTopicSelected(topic: Topic, selected: boolean): void {
+    if (!selected) {
+      this._selectedTopics.delete(topic);
+    } else if (this._topicsById.get(topic.getId()) === topic || this._topics.includes(topic)) {
+      this._selectedTopics.add(topic);
+    }
+  }
+
+  /**
+   * Case-insensitive substring match over topic text. An empty or
+   * whitespace-only query matches nothing rather than every topic.
+   */
+  findTopicsByText(query: string): Topic[] {
+    const normalizedQuery = query.trim().toLowerCase();
+    if (!normalizedQuery) {
+      return [];
+    }
+    return this._topics.filter((topic) =>
+      DesignerModel._searchableText(topic).toLowerCase().includes(normalizedQuery),
+    );
+  }
+
+  /**
+   * A topic whose text was never edited stores nothing, yet renders the
+   * theme's default label -- "Main Topic" and friends. Search has to match
+   * what is on screen, so fall back to the rendered text in that case. The
+   * model's plain text is preferred because it has HTML markup stripped.
+   */
+  private static _searchableText(topic: Topic): string {
+    const plainText = topic.getModel().getPlainText();
+    return plainText !== '' ? plainText : topic.getText();
+  }
+
+  filterSelectedRelationships(): Relationship[] {
+    return this._relationships.filter((r) => r.isOnFocus());
+  }
+
+  /**
+   * The number of selected relationships: the length of filterSelectedRelationships(), without
+   * the scan.
+   */
+  countSelectedRelationships(): number {
+    return this._selectedRelationships.size;
+  }
+
+  /**
+   * Records that a relationship of this model was selected or unselected.
+   * @internal Called by Relationship.setOnFocus.
+   */
+  setRelationshipSelected(relationship: Relationship, selected: boolean): void {
+    if (selected) {
+      this._selectedRelationships.add(relationship);
+    } else {
+      this._selectedRelationships.delete(relationship);
+    }
+  }
+
+  getEntities(): (Relationship | Topic)[] {
+    let result: (Relationship | Topic)[] = [];
+    result = result.concat(this._topics);
+    result = result.concat(this._relationships);
+    return result;
+  }
+
+  removeTopic(topic: Topic): void {
+    $assert(topic, 'topic can not be null');
+    this._topics = this._topics.filter((t) => t !== topic);
+    this._selectedTopics.delete(topic);
+    this._unindex(topic);
+  }
+
+  removeRelationship(rel: Relationship): void {
+    $assert(rel, 'rel can not be null');
+    this._relationships = this._relationships.filter((r) => r !== rel);
+    this._selectedRelationships.delete(rel);
+  }
+
+  addTopic(topic: Topic): void {
+    $assert(topic, 'topic can not be null');
+    $assert(typeof topic.getId() === 'number', `id is not a number:${topic.getId()}`);
+    this._topics.push(topic);
+    this._index(topic);
+  }
+
+  /** A lookup answers the first topic of _topics that matches: an earlier one keeps its place. */
+  private _index(topic: Topic): void {
+    const id = topic.getId();
+    if (!this._topicsById.has(id)) {
+      this._topicsById.set(id, topic);
+    }
+  }
+
+  private _unindex(topic: Topic): void {
+    const id = topic.getId();
+    if (this._topicsById.get(id) === topic) {
+      this._topicsById.delete(id);
+      // Another topic with the same id, if any, takes its place ...
+      const other = this._topics.find((t) => t.getId() === id);
+      if (other) {
+        this._topicsById.set(id, other);
+      }
+    }
+  }
+
+  addRelationship(rel: Relationship): void {
+    $assert(rel, 'rel can not be null');
+    this._relationships.push(rel);
+  }
+
+  filterTopicsIds(validate?: (topic: Topic) => boolean, errorMsg?: string): number[] {
+    const result: number[] = [];
+    const topics = this.filterSelectedTopics();
+
+    let isValid = true;
+    topics.forEach((topic) => {
+      if (validate) {
+        isValid = validate(topic);
+      }
+
+      // Add node only if it's valid.
+      if (isValid) {
+        result.push(topic.getId());
+      } else if (errorMsg) {
+        $notify(errorMsg);
+      }
+    });
+
+    return result;
+  }
+
+  selectedTopic(): Topic | undefined {
+    const topics = this.filterSelectedTopics();
+    return topics.length > 0 ? topics[0] : undefined;
+  }
+
+  selectedRelationship(): Relationship | undefined {
+    const relationships = this.filterSelectedRelationships();
+    return relationships.length > 0 ? relationships[0] : undefined;
+  }
+
+  /** Indexes a topic whose id changed from previousId. */
+  reindexTopic(topic: Topic, previousId: number): void {
+    if (this._topicsById.get(previousId) === topic) {
+      this._topicsById.delete(previousId);
+      // Another topic with the previous id, if any, takes its place ...
+      const other = this._topics.find((t) => t.getId() === previousId);
+      if (other) {
+        this._topicsById.set(previousId, other);
+      }
+    }
+    if (this._topics.includes(topic)) {
+      this._index(topic);
+    }
+  }
+
+  findTopicById(id: number): Topic | undefined {
+    const topic = this._topicsById.get(id);
+    if (!topic || topic.getId() === id) {
+      return topic;
+    }
+    // Its id changed without reindexTopic: index it under the new one, and search for another
+    // topic with this id. Rare, unlike a miss.
+    this._topicsById.delete(id);
+    this._index(topic);
+    const result = this._topics.find((t) => t.getId() === id);
+    if (result) {
+      this._topicsById.set(id, result);
+    }
+    return result;
+  }
+
+  /** The topic of a model. A topic has the id of its model, so the id index finds it. */
+  findTopicByModel(model: NodeModel): Topic | undefined {
+    const topic = this.findTopicById(model.getId());
+    if (!topic || topic.getModel() === model) {
+      return topic;
+    }
+    // Another topic with the same id (a duplicate, or one given another model): search.
+    return this._topics.find((t) => t.getModel() === model);
+  }
+
+  /**
+   * The topics with the given ids, in the order the model keeps them. Ids that match no topic
+   * are left out.
+   */
+  findTopicsByIds(ids: number[]): Topic[] {
+    const idSet = new Set(ids);
+    return this._topics.filter((t) => idSet.has(t.getId()));
+  }
+}
+
+export default DesignerModel;

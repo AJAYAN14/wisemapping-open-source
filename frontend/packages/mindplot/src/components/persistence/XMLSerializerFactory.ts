@@ -1,0 +1,102 @@
+/*
+ *    Copyright [2007-2025] [wisemapping]
+ *
+ *   Licensed under WiseMapping Public License, Version 1.0 (the "License").
+ *   It is basically the Apache License, Version 2.0 (the "License") plus the
+ *   "powered by wisemapping" text requirement on every single page;
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the license at
+ *
+ *       https://github.com/wisemapping/wisemapping-open-source/blob/main/LICENSE.md
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
+import ModelCodeName from './ModelCodeName';
+import Beta2PelaMigrator from './Beta2PelaMigrator';
+import Pela2TangoMigrator from './Pela2TangoMigrator';
+import XMLSerializerBeta from './XMLSerializerBeta';
+import XMLSerializerTango from './XMLSerializerTango';
+import type Mindmap from '../model/Mindmap';
+import type XMLMindmapSerializer from './XMLMindmapSerializer';
+
+type SerializerConstructor = new () => XMLMindmapSerializer;
+
+type MigratorConstructor = new (serializer: XMLMindmapSerializer) => XMLMindmapSerializer;
+
+type SerializerEntry = {
+  codeName: string;
+  serializer: SerializerConstructor;
+  // Migrates the maps of the previous version. The first version (BETA) has none.
+  migrator?: MigratorConstructor;
+};
+
+const codeToSerializer: SerializerEntry[] = [
+  {
+    codeName: ModelCodeName.BETA,
+    serializer: XMLSerializerBeta,
+  },
+  {
+    codeName: ModelCodeName.PELA,
+    serializer: XMLSerializerTango,
+    migrator: Beta2PelaMigrator,
+  },
+  {
+    codeName: ModelCodeName.TANGO,
+    serializer: XMLSerializerTango,
+    migrator: Pela2TangoMigrator,
+  },
+];
+
+class XMLSerializerFactory {
+  /**
+   * @param {mindplot.model.IMindmap} mindmap
+   * @return {mindplot.persistence.XMLSerializer_Beta|mindplot.persistence.XMLSerializer_Pela|
+   * mindplot.persistence.XMLSerializer_Tango} serializer corresponding to the mindmap's version
+   */
+  static createFromMindmap(mindmap: Mindmap): XMLMindmapSerializer {
+    return XMLSerializerFactory.getSerializer(mindmap.getVersion());
+  }
+
+  /**
+   * @param domDocument
+   * @return serializer corresponding to the mindmap's version
+   */
+  static createFromDocument(domDocument: Document): XMLMindmapSerializer {
+    const rootElem = domDocument.documentElement;
+
+    // Legacy version don't have version defined.
+    let version = rootElem.getAttribute('version');
+    version = version || ModelCodeName.BETA;
+
+    return XMLSerializerFactory.getSerializer(version);
+  }
+
+  /**
+   * retrieves the serializer for the mindmap's version and migrates to the current version,
+   * e.g. for a Beta mindmap and current version Tango:
+   * serializer = new Pela2TangoMigrator(new Beta2PelaMigrator(new XMLSerializer_Beta()))
+   */
+  static getSerializer(version = ModelCodeName.TANGO): XMLMindmapSerializer {
+    const start = codeToSerializer.findIndex((entry) => entry.codeName === version);
+    const entry = codeToSerializer[start];
+    if (!entry) {
+      throw new Error(`Cound not find serialized for ${version}`);
+    }
+
+    let result: XMLMindmapSerializer = new entry.serializer();
+    // Wrap it in the migrator of each later version, up to the current one.
+    codeToSerializer.slice(start + 1).forEach(({ codeName, migrator }) => {
+      if (!migrator) {
+        throw new Error(`Missing migrator to ${codeName}`);
+      }
+
+      result = new migrator(result);
+    });
+    return result;
+  }
+}
+export default XMLSerializerFactory;

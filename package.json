@@ -1,0 +1,37 @@
+{
+  "name": "wisemapping-personal",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "WiseMapping Personal Private Edition (Netlify Functions + Supabase)",
+  "engines": {
+    "node": ">=20.14.0"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:unit": "vitest run tests/unit tests/contract",
+    "build:functions": "esbuild netlify/functions/api.ts netlify/functions/oauth.ts --bundle --platform=node --target=node20 --format=esm --outdir=.netlify/functions-check"
+  },
+  "dependencies": {
+    "@netlify/functions": "^5.3.0",
+    "@supabase/ssr": "0.12.0",
+    "@supabase/supabase-js": "~2.108.0",
+    "jose": "^6.2.18",
+    "pg": "^8.23.1",
+    "wisemapping-personal": "file:"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.43",
+    "@types/pg": "^8.23.1",
+    "dotenv": "^18.0.10",
+    "esbuild": "^0.28.2",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.7"
+  },
+  "overrides": {
+    "vite": "^6.4.6"
+  }
+}

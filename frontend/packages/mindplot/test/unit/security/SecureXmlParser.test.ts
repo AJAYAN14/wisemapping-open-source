@@ -1,0 +1,186 @@
+/*
+ *    Copyright [2007-2025] [wisemapping]
+ *
+ *   Licensed under WiseMapping Public License, Version 1.0 (the "License").
+ *   It is basically the Apache License, Version 2.0 (the "License") plus the
+ *   "powered by wisemapping" text requirement on every single page;
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the license at
+ *
+ *       https://github.com/wisemapping/wisemapping-open-source/blob/main/LICENSE.md
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
+
+import { describe, expect, jest, test } from '@jest/globals';
+import SecureXmlParser from '../../../src/components/security/SecureXmlParser';
+
+describe('SecureXmlParser', () => {
+  test('keeps the predefined XML entities and character references', () => {
+    const doc = SecureXmlParser.parseSecureXml(
+      '<node TEXT="R&amp;D &lt;tag&gt; &quot;q&quot; &apos;a&apos;">caf&#233; &#x2713;</node>',
+    );
+
+    expect(doc).toBeDefined();
+    expect(doc!.documentElement.getAttribute('TEXT')).toBe('R&D <tag> "q" \'a\'');
+    expect(doc!.documentElement.textContent).toBe('café ✓');
+  });
+
+  test('does not alter CDATA sections', () => {
+    const cdata = 'a <!-- not a comment --> <?pi not a pi?> &amp; &custom;';
+    const doc = SecureXmlParser.parseSecureXml(`<note><![CDATA[${cdata}]]></note>`);
+
+    expect(doc).toBeDefined();
+    expect(doc!.documentElement.textContent).toBe(cdata);
+  });
+
+  test('removes comments and processing instructions', () => {
+    const doc = SecureXmlParser.parseSecureXml(
+      '<?xml version="1.0"?><?xml-stylesheet href="x.xsl"?><map><!-- comment --><node/></map>',
+    );
+
+    expect(doc).toBeDefined();
+    expect(doc!.documentElement.childNodes).toHaveLength(1);
+    expect(doc!.documentElement.firstElementChild!.tagName).toBe('node');
+  });
+
+  test('rejects documents declaring entities', () => {
+    jest.spyOn(console, 'error').mockImplementation(() => undefined);
+
+    const xxe = `<?xml version="1.0"?>
+<!DOCTYPE map [
+  <!ENTITY xxe SYSTEM "file:///etc/passwd">
+]>
+<map><node TEXT="&xxe;"/></map>`;
+    expect(SecureXmlParser.parseSecureXml(xxe)).toBeUndefined();
+
+    const bomb =
+      '<!DOCTYPE lolz [<!ENTITY lol "lol"><!ENTITY lol2 "&lol;&lol;">]><lolz>&lol2;</lolz>';
+    expect(SecureXmlParser.parseSecureXml(bomb)).toBeUndefined();
+  });
+
+  test('ignores a DOCTYPE without entity declarations', () => {
+    const doc = SecureXmlParser.parseSecureXml(
+      '<!DOCTYPE map SYSTEM "map.dtd"><map><node TEXT="ok"/></map>',
+    );
+
+    expect(doc).toBeDefined();
+    expect(doc!.documentElement.tagName).toBe('map');
+  });
+
+  test('drops references to undeclared entities', () => {
+    const doc = SecureXmlParser.parseSecureXml('<node>a&nbsp;b</node>');
+
+    expect(doc).toBeDefined();
+    expect(doc!.documentElement.textContent).toBe('ab');
+  });
+
+  test('isXmlContentSafe rejects xml-stylesheet processing instructions (BL5-23)', () => {
+    expect(SecureXmlParser.isXmlContentSafe('<?xml-stylesheet href="x.xsl"?><map/>')).toBe(false);
+    expect(SecureXmlParser.isXmlContentSafe('<?XML-STYLESHEET href="x.xsl"?><map/>')).toBe(false);
+    expect(SecureXmlParser.isXmlContentSafe('<map/>')).toBe(true);
+  });
+
+  test('isXmlContentSafe accepts the predefined XML entities', () => {
+    expect(SecureXmlParser.isXmlContentSafe('<node TEXT="R&amp;D"/>')).toBe(true);
+    expect(SecureXmlParser.isXmlContentSafe('<node TEXT="&xxe;"/>')).toBe(false);
+  });
+
+  test('accepts large maps with more than 10000 elements', () => {
+    // 4000 topics with a rich note each: about 20000 elements.
+    const note = '<richcontent TYPE="NOTE"><html><body><p>note</p></body></html></richcontent>';
+    const nodes = Array.from({ length: 4000 }, (_, i) => `<node TEXT="${i}">${note}</node>`);
+    const doc = SecureXmlParser.parseSecureXml(
+      `<map><node TEXT="root">${nodes.join('')}</node></map>`,
+    );
+
+    expect(doc).toBeDefined();
+    expect(doc!.getElementsByTagName('node')).toHaveLength(4001);
+  });
+  describe('element cap', () => {
+    // MAX_XML_NODES is 200000.
+    const elements = (count: number): string => `<r>${'<a/>'.repeat(count - 1)}</r>`;
+
+    test('rejects a document with too many elements before building its DOM', () => {
+      const parse = jest.spyOn(DOMParser.prototype, 'parseFromString');
+      const error = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+      try {
+        expect(SecureXmlParser.parseSecureXml(elements(200001))).toBeUndefined();
+        expect(parse).not.toHaveBeenCalled();
+        expect(error).toHaveBeenCalledWith(
+          'Secure XML parsing failed:',
+          new Error('Too many XML nodes'),
+        );
+      } finally {
+        parse.mockRestore();
+        error.mockRestore();
+      }
+    });
+
+    test('does not count markup inside CDATA sections or comments as elements', () => {
+      const markup = '<b/>'.repeat(200001);
+      const doc = SecureXmlParser.parseSecureXml(
+        `<r><!-- ${markup} --><note><![CDATA[${markup}]]></note></r>`,
+      );
+
+      expect(doc).toBeDefined();
+      expect(doc!.documentElement.textContent).toBe(markup);
+    });
+  });
+
+  describe('DOM validation', () => {
+    test('walks the elements once to count them and check their attributes', () => {
+      const select = jest.spyOn(Document.prototype, 'querySelectorAll');
+      try {
+        const doc = SecureXmlParser.parseSecureXml(
+          '<map><node TEXT="a"><node TEXT="b"/></node></map>',
+        );
+
+        expect(doc).toBeDefined();
+        expect(select.mock.calls.filter(([selector]) => selector === '*')).toHaveLength(1);
+      } finally {
+        select.mockRestore();
+      }
+    });
+
+    test('rejects an attribute value longer than 10000 characters', () => {
+      const error = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+      try {
+        const ok = SecureXmlParser.parseSecureXml(`<map><node TEXT="${'a'.repeat(10000)}"/></map>`);
+        const tooLong = SecureXmlParser.parseSecureXml(
+          `<map><node TEXT="${'a'.repeat(10001)}"/></map>`,
+        );
+
+        expect(ok).toBeDefined();
+        expect(tooLong).toBeUndefined();
+        expect(error).toHaveBeenCalledWith(
+          'Secure XML parsing failed:',
+          new Error('Attribute value too long'),
+        );
+      } finally {
+        error.mockRestore();
+      }
+    });
+
+    test('rejects a document nested deeper than the depth cap', () => {
+      const error = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+      try {
+        // MAX_XML_DEPTH is 100 and the root element is at depth 0.
+        const depth = 102;
+        const xml = `${'<a>'.repeat(depth)}${'</a>'.repeat(depth)}`;
+
+        expect(SecureXmlParser.parseSecureXml(xml)).toBeUndefined();
+        expect(error).toHaveBeenCalledWith(
+          'Secure XML parsing failed:',
+          new Error('XML nesting too deep'),
+        );
+      } finally {
+        error.mockRestore();
+      }
+    });
+  });
+});

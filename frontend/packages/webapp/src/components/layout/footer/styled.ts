@@ -1,0 +1,105 @@
+/*
+ *    Copyright [2007-2025] [wisemapping]
+ *
+ *   Licensed under WiseMapping Public License, Version 1.0 (the "License").
+ *   It is basically the Apache License, Version 2.0 (the "License") plus the
+ *   "powered by wisemapping" text requirement on every single page;
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the license at
+ *
+ *       https://github.com/wisemapping/wisemapping-open-source/blob/main/LICENSE.md
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
+
+import { styled } from '@mui/material/styles';
+/* Footer */
+
+export const StyledFooter = styled('footer')(({ theme }) => ({
+  marginTop: '80px',
+  padding: '30px 0 10px 0',
+  backgroundColor: theme.palette.primary.main,
+  display: 'flex',
+  justifyContent: 'center',
+  overflow: 'hidden',
+
+  '& .copyright': {
+    marginTop: '12px',
+    fontSize: '12px',
+    color: 'white',
+  },
+
+  '& > div': {
+    maxWidth: '950px',
+    width: '100%',
+    display: 'grid',
+    gridTemplateColumns: '200px 1fr 1fr 1fr auto',
+    gap: '20px',
+    padding: '0 20px',
+    alignItems: 'start',
+
+    '& > div:nth-of-type(1)': {
+      gridColumn: '1',
+      padding: 0,
+      margin: 0,
+    },
+
+    '& > div:nth-of-type(2)': {
+      gridColumn: '2',
+    },
+
+    '& > div:nth-of-type(3)': {
+      gridColumn: '3',
+    },
+
+    '& > div:nth-of-type(4)': {
+      gridColumn: '4',
+    },
+
+    // The theme switch.
+    '& > div:nth-of-type(5)': {
+      gridColumn: '5',
+      textAlign: 'right',
+      display: 'flex',
+      visibility: 'visible',
+      justifyContent: 'flex-end',
+      alignItems: 'flex-start',
+      marginTop: '10px',
+    },
+  },
+
+  '& a': {
+    fontSize: '14px',
+    color: 'white',
+    whiteSpace: 'nowrap',
+    lineHeight: 1.5,
+    display: 'inline-block',
+    textDecoration: 'none',
+    '&:hover': {
+      textDecoration: 'underline',
+    },
+  },
+
+  '& h4': {
+    fontSize: '14px',
+    color: 'white',
+    whiteSpace: 'nowrap',
+    fontWeight: 700,
+    margin: '0 0 6px 0',
+  },
+
+  '& .donate-link': {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '4px',
+    fontWeight: 600,
+  },
+
+  '& .donate-icon': {
+    fontSize: '14px',
+  },
+}));

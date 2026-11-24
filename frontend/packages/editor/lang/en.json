@@ -1,0 +1,779 @@
+{
+  "action.accept": {
+    "defaultMessage": "Accept"
+  },
+  "action.delete": {
+    "defaultMessage": "Delete"
+  },
+  "appbar.back-to-map-list": {
+    "defaultMessage": "Back to maps list"
+  },
+  "appbar.button-signup": {
+    "defaultMessage": "Sign Up"
+  },
+  "appbar.error-saving-title": {
+    "defaultMessage": "Error saving"
+  },
+  "appbar.logo-aria-label": {
+    "defaultMessage": "WiseMapping Logo"
+  },
+  "appbar.shared-button": {
+    "defaultMessage": "Share"
+  },
+  "appbar.title-renamed": {
+    "defaultMessage": "Mindmap renamed"
+  },
+  "appbar.tooltip-change-layout": {
+    "defaultMessage": "Change Layout"
+  },
+  "appbar.tooltip-export": {
+    "defaultMessage": "Export"
+  },
+  "appbar.tooltip-history": {
+    "defaultMessage": "Changes History"
+  },
+  "appbar.tooltip-info": {
+    "defaultMessage": "Information"
+  },
+  "appbar.tooltip-print": {
+    "defaultMessage": "Print"
+  },
+  "appbar.tooltip-publish": {
+    "defaultMessage": "Publish"
+  },
+  "appbar.tooltip-redo": {
+    "defaultMessage": "Redo"
+  },
+  "appbar.tooltip-rename": {
+    "defaultMessage": "Rename"
+  },
+  "appbar.tooltip-save": {
+    "defaultMessage": "Save"
+  },
+  "appbar.tooltip-shared": {
+    "defaultMessage": "Share for Collaboration"
+  },
+  "appbar.tooltip-signup": {
+    "defaultMessage": "Sign Up"
+  },
+  "appbar.tooltip-starred": {
+    "defaultMessage": "Starred"
+  },
+  "appbar.tooltip-theme": {
+    "defaultMessage": "Theme"
+  },
+  "appbar.tooltip-theme-toggle": {
+    "defaultMessage": "Toggle Theme"
+  },
+  "appbar.tooltip-undo": {
+    "defaultMessage": "Undo"
+  },
+  "canvas-style.background-color": {
+    "defaultMessage": "Background Color"
+  },
+  "canvas-style.background-style": {
+    "defaultMessage": "Background Style"
+  },
+  "canvas-style.grid-color": {
+    "defaultMessage": "Grid Color"
+  },
+  "canvas-style.grid-size-l": {
+    "defaultMessage": "Large"
+  },
+  "canvas-style.grid-size-m": {
+    "defaultMessage": "Medium"
+  },
+  "canvas-style.grid-size-s": {
+    "defaultMessage": "Small"
+  },
+  "canvas-style.grid-size-xl": {
+    "defaultMessage": "Extra Large"
+  },
+  "canvas-style.grid-size-xs": {
+    "defaultMessage": "Extra Small"
+  },
+  "canvas-style.grid-style": {
+    "defaultMessage": "Grid Size"
+  },
+  "canvas-style.pattern-default-tooltip": {
+    "defaultMessage": "Default - All styles will be automatically selected based on the theme"
+  },
+  "canvas-style.pattern-dots": {
+    "defaultMessage": "Dots"
+  },
+  "canvas-style.pattern-grid": {
+    "defaultMessage": "Grid Lines"
+  },
+  "canvas-style.pattern-solid": {
+    "defaultMessage": "Solid Color"
+  },
+  "canvas-style.tab-color": {
+    "defaultMessage": "Color"
+  },
+  "canvas-style.tab-grid": {
+    "defaultMessage": "Grid Color"
+  },
+  "color-picker.color": {
+    "defaultMessage": "Color"
+  },
+  "color-picker.default-color": {
+    "defaultMessage": "Default color"
+  },
+  "common.close": {
+    "defaultMessage": "Close"
+  },
+  "creator-info-pane.creator": {
+    "defaultMessage": "Creator"
+  },
+  "creator-info-pane.description": {
+    "defaultMessage": "Description"
+  },
+  "editor-panel.deeplink-copied": {
+    "defaultMessage": "Link to node copied to clipboard"
+  },
+  "editor-panel.deeplink-copy-failed": {
+    "defaultMessage": "Could not copy the link to the clipboard"
+  },
+  "editor-panel.font-family-default": {
+    "defaultMessage": "Default"
+  },
+  "editor-panel.font-family-mixed": {
+    "defaultMessage": "Mixed"
+  },
+  "editor-panel.link-panel-title": {
+    "defaultMessage": "Link"
+  },
+  "editor-panel.note-panel-title": {
+    "defaultMessage": "Note"
+  },
+  "editor-panel.tooltip-add-icon": {
+    "defaultMessage": "Add Icon"
+  },
+  "editor-panel.tooltip-add-link": {
+    "defaultMessage": "Add Link"
+  },
+  "editor-panel.tooltip-add-note": {
+    "defaultMessage": "Add Note"
+  },
+  "editor-panel.tooltip-add-relationship": {
+    "defaultMessage": "Add Relationship"
+  },
+  "editor-panel.tooltip-add-topic-image": {
+    "defaultMessage": "Add Topic Image"
+  },
+  "editor-panel.tooltip-canvas-style": {
+    "defaultMessage": "Background"
+  },
+  "editor-panel.tooltip-copy-node-link": {
+    "defaultMessage": "Copy Link to Node"
+  },
+  "editor-panel.tooltip-relationship-style": {
+    "defaultMessage": "Relationship Style"
+  },
+  "editor-panel.tooltip-topic-font-style": {
+    "defaultMessage": "Font Style"
+  },
+  "editor-panel.tooltip-unified-styling": {
+    "defaultMessage": "Style Topic & Connections"
+  },
+  "editor.edit-description-mobile": {
+    "defaultMessage": "Limited mindmap edition capabilities are supported in Mobile devices. Use Desktop browser for full editor capabilities."
+  },
+  "editor.try-welcome": {
+    "defaultMessage": "This edition space showcases some of the mindmap editor capabilities!"
+  },
+  "editor.try-welcome-description": {
+    "defaultMessage": "Sign Up to start creating, sharing and publishing unlimited number of mindmaps for free."
+  },
+  "editor.try-welcome-description-mobile": {
+    "defaultMessage": "Sign Up to start creating, sharing and publishing unlimited number of mindmaps for free. Limited mindmap edition capabilties are supported in Mobile devices. Use Desktop browser for full editor capabilies."
+  },
+  "editor.try-welcome-mobile": {
+    "defaultMessage": "This edition space showcases some of the mindmap editor capabilities!"
+  },
+  "emoji-picker.search-placeholder": {
+    "defaultMessage": "Search emojis..."
+  },
+  "find-in-map.clear": {
+    "defaultMessage": "Clear search"
+  },
+  "find-in-map.empty-state": {
+    "defaultMessage": "No node matches “{query}”."
+  },
+  "find-in-map.match-counter": {
+    "defaultMessage": "{current} of {total}"
+  },
+  "find-in-map.next": {
+    "defaultMessage": "Next match"
+  },
+  "find-in-map.no-results": {
+    "defaultMessage": "No matches"
+  },
+  "find-in-map.placeholder": {
+    "defaultMessage": "Find node..."
+  },
+  "find-in-map.previous": {
+    "defaultMessage": "Previous match"
+  },
+  "icon-collection.border.dashed": {
+    "defaultMessage": "Dashed"
+  },
+  "icon-collection.border.default": {
+    "defaultMessage": "Default"
+  },
+  "icon-collection.border.default-tooltip": {
+    "defaultMessage": "Default - Colors will be automatically taken based on the selected theme"
+  },
+  "icon-collection.border.dotted": {
+    "defaultMessage": "Dotted"
+  },
+  "icon-collection.border.solid": {
+    "defaultMessage": "Solid"
+  },
+  "icon-collection.connection.arc": {
+    "defaultMessage": "Arc"
+  },
+  "icon-collection.connection.arc-tooltip": {
+    "defaultMessage": "Circular arc connection - Perfect for radial layouts and organic flow"
+  },
+  "icon-collection.connection.curved-polyline": {
+    "defaultMessage": "Curved Polyline"
+  },
+  "icon-collection.connection.curved-polyline-tooltip": {
+    "defaultMessage": "Multi-segment line with smooth corners - Best for structured layouts and clear paths"
+  },
+  "icon-collection.connection.default": {
+    "defaultMessage": "Default"
+  },
+  "icon-collection.connection.default-tooltip": {
+    "defaultMessage": "Default - Connection style will be automatically selected based on the theme"
+  },
+  "icon-collection.connection.heartbeat": {
+    "defaultMessage": "Heartbeat"
+  },
+  "icon-collection.connection.heartbeat-tooltip": {
+    "defaultMessage": "ECG-inspired waveform with sharp spikes – perfect for conveying energy, urgency, or life signals"
+  },
+  "icon-collection.connection.neuron": {
+    "defaultMessage": "Neuron"
+  },
+  "icon-collection.connection.neuron-tooltip": {
+    "defaultMessage": "Organic impulse line with branching pulses – ideal for science, neural nets, or anything futuristic"
+  },
+  "icon-collection.connection.simple-polyline": {
+    "defaultMessage": "Simple Polyline"
+  },
+  "icon-collection.connection.simple-polyline-tooltip": {
+    "defaultMessage": "Direct straight line connection - Clean and minimalist style for simple relationships"
+  },
+  "icon-collection.connection.thick-curved": {
+    "defaultMessage": "Thick Curved"
+  },
+  "icon-collection.connection.thick-curved-tooltip": {
+    "defaultMessage": "Thick curved line with smooth bezier curves - Great for emphasizing main branches"
+  },
+  "icon-collection.connection.thin-curved": {
+    "defaultMessage": "Thin Curved"
+  },
+  "icon-collection.connection.thin-curved-tooltip": {
+    "defaultMessage": "Thin curved line with elegant bezier curves - Ideal for detailed or dense mind maps"
+  },
+  "icon-collection.default-tooltip": {
+    "defaultMessage": "Default - All styles will be automatically selected based on the theme"
+  },
+  "icon-collection.shape.default": {
+    "defaultMessage": "Default"
+  },
+  "icon-collection.shape.ellipse": {
+    "defaultMessage": "Ellipse"
+  },
+  "icon-collection.shape.line": {
+    "defaultMessage": "Line"
+  },
+  "icon-collection.shape.none": {
+    "defaultMessage": "None"
+  },
+  "icon-collection.shape.none-tooltip": {
+    "defaultMessage": "None - No visible shape background"
+  },
+  "icon-collection.shape.rectangle": {
+    "defaultMessage": "Rectangle"
+  },
+  "icon-collection.shape.rounded": {
+    "defaultMessage": "Rounded"
+  },
+  "icon-picker.emojis": {
+    "defaultMessage": "Emojis"
+  },
+  "icon-picker.frequently-used": {
+    "defaultMessage": "Frequently Used"
+  },
+  "icon-picker.icons": {
+    "defaultMessage": "Icons Gallery"
+  },
+  "icon-picker.no-results": {
+    "defaultMessage": "No icons found"
+  },
+  "icon-picker.search-placeholder": {
+    "defaultMessage": "Search icons..."
+  },
+  "icon-picker.show-images": {
+    "defaultMessage": "Show images"
+  },
+  "layout-selector.accept": {
+    "defaultMessage": "Accept"
+  },
+  "layout-selector.cancel": {
+    "defaultMessage": "Cancel"
+  },
+  "layout-selector.description": {
+    "defaultMessage": "Choose layout style"
+  },
+  "layout-selector.title": {
+    "defaultMessage": "Choose Layout"
+  },
+  "layout.mindmap.description": {
+    "defaultMessage": "Horizontal layout with balanced branches on both sides. Best for traditional mind mapping and brainstorming."
+  },
+  "layout.mindmap.name": {
+    "defaultMessage": "Mindmap"
+  },
+  "layout.tree.description": {
+    "defaultMessage": "Vertical hierarchy flowing top-to-bottom. Great for organizational charts and hierarchical structures."
+  },
+  "layout.tree.name": {
+    "defaultMessage": "Tree"
+  },
+  "link.help_text": {
+    "defaultMessage": "Address is not valid"
+  },
+  "link.placeholder": {
+    "defaultMessage": "https://www.example.com"
+  },
+  "note.character.count": {
+    "defaultMessage": "{remaining} left"
+  },
+  "note.character.limit.warning": {
+    "defaultMessage": "(Approaching limit)"
+  },
+  "outline.collapse": {
+    "defaultMessage": "Collapse"
+  },
+  "outline.collapse-all": {
+    "defaultMessage": "Collapse All"
+  },
+  "outline.empty": {
+    "defaultMessage": "No content to display"
+  },
+  "outline.expand": {
+    "defaultMessage": "Expand"
+  },
+  "outline.expand-all": {
+    "defaultMessage": "Expand All"
+  },
+  "outline.has-note": {
+    "defaultMessage": "Has note"
+  },
+  "outline.link": {
+    "defaultMessage": "Link"
+  },
+  "outline.note": {
+    "defaultMessage": "Note"
+  },
+  "outline.untitled-map": {
+    "defaultMessage": "Untitled Map"
+  },
+  "relationship-style-editor.color": {
+    "defaultMessage": "Relationship Color"
+  },
+  "relationship-style-editor.dashed-line": {
+    "defaultMessage": "Dashed Line"
+  },
+  "relationship-style-editor.dashed-line-tooltip": {
+    "defaultMessage": "Dashed line style"
+  },
+  "relationship-style-editor.dotted-line": {
+    "defaultMessage": "Dotted Line"
+  },
+  "relationship-style-editor.dotted-line-tooltip": {
+    "defaultMessage": "Dotted line style"
+  },
+  "relationship-style-editor.end-arrow": {
+    "defaultMessage": "End Arrow"
+  },
+  "relationship-style-editor.end-arrow-tooltip": {
+    "defaultMessage": "Toggle end arrow"
+  },
+  "relationship-style-editor.line-arrows": {
+    "defaultMessage": "Line Style & Arrows"
+  },
+  "relationship-style-editor.solid-line": {
+    "defaultMessage": "Solid Line"
+  },
+  "relationship-style-editor.solid-line-tooltip": {
+    "defaultMessage": "Solid line style"
+  },
+  "relationship-style-editor.start-arrow": {
+    "defaultMessage": "Start Arrow"
+  },
+  "relationship-style-editor.start-arrow-tooltip": {
+    "defaultMessage": "Toggle start arrow"
+  },
+  "rich-text-editor.bold": {
+    "defaultMessage": "Bold"
+  },
+  "rich-text-editor.bullet-list": {
+    "defaultMessage": "Bullet List"
+  },
+  "rich-text-editor.indent": {
+    "defaultMessage": "Increase Indent (Tab)"
+  },
+  "rich-text-editor.insert-icon": {
+    "defaultMessage": "Insert Icon"
+  },
+  "rich-text-editor.insert-link": {
+    "defaultMessage": "Insert Link"
+  },
+  "rich-text-editor.italic": {
+    "defaultMessage": "Italic"
+  },
+  "rich-text-editor.numbered-list": {
+    "defaultMessage": "Numbered List"
+  },
+  "rich-text-editor.outdent": {
+    "defaultMessage": "Decrease Indent (Shift+Tab)"
+  },
+  "rich-text-editor.strikethrough": {
+    "defaultMessage": "Strikethrough"
+  },
+  "rich-text-editor.underline": {
+    "defaultMessage": "Underline"
+  },
+  "shortcut-help-pane.action": {
+    "defaultMessage": "Action"
+  },
+  "shortcut-help-pane.add-child": {
+    "defaultMessage": "Add child topic"
+  },
+  "shortcut-help-pane.add-link": {
+    "defaultMessage": "Add link"
+  },
+  "shortcut-help-pane.add-note": {
+    "defaultMessage": "Add note"
+  },
+  "shortcut-help-pane.add-sibling": {
+    "defaultMessage": "Add sibling topic"
+  },
+  "shortcut-help-pane.cancel-text-changes": {
+    "defaultMessage": "Cancel text changes"
+  },
+  "shortcut-help-pane.category-editing": {
+    "defaultMessage": "Edit"
+  },
+  "shortcut-help-pane.category-format": {
+    "defaultMessage": "Format"
+  },
+  "shortcut-help-pane.category-navigation": {
+    "defaultMessage": "Navigate"
+  },
+  "shortcut-help-pane.category-view": {
+    "defaultMessage": "View"
+  },
+  "shortcut-help-pane.change-font-bold": {
+    "defaultMessage": "Change text to bold"
+  },
+  "shortcut-help-pane.change-font-italic": {
+    "defaultMessage": "Change text to italic"
+  },
+  "shortcut-help-pane.collapse-children": {
+    "defaultMessage": "Collpase children"
+  },
+  "shortcut-help-pane.copy-and-text": {
+    "defaultMessage": "Copy and paste topics/Copy mindmap image to clipboard."
+  },
+  "shortcut-help-pane.delete-topic": {
+    "defaultMessage": "Delete topic"
+  },
+  "shortcut-help-pane.deselect-all-topics": {
+    "defaultMessage": "Deselect all topics"
+  },
+  "shortcut-help-pane.diagram-aria": {
+    "defaultMessage": "Left arrow moves to the parent topic, right arrow to a child, up and down between siblings."
+  },
+  "shortcut-help-pane.diagram-caption": {
+    "defaultMessage": "On the left half of the map, ← and → swap roles."
+  },
+  "shortcut-help-pane.diagram-child": {
+    "defaultMessage": "Child"
+  },
+  "shortcut-help-pane.diagram-parent": {
+    "defaultMessage": "Parent"
+  },
+  "shortcut-help-pane.diagram-selected": {
+    "defaultMessage": "Selected"
+  },
+  "shortcut-help-pane.diagram-sibling": {
+    "defaultMessage": "Sibling"
+  },
+  "shortcut-help-pane.drag-disconnect": {
+    "defaultMessage": "Disconnect topic"
+  },
+  "shortcut-help-pane.drag-disconnect-key": {
+    "defaultMessage": "drag topic"
+  },
+  "shortcut-help-pane.edit-multiline": {
+    "defaultMessage": "Add multi-line topic text"
+  },
+  "shortcut-help-pane.edit-topic": {
+    "defaultMessage": "Edit topic text"
+  },
+  "shortcut-help-pane.edit-topic-key": {
+    "defaultMessage": "F2 or Double Click"
+  },
+  "shortcut-help-pane.expand-by-level": {
+    "defaultMessage": "Expand topics by level"
+  },
+  "shortcut-help-pane.expand-collapse-all": {
+    "defaultMessage": "Expand/Collapse all topics"
+  },
+  "shortcut-help-pane.find-in-map": {
+    "defaultMessage": "Find node in map"
+  },
+  "shortcut-help-pane.indent-topic": {
+    "defaultMessage": "Indent topic (attach to sibling above)"
+  },
+  "shortcut-help-pane.move-topic-down": {
+    "defaultMessage": "Move topic down among siblings"
+  },
+  "shortcut-help-pane.move-topic-up": {
+    "defaultMessage": "Move topic up among siblings"
+  },
+  "shortcut-help-pane.navigation": {
+    "defaultMessage": "Navigation"
+  },
+  "shortcut-help-pane.navigation-keys": {
+    "defaultMessage": "Arrow keys"
+  },
+  "shortcut-help-pane.outdent-topic": {
+    "defaultMessage": "Outdent topic (attach to grandparent)"
+  },
+  "shortcut-help-pane.outline-view": {
+    "defaultMessage": "Open outline view"
+  },
+  "shortcut-help-pane.overwrite-edit-topic": {
+    "defaultMessage": "Overwrite topic text"
+  },
+  "shortcut-help-pane.overwrite-edit-topic-key": {
+    "defaultMessage": "Type on a selected topic"
+  },
+  "shortcut-help-pane.pan-canvas": {
+    "defaultMessage": "Pan the canvas"
+  },
+  "shortcut-help-pane.pan-canvas-keys": {
+    "defaultMessage": "Two-finger swipe or Mouse wheel"
+  },
+  "shortcut-help-pane.paste-as-child": {
+    "defaultMessage": "Paste as child of the selected topic"
+  },
+  "shortcut-help-pane.redo": {
+    "defaultMessage": "Redo edition"
+  },
+  "shortcut-help-pane.save-changes": {
+    "defaultMessage": "Save changes"
+  },
+  "shortcut-help-pane.select-all-topics": {
+    "defaultMessage": "Select all topics"
+  },
+  "shortcut-help-pane.select-topics": {
+    "defaultMessage": "Select multiple topics"
+  },
+  "shortcut-help-pane.select-topics-keys": {
+    "defaultMessage": "Mouse click"
+  },
+  "shortcut-help-pane.undo": {
+    "defaultMessage": "Undo edition"
+  },
+  "shortcut-help-pane.zoom-in": {
+    "defaultMessage": "Zoom in"
+  },
+  "shortcut-help-pane.zoom-out": {
+    "defaultMessage": "Zoom out"
+  },
+  "shortcut-help-pane.zoom-to-fit": {
+    "defaultMessage": "Zoom to fit"
+  },
+  "shortcut-help-pane.zoom-wheel": {
+    "defaultMessage": "Zoom in/out with the wheel"
+  },
+  "theme-editor.accept": {
+    "defaultMessage": "Apply Theme"
+  },
+  "theme-editor.cancel": {
+    "defaultMessage": "Cancel"
+  },
+  "theme-editor.description": {
+    "defaultMessage": "A theme defines the visual style of your mind map, including colors, fonts, and overall appearance. Choose a theme that best fits your content and audience."
+  },
+  "theme-editor.title": {
+    "defaultMessage": "Choose Theme"
+  },
+  "theme.aurora.description": {
+    "defaultMessage": "Neon-inspired gradient theme with glow effects, bold typography, and high-contrast connectors designed for immersive storytelling."
+  },
+  "theme.aurora.name": {
+    "defaultMessage": "Aurora"
+  },
+  "theme.classic.description": {
+    "defaultMessage": "Clean and professional design with blue accents. Perfect for business presentations and formal documents."
+  },
+  "theme.classic.name": {
+    "defaultMessage": "Classic"
+  },
+  "theme.dark": {
+    "defaultMessage": "Dark"
+  },
+  "theme.light": {
+    "defaultMessage": "Light"
+  },
+  "theme.ocean.description": {
+    "defaultMessage": "Ocean-inspired blue theme with light/dark variants. Calm and professional colors perfect for business and creative projects."
+  },
+  "theme.ocean.name": {
+    "defaultMessage": "Ocean"
+  },
+  "theme.retro.description": {
+    "defaultMessage": "80s synthwave palette with neon rims, chrome gradients, and grid-lined canvases inspired by retro night parties."
+  },
+  "theme.retro.name": {
+    "defaultMessage": "80s Retro Night"
+  },
+  "theme.robot.description": {
+    "defaultMessage": "Tech-inspired green theme. Perfect for technical documentation and futuristic presentations."
+  },
+  "theme.robot.name": {
+    "defaultMessage": "Robot"
+  },
+  "theme.summer.description": {
+    "defaultMessage": "Bright and vibrant orange theme. Great for creative projects and energetic presentations."
+  },
+  "theme.summer.name": {
+    "defaultMessage": "Summer"
+  },
+  "theme.sunrise.description": {
+    "defaultMessage": "Sunrise theme with light/dark mode variants. Enhanced colors and contrast for better readability."
+  },
+  "theme.sunrise.name": {
+    "defaultMessage": "Sunrise"
+  },
+  "theme.switch-to-dark": {
+    "defaultMessage": "Switch to dark mode"
+  },
+  "theme.switch-to-light": {
+    "defaultMessage": "Switch to light mode"
+  },
+  "topic-font-editor.active": {
+    "defaultMessage": "active"
+  },
+  "topic-font-editor.bold": {
+    "defaultMessage": "Bold"
+  },
+  "topic-font-editor.bold-tooltip": {
+    "defaultMessage": "Toggle bold"
+  },
+  "topic-font-editor.decrease-size": {
+    "defaultMessage": "Smaller"
+  },
+  "topic-font-editor.decrease-size-tooltip": {
+    "defaultMessage": "Decrease font size"
+  },
+  "topic-font-editor.font-color": {
+    "defaultMessage": "Font Color"
+  },
+  "topic-font-editor.font-family": {
+    "defaultMessage": "Font Family"
+  },
+  "topic-font-editor.font-size-style": {
+    "defaultMessage": "Font Size & Style"
+  },
+  "topic-font-editor.increase-size": {
+    "defaultMessage": "Bigger"
+  },
+  "topic-font-editor.increase-size-tooltip": {
+    "defaultMessage": "Increase font size"
+  },
+  "topic-font-editor.italic": {
+    "defaultMessage": "Italic"
+  },
+  "topic-font-editor.italic-tooltip": {
+    "defaultMessage": "Toggle italic"
+  },
+  "topic-font-editor.reset-to-default": {
+    "defaultMessage": "Reset to Default"
+  },
+  "unified-styling.background-color": {
+    "defaultMessage": "Background Color"
+  },
+  "unified-styling.border-color": {
+    "defaultMessage": "Border Color"
+  },
+  "unified-styling.border-style": {
+    "defaultMessage": "Border Style"
+  },
+  "unified-styling.connection-style": {
+    "defaultMessage": "Connection Style"
+  },
+  "unified-styling.connector-style": {
+    "defaultMessage": "Connector Style"
+  },
+  "unified-styling.shape-type": {
+    "defaultMessage": "Shape Type"
+  },
+  "unified-styling.tab.border": {
+    "defaultMessage": "Border"
+  },
+  "unified-styling.tab.connector": {
+    "defaultMessage": "Connector"
+  },
+  "unified-styling.tab.shape": {
+    "defaultMessage": "Shape"
+  },
+  "visualization-toolbar.tooltip-collapse-all": {
+    "defaultMessage": "Collapse All Nodes"
+  },
+  "visualization-toolbar.tooltip-expand-all": {
+    "defaultMessage": "Expand All Nodes"
+  },
+  "visualization-toolbar.tooltip-expand-level": {
+    "defaultMessage": "Expand by Level"
+  },
+  "visualization-toolbar.tooltip-expand-level-current": {
+    "defaultMessage": "Expand by Level (Level {level})"
+  },
+  "visualization-toolbar.tooltip-find-in-map": {
+    "defaultMessage": "Find in Map"
+  },
+  "visualization-toolbar.tooltip-keyboard": {
+    "defaultMessage": "Keyboard Shortcuts"
+  },
+  "visualization-toolbar.tooltip-outline-view": {
+    "defaultMessage": "Outline View"
+  },
+  "visualization-toolbar.tooltip-switch-to-dark": {
+    "defaultMessage": "Switch to dark mode"
+  },
+  "visualization-toolbar.tooltip-switch-to-light": {
+    "defaultMessage": "Switch to light mode"
+  },
+  "visualization-toolbar.tooltip-theme-toggle": {
+    "defaultMessage": "Toggle theme"
+  },
+  "visualization-toolbar.tooltip-zoom-in": {
+    "defaultMessage": "Zoom In"
+  },
+  "visualization-toolbar.tooltip-zoom-out": {
+    "defaultMessage": "Zoom Out"
+  },
+  "visualization-toolbar.tooltip-zoom-to-fit": {
+    "defaultMessage": "Zoom to Fit"
+  }
+}

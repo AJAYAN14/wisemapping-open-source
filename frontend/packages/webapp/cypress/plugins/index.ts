@@ -1,0 +1,39 @@
+/*
+ *    Copyright [2007-2025] [wisemapping]
+ *
+ *   Licensed under WiseMapping Public License, Version 1.0 (the "License").
+ *   It is basically the Apache License, Version 2.0 (the "License") plus the
+ *   "powered by wisemapping" text requirement on every single page;
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the license at
+ *
+ *       https://github.com/wisemapping/wisemapping-open-source/blob/main/LICENSE.md
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
+
+/// <reference types="cypress" />
+
+/** The `setupNodeEvents` of the Cypress config. It leaves the config unchanged. */
+const setupNodeEvents = (on: Cypress.PluginEvents): void => {
+  on('task', {
+    // cy.log() only writes to the in-browser command log, which `cypress run`
+    // does not print. These tasks run in the Node process, so anything they
+    // write lands in the terminal / CI log. Used by the accessibility spec to
+    // report axe violations without failing the run.
+    log(message: unknown) {
+      console.log(message);
+      return null;
+    },
+    table(rows: unknown) {
+      console.table(rows);
+      return null;
+    },
+  });
+};
+
+export default setupNodeEvents;

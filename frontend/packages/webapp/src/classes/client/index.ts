@@ -1,0 +1,216 @@
+/*
+ *    Copyright [2007-2025] [wisemapping]
+ *
+ *   Licensed under WiseMapping Public License, Version 1.0 (the "License").
+ *   It is basically the Apache License, Version 2.0 (the "License") plus the
+ *   "powered by wisemapping" text requirement on every single page;
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the license at
+ *
+ *       https://github.com/wisemapping/wisemapping-open-source/blob/main/LICENSE.md
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
+import { Locale, LocaleCode } from '../app-i18n';
+
+export type JwtAuth = {
+  email: string;
+  password: string;
+};
+
+export type NewUser = {
+  email: string;
+  firstname: string;
+  lastname: string;
+  password: string;
+  recaptcha: string;
+  acceptedTerms: boolean;
+};
+
+export type ImportMapInfo = {
+  title: string;
+  description?: string;
+  contentType?: string;
+  content?: ArrayBuffer | string;
+};
+
+export type Label = {
+  id: number;
+  title: string;
+  color: string;
+};
+
+// 'none': the map is public and the signed-in user (or the anonymous visitor) is no collaborator.
+export type Role = 'owner' | 'editor' | 'viewer' | 'none';
+
+export type MapInfo = {
+  id: number;
+  starred: boolean;
+  title: string;
+  labels: Label[];
+  createdBy: string;
+  creationTime: string;
+  lastModificationBy: string;
+  lastModificationTime: string;
+  description: string;
+  public: boolean;
+  role: Role;
+};
+
+export type MapMetadata = {
+  id: number;
+  title: string;
+  creatorFullName: string;
+  isLocked: boolean;
+  isLockedBy?: string;
+  jsonProps: string;
+  role: Role; // User's role for this map (owner, editor, viewer, or none)
+  // Extended fields to match MapInfo
+  description?: string;
+  createdBy?: string; // Email
+  creationTime?: string;
+  lastModificationBy?: string;
+  lastModificationTime?: string;
+  starred?: boolean;
+  public?: boolean;
+  xml?: string; // Map XML content (included when ?xml=true query parameter is provided)
+  version?: number;
+};
+
+export type ChangeHistory = {
+  id: number;
+  lastModificationBy: string;
+  lastModificationTime: string;
+};
+
+export type BasicMapInfo = {
+  title: string;
+  description?: string;
+};
+
+/**
+ * The longest map title the backend can store: the `mindmap.title` column is a VARCHAR(255) in
+ * every schema. The create, rename, duplicate and import dialogs, and the admin console's edit map
+ * dialog, all limit the name to it.
+ */
+export const MAP_TITLE_MAX_LENGTH = 255;
+
+/** The longest label title the backend accepts (Constants.MAX_LABEL_NAME_LENGTH). */
+export const LABEL_TITLE_MAX_LENGTH = 30;
+
+/**
+ * The longest map description the backend accepts: its MapInfoValidator rejects more than 512
+ * characters (`mindmap.description` is an unbounded text column, so the validator sets the
+ * limit). Every dialog that edits a description limits it to this.
+ */
+export const MAP_DESCRIPTION_MAX_LENGTH = 512;
+
+export type FieldError = {
+  id: string;
+  msg: string;
+};
+
+export type ErrorInfo = {
+  isAuth?: boolean;
+  msg?: string;
+  // A plain record, not a Map: this is what the REST client assigns straight
+  // from the server's `fieldErrors` payload, and what `form/input` indexes by
+  // field name.
+  fields?: Record<string, string>;
+  status?: number;
+};
+
+export type LoginErrorInfo = ErrorInfo & {
+  code: 1 | 2 | 3;
+};
+
+export enum AuthenticationType {
+  GOOGLE_OAUTH2 = 'GOOGLE_OAUTH2',
+  FACEBOOK_OAUTH2 = 'FACEBOOK_OAUTH2',
+  DATABASE = 'DATABASE',
+  LDAP = 'LDAP',
+}
+
+export type AccountInfo = {
+  firstname: string;
+  lastname: string;
+  email: string;
+  // Undefined when the account has no locale, or one this frontend does not know.
+  locale?: Locale | undefined;
+  authenticationType: AuthenticationType;
+  isAdmin: boolean;
+};
+
+export type Permission = {
+  name?: string;
+  email: string;
+  role: Role;
+};
+
+export type Oauth2CallbackResult = {
+  email: string;
+  oauthSync: boolean;
+  syncCode?: string;
+};
+
+export type ForgotPasswordResult = {
+  action: 'EMAIL_SENT' | 'OAUTH2_USER';
+};
+
+interface Client {
+  login(auth: JwtAuth): Promise<void>;
+  logout(): Promise<void>;
+  deleteAccount(): Promise<void>;
+  importMap(model: ImportMapInfo): Promise<number>;
+  createMap(map: BasicMapInfo): Promise<number>;
+  deleteMaps(ids: number[]): Promise<void>;
+  deleteMap(id: number): Promise<void>;
+  /** Updates the title and/or the description: a field left out is not sent. */
+  renameMap(id: number, changes: Partial<BasicMapInfo>): Promise<void>;
+  fetchAllMaps(): Promise<MapInfo[]>;
+  fetchMapMetadata(id: number, includeXml?: boolean): Promise<MapMetadata>;
+  fetchMapInfo(id: number): Promise<MapInfo>;
+
+  fetchMapPermissions(id: number): Promise<Permission[]>;
+  addMapPermissions(id: number, message: string, permissions: Permission[]): Promise<void>;
+  deleteMapPermission(id: number, email: string): Promise<void>;
+
+  duplicateMap(id: number, basicInfo: BasicMapInfo): Promise<number>;
+
+  updateAccountLanguage(locale: LocaleCode): Promise<void>;
+  updateAccountPassword(pasword: string): Promise<void>;
+  updateAccountInfo(firstname: string, lastname: string): Promise<void>;
+
+  updateStarred(id: number, starred: boolean): Promise<void>;
+  updateMapToPublic(id: number, isPublic: boolean): Promise<void>;
+
+  createLabel(title: string, color: string): Promise<number>;
+  fetchLabels(): Promise<Label[]>;
+  deleteLabel(id: number): Promise<void>;
+  addLabelToMap(labelId: number, mapId: number): Promise<void>;
+  deleteLabelFromMap(labelId: number, mapId: number): Promise<void>;
+  fetchAccountInfo(): Promise<AccountInfo>;
+
+  registerNewUser(user: NewUser): Promise<void>;
+  resetPassword(email: string): Promise<ForgotPasswordResult>;
+  resetPasswordFromToken(token: string, newPassword: string): Promise<void>;
+  activateAccount(code: string): Promise<void>;
+  processGoogleCallback(code: string): Promise<Oauth2CallbackResult>;
+  processFacebookCallback(code: string): Promise<Oauth2CallbackResult>;
+  confirmAccountSync(
+    email: string,
+    code?: string,
+    provider?: string,
+  ): Promise<Oauth2CallbackResult>;
+
+  fetchHistory(id: number): Promise<ChangeHistory[]>;
+  revertHistory(id: number, cid: number): Promise<void>;
+
+  onSessionExpired(callback?: () => void): (() => void) | undefined;
+}
+
+export default Client;

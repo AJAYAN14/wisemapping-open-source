@@ -1,0 +1,215 @@
+/*
+ *    Copyright [2007-2025] [wisemapping]
+ *
+ *   Licensed under WiseMapping Public License, Version 1.0 (the "License").
+ *   It is basically the Apache License, Version 2.0 (the "License") plus the
+ *   "powered by wisemapping" text requirement on every single page;
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the license at
+ *
+ *       https://github.com/wisemapping/wisemapping-open-source/blob/main/LICENSE.md
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
+import type PositionType from '../PositionType';
+import type INodeModel from '../model/INodeModel';
+import type SizeType from '../SizeType';
+import type LayoutEventBus from './LayoutEventBus';
+import type LayoutManager from './LayoutManager';
+import type { LayoutEventBusType, LayoutEvents } from '../LayoutEventBusType';
+
+class EventBusDispatcher {
+  private _layoutManager: LayoutManager | undefined;
+
+  // The bus of the designer whose layout this dispatcher drives.
+  private _layoutEventBus: LayoutEventBus;
+
+  // Removes the LayoutEventBus handlers registerBusEvents added; called by dispose() ...
+  private _busRemovals: (() => void)[] = [];
+
+  // A connection asks for a layout, which is run once for a run of them (see _requestLayout).
+  private _layoutPending = false;
+
+  private _flushScheduled = false;
+
+  private _batchDepth = 0;
+
+  constructor(layoutEventBus: LayoutEventBus) {
+    this._layoutEventBus = layoutEventBus;
+    this.registerBusEvents();
+    this._layoutManager = undefined;
+  }
+
+  setLayoutManager(layoutManager: LayoutManager) {
+    this._layoutManager = layoutManager;
+    this._layoutPending = false;
+  }
+
+  /**
+   * Holds back the layouts that connections ask for until the matching endBatch(), which lays out
+   * once if any was asked for. Loading a map connects every topic: laying out after each one made
+   * the load quadratic. Batches nest.
+   */
+  beginBatch(): void {
+    this._batchDepth += 1;
+  }
+
+  endBatch(): void {
+    if (this._batchDepth === 0) {
+      return;
+    }
+    this._batchDepth -= 1;
+    if (this._batchDepth === 0) {
+      this.flushPendingLayout();
+    }
+  }
+
+  /** Runs the layout that connections asked for, if it has not run yet. */
+  flushPendingLayout(): void {
+    if (this._layoutPending && this._layoutManager) {
+      this._layoutPending = false;
+      this._layoutManager.layout(true);
+    }
+  }
+
+  registerBusEvents() {
+    this.dispose();
+    this._on('topicAdded', this._topicAdded.bind(this));
+    this._on('topicRemoved', this._topicRemoved.bind(this));
+    this._on('topicResize', this._topicResizeEvent.bind(this));
+    this._on('topicMoved', this._topicMoved.bind(this));
+    this._on('topicDisconect', this._topicDisconect.bind(this));
+    this._on('topicConnected', this._topicConnected.bind(this));
+    this._on('childShrinked', this._childShrinked.bind(this));
+    this._on('forceLayout', this._forceLayout.bind(this));
+  }
+
+  /** Adds a handler, checked against the payload of its event, and keeps how to remove it. */
+  private _on<T extends LayoutEventBusType>(type: T, handler: (payload: LayoutEvents[T]) => void) {
+    const bus = this._layoutEventBus;
+    bus.addEvent(type, handler);
+    this._busRemovals.push(() => bus.removeEvent(type, handler));
+  }
+
+  /**
+   * Removes the LayoutEventBus handlers, so that this dispatcher no longer drives its layout.
+   */
+  dispose(): void {
+    this._busRemovals.forEach((remove) => remove());
+    this._busRemovals = [];
+    this._layoutPending = false;
+    this._batchDepth = 0;
+  }
+
+  /**
+   * A connection needs a layout, but not one each: Topic.connectTo fires forceLayout right after
+   * topicConnected, the commands that rebuild branches end with forceLayout, and a map load is a
+   * batch. So the layout waits for the next forceLayout or the end of the batch, and at the
+   * latest runs in a microtask, so that a connection made anywhere else is still laid out.
+   */
+  private _requestLayout(): void {
+    this._layoutPending = true;
+    if (this._batchDepth === 0 && !this._flushScheduled) {
+      this._flushScheduled = true;
+      queueMicrotask(() => {
+        this._flushScheduled = false;
+        this.flushPendingLayout();
+      });
+    }
+  }
+
+  private _topicResizeEvent(args: { node: INodeModel; size: SizeType }) {
+    this.getLayoutManager().updateNodeSize(args.node.getId(), args.size);
+  }
+
+  private _topicMoved(args: { node: INodeModel; position: PositionType }) {
+    this.getLayoutManager().moveNode(args.node.getId(), args.position);
+  }
+
+  private _topicDisconect(node: INodeModel) {
+    this.getLayoutManager().disconnectNode(node.getId());
+  }
+
+  private _topicConnected(args: { parentNode: INodeModel; childNode: INodeModel }) {
+    // Get the order, handling undefined for topics without order attribute
+    let order = args.childNode.getOrder();
+    if (order === undefined) {
+      // If order is not set, assign the next available order
+      // This can happen when loading maps where topics don't have order attributes
+      const parent = args.parentNode;
+      const siblings = parent.getChildren().filter((child) => child !== args.childNode);
+      order = siblings.length;
+
+      // Set the order on the child for future consistency
+      args.childNode.setOrder(order);
+    }
+
+    this._layoutManager!.connectNode(args.parentNode.getId(), args.childNode.getId(), order);
+
+    // Recalculate layout after connection to update positions
+    this._requestLayout();
+  }
+
+  getLayoutManager(): LayoutManager {
+    if (!this._layoutManager) {
+      throw new Error('Layout not initialized');
+    }
+    return this._layoutManager;
+  }
+
+  private _childShrinked(node: INodeModel) {
+    this.getLayoutManager().updateShrinkState(node.getId(), node.areChildrenShrunken());
+  }
+
+  // The bus hands over topic models (see LayoutEventPayloads), not topics.
+  private _topicAdded(node: INodeModel) {
+    // Central topic must not be added twice ...
+    if (node.getId() !== 0) {
+      this.getLayoutManager().addNode(
+        node.getId(),
+        { width: 10, height: 10 },
+        EventBusDispatcher._initialPosition(node),
+      );
+      this.getLayoutManager().updateShrinkState(node.getId(), node.areChildrenShrunken());
+    }
+  }
+
+  /**
+   * A model may have no position (getPosition() is then undefined). As the Tango loader does,
+   * fall back to the closest ancestor position, or the origin, so the layout gets real numbers.
+   */
+  private static _initialPosition(node: INodeModel): PositionType {
+    let model: INodeModel | undefined = node;
+    while (model) {
+      const position = model.getPosition();
+      if (position) {
+        return position;
+      }
+      model = model.getParent();
+    }
+    return { x: 0, y: 0 };
+  }
+
+  private _topicRemoved(node: INodeModel) {
+    this.getLayoutManager().removeNode(node.getId());
+  }
+
+  /**
+   * Lays out, unless nothing changed since the last layout: it would move nothing. A command runs
+   * Topic.connectTo, which lays out, and the action runner then asks for another one (BL5-94).
+   */
+  private _forceLayout(): void {
+    // This layout includes any a connection asked for ...
+    this._layoutPending = false;
+    const layoutManager = this.getLayoutManager();
+    if (layoutManager.needsLayout()) {
+      layoutManager.layout(true);
+    }
+  }
+}
+
+export default EventBusDispatcher;

@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xmap-content xmlns="urn:xmind:xmap:xmlns:content:2.0" xmlns:fo="http://www.w3.org/1999/XSL/Format" xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:xlink="http://www.w3.org/1999/xlink" version="2.0">
+  <sheet id="sheet1">
+    <topic id="topic1">
+      <title>Icon Test Map</title>
+      <children>
+        <topics type="attached">
+          <topic id="topic2">
+            <title>Priority Icons</title>
+            <marker-refs>
+              <marker-ref marker-id="priority-1"/>
+            </marker-refs>
+            <children>
+              <topics type="attached">
+                <topic id="topic3">
+                  <title>Priority 2</title>
+                  <marker-refs>
+                    <marker-ref marker-id="priority-2"/>
+                  </marker-refs>
+                </topic>
+                <topic id="topic4">
+                  <title>Priority 3</title>
+                  <marker-refs>
+                    <marker-ref marker-id="priority-3"/>
+                  </marker-refs>
+                </topic>
+              </topics>
+            </children>
+          </topic>
+          <topic id="topic5">
+            <title>Star Rating</title>
+            <marker-refs>
+              <marker-ref marker-id="star-yellow"/>
+            </marker-refs>
+          </topic>
+          <topic id="topic6">
+            <title>Task Management</title>
+            <marker-refs>
+              <marker-ref marker-id="task-done"/>
+            </marker-refs>
+            <children>
+              <topics type="attached">
+                <topic id="topic7">
+                  <title>In Progress</title>
+                  <marker-refs>
+                    <marker-ref marker-id="task-start"/>
+                  </marker-refs>
+                </topic>
+              </topics>
+            </children>
+          </topic>
+          <topic id="topic8">
+            <title>Emotions</title>
+            <marker-refs>
+              <marker-ref marker-id="smiley-smile"/>
+            </marker-refs>
+            <children>
+              <topics type="attached">
+                <topic id="topic9">
+                  <title>Happy</title>
+                  <marker-refs>
+                    <marker-ref marker-id="smiley-laugh"/>
+                  </marker-refs>
+                </topic>
+                <topic id="topic10">
+                  <title>Thinking</title>
+                  <marker-refs>
+                    <marker-ref marker-id="other-lightbulb"/>
+                  </marker-refs>
+                </topic>
+              </topics>
+            </children>
+          </topic>
+          <topic id="topic11">
+            <title>Technology</title>
+            <marker-refs>
+              <marker-ref marker-id="symbol-code"/>
+            </marker-refs>
+            <children>
+              <topics type="attached">
+                <topic id="topic12">
+                  <title>Mobile</title>
+                  <marker-refs>
+                    <marker-ref marker-id="other-phone2"/>
+                  </marker-refs>
+                </topic>
+              </topics>
+            </children>
+          </topic>
+        </topics>
+      </children>
+    </topic>
+  </sheet>
+</xmap-content>

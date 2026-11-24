@@ -1,0 +1,424 @@
+/*
+ *    Copyright [2007-2025] [wisemapping]
+ *
+ *   Licensed under WiseMapping Public License, Version 1.0 (the "License").
+ *   It is basically the Apache License, Version 2.0 (the "License") plus the
+ *   "powered by wisemapping" text requirement on every single page;
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the license at
+ *
+ *       https://github.com/wisemapping/wisemapping-open-source/blob/main/LICENSE.md
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
+import type { FontStyle } from '@wisemapping/web2d';
+
+import EventManager from './util/EventManager';
+import EventDispatcher from './EventDispatcher';
+import type Topic from './Topic';
+
+/** 'input' sends the DOM event and the new text. */
+type EditorEvents = { input: [Event, string] };
+
+class EditorComponent extends EventDispatcher<EditorEvents> {
+  private _topic: Topic;
+
+  private _oldText: string | undefined;
+
+  private _containerElem: HTMLElement;
+
+  private _onClose: () => void;
+
+  // Animation frame of the pending layout of the live preview, if any.
+  private _pendingRelayout: number | undefined;
+
+  constructor(topic: Topic, onClose: () => void) {
+    super();
+    this._topic = topic;
+
+    // Create editor ui, next to the map of the topic's designer ...
+    this._containerElem = EditorComponent.buildEditor();
+    EditorComponent.anchorOf(topic)?.parentElement?.appendChild(this._containerElem);
+    this.registerEvents(this._containerElem);
+    // Use the model text: getText() falls back to the theme placeholder for empty topics ...
+    this._oldText = topic.getModel().getText();
+    this._onClose = onClose;
+  }
+
+  getTopic(): Topic {
+    return this._topic;
+  }
+
+  /**
+   * The element the editor is placed next to, in the page: the web component of the topic's
+   * designer, or its canvas container when that is not in a web component. The editor stays out
+   * of the shadow DOM, where the page could not tell it has the focus.
+   */
+  private static anchorOf(topic: Topic): HTMLElement | undefined {
+    const container = topic.getDesigner()?.getContainer();
+    if (!container) {
+      return undefined;
+    }
+    const root = container.getRootNode();
+    return root instanceof ShadowRoot ? (root.host as HTMLElement) : container;
+  }
+
+  private static buildEditor(): HTMLElement {
+    const result = document.createElement('div');
+    result.setAttribute('id', 'textContainer');
+    result.style.display = 'none';
+    result.style.zIndex = '8';
+    result.style.border = '0 none';
+
+    const textareaElem = document.createElement('textarea');
+    textareaElem.setAttribute('tabindex', '-1');
+    textareaElem.setAttribute('value', '');
+    textareaElem.setAttribute('wrap', 'off');
+    // Prevent browser extensions from interfering with this textarea
+    textareaElem.setAttribute('autocomplete', 'off');
+    textareaElem.setAttribute('data-lpignore', 'true'); // LastPass ignore
+    textareaElem.setAttribute('data-form-type', 'other'); // 1Password ignore
+    textareaElem.setAttribute('data-1p-ignore', 'true'); // 1Password ignore
+    textareaElem.style.border = '0px';
+    textareaElem.style.background = 'rgba(0, 0, 0, 0)';
+    textareaElem.style.outline = '0 none';
+    textareaElem.style.resize = 'none';
+    textareaElem.style.overflow = 'hidden';
+    textareaElem.style.padding = '0px 0px 0px 0px';
+    textareaElem.style.lineHeight = '100%';
+    textareaElem.style.width = '100%';
+
+    result.appendChild(textareaElem);
+    return result;
+  }
+
+  private registerEvents(containerElem: HTMLElement): void {
+    const textareaElem = this.getTextareaElem();
+    EventManager.bind(textareaElem, 'keydown', (event: Event) => {
+      const keyboardEvent = event as KeyboardEvent;
+
+      // Keys pressed while an IME (zh, ja, ko) is composing belong to the IME ...
+      if (keyboardEvent.isComposing || keyboardEvent.keyCode === 229) {
+        event.stopPropagation();
+        return;
+      }
+
+      switch (keyboardEvent.code) {
+        case 'Escape':
+          // Revert to previous text ...
+          this.close(false);
+          break;
+        case 'Enter': {
+          if (keyboardEvent.metaKey || keyboardEvent.ctrlKey) {
+            keyboardEvent.preventDefault();
+
+            const text = this.getTextAreaText();
+            const selectionStart = textareaElem.selectionStart ?? text.length;
+            const selectionEnd = textareaElem.selectionEnd ?? selectionStart;
+            const head = text.substring(0, selectionStart);
+            const tail = text.substring(selectionEnd);
+            const newText = `${head}\n${tail}`;
+
+            this.setText(newText);
+            this.fireEvent('input', [event, newText]);
+
+            textareaElem.focus();
+            const newCursorPosition = selectionStart + 1;
+            textareaElem.setSelectionRange(newCursorPosition, newCursorPosition);
+          } else {
+            // Without this, the browser adds the new line to the textarea after closing,
+            // and the input listener would write it into the topic ...
+            keyboardEvent.preventDefault();
+            this.close(true);
+          }
+          break;
+        }
+        default:
+          // No actions...
+          break;
+      }
+      event.stopPropagation();
+    });
+
+    // The designer opens the editor on keypress, so keep it from reaching the document ...
+    EventManager.bind(textareaElem, 'keypress', (event: Event) => {
+      event.stopPropagation();
+    });
+
+    // Sync the topic on every change, including paste, delete and IME input ...
+    EventManager.bind(textareaElem, 'input', (event: Event) => {
+      // Once closed, the text has been committed and the editor is gone ...
+      if (!containerElem.isConnected) {
+        return;
+      }
+      const text = this.getTextAreaText();
+      this._topic.setText(text);
+
+      // Size the editor now, but lay the map out once per frame: several input events
+      // can arrive within a frame (fast typing on a large map, key repeat, IME).
+      this.sizeToText(text);
+      this.scheduleRelayout();
+
+      this.fireEvent('input', [event, text]);
+    });
+
+    // If the user clicks on the input, all event must be ignored ...
+    EventManager.bind(containerElem, 'click', (event: Event) => {
+      event.stopPropagation();
+    });
+    EventManager.bind(containerElem, 'dblclick', (event: Event) => {
+      event.stopPropagation();
+    });
+    EventManager.bind(containerElem, 'mousedown', (event: Event) => {
+      event.stopPropagation();
+    });
+
+    // Prevent touch events from propagating on mobile (prevents focus loss)
+    EventManager.bind(containerElem, 'touchstart', (event: Event) => {
+      event.stopPropagation();
+    });
+    EventManager.bind(containerElem, 'touchend', (event: Event) => {
+      event.stopPropagation();
+    });
+  }
+
+  private resize(text?: string): void {
+    this.relayout();
+    this.sizeToText(text || this.getTextAreaText());
+  }
+
+  private scheduleRelayout(): void {
+    if (typeof requestAnimationFrame !== 'function') {
+      this.relayout();
+      return;
+    }
+    if (this._pendingRelayout === undefined) {
+      this._pendingRelayout = requestAnimationFrame(() => {
+        this._pendingRelayout = undefined;
+        // Closing lays the map out itself ...
+        if (this._containerElem.isConnected) {
+          this.relayout();
+        }
+      });
+    }
+  }
+
+  private cancelRelayout(): void {
+    if (this._pendingRelayout !== undefined) {
+      cancelAnimationFrame(this._pendingRelayout);
+      this._pendingRelayout = undefined;
+    }
+  }
+
+  private relayout(): void {
+    // A synchronous layout makes the pending one useless ...
+    this.cancelRelayout();
+
+    // Force relayout ...
+    this._topic.getLayoutEventBus().fireEvent('forceLayout');
+
+    // Adjust position: the editor is absolute, so place it relative to its offset parent ...
+    const textShape = this._topic.getOrBuildTextShape();
+    this._containerElem.style.position = 'absolute';
+    const { top, left } = textShape.getNativePosition(
+      this._containerElem.offsetParent ?? undefined,
+    );
+    this._containerElem.style.top = `${top}px`;
+    this._containerElem.style.left = `${left}px`;
+
+    const mindmapCompData = EditorComponent.anchorOf(this._topic)?.getBoundingClientRect();
+    const maxWidth = mindmapCompData ? mindmapCompData.width - left : 0;
+    this._containerElem.style.maxWidth = `${maxWidth}px`;
+  }
+
+  private sizeToText(textValue: string): void {
+    const textElem = this.getTextareaElem();
+
+    const rows = [...textValue].filter((x) => x === '\n').length + 1;
+    const maxLineLength = Math.max(...textValue.split('\n').map((l) => l.length));
+
+    textElem.setAttribute('cols', maxLineLength.toString());
+    textElem.setAttribute('rows', rows.toString());
+
+    this._containerElem.style.width = `${maxLineLength + 2}em`;
+    this._containerElem.style.height = '0';
+  }
+
+  private updateModel() {
+    const text = this.getTextAreaText();
+    const topicId = this._topic.getId();
+
+    const actionDispatcher = this._topic.getActionDispatcher();
+    const commandContext = actionDispatcher.getCommandContext();
+
+    // Safety check: Verify the topic still exists in the designer before updating
+    // This prevents errors when the editor is connected to a topic that's being modified/removed
+    const designerTopics = commandContext.designer.getModel().getTopics();
+    const topicExists = designerTopics.some((topic) => topic.getId() === topicId);
+
+    if (!topicExists) {
+      // Topic no longer exists in the model - skip update silently
+      // This can happen during rapid UI updates or topic lifecycle transitions
+      return;
+    }
+
+    try {
+      actionDispatcher.changeTextToTopic([topicId], text);
+    } catch (e) {
+      // Fallback: If update still fails despite our check, log for debugging
+      // but don't use console.error to avoid failing tests
+      console.warn('Text update failed:', e);
+    }
+  }
+
+  show(textOverwrite?: string): void {
+    const topic = this._topic;
+
+    // Hide topic text ...
+    topic.getOrBuildTextShape().setVisibility(false);
+
+    // Set Editor Style
+    const nodeText = topic.getOrBuildTextShape();
+    const fontStyle = nodeText.getFontStyle();
+    fontStyle.size = nodeText.getHtmlFontSize();
+    fontStyle.color = nodeText.getColor();
+
+    this.setStyle(fontStyle);
+
+    // Set editor's initial size
+    // Position the editor and set the size...
+    this._containerElem.style.display = 'block';
+
+    // Set editor's initial text. If the text has not been specifed, it will be empty
+    const modelText = topic.getModel().getText();
+    const text = textOverwrite || modelText || '';
+    this.setText(text);
+
+    // Focus the element and select the current text: positionCursor does both ...
+    this.positionCursor(this.getTextareaElem(), textOverwrite === undefined);
+  }
+
+  private setStyle(fontStyle: FontStyle) {
+    const inputField = this.getTextareaElem();
+    // allowed param reassign to avoid risks of existing code relying in this side-effect
+    if (!fontStyle.fontFamily) {
+      fontStyle.fontFamily = 'Arial';
+    }
+    if (!fontStyle.style) {
+      fontStyle.style = 'normal';
+    }
+    if (!fontStyle.weight) {
+      fontStyle.weight = 'normal';
+    } else if (fontStyle.weight !== 'normal' && fontStyle.weight !== 'bold') {
+      // Keep semantic weights; rendering layer will map if needed
+      // No need to assign to itself, just keep the existing value
+    }
+
+    const cssStyle: Record<string, string> = {
+      // A text without a size: the empty value removes the property rather than writing
+      // "undefinedpx", so that the editor inherits one.
+      'font-size': fontStyle.size === undefined ? '' : `${fontStyle.size}px`,
+      'font-family': fontStyle.fontFamily,
+      'font-style': fontStyle.style,
+      'font-weight': fontStyle.weight,
+      // A text without a colour of its own: the empty value removes the one of the topic edited
+      // before, so that the editor inherits one.
+      color: fontStyle.color ?? '',
+    };
+    Object.entries(cssStyle).forEach(([prop, value]) => {
+      inputField.style.setProperty(prop, value);
+      this._containerElem.style.setProperty(prop, value);
+    });
+  }
+
+  private setText(text: string): void {
+    const textareaElem = this.getTextareaElem();
+    textareaElem.value = text;
+
+    this._topic.setText(text);
+
+    this.resize(text);
+  }
+
+  private getTextAreaText(): string {
+    return this.getTextareaElem().value;
+  }
+
+  private getTextareaElem(): HTMLTextAreaElement {
+    const result = this._containerElem.querySelector('textarea');
+    if (!result) {
+      throw new Error('The text editor has no textarea');
+    }
+    return result;
+  }
+
+  private positionCursor(textareaElem: HTMLTextAreaElement, selectText: boolean) {
+    const { length } = this.getTextAreaText();
+    const start = selectText ? 0 : length;
+    textareaElem.focus();
+    textareaElem.setSelectionRange(start, length);
+  }
+
+  close(update: boolean): void {
+    this.cancelRelayout();
+
+    // Revert to all text ...
+    this._topic.setText(this._oldText);
+
+    if (update) {
+      this.updateModel();
+    }
+    // Remove it form the screen ...
+    this._containerElem.remove();
+
+    // Restore topoc share visibility ...
+    this._topic.getOrBuildTextShape().setVisibility(true);
+
+    this.resize();
+
+    // Purge ...
+    this._onClose();
+  }
+}
+
+/** The text editor of one designer: each designer has its own (see TopicEventDispatcher). */
+class MultitTextEditor {
+  private _component: EditorComponent | undefined;
+
+  constructor() {
+    this._component = undefined;
+  }
+
+  isActive(): boolean {
+    return this._component !== undefined;
+  }
+
+  getActiveTopic(): Topic | undefined {
+    return this._component?.getTopic();
+  }
+
+  show(topic: Topic, textOverwrite?: string): void {
+    // Is it active ?
+    if (this._component) {
+      console.warn('Editor was already displayed. Closing previous editor.');
+      this._component.close(false);
+    }
+    // Create a new instance
+    this._component = new EditorComponent(topic, () => {
+      this._component = undefined;
+    });
+    this._component.show(textOverwrite);
+  }
+
+  close(update: boolean): void {
+    if (this._component) {
+      this._component.close(update);
+      this._component = undefined;
+    }
+  }
+}
+export default MultitTextEditor;

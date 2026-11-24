@@ -1,0 +1,227 @@
+/*
+ *    Copyright [2007-2025] [wisemapping]
+ *
+ *   Licensed under WiseMapping Public License, Version 1.0 (the "License").
+ *   It is basically the Apache License, Version 2.0 (the "License") plus the
+ *   "powered by wisemapping" text requirement on every single page;
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the license at
+ *
+ *       https://github.com/wisemapping/wisemapping-open-source/blob/main/LICENSE.md
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
+
+import { ErrorInfo, MapMetadata, Role } from '../../classes/client';
+import type { EditorRenderMode } from '@wisemapping/mindplot';
+import type { LoaderFunctionArgs } from 'react-router';
+import AppConfig from '../../classes/app-config';
+import queryClient from '../../queryClient';
+import Client from '../../classes/client';
+import { createJsonResponse } from '../../utils/response';
+import { mapMetadataQueryKey } from '../../classes/middleware';
+import AppI18n from '../../classes/app-i18n';
+import I18nMsg from '@wisemapping/editor/classes/i18n-msg';
+import { appLogger as log } from '../../utils/logger';
+
+export type EditorMetadata = {
+  editorMode: EditorRenderMode;
+  mapMetadata: MapMetadata;
+  zoom: number;
+  bootstrapXML?: string; // Bootstrap XML to use instead of fetching from server
+};
+
+export type PageModeType = 'edit' | 'try' | 'view-public' | 'view-private';
+
+/**
+ * Fetches map metadata using React Query cache.
+ * Will return cached data if available and not stale, otherwise fetches from API.
+ * @param mapId - The ID of the map to fetch metadata for
+ * @param client - The client instance to use for fetching
+ * @param includeXml - Whether to include XML in the metadata response
+ * @returns Promise resolving to MapMetadata
+ */
+async function fetchMapMetadataWithCache(
+  mapId: number,
+  client: Client,
+  includeXml = false,
+): Promise<MapMetadata> {
+  return queryClient.fetchQuery<MapMetadata, ErrorInfo>({
+    queryKey: mapMetadataQueryKey(mapId, includeXml),
+    queryFn: () => client.fetchMapMetadata(mapId, includeXml),
+  });
+}
+
+const isCollaboratorRole = (role: Role): role is Exclude<Role, 'none'> =>
+  role === 'owner' || role === 'editor' || role === 'viewer';
+
+const isErrorInfo = (error: unknown): error is ErrorInfo =>
+  typeof error === 'object' &&
+  error !== null &&
+  ('msg' in error || 'isAuth' in error || 'fields' in error || 'status' in error);
+
+const PUBLIC_MAP_REMOVED_MESSAGE = 'The map you are looking for is no longer available.';
+
+// The editor's own messages, loaded with the map so that its chrome paints in the user's
+// language. Imported by path: the editor barrel would put the whole editor in the entry.
+const preloadEditorMessages = (): Promise<unknown> =>
+  I18nMsg.load(AppI18n.getUserLocale().code).catch((error) =>
+    log.error('The editor messages could not be loaded', error),
+  );
+
+export const loader = (pageMode: PageModeType, bootstrap = false) => {
+  const loadMap = loadMapFor(pageMode, bootstrap);
+  return async (args: LoaderFunctionArgs): Promise<Response> => {
+    const [result] = await Promise.all([loadMap(args), preloadEditorMessages()]);
+    return result;
+  };
+};
+
+const loadMapFor = (pageMode: PageModeType, bootstrap: boolean) => {
+  return async ({ params }: LoaderFunctionArgs): Promise<Response> => {
+    const client = AppConfig.getClient();
+    let result: Response | undefined;
+
+    // Validate that params.id exists and is a valid number
+    if (!params['id'] || params['id'] === 'undefined') {
+      return new Response('Map ID is required', {
+        status: 400,
+        statusText: 'Bad Request',
+      });
+    }
+
+    const mapId = Number.parseInt(params['id'], 10);
+    if (Number.isNaN(mapId)) {
+      return new Response('Invalid map ID', {
+        status: 400,
+        statusText: 'Bad Request',
+      });
+    }
+
+    switch (pageMode) {
+      case 'try': {
+        const value = await Promise.resolve({
+          editorMode: 'showcase',
+          mapMetadata: {
+            id: mapId,
+            title: 'What is WiseMapping ?',
+            creatorFullName: 'Paulo Gustavo Veiga',
+            isLocked: false,
+            jsonProps: '{ "zoom": 0.8 }',
+            role: 'owner' as const,
+          },
+          zoom: 0.8,
+        });
+        result = createJsonResponse(value);
+        break;
+      }
+      case 'edit':
+      case 'view-private': {
+        try {
+          // A history revision is loaded by the editor from its own URL: bootstrapping it with
+          // the current map's XML would show today's map instead of the revision.
+          const bootstrapXml = bootstrap && !params['hid'];
+          const mapMetadata = await fetchMapMetadataWithCache(mapId, client, bootstrapXml);
+
+          let editorMode: EditorRenderMode;
+          if (!isCollaboratorRole(mapMetadata.role)) {
+            // Somebody else's public map: only its public XML can be read, and nothing saved.
+            // A revision has no public endpoint, so it is read through the private one.
+            editorMode = params['hid'] ? 'viewonly-private' : 'viewonly-public';
+          } else if (mapMetadata.isLocked || pageMode === 'view-private') {
+            editorMode = 'viewonly-private';
+          } else {
+            editorMode = `edition-${mapMetadata.role}`;
+          }
+
+          // Build result ...
+          // Safely parse jsonProps with fallback to default zoom
+          let zoom = 0.8; // Default zoom value
+          if (mapMetadata.jsonProps && mapMetadata.jsonProps.trim()) {
+            try {
+              const parsedProps = JSON.parse(mapMetadata.jsonProps.trim());
+              if (parsedProps && typeof parsedProps === 'object' && 'zoom' in parsedProps) {
+                zoom = typeof parsedProps.zoom === 'number' ? parsedProps.zoom : zoom;
+              }
+            } catch (error) {
+              console.warn(
+                `Failed to parse jsonProps for map ${mapMetadata.id}:`,
+                mapMetadata.jsonProps,
+                error,
+              );
+              // Use default zoom value on parse error
+            }
+          }
+          const data: EditorMetadata = {
+            editorMode: editorMode,
+            mapMetadata: mapMetadata,
+            zoom: zoom,
+          };
+
+          // Include XML if requested and available
+          if (bootstrapXml && mapMetadata.xml) {
+            data.bootstrapXML = mapMetadata.xml;
+          }
+
+          result = createJsonResponse(data);
+        } catch (e) {
+          // If the issue is an auth error, it needs to be redirect to login.
+          const error = e as ErrorInfo;
+          if (!error.isAuth) {
+            console.warn(`Map could not be loaded`);
+            console.warn(e);
+            throw e;
+          }
+        }
+        break;
+      }
+      case 'view-public': {
+        try {
+          const mapMetadata = await fetchMapMetadataWithCache(mapId, client, bootstrap);
+          const data: EditorMetadata = {
+            editorMode: 'viewonly-public',
+            mapMetadata: mapMetadata,
+            zoom: 0.8,
+          };
+
+          // Include XML if requested and available
+          if (bootstrap && mapMetadata.xml) {
+            data.bootstrapXML = mapMetadata.xml;
+          }
+
+          result = createJsonResponse(data);
+        } catch (error) {
+          if (isErrorInfo(error) && error.status === 410) {
+            throw new Response(error.msg ?? PUBLIC_MAP_REMOVED_MESSAGE, {
+              status: 410,
+              statusText: 'Gone',
+            });
+          }
+          throw error;
+        }
+        break;
+      }
+      default: {
+        const exhaustiveCheck: never = pageMode;
+        throw new Error(exhaustiveCheck);
+      }
+    }
+
+    // If result has not been set, redict to the login with the original url
+    if (!result) {
+      const url = window.location.pathname + window.location.search;
+      result = new Response('Map could not be loaded, redirect to login.', {
+        status: 302,
+        headers: {
+          Location: `/c/login?redirect=${encodeURIComponent(url)}`,
+        },
+      });
+    }
+
+    return result;
+  };
+};

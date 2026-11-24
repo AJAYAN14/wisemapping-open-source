@@ -1,0 +1,111 @@
+/*
+ *    Copyright [2007-2025] [wisemapping]
+ *
+ *   Licensed under WiseMapping Public License, Version 1.0 (the "License").
+ *   It is basically the Apache License, Version 2.0 (the "License") plus the
+ *   "powered by wisemapping" text requirement on every single page;
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the license at
+ *
+ *       https://github.com/wisemapping/wisemapping-open-source/blob/main/LICENSE.md
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
+
+import { useQuery } from '@tanstack/react-query';
+import { AccountInfo, ErrorInfo, MapInfo, MapMetadata } from '../client';
+import { ClientContext } from '../provider/client-context';
+import { use, useMemo } from 'react';
+import AppI18n from '../app-i18n';
+
+/**
+ * The cache key of a map's metadata. It sits under ['maps'], so the invalidation every map
+ * mutation does (rename, star, labels, publish...) also refreshes it: with its own top-level
+ * key it stayed fresh for the 5-minute staleTime, and a dialog opened again showed, and saved
+ * back, the values from before the change.
+ */
+export const mapMetadataQueryKey = (id: number, withXml = false): unknown[] =>
+  withXml ? ['maps', 'metadata', id, 'xml'] : ['maps', 'metadata', id];
+
+type MapLoadResult = {
+  isLoading: boolean;
+  error: ErrorInfo | undefined;
+  data: MapInfo | undefined;
+};
+
+export const useFetchMapById = (id: number): MapLoadResult => {
+  const client = use(ClientContext);
+  const { isLoading, error, data } = useQuery<MapMetadata, ErrorInfo>({
+    queryKey: mapMetadataQueryKey(id),
+    queryFn: () => client.fetchMapMetadata(id),
+    // 0 is a valid map ID, only disable for NaN
+    enabled: !Number.isNaN(id),
+  });
+
+  // Convert MapMetadata to MapInfo format. Memoised on `data`: callers key
+  // effects on this object, and rebuilding it every render made those effects
+  // re-run forever once the query resolved.
+  const map: MapInfo | undefined = useMemo(
+    () =>
+      data
+        ? {
+            id: data.id,
+            title: data.title,
+            starred: data.starred ?? false,
+            labels: [], // Labels not included in metadata - would need separate call if needed
+            createdBy: data.createdBy ?? data.creatorFullName,
+            creationTime: data.creationTime ?? '',
+            lastModificationBy: data.lastModificationBy ?? '',
+            lastModificationTime: data.lastModificationTime ?? '',
+            description: data.description ?? '',
+            public: data.public ?? false,
+            role: data.role,
+          }
+        : undefined,
+    [data],
+  );
+  return { isLoading, error: error ?? undefined, data: map };
+};
+
+type MapMetadataLoadResult = {
+  isLoading: boolean;
+  error: ErrorInfo | undefined;
+  data: MapMetadata | undefined;
+};
+
+export const useFetchMapMetadata = (id: number): MapMetadataLoadResult => {
+  const client = use(ClientContext);
+  const { isLoading, error, data } = useQuery<MapMetadata, ErrorInfo>({
+    queryKey: mapMetadataQueryKey(id),
+    queryFn: () => client.fetchMapMetadata(id),
+  });
+  return { isLoading, error: error ?? undefined, data };
+};
+
+export const useFetchAccount = (): AccountInfo | undefined => {
+  const client = use(ClientContext);
+  const { data } = useQuery<AccountInfo, ErrorInfo>({
+    queryKey: ['account'],
+    queryFn: () => client.fetchAccountInfo(),
+    enabled: !AppI18n.isPublicPage(),
+  });
+  return data;
+};
+
+export const useFetchAccountWithState = (): {
+  data: AccountInfo | undefined;
+  isLoading: boolean;
+  error: ErrorInfo | undefined;
+} => {
+  const client = use(ClientContext);
+  const { data, isLoading, error } = useQuery<AccountInfo, ErrorInfo>({
+    queryKey: ['account'],
+    queryFn: () => client.fetchAccountInfo(),
+    enabled: !AppI18n.isPublicPage(),
+  });
+  return { data, isLoading, error: error ?? undefined };
+};

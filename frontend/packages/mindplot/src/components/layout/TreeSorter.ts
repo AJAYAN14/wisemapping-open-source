@@ -1,0 +1,306 @@
+/*
+ *    Copyright [2007-2025] [wisemapping]
+ *
+ *   Licensed under WiseMapping Public License, Version 1.0 (the "License").
+ *   It is basically the Apache License, Version 2.0 (the "License") plus the
+ *   "powered by wisemapping" text requirement on every single page;
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the license at
+ *
+ *       https://github.com/wisemapping/wisemapping-open-source/blob/main/LICENSE.md
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
+import { $assert } from '../util/assert';
+import AbstractBasicSorter from './AbstractBasicSorter';
+import type { SorterPrediction } from './ChildrenSorterStrategy';
+import type RootedTreeSet from './RootedTreeSet';
+import type Node from './Node';
+import type PositionType from '../PositionType';
+
+class TreeSorter extends AbstractBasicSorter {
+  private static INTERNODE_VERTICAL_PADDING = 70; // Increased spacing between parent and child (5x the original 14)
+
+  private static INTERNODE_HORIZONTAL_PADDING = 5; // Very compact horizontal spacing (75% reduction)
+
+  predict(
+    graph: RootedTreeSet,
+    parent: Node,
+    node: Node | undefined,
+    position: PositionType | undefined,
+  ): SorterPrediction {
+    // If node is being added (not dragged)
+    if (!node) {
+      const parentChildren = graph.getChildren(parent);
+      const order = parentChildren.length;
+
+      const result = {
+        x: parent.getPosition().x,
+        y: parent.getPosition().y + parent.getSize().height + TreeSorter.INTERNODE_VERTICAL_PADDING,
+      };
+      return { order, position: result };
+    }
+
+    // If position not provided, keep current position
+    if (!position) {
+      return { order: node.getOrder() ?? 0, position: node.getPosition() };
+    }
+
+    // Node is being dragged - determine order based on horizontal position.
+    // Once the node is detached its remaining siblings are renumbered 0..n-1 in this
+    // sorted order, so an index into this array is also the order to insert at.
+    const parentChildren = graph
+      .getChildren(parent)
+      .filter((child) => child !== node)
+      .sort((a, b) => (a.getOrder() ?? 0) - (b.getOrder() ?? 0));
+
+    const firstChild = parentChildren[0];
+    if (!firstChild) {
+      const result = {
+        x: parent.getPosition().x,
+        y: parent.getPosition().y + parent.getSize().height + TreeSorter.INTERNODE_VERTICAL_PADDING,
+      };
+      return { order: 0, position: result };
+    }
+
+    // Find position in order based on X coordinate
+    let order = 0;
+    parentChildren.forEach((child, i) => {
+      if (position.x > child.getPosition().x) {
+        order = i + 1;
+      }
+    });
+
+    // Calculate Y position (all children at same level)
+    const yPos =
+      parent.getPosition().y + parent.getSize().height + TreeSorter.INTERNODE_VERTICAL_PADDING;
+
+    // Calculate X position - between siblings or at edges
+    // order is in [0, parentChildren.length]: no child before it, no child after it, or both.
+    const prevChild = parentChildren[order - 1];
+    const nextChild = parentChildren[order];
+    let xPos: number;
+    if (!prevChild) {
+      // Before first child: half a gap left of it, as between two children
+      xPos = firstChild.getPosition().x - this._halfSiblingGapX(parentChildren, 0);
+    } else if (!nextChild) {
+      // After last child: half a gap right of it
+      xPos = prevChild.getPosition().x + this._halfSiblingGapX(parentChildren, order - 1);
+    } else {
+      // Between two children
+      xPos = (prevChild.getPosition().x + nextChild.getPosition().x) / 2;
+    }
+
+    return { order, position: { x: xPos, y: yPos } };
+  }
+
+  /**
+   * Half the gap, in x, between the centre of children[index] and the next child in the list (the
+   * one before it, for the last), as AbstractBasicSorter._halfSiblingGap in y. A lone child counts
+   * the gap the layout leaves between two leaves of its width.
+   */
+  private _halfSiblingGapX(children: Node[], index: number): number {
+    // In range: every caller passes the index of a child it already holds.
+    const child = children[index]!;
+    const neighbour = children[index === 0 ? 1 : index - 1];
+    const gap = neighbour
+      ? Math.abs(neighbour.getPosition().x - child.getPosition().x)
+      : child.getSize().width + TreeSorter.INTERNODE_HORIZONTAL_PADDING * 2;
+    return gap / 2;
+  }
+
+  insert(treeSet: RootedTreeSet, parent: Node, child: Node, order: number): void {
+    const children = this._getSortedChildren(treeSet, parent);
+
+    // Validate and fix order if invalid
+    let recovered = false;
+
+    // Check for invalid order values
+    if (!Number.isFinite(order) || order < 0) {
+      console.error(
+        '[TreeSorter] Invalid order value detected - attempting recovery.\n' +
+          `  Child ID: ${child.getId()}\n` +
+          `  Parent ID: ${parent.getId()}\n` +
+          `  Invalid order: ${order} (${typeof order})\n` +
+          `  Current children count: ${children.length}\n` +
+          `  Recovering by adjusting order to: ${children.length}`,
+      );
+      order = children.length;
+      recovered = true;
+    } else if (order > children.length) {
+      // Check for gaps/holes in sequence
+      console.error(
+        '[TreeSorter] Order discontinuity detected - attempting recovery.\n' +
+          `  Child ID: ${child.getId()}\n` +
+          `  Parent ID: ${parent.getId()}\n` +
+          `  Requested order: ${order}\n` +
+          `  Current children count: ${children.length}\n` +
+          `  Max valid order: ${children.length}\n` +
+          `  Existing children orders: [${children.map((c) => c.getOrder()).join(', ')}]\n` +
+          `  Recovering by adjusting order to: ${children.length}`,
+      );
+      order = children.length;
+      recovered = true;
+    }
+
+    // Check if existing children have discontinuous orders
+    if (!recovered && children.length > 0) {
+      const expectedOrders = children.map((_, idx) => idx);
+      const actualOrders = children.map((c) => c.getOrder());
+      const hasHoles = !expectedOrders.every((exp, idx) => exp === actualOrders[idx]);
+
+      if (hasHoles) {
+        console.error(
+          '[TreeSorter] Existing children have discontinuous orders - repairing.\n' +
+            `  Parent ID: ${parent.getId()}\n` +
+            `  Expected orders: [${expectedOrders.join(', ')}]\n` +
+            `  Actual orders: [${actualOrders.join(', ')}]\n` +
+            '  Repairing by reassigning sequential orders...',
+        );
+        // Fix existing children orders
+        children.forEach((c, idx) => c.setOrder(idx));
+      }
+    }
+
+    // Shift all elements after insertion point
+    children.forEach((node, i) => {
+      if (i >= order) {
+        node.setOrder(i + 1);
+      }
+    });
+    child.setOrder(order);
+  }
+
+  detach(treeSet: RootedTreeSet, node: Node): void {
+    const parent = treeSet.getParent(node);
+    $assert(parent !== undefined, 'cannot detach node with null parent');
+    const children = this._getSortedChildren(treeSet, parent);
+    const order = node.getOrder();
+    $assert(order !== undefined, 'Node must have an order to be detached');
+    // TypeScript doesn't understand $assert narrows the type, so we use non-null assertion
+    $assert(children[order] === node, 'Node seems not to be in the right position');
+
+    // Shift all nodes after the removed node
+    const nodeOrder = node.getOrder();
+    if (nodeOrder !== undefined) {
+      children.slice(nodeOrder + 1).forEach((child) => {
+        const childOrder = child.getOrder();
+        if (childOrder !== undefined) {
+          child.setOrder(childOrder - 1);
+        }
+      });
+    }
+    node.setOrder(0);
+  }
+
+  computeOffsets(
+    treeSet: RootedTreeSet,
+    node: Node,
+    extentById?: Map<number, number>,
+  ): Map<number, PositionType> {
+    const children = this._getSortedChildren(treeSet, node);
+
+    // Calculate total width needed for all children
+    const childrenWidths = children.map((child) => ({
+      id: child.getId(),
+      order: child.getOrder(),
+      width: extentById?.get(child.getId()) ?? this._computeChildrenWidth(treeSet, child),
+      height: child.getSize().height,
+    }));
+
+    const totalWidth = childrenWidths.map((c) => c.width).reduce((acc, width) => acc + width, 0);
+
+    // Start from the left, centering all children under parent
+    let xOffset = -totalWidth / 2;
+
+    const result = new Map<number, PositionType>();
+    childrenWidths.forEach((childData) => {
+      // X offset: position horizontally
+      xOffset += childData.width / 2;
+
+      // Y offset: fixed distance below parent
+      const yOffset =
+        node.getSize().height / 2 + TreeSorter.INTERNODE_VERTICAL_PADDING + childData.height / 2;
+
+      result.set(childData.id, { x: xOffset, y: yOffset });
+
+      // Move to next position
+      xOffset += childData.width / 2;
+    });
+
+    return result;
+  }
+
+  /**
+   * Siblings sit side by side in the tree, so a branch is measured by its width: the sum of the
+   * widths of its children, or its own if wider. Its height does not move its siblings.
+   */
+  override computeBranchExtents(treeSet: RootedTreeSet, node: Node): Map<number, number> {
+    const result = new Map<number, number>();
+    this._computeChildrenWidth(treeSet, node, result);
+    return result;
+  }
+
+  override getBranchExtentKey(): string {
+    return `width:${TreeSorter.INTERNODE_HORIZONTAL_PADDING}`;
+  }
+
+  private _computeChildrenWidth(
+    treeSet: RootedTreeSet,
+    node: Node,
+    widthCache?: Map<number, number>,
+  ): number {
+    // Include horizontal padding
+    const nodeWidth = node.getSize().width + TreeSorter.INTERNODE_HORIZONTAL_PADDING * 2;
+
+    let result: number;
+    const children = treeSet.getChildren(node);
+
+    if (children.length === 0 || node.areChildrenShrunken()) {
+      result = nodeWidth;
+    } else {
+      // Sum of all children widths
+      const childrenWidth = children
+        .map((child) => this._computeChildrenWidth(treeSet, child, widthCache))
+        .reduce((acc, width) => acc + width, 0);
+
+      // Use the larger of node width or children width
+      result = Math.max(nodeWidth, childrenWidth);
+    }
+
+    if (widthCache) {
+      widthCache.set(node.getId(), result);
+    }
+
+    return result;
+  }
+
+  verify(treeSet: RootedTreeSet, node: Node): void {
+    // Check that all orders are consistent
+    const children = this._getSortedChildren(treeSet, node);
+
+    children.forEach((child, i) => {
+      $assert(child.getOrder() === i, 'missing order elements');
+    });
+  }
+
+  getChildDirection(_treeSet: RootedTreeSet, _child: Node): 1 | -1 {
+    // In tree layout, all children go down (positive Y direction)
+    // Return 1 for consistency with interface
+    return 1;
+  }
+
+  toString(): string {
+    return 'Tree Sorter';
+  }
+
+  override getVerticalPadding(): number {
+    return TreeSorter.INTERNODE_VERTICAL_PADDING;
+  }
+}
+
+export default TreeSorter;

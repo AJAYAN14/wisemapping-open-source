@@ -1,0 +1,318 @@
+/*
+ *    Copyright [2007-2025] [wisemapping]
+ *
+ *   Licensed under WiseMapping Public License, Version 1.0 (the "License").
+ *   It is basically the Apache License, Version 2.0 (the "License") plus the
+ *   "powered by wisemapping" text requirement on every single page;
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the license at
+ *
+ *       https://github.com/wisemapping/wisemapping-open-source/blob/main/LICENSE.md
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
+
+import Client from '../client';
+import RestClient from '../client/rest-client';
+import AdminClient, { AdminClientInterface } from '../client/admin-client';
+import { appLogger as log } from '../../utils/logger';
+
+type ConfigContainer = {
+  type: 'remote' | 'static';
+  url?: string;
+  config: Config;
+};
+
+type Config = {
+  uiBaseUrl: string;
+  apiBaseUrl: string;
+  analyticsAccount?: string;
+  recaptcha2Enabled: boolean;
+  registrationEnabled: boolean;
+  recaptcha2SiteKey?: string;
+  clientType: 'mock' | 'rest';
+  googleOauth2Url: string;
+  googleOauth2Enabled: boolean;
+  facebookOauth2Url: string;
+  facebookOauth2Enabled: boolean;
+  oidcOauth2Url?: string;
+  oidcOauth2Enabled?: boolean;
+  oidcOauth2Label?: string;
+  localLoginEnabled?: boolean;
+  jwtExpirationMin: number;
+};
+
+class AppConfig {
+  private static _config: Config | undefined;
+
+  private static _initializationPromise: Promise<Config> | undefined;
+
+  private static _client: Client | undefined;
+
+  private static _adminClient: AdminClientInterface | undefined;
+
+  // The mock clients, loaded by initialize() only when the configuration asks for them: they are
+  // for development, and production does not download them.
+  private static _mocks:
+    | {
+        MockClient: new () => Client;
+        MockAdminClient: new () => AdminClientInterface;
+      }
+    | undefined;
+
+  static async initialize(): Promise<Config> {
+    if (this._config) {
+      return this._config;
+    }
+
+    if (!this._initializationPromise) {
+      this._initializationPromise = this.loadConfig()
+        .then(async (config) => {
+          if (AppConfig.usesMockClient(config)) {
+            const [mockClient, mockAdminClient] = await Promise.all([
+              import('../client/mock-client'),
+              import('../client/mock-admin-client'),
+            ]);
+            this._mocks = {
+              MockClient: mockClient.default,
+              MockAdminClient: mockAdminClient.default,
+            };
+          }
+          this._config = config;
+          return config;
+        })
+        .catch((error: unknown) => {
+          const message =
+            error instanceof Error
+              ? error.message
+              : 'Unexpected error while loading configuration.';
+          throw { msg: `Unexpected error application. Please, try latter. Detail: ${message}` };
+        })
+        .finally(() => {
+          this._initializationPromise = undefined;
+        });
+    }
+
+    return this._initializationPromise;
+  }
+
+  static fetchOrGetConfig(): Config {
+    if (!this._config) {
+      throw new Error(
+        'App configuration has not been initialized. Call AppConfig.initialize() before accessing configuration.',
+      );
+    }
+    return this._config;
+  }
+
+  private static async loadConfig(): Promise<Config> {
+    // Dynamic import for BootstrapConfig
+    const windowWithConfig = window as unknown as { BoostrapConfig?: ConfigContainer };
+    if (!windowWithConfig.BoostrapConfig) {
+      throw new Error(
+        'BoostrapConfig is not available on window object. Make sure the configuration is properly loaded.',
+      );
+    }
+    const extConfig: ConfigContainer = windowWithConfig.BoostrapConfig;
+    if (extConfig.type === 'static') {
+      // Configuration has been defined as part of webpack ...
+      return extConfig.config;
+    }
+
+    // Configuration must be fetched externally ...
+    log.info(`Fetching remote config from '${extConfig.url}'`);
+    if (!extConfig.url) {
+      throw new Error(`Fetching remote config from ${extConfig.url} can not be empty`);
+    }
+
+    // 'same-origin': a deployment behind a proxy that authenticates the whole site (HTTP Basic,
+    // or a cookie) needs the credentials on this request too. A config on another origin
+    // (app. fetching from api.wisemapping.com) still goes without them, as 'include' would
+    // need Access-Control-Allow-Credentials there.
+    const response = await fetch(extConfig.url, {
+      credentials: 'same-origin',
+      cache: 'no-store',
+    });
+
+    if (!response.ok) {
+      throw new Error(`Request failed: ${response.statusText}`);
+    }
+
+    return (await response.json()) as Config;
+  }
+
+  // The clients fall back to the mocks when the configuration has no REST API to talk to.
+  private static usesMockClient(config: Config): boolean {
+    return (config.clientType !== 'rest' && !!config.clientType) || !config.apiBaseUrl;
+  }
+
+  private static mocks(): NonNullable<typeof AppConfig._mocks> {
+    if (!this._mocks) {
+      throw new Error('The mock clients are only loaded when the configuration asks for them.');
+    }
+    return this._mocks;
+  }
+
+  static isMockEnv(): boolean {
+    const config = this.fetchOrGetConfig();
+    return config.clientType === 'mock';
+  }
+
+  static getJwtExpirationMin(): number {
+    const config = this.fetchOrGetConfig();
+    if (!config.jwtExpirationMin) {
+      throw new Error('jwtExpirationMin can not be null. Review wise-api configuration.');
+    }
+    return config.jwtExpirationMin;
+  }
+
+  static isRestClient(): boolean {
+    const config = this.fetchOrGetConfig();
+    return config.clientType === 'rest' || !config.clientType;
+  }
+
+  static isRecaptcha2Enabled(): boolean {
+    const config = this.fetchOrGetConfig();
+    return config.recaptcha2Enabled;
+  }
+
+  static getRecaptcha2SiteKey(): string | undefined {
+    const config = this.fetchOrGetConfig();
+    return config.recaptcha2SiteKey;
+  }
+
+  static getGoogleAnalyticsAccount(): string | undefined {
+    const config = this.fetchOrGetConfig();
+    return config.analyticsAccount;
+  }
+
+  // Sign-up goes with local login: without it, accounts are created on their first OpenID
+  // Connect login instead.
+  static isRegistrationEnabled(): boolean {
+    const config = this.fetchOrGetConfig();
+    return config.registrationEnabled && this.isLocalLoginEnabled();
+  }
+
+  static getGoogleOauth2Url(): string | undefined {
+    const config = this.fetchOrGetConfig();
+    return config.googleOauth2Url;
+  }
+
+  static getFacebookOauth2Url(): string | undefined {
+    const config = this.fetchOrGetConfig();
+    return config.facebookOauth2Url;
+  }
+
+  static isGoogleOauth2Enabled(): boolean {
+    const config = this.fetchOrGetConfig();
+    return config.googleOauth2Enabled || false;
+  }
+
+  static isFacebookOauth2Enabled(): boolean {
+    const config = this.fetchOrGetConfig();
+    return config.facebookOauth2Enabled || false;
+  }
+
+  static getOidcOauth2Url(): string | undefined {
+    const config = this.fetchOrGetConfig();
+    return config.oidcOauth2Url;
+  }
+
+  static isOidcOauth2Enabled(): boolean {
+    const config = this.fetchOrGetConfig();
+    return config.oidcOauth2Enabled || false;
+  }
+
+  // Name of the instance's own identity provider, shown on its sign-in button.
+  static getOidcOauth2Label(): string {
+    const config = this.fetchOrGetConfig();
+    return config.oidcOauth2Label || 'Single Sign-On';
+  }
+
+  // Email/password login. The backend turns it off once OpenID Connect is configured; older
+  // backends do not send the flag, and keep it on.
+  static isLocalLoginEnabled(): boolean {
+    const config = this.fetchOrGetConfig();
+    return config.localLoginEnabled ?? true;
+  }
+
+  static getClient(): Client {
+    if (this._client) {
+      return this._client;
+    }
+
+    let result: Client | undefined;
+    try {
+      if (this.isRestClient()) {
+        const apiBaseUrl = this.getApiBaseUrl();
+        if (!apiBaseUrl) {
+          throw new Error('API base URL is not configured');
+        }
+        result = new RestClient(apiBaseUrl);
+      }
+    } catch (e) {
+      log.error('Client could not be initialized.', e);
+    }
+
+    if (!result) {
+      log.warn('Service using mock client');
+      result = new (this.mocks().MockClient)();
+    }
+
+    this._client = result;
+    return result;
+  }
+
+  static getAdminClient(): AdminClientInterface {
+    if (this._adminClient) {
+      return this._adminClient;
+    }
+
+    // If we're in mock mode, always use MockAdminClient for admin functionality
+    if (this.isMockEnv()) {
+      log.info('Mock environment detected, using MockAdminClient');
+      this._adminClient = new (this.mocks().MockAdminClient)();
+      return this._adminClient;
+    }
+
+    let result: AdminClientInterface | undefined;
+    try {
+      if (this.isRestClient()) {
+        const apiBaseUrl = this.getApiBaseUrl();
+        if (!apiBaseUrl) {
+          throw new Error('API base URL is not configured');
+        }
+        result = new AdminClient(apiBaseUrl);
+      }
+    } catch (e) {
+      log.error('Admin client could not be initialized.', e);
+    }
+
+    if (!result) {
+      log.warn('Service using mock admin client');
+      result = new (this.mocks().MockAdminClient)();
+    }
+
+    this._adminClient = result;
+    return result;
+  }
+
+  static getApiBaseUrl(): string {
+    const config = this.fetchOrGetConfig();
+    if (!config.apiBaseUrl) {
+      throw new Error('API base URL is not configured in the application configuration');
+    }
+    return config.apiBaseUrl;
+  }
+
+  static getUiBaseUrl(): string {
+    const config = this.fetchOrGetConfig();
+    return config.uiBaseUrl;
+  }
+}
+
+export default AppConfig;

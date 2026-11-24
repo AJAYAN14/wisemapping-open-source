@@ -1,0 +1,75 @@
+/*
+ *    Copyright [2007-2025] [wisemapping]
+ *
+ *   Licensed under WiseMapping Public License, Version 1.0 (the "License").
+ *   It is basically the Apache License, Version 2.0 (the "License") plus the
+ *   "powered by wisemapping" text requirement on every single page;
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the license at
+ *
+ *       https://github.com/wisemapping/wisemapping-open-source/blob/main/LICENSE.md
+ *
+ *   Unless required by applicable law or agreed to in writing, software
+ *   distributed under the License is distributed on an "AS IS" BASIS,
+ *   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *   See the License for the specific language governing permissions and
+ *   limitations under the License.
+ */
+
+import React from 'react';
+import { FormattedMessage } from 'react-intl';
+import { LoadingBox } from './styled';
+import CircularProgress from '@mui/material/CircularProgress';
+import Typography from '@mui/material/Typography';
+import EditorLoadingSkeleton from '@wisemapping/editor/components/editor-loading-skeleton';
+import { MapsPageLoading } from '../maps-page/maps-list/MapsListSkeleton';
+import AuthProgress from '../layout/auth-progress';
+
+const isEditorRoute = () => {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  return /\/c\/maps\/(?:\d+)(?:\/|$)/.test(window.location.pathname);
+};
+
+// The map list shows its own skeleton from the first paint, so that loading it is one skeleton
+// followed by the page.
+const isMapListRoute = () =>
+  typeof window !== 'undefined' && /^\/c\/maps\/?$/.test(window.location.pathname);
+
+// Signing in goes through these, with a full page load between the OAuth callback and the login
+// page: they load in the waiting screen they show, so the steps read as one screen.
+const isSignInRoute = () =>
+  typeof window !== 'undefined' &&
+  /^(\/[a-z]{2}(-[A-Z]{2})?)?\/c\/(login|oauth-callback|registration-google|registration-facebook)\/?$/.test(
+    window.location.pathname,
+  );
+
+const LoadingFallback = (): React.ReactElement => {
+  if (isSignInRoute()) {
+    return <AuthProgress />;
+  }
+  if (isEditorRoute()) {
+    return <EditorLoadingSkeleton />;
+  }
+  if (isMapListRoute()) {
+    return <MapsPageLoading />;
+  }
+
+  return (
+    <LoadingBox>
+      <CircularProgress size={48} />
+      <Typography
+        variant="h6"
+        sx={{
+          color: 'text.secondary',
+        }}
+      >
+        <FormattedMessage id="common.loading" defaultMessage="Loading..." />
+      </Typography>
+    </LoadingBox>
+  );
+};
+
+export default LoadingFallback;
