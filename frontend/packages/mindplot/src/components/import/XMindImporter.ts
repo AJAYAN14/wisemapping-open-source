@@ -93,6 +93,7 @@ interface XMindTopic {
   };
   labels?: string[];
   href?: string;
+  image?: { src?: string };
 }
 
 interface XMindExtension {
@@ -129,10 +130,121 @@ const XLINK_NAMESPACE = 'http://www.w3.org/1999/xlink';
 // with thousands of topics is a few MB; anything bigger is rejected rather than inflated.
 const MAX_XMIND_CONTENT_BYTES = 50 * 1024 * 1024;
 
-// The only archive entries the importer reads. Thumbnails, attachments and other resources are
-// never inflated.
+const isXMindResourceImage = (name: string): boolean =>
+  /(?:^|\/)resources\/.+\.(png|jpe?g|gif|webp|svg)$/i.test(name);
+
+// Read content entries and embedded resource images from the XMind archive.
 const isXMindContentEntry = (name: string): boolean =>
-  name.endsWith('content.json') || name.endsWith('content.xml');
+  name.endsWith('content.json') || name.endsWith('content.xml') || isXMindResourceImage(name);
+
+type ExtractedImage = {
+  url: string;
+  width: number;
+  height: number;
+};
+
+const mimeFromFilename = (filename: string): string => {
+  const lower = filename.toLowerCase();
+  if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
+  if (lower.endsWith('.gif')) return 'image/gif';
+  if (lower.endsWith('.webp')) return 'image/webp';
+  if (lower.endsWith('.svg')) return 'image/svg+xml';
+  return 'image/png';
+};
+
+const uint8ArrayToBase64 = (bytes: Uint8Array): string => {
+  let binary = '';
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+  }
+  return btoa(binary);
+};
+
+const readPngDimensions = (bytes: Uint8Array): { origW: number; origH: number } | undefined => {
+  // PNG magic header + IHDR chunk dimensions at offset 16..24
+  if (
+    bytes.length >= 24 &&
+    bytes[0] === 0x89 &&
+    bytes[1] === 0x50 &&
+    bytes[2] === 0x4e &&
+    bytes[3] === 0x47
+  ) {
+    const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    const origW = view.getUint32(16, false);
+    const origH = view.getUint32(20, false);
+    if (origW > 0 && origH > 0) {
+      return { origW, origH };
+    }
+  }
+  return undefined;
+};
+
+const scaleCardSize = (origW: number, origH: number): { width: number; height: number } => {
+  const maxW = 150;
+  const maxH = 100;
+  const scale = Math.min(maxW / origW, maxH / origH, 1.0);
+  return {
+    width: Math.max(Math.round(origW * scale), 80),
+    height: Math.max(Math.round(origH * scale), 50),
+  };
+};
+
+const encodeXMindResourceImage = async (
+  bytes: Uint8Array,
+  filename: string,
+): Promise<ExtractedImage> => {
+  const mime = mimeFromFilename(filename);
+  const pngDims = mime === 'image/png' ? readPngDimensions(bytes) : undefined;
+
+  if (typeof document !== 'undefined' && typeof URL !== 'undefined' && mime !== 'image/svg+xml') {
+    try {
+      const blob = new Blob([new Uint8Array(bytes)], { type: mime });
+      const blobUrl = URL.createObjectURL(blob);
+      try {
+        const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+          const el = new Image();
+          el.onload = () => resolve(el);
+          el.onerror = () => reject(new Error('Image decode failed'));
+          el.src = blobUrl;
+        });
+        const origW = img.naturalWidth || pngDims?.origW || 130;
+        const origH = img.naturalHeight || pngDims?.origH || 90;
+        const cardSize = scaleCardSize(origW, origH);
+
+        // Downscale oversized screenshots to crisp 2x card resolution so data URIs stay compact
+        if (bytes.length > 32 * 1024 || origW > 320 || origH > 220) {
+          const canvas = document.createElement('canvas');
+          canvas.width = cardSize.width * 2;
+          canvas.height = cardSize.height * 2;
+          const ctx = canvas.getContext('2d');
+          if (ctx) {
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            const webpUrl = canvas.toDataURL('image/webp', 0.85);
+            const url = webpUrl.startsWith('data:image/webp')
+              ? webpUrl
+              : canvas.toDataURL('image/png');
+            return { url, ...cardSize };
+          }
+        }
+        return {
+          url: `data:${mime};base64,${uint8ArrayToBase64(bytes)}`,
+          ...cardSize,
+        };
+      } finally {
+        URL.revokeObjectURL(blobUrl);
+      }
+    } catch {
+      // Fallback to raw base64 below
+    }
+  }
+
+  const cardSize = pngDims ? scaleCardSize(pngDims.origW, pngDims.origH) : { width: 130, height: 90 };
+  return {
+    url: `data:${mime};base64,${uint8ArrayToBase64(bytes)}`,
+    ...cardSize,
+  };
+};
 
 const sameEmoji = (ids: string[], emoji: string): Record<string, string> =>
   Object.fromEntries(ids.map((id) => [id, emoji]));
@@ -320,10 +432,13 @@ class XMindImporter extends Importer {
 
   private topicIdMap: Map<string, number>;
 
+  private zipImages: Map<string, ExtractedImage>;
+
   constructor(map: XMindRawInput) {
     super();
     this.xmindInput = map;
     this.topicIdMap = new Map();
+    this.zipImages = new Map();
   }
 
   async import(nameMap: string, description?: string): Promise<string> {
@@ -406,7 +521,7 @@ class XMindImporter extends Importer {
 
       try {
         const binary = this.binaryStringToUint8Array(this.xmindInput);
-        return this.detectFromZip(binary);
+        return await this.detectFromZip(binary);
       } catch (error) {
         throw new Error(
           `Unsupported XMind input: unable to detect format (${(error as Error).message})`,
@@ -468,14 +583,14 @@ class XMindImporter extends Importer {
     return tryDecodeUtf8(input);
   }
 
-  private detectFromZip(data: Uint8Array): DetectedInput {
+  private async detectFromZip(data: Uint8Array): Promise<DetectedInput> {
     if (!data || data.length === 0) {
       throw new Error('Empty XMind ZIP payload');
     }
 
     let files: Record<string, Uint8Array>;
     try {
-      // Only the content entries are inflated, within the cap, and none past its declared size.
+      // Read content entries and embedded resource images within cap.
       files = readZipEntries(data, {
         accept: isXMindContentEntry,
         maxBytes: MAX_XMIND_CONTENT_BYTES,
@@ -494,6 +609,17 @@ class XMindImporter extends Importer {
     }
 
     const entries = Object.entries(files);
+    this.zipImages = new Map();
+    const resourceEntries = entries.filter(([name]) => isXMindResourceImage(name));
+    await Promise.all(
+      resourceEntries.map(async ([name, bytes]) => {
+        const extracted = await encodeXMindResourceImage(bytes, name);
+        const normalizedPath = name.replace(/^\/+/, '');
+        const baseName = normalizedPath.split('/').pop() || normalizedPath;
+        this.zipImages.set(normalizedPath, extracted);
+        this.zipImages.set(baseName, extracted);
+      }),
+    );
 
     const jsonEntry = entries.find(([name]) => name.endsWith('content.json'));
     if (jsonEntry) {
@@ -576,8 +702,20 @@ class XMindImporter extends Importer {
     const topic = mindmap.createNode('MainTopic', this.ids.next());
     this.topicIdMap.set(xmindTopicId, topic.getId());
     topic.setText(title);
-    topic.setShapeType('line');
+    topic.setShapeType('rounded rectangle');
     return topic;
+  }
+
+  private resolveZipImage(src: string | undefined): ExtractedImage | undefined {
+    if (!src) return undefined;
+    const cleaned = src.replace(/^xap:/i, '').replace(/^\/+/, '');
+    const baseName = cleaned.split('/').pop() || cleaned;
+    return this.zipImages.get(cleaned) || this.zipImages.get(baseName);
+  }
+
+  private static formatImageFallbackTitle(parentTitle?: string): string {
+    const clean = (parentTitle || '').replace(/^[\d.\s、]+/, '').trim();
+    return clean ? `${clean}示意图` : '图片';
   }
 
   private addIcon(topic: NodeModel, xmindIconId: string): void {
@@ -663,8 +801,9 @@ class XMindImporter extends Importer {
   ): void {
     const childTopics = XMindImporter.xmlChildTopics(xmlTopic, 'attached');
     const siblingCount = childTopics.length;
+    const parentTitle = parent.getText();
     childTopics.forEach((childTopic, index) => {
-      const topic = this.convertXMLTopic(mindmap, childTopic, depth);
+      const topic = this.convertXMLTopic(mindmap, childTopic, depth, parentTitle);
       const position = this.calculatePosition(index, depth, siblingCount);
       topic.setPosition(position.x, position.y);
       topic.setOrder(index);
@@ -672,10 +811,27 @@ class XMindImporter extends Importer {
     });
   }
 
-  private convertXMLTopic(mindmap: Mindmap, xmlTopic: Element, depth: number): NodeModel {
+  private convertXMLTopic(
+    mindmap: Mindmap,
+    xmlTopic: Element,
+    depth: number,
+    parentTitle?: string,
+  ): NodeModel {
     const xmindTopicId = xmlTopic.getAttribute('id') || `topic${this.ids.peek() + 1}`;
-    const title = XMindImporter.childElement(xmlTopic, 'title')?.textContent || 'Untitled';
+    const rawTitle = XMindImporter.childElement(xmlTopic, 'title')?.textContent?.trim();
+    const imgElement = Array.from(xmlTopic.children).find(
+      (el) => el.localName === 'img' || el.tagName.endsWith(':img'),
+    );
+    const imgSrc =
+      imgElement?.getAttribute('xlink:href') || imgElement?.getAttribute('src') || undefined;
+    const resolvedImg = this.resolveZipImage(imgSrc);
+    const title =
+      rawTitle || (resolvedImg ? XMindImporter.formatImageFallbackTitle(parentTitle) : 'Untitled');
     const topic = this.createTopic(mindmap, xmindTopicId, title);
+    if (resolvedImg) {
+      topic.setImageUrl(resolvedImg.url);
+      topic.setImageSize(resolvedImg.width, resolvedImg.height);
+    }
     this.addXMLTopicFeatures(topic, xmlTopic);
 
     // Recursively generate child topics
@@ -765,8 +921,9 @@ class XMindImporter extends Importer {
     depth: number,
   ): void {
     const siblingCount = jsonTopics.length;
+    const parentTitle = parent.getText();
     jsonTopics.forEach((jsonTopic, index) => {
-      const topic = this.convertJsonTopic(mindmap, jsonTopic, depth);
+      const topic = this.convertJsonTopic(mindmap, jsonTopic, depth, parentTitle);
       const position = this.calculatePosition(index, depth, siblingCount);
       topic.setPosition(position.x, position.y);
       topic.setOrder(index);
@@ -774,8 +931,21 @@ class XMindImporter extends Importer {
     });
   }
 
-  private convertJsonTopic(mindmap: Mindmap, jsonTopic: XMindTopic, depth: number): NodeModel {
-    const topic = this.createTopic(mindmap, jsonTopic.id, jsonTopic.title || 'Untitled');
+  private convertJsonTopic(
+    mindmap: Mindmap,
+    jsonTopic: XMindTopic,
+    depth: number,
+    parentTitle?: string,
+  ): NodeModel {
+    const rawTitle = jsonTopic.title?.trim();
+    const resolvedImg = this.resolveZipImage(jsonTopic.image?.src);
+    const title =
+      rawTitle || (resolvedImg ? XMindImporter.formatImageFallbackTitle(parentTitle) : 'Untitled');
+    const topic = this.createTopic(mindmap, jsonTopic.id, title);
+    if (resolvedImg) {
+      topic.setImageUrl(resolvedImg.url);
+      topic.setImageSize(resolvedImg.width, resolvedImg.height);
+    }
     this.addJsonTopicFeatures(topic, jsonTopic);
 
     // Recursively generate child topics

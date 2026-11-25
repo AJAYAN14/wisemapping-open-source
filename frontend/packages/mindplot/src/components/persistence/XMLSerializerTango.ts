@@ -199,10 +199,12 @@ class XMLSerializerTango implements XMLMindmapSerializer {
     const shape = topic.getShapeType();
     if (shape !== undefined) {
       parentTopic.setAttribute('shape', shape);
-      const size = topic.getImageSize();
-      if (shape === 'image' && size) {
-        parentTopic.setAttribute('image', `${size.width},${size.height}:${topic.getImageUrl()}`);
-      }
+    }
+
+    const imageUrl = topic.getImageUrl();
+    if (imageUrl) {
+      const size = topic.getImageSize() || { width: 130, height: 90 };
+      parentTopic.setAttribute('image', `${size.width},${size.height}:${imageUrl}`);
     }
     // Serialize image emoji as a separate attribute (feature)
     const imageEmojiChar = topic.getImageEmojiChar();
@@ -548,9 +550,10 @@ class XMLSerializerTango implements XMLMindmapSerializer {
 
       // Is an image ?
       const image = domElem.getAttribute('image');
-      if (image && shape === 'image') {
-        const size = image.substring(0, image.indexOf(':'));
-        const url = image.substring(image.indexOf(':') + 1, image.length);
+      if (image) {
+        const colonIdx = image.indexOf(':');
+        const size = colonIdx > -1 ? image.substring(0, colonIdx) : '';
+        const url = colonIdx > -1 ? image.substring(colonIdx + 1) : image;
         topic.setImageUrl(url);
 
         const split = size.split(',');
@@ -558,6 +561,8 @@ class XMLSerializerTango implements XMLMindmapSerializer {
         const height = Number.parseInt(split[1] ?? '', 10);
         if (Number.isFinite(width) && Number.isFinite(height)) {
           topic.setImageSize(width, height);
+        } else {
+          topic.setImageSize(130, 90);
         }
       }
     }

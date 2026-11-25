@@ -17,7 +17,7 @@
  */
 import { $assert } from './util/assert';
 import { AjaxUtils } from './util/AjaxUtils';
-import PersistenceManager from './PersistenceManager';
+import PersistenceManager, { type SaveEvents, type SaveOptions } from './PersistenceManager';
 
 class MockPersistenceManager extends PersistenceManager {
   private exampleMap: string;
@@ -29,21 +29,49 @@ class MockPersistenceManager extends PersistenceManager {
   }
 
   saveMapXml(
-    _mapId: string,
-    _mapXml: Document,
+    mapId: string,
+    mapXml: Document,
     _pref?: string,
     _saveHistory?: boolean,
-    events?: { onSuccess: () => void },
+    events?: SaveEvents,
+    _options?: SaveOptions,
   ): void {
-    // Nothing is persisted, but the caller must still be settled.
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const xmlStr = new XMLSerializer().serializeToString(mapXml);
+        window.localStorage.setItem(`wisemapping.mock.xml.${mapId}`, xmlStr);
+        window.localStorage.setItem(`mock-map-${mapId}-xml`, xmlStr);
+      }
+    } catch (e) {
+      console.warn('Failed to save mock map to localStorage:', e);
+    }
     events?.onSuccess();
   }
 
-  discardChanges() {
-    // Ignore, no implementation required ...
+  discardChanges(mapId?: string) {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage && mapId) {
+        window.localStorage.removeItem(`wisemapping.mock.xml.${mapId}`);
+        window.localStorage.removeItem(`mock-map-${mapId}-xml`);
+      }
+    } catch (e) {
+      console.warn(e);
+    }
   }
 
-  loadMapDom(): Promise<Document> {
+  loadMapDom(mapId: string): Promise<Document> {
+    try {
+      if (typeof window !== 'undefined' && window.localStorage) {
+        const saved =
+          window.localStorage.getItem(`wisemapping.mock.xml.${mapId}`) ||
+          window.localStorage.getItem(`mock-map-${mapId}-xml`);
+        if (saved && saved.includes('<map') && saved.includes('<topic')) {
+          return Promise.resolve(AjaxUtils.parseXML(saved));
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to load mock map from localStorage:', e);
+    }
     return Promise.resolve(AjaxUtils.parseXML(this.exampleMap));
   }
 

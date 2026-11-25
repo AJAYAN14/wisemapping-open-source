@@ -27,7 +27,10 @@ class ImagePeer extends ElementPeer<SVGImageElement> {
     super(ElementPeer.createNode('image'));
     this._position = { x: 0, y: 0 };
     this._href = '';
-    this.attr('preserveAspectRatio', 'none');
+    this.attr('preserveAspectRatio', 'xMidYMid meet');
+    this.attr('rx', '6');
+    this.attr('ry', '6');
+    this.attr('style', 'border-radius: 6px; overflow: hidden;');
   }
 
   protected override hasSizeAttributes(): boolean {

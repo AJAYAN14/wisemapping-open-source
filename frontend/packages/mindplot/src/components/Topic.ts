@@ -15,7 +15,7 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-import { Text, Group, Rect } from '@wisemapping/web2d';
+import { Text, Group, Rect, Image } from '@wisemapping/web2d';
 import type {
   StrokeStyle,
   FontWeightType as TextWeight,
@@ -95,6 +95,8 @@ abstract class Topic extends NodeGraph {
   private _parent: Topic | undefined;
 
   private _outerShape: Rect | undefined;
+
+  private _imageShape: Image | undefined;
 
   private _text: Text | undefined;
 
@@ -540,6 +542,24 @@ abstract class Topic extends NodeGraph {
     return this.resolveStyle('fontSize', this.getThemeVariant(), (theme) =>
       theme.getFontSize(this),
     );
+  }
+
+  getImageUrl(): string | undefined {
+    return this.getModel().getImageUrl();
+  }
+
+  setImageUrl(url: string | undefined): void {
+    if (url) {
+      this.getModel().setImageUrl(url);
+    }
+  }
+
+  getImageSize(): SizeType | undefined {
+    return this.getModel().getImageSize();
+  }
+
+  setImageSize(width: number, height: number): void {
+    this.getModel().setImageSize(width, height);
   }
 
   getImageEmojiChar(): string | undefined {
@@ -1433,6 +1453,27 @@ abstract class Topic extends NodeGraph {
       const iconGroupWith = iconGroup.getSize().width;
       let topicWith = iconGroupWith + 2 * textIconSpacing + textWidth + padding * 2;
 
+      // Handle raster image support
+      const imageUrl = this.getImageUrl();
+      const hasImage = Boolean(imageUrl);
+      let imgWidth = 0;
+      let imgHeight = 0;
+      if (hasImage) {
+        if (!this._imageShape) {
+          this._imageShape = new Image();
+          this.get2DElement().append(this._imageShape);
+        }
+        this._imageShape.setHref(imageUrl!);
+        const customSize = this.getImageSize();
+        imgWidth = customSize?.width || 130;
+        imgHeight = customSize?.height || 90;
+        this._imageShape.setSize(imgWidth, imgHeight);
+        this._imageShape.setVisibility(true);
+        this._imageShape.moveToFront();
+      } else if (this._imageShape) {
+        this._imageShape.setVisibility(false);
+      }
+
       // Handle emoji and SVG features - both appear on top of any shape
       const hasEmoji = this._imageEmojiFeature.hasEmoji();
       const hasSVG = this._imageSVGFeature.hasSVG();
@@ -1455,7 +1496,14 @@ abstract class Topic extends NodeGraph {
         this._imageSVGFeature.updateIconColor();
       }
 
-      if (hasEmoji) {
+      const cardPaddingX = hasImage ? 12 : padding;
+      const cardPaddingY = hasImage ? 10 : padding;
+      const imgTextGap = 8;
+
+      if (hasImage) {
+        topicWith = Math.max(imgWidth + cardPaddingX * 2, textWidth + cardPaddingX * 2);
+        topicHeight = imgHeight + textHeight + cardPaddingY * 2 + imgTextGap;
+      } else if (hasEmoji) {
         // Calculate emoji dimensions and adjust topic size
         const emojiDimensions = this._imageEmojiFeature.calculateEmojiDimensions();
         emojiHeight = emojiDimensions.height;
@@ -1491,9 +1539,14 @@ abstract class Topic extends NodeGraph {
 
       // Adjust all topic elements positions ...
 
-      // Position elements based on whether emoji or SVG is present
+      // Position elements based on whether image, emoji or SVG is present
       let positioning;
-      if (hasEmoji) {
+      if (hasImage) {
+        positioning = {
+          textY: padding + imgHeight + 4,
+          iconY: padding + imgHeight + 4,
+        };
+      } else if (hasEmoji) {
         positioning = this._imageEmojiFeature.positionEmojiAndAdjustText(
           topicWith,
           emojiHeight,
@@ -1516,7 +1569,16 @@ abstract class Topic extends NodeGraph {
         };
       }
 
-      if (hasEmoji) {
+      if (hasImage && this._imageShape) {
+        const imgX = (topicWith - imgWidth) / 2;
+        const imgY = cardPaddingY;
+        this._imageShape.setPosition(imgX, imgY);
+        const isThisTopicBeingEdited =
+          this._getTopicEventDispatcher()?.isEditingTopic(this) ?? false;
+        textShape.setVisibility(!isThisTopicBeingEdited);
+        textShape.setPosition((topicWith - textWidth) / 2, imgY + imgHeight + imgTextGap);
+        iconGroup.setPosition(cardPaddingX, imgY + imgHeight + imgTextGap);
+      } else if (hasEmoji) {
         // Setup delete widget for emoji
         this._imageEmojiFeature.setupDeleteWidget();
 
@@ -1556,13 +1618,21 @@ abstract class Topic extends NodeGraph {
 
       // Update topic color ...
       const innerShape = this.getInnerShape();
-      const borderColor = this.getBorderColor(variant);
+      let borderColor = this.getBorderColor(variant);
       const borderStyle = this.getBorderStyle() || 'solid';
       const strokeStyle = this.getStrokeStyle(borderStyle);
-      innerShape.setStroke(undefined, strokeStyle, borderColor);
 
-      const bgColor = this.getBackgroundColor(variant);
-      innerShape.setFill(bgColor);
+      let bgColor = this.getBackgroundColor(variant);
+      if (hasImage) {
+        // High quality white card styling with crisp border for part photos
+        bgColor = this.getModel().getBackgroundColor() || '#FFFFFF';
+        borderColor = this.getModel().getBorderColor() || '#CBD5E1';
+        innerShape.setStroke(1.5, strokeStyle, borderColor);
+        innerShape.setFill(bgColor);
+      } else {
+        innerShape.setStroke(undefined, strokeStyle, borderColor);
+        innerShape.setFill(bgColor);
+      }
 
       // The measurement is only valid until the text changes ...
       this._measuredFontHeight = undefined;

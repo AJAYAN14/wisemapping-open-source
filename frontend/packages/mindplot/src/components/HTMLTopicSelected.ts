@@ -451,17 +451,8 @@ class HTMLTopicSelected {
     this._overlay.style.width = `${Math.round(overlayWidth)}px`;
     this._overlay.style.height = `${Math.round(overlayHeight)}px`;
 
-    const minDimension = Math.min(overlayWidth, overlayHeight);
-    const borderRadiusValue = Math.max(15, minDimension * 0.2);
-    const borderRadius = `${borderRadiusValue}px`;
-
-    this._overlay.style.borderTopLeftRadius = '0px';
-    this._overlay.style.borderTopRightRadius = '0px';
-    this._overlay.style.borderBottomLeftRadius = '0px';
-    this._overlay.style.borderBottomRightRadius = '0px';
-
-    this._overlay.style.borderTopLeftRadius = borderRadius;
-    this._overlay.style.borderBottomRightRadius = borderRadius;
+    // Use clean, symmetrical 10px rounded corners on all four sides so the selection frame cleanly wraps the card
+    this._overlay.style.borderRadius = '10px';
   }
 
   private ensureHelperElements(): HelperElements | undefined {

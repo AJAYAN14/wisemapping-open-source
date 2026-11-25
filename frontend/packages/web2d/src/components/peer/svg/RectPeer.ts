@@ -58,7 +58,9 @@ class RectPeer extends ElementPeer<SVGRectElement> {
 
     if (this._arc !== undefined) {
       // Transform percentages to SVG format.
-      const arc = (min / 2) * this._arc;
+      // Cap at 8px for rounded rectangles so cards maintain a modern, crisp radius instead of oversized pill shapes
+      const rawArc = (min / 2) * this._arc;
+      const arc = this._arc > 0.8 ? rawArc : Math.min(rawArc, 8);
       this.attr('rx', formatLength(arc));
       this.attr('ry', formatLength(arc));
     }

@@ -74,6 +74,12 @@
 13. **Single Mindmap Layout Only (Removed Tree Layout & Selector Dialog)**
     - Removed the layout selector toolbar button from `frontend/packages/editor/src/components/app-bar/index.tsx` and deleted `frontend/packages/editor/src/components/action-widget/pane/layout-selector/index.tsx`.
     - Updated `XMindImporter` (`frontend/packages/mindplot/src/components/import/XMindImporter.ts`) to always normalize imported structures to `'mindmap'` layout since Tree layout selection is removed.
+    - Enforced `'mindmap'` layout on XML load and layout initialization (`XMLSerializerTango.ts`, `Mindmap.ts`, `LayoutManager.ts`) so previously saved `layout="tree"` maps also automatically render in standard horizontal mindmap layout.
+    - Completely deleted `TreeLayout.ts`, `TreeSorter.ts`, `ChangeLayoutCommand.ts`, and all `'tree'` layout switching/type logic across `mindplot` and `editor`.
+14. **Restored UI Card Styling, Image Display & Persistence (`wisemapping-frontend` `b603bc6`) + XMind Image Extraction**
+    - Restored `Topic.ts` raster image rendering (`_imageShape`, white card styling with `#CBD5E1` border, `cardPaddingX=12`, `cardPaddingY=10`, `imgTextGap=8`) and `XMLSerializerTango.ts` universal `image` attribute serialization/deserialization across all topic shapes.
+    - Restored `ImagePeer.ts` (`preserveAspectRatio="xMidYMid meet"` + 6px rounded corners), `RectPeer.ts` (capped card corner radius at `8px`), `HTMLTopicSelected.ts` (symmetrical `10px` selection overlay), `prism-default.json` & `prism-light.json` (Sky Blue `#0284C7` central node, pastel MainTopic cards, white SubTopic cards, `#F8FAFC` background, Chinese system fonts, `POLYLINE_STRAIGHT` connectors, `rounded rectangle` shape), `topic-link-editor` (`/` URL support), and `MockPersistenceManager.ts` localStorage sync.
+    - Upgraded `XMindImporter.ts` to extract embedded `resources/` images directly from `.xmind` ZIP archives as crisp 2x downscaled data URLs with scaled card sizes and Chinese fallback titles (`<父节点>示意图`) instead of `Untitled`.
 
 ---
 

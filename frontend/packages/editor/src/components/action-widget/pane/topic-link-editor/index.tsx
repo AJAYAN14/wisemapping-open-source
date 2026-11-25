@@ -55,6 +55,8 @@ const TopicLinkEditor = (props: {
   };
 
   const checkURL = (url: string): boolean => {
+    if (!url) return false;
+    if (url.startsWith('/') || url.startsWith('http://') || url.startsWith('https://')) return true;
     const regex =
       // eslint-disable-next-line no-useless-escape
       /[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/gi;
