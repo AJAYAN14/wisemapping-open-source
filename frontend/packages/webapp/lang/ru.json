@@ -1062,25 +1062,25 @@
     "defaultMessage": "Время вашей сессии истекло"
   },
   "export.desc": {
-    "defaultMessage": "Выгрузите эту карту в формате, который нужен - вставка в презентацию, отправка по почте, оффлайн работа."
+    "defaultMessage": "Экспортируйте карту в формате XMind или Markdown (в ZIP при наличии изображений)."
   },
-  "export.document": {
-    "defaultMessage": "Майнд-карта: Экспорт в различных форматах редакторов майнд-карт"
+  "export.error.generic": {
+    "defaultMessage": "Ошибка экспорта. Попробуйте ещё раз."
   },
-  "export.document-label": {
-    "defaultMessage": "Документ: Экспорт в формате документа"
+  "export.format.md.desc": {
+    "defaultMessage": "Экспорт в структуру Markdown; при наличии изображений автоматически упаковывается в ZIP с папкой assets."
   },
-  "export.image": {
-    "defaultMessage": "Рисунок: Экспорт рисунка вашей карты с учетом всех цветов и форм."
+  "export.format.md.title": {
+    "defaultMessage": "Документ Markdown"
   },
-  "export.img-center": {
-    "defaultMessage": "Центрировать и масштабировать"
+  "export.format.xmind.desc": {
+    "defaultMessage": "Стандартный файл XMind с сохранением тем, плавающих узлов, изображений, заметок, ссылок и стилей."
+  },
+  "export.format.xmind.title": {
+    "defaultMessage": "Карта XMind"
   },
   "export.title": {
     "defaultMessage": "Экспорт"
-  },
-  "export.warning": {
-    "defaultMessage": "Экспорт рисунком (SVG,PNG,JPEG,PDF) доступен только из панели редактирования."
   },
   "footer.aboutus": {
     "defaultMessage": "О Нас"

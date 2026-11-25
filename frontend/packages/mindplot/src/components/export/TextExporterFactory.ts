@@ -22,11 +22,12 @@ import TxtExporter from './TxtExporter';
 import WiseXMLExporter from './WiseXMLExporter';
 import FreemindExporter from './FreemindExporter';
 import FreeplaneExporter from './FreeplaneExporter';
+import XMindExporter from './XMindExporter';
 
-type textType = 'wxml' | 'txt' | 'mm' | 'mmx' | 'csv' | 'md' | 'mmap';
+type textType = 'wxml' | 'txt' | 'mm' | 'mmx' | 'csv' | 'md' | 'mmap' | 'xmind';
 
 class TextExporterFactory {
-  static create(type: textType, mindmap: Mindmap): Exporter {
+  static create(type: textType, mindmap: Mindmap, mapName?: string): Exporter {
     let result: Exporter;
     switch (type) {
       case 'wxml':
@@ -36,13 +37,16 @@ class TextExporterFactory {
         result = new TxtExporter(mindmap);
         break;
       case 'md':
-        result = new MDExporter(mindmap);
+        result = new MDExporter(mindmap, mapName);
         break;
       case 'mm':
         result = new FreemindExporter(mindmap);
         break;
       case 'mmx':
         result = new FreeplaneExporter(mindmap);
+        break;
+      case 'xmind':
+        result = new XMindExporter(mindmap, mapName);
         break;
       default:
         throw new Error(`Unsupported type ${type}`);

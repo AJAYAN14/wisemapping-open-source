@@ -1062,25 +1062,25 @@
     "defaultMessage": "आपका सत्र समाप्त हो गया है"
   },
   "export.desc": {
-    "defaultMessage": "इस मानचित्र को उस प्रारूप में निर्यात करें जो आप चाहते हैं और इसे अपनी प्रस्तुतियों में उपयोग करना शुरू करें या ईमेल द्वारा साझा करें"
+    "defaultMessage": "अपना माइंडमैप XMind या Markdown (छवियों के साथ ZIP) के रूप में निर्यात करें।"
   },
-  "export.document": {
-    "defaultMessage": "माइंडमैप टूल्स: अपने माइंडमैप को तृतीय-पक्ष माइंडमैप टूल प्रारूपों में निर्यात करें"
+  "export.error.generic": {
+    "defaultMessage": "निर्यात विफल रहा। कृपया पुनः प्रयास करें।"
   },
-  "export.document-label": {
-    "defaultMessage": "दस्तावेज़: अपने माइंडमैप को एक स्व-निहित दस्तावेज़ में निर्यात करें जो साझा करने के लिए तैयार हो"
+  "export.format.md.desc": {
+    "defaultMessage": "Markdown रूपरेखा के रूप में निर्यात करता है; छवियाँ होने पर assets फ़ोल्डर के साथ स्वचालित रूप से ZIP बनाता है।"
   },
-  "export.image": {
-    "defaultMessage": "छवि: सभी रंगों और आकृतियों सहित अपने मानचित्र का ग्राफिक प्रतिनिधित्व प्राप्त करें।"
+  "export.format.md.title": {
+    "defaultMessage": "Markdown दस्तावेज़"
   },
-  "export.img-center": {
-    "defaultMessage": "केंद्र और फिट करने के लिए ज़ूम करें"
+  "export.format.xmind.desc": {
+    "defaultMessage": "मानक XMind फ़ाइल जो विषय, फ़्लोटिंग नोड, छवियाँ, नोट्स, लिंक और शैलियाँ सहेजती है।"
+  },
+  "export.format.xmind.title": {
+    "defaultMessage": "XMind माइंडमैप"
   },
   "export.title": {
     "defaultMessage": "निर्यात"
-  },
-  "export.warning": {
-    "defaultMessage": "छवि (SVG,PNG,JPEG,PDF) में निर्यात केवल संपादक टूलबार में उपलब्ध है।"
   },
   "footer.aboutus": {
     "defaultMessage": "हमारे बारे में"

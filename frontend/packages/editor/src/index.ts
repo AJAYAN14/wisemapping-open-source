@@ -29,12 +29,15 @@ import {
   TextExporterFactory,
   ImageExporterFactory,
   Exporter,
+  MDExporter,
+  XMindExporter,
+  sanitizeExportFileName,
   Importer,
   ImportError,
   TextImporterFactory,
   XMLSerializerFactory,
 } from '@wisemapping/mindplot';
-import type { EditorRenderMode, TopicImageValue } from '@wisemapping/mindplot';
+import type { EditorRenderMode, ExportFileResult, TopicImageValue } from '@wisemapping/mindplot';
 
 import Editor from './components';
 import EditorLoadingSkeleton from './components/editor-loading-skeleton';
@@ -58,6 +61,7 @@ export type {
   SizeType,
   ThemeVariantStorage,
   EditorRenderMode,
+  ExportFileResult,
 };
 
 export {
@@ -72,6 +76,9 @@ export {
   TextExporterFactory,
   ImageExporterFactory,
   Exporter,
+  MDExporter,
+  XMindExporter,
+  sanitizeExportFileName,
   Importer,
   ImportError,
   TextImporterFactory,

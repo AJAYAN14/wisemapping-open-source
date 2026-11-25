@@ -19,6 +19,12 @@ import type Mindmap from '../model/Mindmap';
 import type INodeModel from '../model/INodeModel';
 import { $assert } from '../util/assert';
 
+export type ExportFileResult = {
+  blob: Blob;
+  extension: string;
+  mimeType: string;
+};
+
 abstract class Exporter {
   private _extension: string;
 
@@ -29,9 +35,17 @@ abstract class Exporter {
     this._contentType = contentType;
   }
 
-  async exportAndEncode(): Promise<string> {
+  async exportFile(): Promise<ExportFileResult> {
     const exportValue = await this.export();
-    const blob = new Blob([exportValue], { type: this._contentType });
+    return {
+      blob: new Blob([exportValue], { type: this._contentType }),
+      extension: this._extension,
+      mimeType: this._contentType,
+    };
+  }
+
+  async exportAndEncode(): Promise<string> {
+    const { blob } = await this.exportFile();
     return URL.createObjectURL(blob);
   }
 

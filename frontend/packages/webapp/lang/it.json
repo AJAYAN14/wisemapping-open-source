@@ -1062,25 +1062,25 @@
     "defaultMessage": "La tua sessione è scaduta"
   },
   "export.desc": {
-    "defaultMessage": "Esporta questa mappa nel formato che preferisci e inizia a usarla nelle tue presentazioni o condividila via email"
+    "defaultMessage": "Esporta la mappa mentale in XMind o Markdown (in ZIP con immagini)."
   },
-  "export.document": {
-    "defaultMessage": "Strumenti Mappa Mentale: Esporta la tua mappa mentale nei formati di strumenti di terze parti"
+  "export.error.generic": {
+    "defaultMessage": "Esportazione non riuscita. Riprova."
   },
-  "export.document-label": {
-    "defaultMessage": "Documento: Esporta la tua mappa mentale in un documento autonomo pronto da condividere"
+  "export.format.md.desc": {
+    "defaultMessage": "Esporta come struttura Markdown; crea automaticamente uno ZIP con cartella assets se sono presenti immagini."
   },
-  "export.image": {
-    "defaultMessage": "Immagine: Ottieni una rappresentazione grafica della tua mappa inclusi tutti i colori e le forme."
+  "export.format.md.title": {
+    "defaultMessage": "Documento Markdown"
   },
-  "export.img-center": {
-    "defaultMessage": "Centra e adatta allo zoom"
+  "export.format.xmind.desc": {
+    "defaultMessage": "File XMind standard che mantiene argomenti, nodi mobili, immagini, note, collegamenti e stili."
+  },
+  "export.format.xmind.title": {
+    "defaultMessage": "Mappa XMind"
   },
   "export.title": {
     "defaultMessage": "Esporta"
-  },
-  "export.warning": {
-    "defaultMessage": "L'esportazione in Immagine (SVG,PNG,JPEG,PDF) è disponibile solo nella barra degli strumenti dell'editor."
   },
   "footer.aboutus": {
     "defaultMessage": "Chi Siamo"

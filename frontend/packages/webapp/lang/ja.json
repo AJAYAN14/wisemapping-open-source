@@ -1062,25 +1062,25 @@
     "defaultMessage": "セッションが期限切れです"
   },
   "export.desc": {
-    "defaultMessage": "このマップを希望の形式でエクスポートし、プレゼンテーションで使用したり、メールで共有したりできます"
+    "defaultMessage": "マインドマップを XMind または Markdown（画像ありの場合は ZIP）としてエクスポートします。"
   },
-  "export.document": {
-    "defaultMessage": "マインドマップツール：マインドマップをサードパーティのマインドマップツール形式でエクスポート"
+  "export.error.generic": {
+    "defaultMessage": "エクスポートに失敗しました。もう一度お試しください。"
   },
-  "export.document-label": {
-    "defaultMessage": "ドキュメント：マインドマップを共有準備完了の独立したドキュメントとしてエクスポート"
+  "export.format.md.desc": {
+    "defaultMessage": "Markdown アウトラインとして出力します。画像が含まれる場合は assets フォルダ付きの ZIP に自動梱包します。"
   },
-  "export.image": {
-    "defaultMessage": "画像：すべての色と形状を含むマップのグラフィック表現を取得"
+  "export.format.md.title": {
+    "defaultMessage": "Markdown ドキュメント"
   },
-  "export.img-center": {
-    "defaultMessage": "中央揃えしてフィット"
+  "export.format.xmind.desc": {
+    "defaultMessage": "トピック階層、フリーノード、画像、メモ、リンク、スタイルを保持する標準 XMind ファイル。"
+  },
+  "export.format.xmind.title": {
+    "defaultMessage": "XMind マインドマップ"
   },
   "export.title": {
     "defaultMessage": "エクスポート"
-  },
-  "export.warning": {
-    "defaultMessage": "画像（SVG、PNG、JPEG、PDF）へのエクスポートは、エディターツールバーでのみ利用可能です。"
   },
   "footer.aboutus": {
     "defaultMessage": "私たちについて"

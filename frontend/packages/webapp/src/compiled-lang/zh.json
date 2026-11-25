@@ -2398,43 +2398,43 @@
   "export.desc": [
     {
       "type": 0,
-      "value": "以您需要的格式导出此思维导图，并在演示文稿中使用或通过电子邮件分享"
+      "value": "将思维导图导出为 XMind 文件或 Markdown 文档（含图片时自动打包为 ZIP）。"
     }
   ],
-  "export.document": [
+  "export.error.generic": [
     {
       "type": 0,
-      "value": "思维导图工具：以第三方思维导图格式导出您的思维导图"
+      "value": "导出失败，请稍后重试。"
     }
   ],
-  "export.document-label": [
+  "export.format.md.desc": [
     {
       "type": 0,
-      "value": "文档：将您的思维导图导出到一个独立的文档中来分享"
+      "value": "导出为 Markdown 大纲文档；若节点包含图片，将自动打包为含 assets 图片资源文件夹的 ZIP。"
     }
   ],
-  "export.image": [
+  "export.format.md.title": [
     {
       "type": 0,
-      "value": "图像：以图片形式获取包含所有颜色和形状的思维导图"
+      "value": "Markdown 文档"
     }
   ],
-  "export.img-center": [
+  "export.format.xmind.desc": [
     {
       "type": 0,
-      "value": "居中并缩放合适大小"
+      "value": "导出标准 .xmind 文件，完整保留主题层级、自由主题、图片、备注、链接与样式。"
+    }
+  ],
+  "export.format.xmind.title": [
+    {
+      "type": 0,
+      "value": "XMind 思维导图"
     }
   ],
   "export.title": [
     {
       "type": 0,
       "value": "导出"
-    }
-  ],
-  "export.warning": [
-    {
-      "type": 0,
-      "value": "导出到图像（SVG，PNG，JPEG，PDF）仅在编辑器工具栏中可用。"
     }
   ],
   "folder.create-button": [

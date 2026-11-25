@@ -1062,25 +1062,25 @@
     "defaultMessage": "Your session has expired"
   },
   "export.desc": {
-    "defaultMessage": "Export this map in the format that you want and start using it in your presentations or sharing by email"
+    "defaultMessage": "Export your mindmap as XMind or Markdown (bundled as ZIP with images)."
   },
-  "export.document": {
-    "defaultMessage": "Mindmap Tools (WXML, MM): Export your mindmap in thirdparty mindmap tool formats"
+  "export.error.generic": {
+    "defaultMessage": "Export failed. Please try again."
   },
-  "export.document-label": {
-    "defaultMessage": "Document (TXT, MD): Export your mindmap in a self-contained document ready to share"
+  "export.format.md.desc": {
+    "defaultMessage": "Exports as a Markdown outline; automatically bundles a ZIP with an assets folder when images exist."
   },
-  "export.image": {
-    "defaultMessage": "Image (SVG, PNG, JPEG, PDF): Get a graphic representation of your map including all colors and shapes."
+  "export.format.md.title": {
+    "defaultMessage": "Markdown Document"
   },
-  "export.img-center": {
-    "defaultMessage": "Center and zoom to fit"
+  "export.format.xmind.desc": {
+    "defaultMessage": "Standard XMind workbook preserving topics, floating nodes, images, notes, links, and styles."
+  },
+  "export.format.xmind.title": {
+    "defaultMessage": "XMind Mindmap"
   },
   "export.title": {
     "defaultMessage": "Export"
-  },
-  "export.warning": {
-    "defaultMessage": "Exporting to Image (SVG,PNG,JPEG,PDF) is only available in the editor toolbar."
   },
   "footer.aboutus": {
     "defaultMessage": "About Us"

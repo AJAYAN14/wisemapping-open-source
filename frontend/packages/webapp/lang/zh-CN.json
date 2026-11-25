@@ -1065,25 +1065,25 @@
     "defaultMessage": "您的会话已过期"
   },
   "export.desc": {
-    "defaultMessage": "以您想要的格式导出此思维导图，并在演示文稿中开始使用或通过电子邮件分享"
+    "defaultMessage": "将思维导图导出为 XMind 文件或 Markdown 文档（含图片时自动打包为 ZIP）。"
   },
-  "export.document": {
-    "defaultMessage": "思维导图工具：以第三方思维导图工具格式导出您的思维导图"
+  "export.error.generic": {
+    "defaultMessage": "导出失败，请稍后重试。"
   },
-  "export.document-label": {
-    "defaultMessage": "文档：将您的思维导图导出为可分享的自包含文档"
+  "export.format.md.desc": {
+    "defaultMessage": "导出为 Markdown 大纲文档；若节点包含图片，将自动打包为含 assets 图片资源文件夹的 ZIP。"
   },
-  "export.image": {
-    "defaultMessage": "图像：获取包含所有颜色和形状的思维导图图形表示。"
+  "export.format.md.title": {
+    "defaultMessage": "Markdown 文档"
   },
-  "export.img-center": {
-    "defaultMessage": "居中并适合缩放"
+  "export.format.xmind.desc": {
+    "defaultMessage": "导出标准 .xmind 文件，完整保留主题层级、自由主题、图片、备注、链接与样式。"
+  },
+  "export.format.xmind.title": {
+    "defaultMessage": "XMind 思维导图"
   },
   "export.title": {
     "defaultMessage": "导出"
-  },
-  "export.warning": {
-    "defaultMessage": "导出为图像（SVG、PNG、JPEG、PDF）仅在编辑器工具栏中可用。"
   },
   "folder.create-button": {
     "defaultMessage": "创建"

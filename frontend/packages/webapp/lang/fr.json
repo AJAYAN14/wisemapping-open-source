@@ -1062,25 +1062,25 @@
     "defaultMessage": "Votre session a expiré"
   },
   "export.desc": {
-    "defaultMessage": "Exportez cette carte dans le format que vous souhaitez et commencez à l'utiliser dans vos présentations ou à partager par e-mail"
+    "defaultMessage": "Exportez votre carte mentale en XMind ou Markdown (en ZIP avec images)."
   },
-  "export.document": {
-    "defaultMessage": "Outils de cartes mentales : exportez votre carte mentale dans des formats d'outils de cartes mentales tiers"
+  "export.error.generic": {
+    "defaultMessage": "Échec de l’exportation. Veuillez réessayer."
   },
-  "export.document-label": {
-    "defaultMessage": "Document : exportez votre carte mentale dans un document autonome prêt à être partagé"
+  "export.format.md.desc": {
+    "defaultMessage": "Exporte en plan Markdown ; crée automatiquement une archive ZIP avec un dossier assets s’il y a des images."
   },
-  "export.image": {
-    "defaultMessage": "Image : obtenez une représentation graphique de votre carte, y compris toutes les couleurs et toutes les formes."
+  "export.format.md.title": {
+    "defaultMessage": "Document Markdown"
   },
-  "export.img-center": {
-    "defaultMessage": "Centrer et ajuster le zoom"
+  "export.format.xmind.desc": {
+    "defaultMessage": "Fichier XMind standard conservant sujets, sujets flottants, images, notes, liens et styles."
+  },
+  "export.format.xmind.title": {
+    "defaultMessage": "Carte XMind"
   },
   "export.title": {
     "defaultMessage": "Exportation"
-  },
-  "export.warning": {
-    "defaultMessage": "L'exportation vers une image (SVG,PNG,JPEG,PDF) n'est disponible que dans la barre d'outils de l'éditeur."
   },
   "footer.aboutus": {
     "defaultMessage": "À propos de nous"

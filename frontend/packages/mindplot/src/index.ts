@@ -26,7 +26,10 @@ import DesignerOptionsBuilder from './components/DesignerOptionsBuilder';
 import ImageExporterFactory from './components/export/ImageExporterFactory';
 import TextExporterFactory from './components/export/TextExporterFactory';
 import TextImporterFactory from './components/import/TextImporterFactory';
-import Exporter from './components/export/Exporter';
+import Exporter, { type ExportFileResult } from './components/export/Exporter';
+import MDExporter from './components/export/MDExporter';
+import XMindExporter from './components/export/XMindExporter';
+import { sanitizeExportFileName } from './components/export/support/ImageAssetCollector';
 import Importer from './components/import/Importer';
 import ImportError from './components/import/ImportError';
 import DesignerKeyboard from './components/DesignerKeyboard';
@@ -73,6 +76,8 @@ export type { LayoutType, OrientationType } from './components/layout/LayoutType
 export type { FontStyleType } from './components/FontStyleType';
 export type { FontWeightType } from './components/FontWeightType';
 
+export type { ExportFileResult };
+
 export {
   Mindmap,
   Designer,
@@ -88,6 +93,9 @@ export {
   ImageExporterFactory,
   TextImporterFactory,
   Exporter,
+  MDExporter,
+  XMindExporter,
+  sanitizeExportFileName,
   SvgImageIcon,
   Importer,
   ImportError,

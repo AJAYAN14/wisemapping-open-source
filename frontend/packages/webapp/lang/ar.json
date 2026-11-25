@@ -1062,25 +1062,25 @@
     "defaultMessage": "انتهت جلستك"
   },
   "export.desc": {
-    "defaultMessage": "صدّر هذه الخريطة بالتنسيق الذي تريده وابدأ باستخدامها في عروضك التقديمية أو شاركها عبر البريد الإلكتروني"
+    "defaultMessage": "تصدير الخريطة الذهنية بصيغة XMind أو Markdown (ملف ZIP عند وجود صور)."
   },
-  "export.document": {
-    "defaultMessage": "أدوات الخرائط الذهنية: صدّر خريطتك الذهنية بصيغ أدوات الخرائط الذهنية الأخرى"
+  "export.error.generic": {
+    "defaultMessage": "فشل التصدير. يرجى المحاولة مرة أخرى."
   },
-  "export.document-label": {
-    "defaultMessage": "مستند: صدّر خريطتك الذهنية في مستند مستقل جاهز للمشاركة"
+  "export.format.md.desc": {
+    "defaultMessage": "تصدير كمخطط Markdown؛ يتم ضغطه تلقائياً كملف ZIP مع مجلد assets عند وجود صور."
   },
-  "export.image": {
-    "defaultMessage": "صورة: احصل على تمثيل رسومي لخريطتك بكل ألوانها وأشكالها."
+  "export.format.md.title": {
+    "defaultMessage": "مستند Markdown"
   },
-  "export.img-center": {
-    "defaultMessage": "توسيط وضبط الحجم"
+  "export.format.xmind.desc": {
+    "defaultMessage": "ملف XMind قياسي يحفظ العقد والعقد الحرة والصور والملاحظات والروابط والأنماط."
+  },
+  "export.format.xmind.title": {
+    "defaultMessage": "خريطة XMind"
   },
   "export.title": {
     "defaultMessage": "تصدير"
-  },
-  "export.warning": {
-    "defaultMessage": "التصدير إلى صورة (SVG، PNG، JPEG، PDF) متاح فقط من شريط أدوات المحرر."
   },
   "footer.aboutus": {
     "defaultMessage": "من نحن"

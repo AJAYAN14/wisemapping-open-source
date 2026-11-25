@@ -1062,25 +1062,25 @@
     "defaultMessage": "Ваша сесія закінчилася"
   },
   "export.desc": {
-    "defaultMessage": "Експортуйте цю карту в потрібному форматі та почніть використовувати її у ваших презентаціях або ділитися електронною поштою"
+    "defaultMessage": "Експортуйте карту у форматі XMind або Markdown (у ZIP за наявності зображень)."
   },
-  "export.document": {
-    "defaultMessage": "Інструменти карт розуму: Експортуйте вашу карту розуму в формати сторонніх інструментів карт розуму"
+  "export.error.generic": {
+    "defaultMessage": "Помилка експорту. Спробуйте ще раз."
   },
-  "export.document-label": {
-    "defaultMessage": "Документ: Експортуйте вашу карту розуму в автономний документ, готовий для обміну"
+  "export.format.md.desc": {
+    "defaultMessage": "Експорт у структуру Markdown; за наявності зображень автоматично пакується у ZIP з текою assets."
   },
-  "export.image": {
-    "defaultMessage": "Зображення: Отримайте графічне представлення вашої карти, включаючи всі кольори та форми."
+  "export.format.md.title": {
+    "defaultMessage": "Документ Markdown"
   },
-  "export.img-center": {
-    "defaultMessage": "Центрувати та масштабувати під розмір"
+  "export.format.xmind.desc": {
+    "defaultMessage": "Стандартний файл XMind зі збереженням тем, вільних вузлів, зображень, нотаток, посилань і стилів."
+  },
+  "export.format.xmind.title": {
+    "defaultMessage": "Карта XMind"
   },
   "export.title": {
     "defaultMessage": "Експорт"
-  },
-  "export.warning": {
-    "defaultMessage": "Експорт в зображення (SVG,PNG,JPEG,PDF) доступний тільки в панелі інструментів редактора."
   },
   "footer.aboutus": {
     "defaultMessage": "Про нас"

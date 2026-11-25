@@ -18,6 +18,7 @@
 
 type BufferCtor = {
   from(array: Uint8Array): { toString(encoding: 'utf-8'): string };
+  from(text: string, encoding: 'utf-8'): Uint8Array;
 };
 
 const toUint8Array = (input: ArrayBuffer | Uint8Array): Uint8Array => {
@@ -54,6 +55,17 @@ export const decodeUtf8 = (input: ArrayBuffer | Uint8Array): string => {
   }
 
   throw new Error('UTF-8 decoding is not supported in this environment.');
+};
+
+export const encodeUtf8 = (text: string): Uint8Array => {
+  if (typeof globalThis.TextEncoder !== 'undefined') {
+    return new globalThis.TextEncoder().encode(text);
+  }
+  const globalWithBuffer = globalThis as unknown as { Buffer?: BufferCtor };
+  if (globalWithBuffer.Buffer) {
+    return new Uint8Array(globalWithBuffer.Buffer.from(text, 'utf-8'));
+  }
+  throw new Error('UTF-8 encoding is not supported in this environment.');
 };
 
 export const tryDecodeUtf8 = (input: ArrayBuffer | Uint8Array): string | undefined => {

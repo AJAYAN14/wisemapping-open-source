@@ -1062,25 +1062,25 @@
     "defaultMessage": "Deine Sitzung ist abgelaufen"
   },
   "export.desc": {
-    "defaultMessage": "Exportiere diese Mindmap im gewünschten Format und verwende sie in deinen Präsentationen oder teile sie per E-Mail"
+    "defaultMessage": "Mindmap als XMind oder Markdown exportieren (mit Bildern als ZIP)."
   },
-  "export.document": {
-    "defaultMessage": "Mindmap-Tools: Exportiere deine Mindmap in Mindmap-Tool-Formate von Drittanbietern"
+  "export.error.generic": {
+    "defaultMessage": "Export fehlgeschlagen. Bitte versuchen Sie es erneut."
   },
-  "export.document-label": {
-    "defaultMessage": "Dokument: Exportiere deine Mindmap in ein eigenständiges Dokument, das du teilen kannst"
+  "export.format.md.desc": {
+    "defaultMessage": "Exportiert als Markdown-Gliederung; mit Bildern automatisch als ZIP samt assets-Ordner."
   },
-  "export.image": {
-    "defaultMessage": "Bild: Erhalte eine grafische Darstellung deiner Mindmap mit allen Farben und Formen."
+  "export.format.md.title": {
+    "defaultMessage": "Markdown-Dokument"
   },
-  "export.img-center": {
-    "defaultMessage": "Zentrieren und zoomen, um anzupassen"
+  "export.format.xmind.desc": {
+    "defaultMessage": "Standard-XMind-Datei mit Themen, freien Themen, Bildern, Notizen, Links und Stilen."
+  },
+  "export.format.xmind.title": {
+    "defaultMessage": "XMind-Mindmap"
   },
   "export.title": {
     "defaultMessage": "Exportieren"
-  },
-  "export.warning": {
-    "defaultMessage": "Der Export in ein Bild (SVG, PNG, JPEG, PDF) ist nur in der Editor-Symbolleiste verfügbar."
   },
   "footer.aboutus": {
     "defaultMessage": "Über uns"

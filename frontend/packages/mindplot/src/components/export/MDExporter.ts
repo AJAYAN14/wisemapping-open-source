@@ -15,15 +15,20 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
+import { zipSync } from 'fflate';
 import type Mindmap from '../model/Mindmap';
 import type INodeModel from '../model/INodeModel';
 import type NoteModel from '../model/NoteModel';
-import Exporter from './Exporter';
+import Exporter, { type ExportFileResult } from './Exporter';
 import ContentType from '../ContentType';
 import { BLOCK_TAGS, htmlToPlainText } from '../import/support/HtmlText';
+import { encodeUtf8 } from '../import/support/Utf8Decoder';
+import { collectMindmapImages, sanitizeExportFileName } from './support/ImageAssetCollector';
 
 class MDExporter extends Exporter {
   private mindmap: Mindmap;
+
+  private mapName: string | undefined;
 
   // The footnotes, as Markdown: one line, or several when the note has lists.
   private footNotes: string[] = [];
@@ -31,9 +36,10 @@ class MDExporter extends Exporter {
   // The footnotes with lists, which a blank line must end.
   private listFootNotes = new Set<number>();
 
-  constructor(mindmap: Mindmap) {
+  constructor(mindmap: Mindmap, mapName?: string) {
     super('md', 'text/markdown');
     this.mindmap = mindmap;
+    this.mapName = mapName;
   }
 
   private normalizeText(value: string): string {
@@ -61,18 +67,64 @@ class MDExporter extends Exporter {
   }
 
   export(): Promise<string> {
+    return Promise.resolve(this.renderMarkdown());
+  }
+
+  override async exportFile(): Promise<ExportFileResult> {
+    const centralTopic = Exporter.centralTopicOf(this.mindmap);
+    const { assets } = await collectMindmapImages(this.mindmap, false);
+
+    if (assets.length === 0) {
+      const markdown = this.renderMarkdown();
+      return {
+        blob: new Blob([markdown], { type: 'text/markdown' }),
+        extension: 'md',
+        mimeType: 'text/markdown',
+      };
+    }
+
+    const assetPathByUrl = new Map<string, string>(
+      assets.map((asset) => [asset.sourceUrl, `assets/${asset.filename}`]),
+    );
+    const markdown = this.renderMarkdown(assetPathByUrl);
+    const mdBaseName = sanitizeExportFileName(
+      this.mapName ?? (this.nodeText(centralTopic) || this.mindmap.getId()),
+      'mindmap',
+    );
+
+    const archiveEntries: Record<string, Uint8Array> = {
+      [`${mdBaseName}.md`]: encodeUtf8(markdown),
+    };
+    assets.forEach((asset) => {
+      archiveEntries[`assets/${asset.filename}`] = asset.bytes;
+    });
+
+    const zipBytes = zipSync(archiveEntries, { level: 6 });
+    return {
+      blob: new Blob([new Uint8Array(zipBytes)], { type: 'application/zip' }),
+      extension: 'zip',
+      mimeType: 'application/zip',
+    };
+  }
+
+  private renderMarkdown(assetPathByUrl?: Map<string, string>): string {
     this.footNotes = [];
     this.listFootNotes = new Set();
 
-    // Add cental node as text. Without text, a placeholder keeps the branches as a list ...
+    // Add central node as heading. Without text, a placeholder keeps the branches as a list ...
     const centralTopic = Exporter.centralTopicOf(this.mindmap);
     const centralText = this.nodeText(centralTopic) || MDExporter.UNTITLED;
 
     // Traverse all the branches ...
     let result = `# ${MDExporter.escape(centralText)}\n\n`;
-    result += this.traverseBranch('', centralTopic.getChildren());
+    const centralImageRef = this.resolveNodeImageRef(centralTopic, assetPathByUrl);
+    if (centralImageRef) {
+      result += `![${MDExporter.escape(centralText)}](${MDExporter.encodeUrl(centralImageRef)})\n\n`;
+    }
 
-    // White footnotes:
+    result += this.traverseBranch('', centralTopic.getChildren(), assetPathByUrl);
+
+    // Write footnotes:
     if (this.footNotes.length > 0) {
       result += '\n\n\n';
       result += this.footNotes
@@ -84,7 +136,18 @@ class MDExporter extends Exporter {
         .join('');
     }
     result += '\n';
-    return Promise.resolve(result);
+    return result;
+  }
+
+  private resolveNodeImageRef(
+    node: INodeModel,
+    assetPathByUrl?: Map<string, string>,
+  ): string | undefined {
+    const rawUrl = node.getImageUrl()?.trim();
+    if (!rawUrl) {
+      return undefined;
+    }
+    return assetPathByUrl?.get(rawUrl) ?? rawUrl;
   }
 
   // The text of a topic on a single line. The paragraphs and the lines of an html text are
@@ -220,10 +283,11 @@ class MDExporter extends Exporter {
     });
   }
 
-  // Topics without text are skipped, unless they hold something to export (children, icons, links or notes) ...
+  // Topics without text are skipped, unless they hold something to export (children, icons, images, links or notes) ...
   private isExportable(node: INodeModel): boolean {
     return (
       this.nodeText(node) !== '' ||
+      Boolean(node.getImageUrl()?.trim()) ||
       node
         .getFeatures()
         .some(
@@ -235,7 +299,11 @@ class MDExporter extends Exporter {
     );
   }
 
-  private traverseBranch(prefix: string, branches: Array<INodeModel>) {
+  private traverseBranch(
+    prefix: string,
+    branches: Array<INodeModel>,
+    assetPathByUrl?: Map<string, string>,
+  ) {
     let result = '';
     branches
       .filter((n) => this.isExportable(n))
@@ -269,7 +337,14 @@ class MDExporter extends Exporter {
           }
         });
         result = `${result}\n`;
-        result += this.traverseBranch(`${prefix}\t`, node.getChildren());
+
+        const imageRef = this.resolveNodeImageRef(node, assetPathByUrl);
+        if (imageRef) {
+          const alt = nodeText ? MDExporter.escape(nodeText) : '图片';
+          result = `${result}${prefix}\t![${alt}](${MDExporter.encodeUrl(imageRef)})\n`;
+        }
+
+        result += this.traverseBranch(`${prefix}\t`, node.getChildren(), assetPathByUrl);
       });
     return result;
   }

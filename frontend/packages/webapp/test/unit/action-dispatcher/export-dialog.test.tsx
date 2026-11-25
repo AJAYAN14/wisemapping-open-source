@@ -16,23 +16,26 @@
  *   limitations under the License.
  */
 
-import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, screen, waitFor } from '@testing-library/react';
 
-// The dialog only needs the exporter factories from the editor bundle.
-const mockExportAndEncode = jest.fn(() => Promise.resolve('blob:export'));
-const mockExporter = { exportAndEncode: () => mockExportAndEncode() };
-const mockCreateTextExporter = jest.fn((_type: string, _mindmap: unknown) => mockExporter);
-const mockCreateImageExporter = jest.fn(
-  (_type: string, _svg: Element, _width: number, _height: number) => mockExporter,
+const mockExportFile = jest.fn(() =>
+  Promise.resolve({
+    blob: new Blob(['xmind-bytes'], { type: 'application/vnd.xmind.workbook' }),
+    extension: 'xmind',
+    mimeType: 'application/vnd.xmind.workbook',
+  }),
+);
+const mockExporter = { exportFile: () => mockExportFile() };
+const mockCreateTextExporter = jest.fn(
+  (_type: string, _mindmap: unknown, _mapName?: string) => mockExporter,
 );
 jest.mock('@wisemapping/editor', () => ({
   TextExporterFactory: {
-    create: (type: string, mindmap: unknown) => mockCreateTextExporter(type, mindmap),
+    create: (type: string, mindmap: unknown, mapName?: string) =>
+      mockCreateTextExporter(type, mindmap, mapName),
   },
-  ImageExporterFactory: {
-    create: (type: string, svg: Element, width: number, height: number) =>
-      mockCreateImageExporter(type, svg, width, height),
-  },
+  sanitizeExportFileName: (name: string | undefined, fallback = 'mindmap') =>
+    (name ?? '').trim().replace(/[\\/:*?"<>|]/g, '_') || fallback,
 }));
 
 const mockFetchMindmap = jest.fn();
@@ -46,14 +49,16 @@ import Client from '../../../src/classes/client';
 import { renderWithProviders } from '../helpers/render';
 import { defined } from '../defined';
 
+const mockFetchMapMetadata = jest.fn(() => Promise.resolve({ title: 'Map' }));
 const client = {
-  fetchMapMetadata: () => Promise.resolve({ title: 'Map' }),
+  fetchMapMetadata: mockFetchMapMetadata,
 } as unknown as Client;
 
 const fakeMindmap = (name: string, theme = 'prism') => {
   const mindmap = {
     name,
     theme,
+    getId: () => name,
     getTheme: () => mindmap.theme,
     setTheme: jest.fn((value: string) => {
       mindmap.theme = value;
@@ -62,22 +67,13 @@ const fakeMindmap = (name: string, theme = 'prism') => {
   return mindmap;
 };
 
-// A designer showing its own map on its own canvas.
-const fakeDesigner = (name: string, theme = 'prism') => {
-  const container = document.createElement('div');
-  const parent = document.createElement('div');
-  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  container.appendChild(parent);
-  parent.appendChild(svg);
+const fakeDesigner = (name: string, theme = 'classic') => {
   const mindmap = fakeMindmap(name, theme);
-  // Like Designer.applyTheme: the theme goes to the model the editor saves.
   const applyTheme = jest.fn((value: string) => mindmap.setTheme(value));
   return {
-    svg,
     mindmap,
     applyTheme,
     designer: {
-      getWorkSpace: () => ({ getSVGElement: () => svg }),
       getMindmap: () => mindmap,
       applyTheme,
     } as unknown as Designer,
@@ -93,9 +89,8 @@ describe('ExportDialog', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    // Another map's designer, as the last-built one is published on globalThis.
     globalWithDesigner.designer = fakeDesigner('other map').designer;
-    // jsdom has no object URLs.
+    URL.createObjectURL = jest.fn(() => 'blob:export');
     URL.revokeObjectURL = jest.fn();
   });
 
@@ -103,133 +98,91 @@ describe('ExportDialog', () => {
     delete globalWithDesigner.designer;
   });
 
-  test('exports the map of its own editor, not the last designer built', async () => {
-    const own = fakeDesigner('own map');
+  test('exports the map of its own editor without mutating the live map theme', async () => {
+    const own = fakeDesigner('own map', 'classic');
+    const onClose = jest.fn();
     renderWithProviders(
-      <ExportDialog mapId={1} enableImgExport={true} designer={own.designer} onClose={jest.fn()} />,
+      <ExportDialog mapId={1} enableImgExport={true} designer={own.designer} onClose={onClose} />,
       { client },
     );
 
     submit();
 
-    await waitFor(() => expect(mockCreateImageExporter).toHaveBeenCalled());
-    expect(defined(mockCreateImageExporter.mock.calls[0])[0]).toBe('svg');
-    expect(defined(mockCreateImageExporter.mock.calls[0])[1]).toBe(own.svg);
+    await waitFor(() => expect(mockCreateTextExporter).toHaveBeenCalled());
+    expect(defined(mockCreateTextExporter.mock.calls[0])[0]).toBe('xmind');
+    expect(defined(mockCreateTextExporter.mock.calls[0])[1]).toBe(own.mindmap);
+    expect(own.applyTheme).not.toHaveBeenCalled();
+    expect(own.mindmap.getTheme()).toBe('classic');
+    await waitFor(() => expect(onClose).toHaveBeenCalledWith(true));
   });
 
-  test('from the map list, exports the selected map', async () => {
+  test('from the map list, fetches the selected map and defaults to XMind', async () => {
     const selected = fakeMindmap('selected map');
     mockFetchMindmap.mockResolvedValue(selected);
-    renderWithProviders(<ExportDialog mapId={7} enableImgExport={false} onClose={jest.fn()} />, {
-      client,
-    });
-
-    submit();
-
-    await waitFor(() => expect(mockCreateTextExporter).toHaveBeenCalled());
-    expect(mockFetchMindmap).toHaveBeenCalledWith(7);
-    expect(mockCreateTextExporter).toHaveBeenCalledWith('txt', selected);
-  });
-
-  test('downloads a Freeplane export as a .mm file (BL5-115)', async () => {
-    mockFetchMindmap.mockResolvedValue(fakeMindmap('selected map'));
     const downloads: string[] = [];
     const click = jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
       this: HTMLAnchorElement,
     ) {
       downloads.push(this.download);
     });
+
     renderWithProviders(<ExportDialog mapId={7} enableImgExport={false} onClose={jest.fn()} />, {
       client,
     });
+    await waitFor(() => expect(mockFetchMapMetadata).toHaveBeenCalledWith(7));
+    await act(() => new Promise((resolve) => setTimeout(resolve, 20)));
 
-    fireEvent.click(screen.getByLabelText(/Mindmap Tools/));
-    fireEvent.mouseDown(screen.getByRole('combobox'));
-    fireEvent.click(await screen.findByRole('option', { name: 'Freeplane (MM)' }));
     submit();
 
-    await waitFor(() => expect(downloads).toEqual(['Map.mm']));
-    // mmx is still the id of the format.
-    expect(defined(mockCreateTextExporter.mock.calls[0])[0]).toBe('mmx');
+    await waitFor(() => expect(downloads).toEqual(['Map.xmind']));
+    expect(mockFetchMindmap).toHaveBeenCalledWith(7);
+    expect(mockCreateTextExporter).toHaveBeenCalledWith('xmind', selected, 'Map');
     click.mockRestore();
   });
 
-  describe('from the editor, leaves the live map theme as it was', () => {
-    const renderOwn = (own: ReturnType<typeof fakeDesigner>, enableImgExport = true) =>
-      renderWithProviders(
-        <ExportDialog
-          mapId={1}
-          enableImgExport={enableImgExport}
-          designer={own.designer}
-          onClose={jest.fn()}
-        />,
-        { client },
-      );
-
-    test('after an image export, rendered in the export theme', async () => {
-      const own = fakeDesigner('own map', 'classic');
-      let themeWhileExporting: string | undefined;
-      mockExportAndEncode.mockImplementationOnce(() => {
-        themeWhileExporting = own.mindmap.getTheme();
-        return Promise.resolve('blob:export');
-      });
-      renderOwn(own);
-
-      submit();
-
-      await waitFor(() => expect(own.applyTheme).toHaveBeenCalledTimes(2));
-      expect(themeWhileExporting).toBe('prism');
-      expect(own.applyTheme.mock.calls).toEqual([['prism'], ['classic']]);
-      expect(own.mindmap.getTheme()).toBe('classic');
+  test('downloads Markdown export as .zip when images are bundled', async () => {
+    mockFetchMindmap.mockResolvedValue(fakeMindmap('selected map'));
+    mockExportFile.mockResolvedValueOnce({
+      blob: new Blob(['zip-bytes'], { type: 'application/zip' }),
+      extension: 'zip',
+      mimeType: 'application/zip',
+    });
+    const downloads: string[] = [];
+    const click = jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      downloads.push(this.download);
     });
 
-    test('after a text export', async () => {
-      const own = fakeDesigner('own map', 'classic');
-      renderOwn(own, false);
-
-      submit();
-
-      await waitFor(() => expect(mockCreateTextExporter).toHaveBeenCalled());
-      await waitFor(() => expect(own.mindmap.getTheme()).toBe('classic'));
+    renderWithProviders(<ExportDialog mapId={7} enableImgExport={false} onClose={jest.fn()} />, {
+      client,
     });
+    await waitFor(() => expect(mockFetchMapMetadata).toHaveBeenCalledWith(7));
+    await act(() => new Promise((resolve) => setTimeout(resolve, 20)));
 
-    test('when the export fails', async () => {
-      const own = fakeDesigner('own map', 'classic');
-      const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined);
-      mockExportAndEncode.mockImplementationOnce(() => Promise.reject(new Error('boom')));
-      renderOwn(own);
+    fireEvent.click(screen.getByRole('radio', { name: 'Markdown (.md / .zip)' }));
+    submit();
 
-      submit();
+    await waitFor(() => expect(downloads).toEqual(['Map.zip']));
+    expect(defined(mockCreateTextExporter.mock.calls[0])[0]).toBe('md');
+    click.mockRestore();
+  });
 
-      await waitFor(() => expect(consoleError).toHaveBeenCalled());
-      expect(own.applyTheme.mock.calls).toEqual([['prism'], ['classic']]);
-      expect(own.mindmap.getTheme()).toBe('classic');
-    });
+  test('keeps the dialog open and shows an error when image download or export fails', async () => {
+    const own = fakeDesigner('own map');
+    const onClose = jest.fn();
+    const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    mockExportFile.mockRejectedValueOnce(new Error('图片下载失败 (HTTP 404)'));
 
-    test('when the exporter cannot be created', async () => {
-      const own = fakeDesigner('own map', 'classic');
-      const consoleError = jest.spyOn(console, 'error').mockImplementation(() => undefined);
-      mockCreateImageExporter.mockImplementationOnce(() => {
-        throw new Error('boom');
-      });
-      renderOwn(own);
+    renderWithProviders(
+      <ExportDialog mapId={1} enableImgExport={true} designer={own.designer} onClose={onClose} />,
+      { client },
+    );
 
-      submit();
+    submit();
 
-      await waitFor(() => expect(consoleError).toHaveBeenCalled());
-      expect(own.mindmap.getTheme()).toBe('classic');
-    });
-
-    test('without re-rendering a map already in the export theme', async () => {
-      const own = fakeDesigner('own map', 'prism');
-      renderOwn(own);
-
-      submit();
-
-      await waitFor(() => expect(mockCreateImageExporter).toHaveBeenCalled());
-      await waitFor(() => expect(mockExportAndEncode).toHaveBeenCalled());
-      expect(own.applyTheme).not.toHaveBeenCalled();
-      expect(own.mindmap.getTheme()).toBe('prism');
-    });
+    await waitFor(() => expect(screen.getByText('图片下载失败 (HTTP 404)')).toBeTruthy());
+    expect(onClose).not.toHaveBeenCalled();
+    consoleError.mockRestore();
   });
 });

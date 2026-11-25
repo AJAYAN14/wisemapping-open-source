@@ -1062,25 +1062,25 @@
     "defaultMessage": "Sua sessão expirou"
   },
   "export.desc": {
-    "defaultMessage": "Exporte este mapa no formato desejado e comece a usá-lo em suas apresentações ou compartilhando por e-mail"
+    "defaultMessage": "Exporte seu mapa mental como XMind ou Markdown (em ZIP se houver imagens)."
   },
-  "export.document": {
-    "defaultMessage": "Ferramentas de mapa mental: exporte seu mapa mental em formatos de ferramentas de mapa mental de terceiros"
+  "export.error.generic": {
+    "defaultMessage": "Falha na exportação. Tente novamente."
   },
-  "export.document-label": {
-    "defaultMessage": "Documento: exporte seu mapa mental em um documento independente pronto para compartilhar"
+  "export.format.md.desc": {
+    "defaultMessage": "Exporta como tópico Markdown; se houver imagens, gera automaticamente um ZIP com a pasta assets."
   },
-  "export.image": {
-    "defaultMessage": "Imagem: obtenha uma representação gráfica do seu mapa, incluindo todas as cores e formas."
+  "export.format.md.title": {
+    "defaultMessage": "Documento Markdown"
   },
-  "export.img-center": {
-    "defaultMessage": "Centralizar e ajustar"
+  "export.format.xmind.desc": {
+    "defaultMessage": "Arquivo XMind padrão preservando tópicos, tópicos flutuantes, imagens, notas, links e estilos."
+  },
+  "export.format.xmind.title": {
+    "defaultMessage": "Mapa XMind"
   },
   "export.title": {
     "defaultMessage": "Exportar"
-  },
-  "export.warning": {
-    "defaultMessage": "A exportação para imagem (SVG, PNG, JPEG, PDF) está disponível apenas na barra de ferramentas do editor."
   },
   "footer.aboutus": {
     "defaultMessage": "Sobre nós"
