@@ -19,7 +19,8 @@
 import React, { ReactElement, useMemo, useRef } from 'react';
 
 import { IntlProvider } from 'react-intl';
-import { Designer } from '@wisemapping/mindplot';
+import { $notify, Designer } from '@wisemapping/mindplot';
+import { blobToDataUrl, compressTopicImage } from '../utils/imageAssetUtils';
 
 import { useLocaleData } from '../classes/i18n-msg';
 
@@ -145,6 +146,77 @@ const EditorContent = ({
     };
   }, [designer, model, isEmbedRoute]);
 
+  // Support pasting an image directly onto a selected topic on the canvas
+  React.useEffect(() => {
+    if (!designer || capability.isHidden('edition-toolbar') || typeof document === 'undefined') {
+      return undefined;
+    }
+
+    const onDocumentPaste = (event: ClipboardEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.tagName === 'SELECT' ||
+          target.isContentEditable ||
+          target.closest('.MuiDialog-root, .MuiPopover-root'))
+      ) {
+        return;
+      }
+
+      const selectedTopic = designer.getModel().selectedTopic();
+      if (!selectedTopic) {
+        return;
+      }
+
+      const items = event.clipboardData?.items;
+      if (!items) {
+        return;
+      }
+
+      let imageFile: File | null = null;
+      for (let i = 0; i < items.length; i += 1) {
+        const item = items[i];
+        if (item && item.type.startsWith('image/')) {
+          imageFile = item.getAsFile();
+          if (imageFile) {
+            break;
+          }
+        }
+      }
+
+      if (!imageFile) {
+        return;
+      }
+
+      event.preventDefault();
+      void (async () => {
+        try {
+          $notify('正在上传图片...');
+          const compressed = await compressTopicImage(imageFile);
+          const nextImage = options.uploadTopicImage
+            ? await options.uploadTopicImage(compressed.blob, imageFile.name || 'pasted.webp', {
+                width: compressed.width,
+                height: compressed.height,
+              })
+            : {
+                url: await blobToDataUrl(compressed.blob),
+                width: compressed.width,
+                height: compressed.height,
+              };
+          designer.changeTopicImage(nextImage);
+          $notify('已将图片添加到所选节点');
+        } catch (err) {
+          $notify(err instanceof Error ? err.message : '粘贴图片上传失败');
+        }
+      })();
+    };
+
+    document.addEventListener('paste', onDocumentPaste);
+    return () => document.removeEventListener('paste', onDocumentPaste);
+  }, [designer, capability, options.uploadTopicImage]);
+
   // Initialize locale ...
   const locale = options.locale;
   const intlLocale = useLocaleData(locale);
@@ -168,7 +240,11 @@ const EditorContent = ({
 
           {model && (
             <div className="no-print">
-              <EditorToolbar model={model} capability={capability} />
+              <EditorToolbar
+                model={model}
+                capability={capability}
+                uploadTopicImage={options.uploadTopicImage}
+              />
               <VisualizationToolbar model={model} capability={capability} />
             </div>
           )}

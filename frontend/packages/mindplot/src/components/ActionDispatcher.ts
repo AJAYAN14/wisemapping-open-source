@@ -33,6 +33,12 @@ import type { TopicShapeType } from './model/INodeModel';
 import type { LineType } from './ConnectionLine';
 import type ThemeType from './model/ThemeType';
 
+export type TopicImageValue = {
+  url: string;
+  width: number;
+  height: number;
+};
+
 /** The events of the ActionDispatcher: 'modelUpdate' after every command, undo or redo. */
 type ActionDispatcherEvents = { modelUpdate: ModelUpdateEvent };
 
@@ -66,6 +72,7 @@ export interface ActionDispatcherCommands {
     topicsIds: number[],
     imageGalleryIconName: string | undefined,
   ) => void;
+  changeImageToTopic: (topicsIds: number[], image: TopicImageValue | undefined) => void;
   changeBackgroundColorToTopic: (topicsIds: number[], color: string | undefined) => void;
   changeBorderColorToTopic: (topicsIds: number[], color: string | undefined) => void;
   changeBorderStyleToTopic: (topicsIds: number[], style: string | undefined) => void;

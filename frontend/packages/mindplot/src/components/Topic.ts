@@ -549,8 +549,9 @@ abstract class Topic extends NodeGraph {
   }
 
   setImageUrl(url: string | undefined): void {
-    if (url) {
-      this.getModel().setImageUrl(url);
+    this.getModel().setImageUrl(url);
+    if (!url) {
+      this.getModel().setImageSize(undefined, undefined);
     }
   }
 
@@ -558,7 +559,7 @@ abstract class Topic extends NodeGraph {
     return this.getModel().getImageSize();
   }
 
-  setImageSize(width: number, height: number): void {
+  setImageSize(width: number | undefined, height: number | undefined): void {
     this.getModel().setImageSize(width, height);
   }
 

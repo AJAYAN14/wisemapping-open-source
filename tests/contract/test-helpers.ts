@@ -430,4 +430,47 @@ export class InMemoryMindmapRepo implements MindmapRepository {
     await this.assertMapOwned(user, mapId);
     this.mapLabels.get(mapId)?.delete(labelId);
   }
+
+  async listAllXmlForOwner(user: RepoUser): Promise<string[]> {
+    const mapXmls = Array.from(this.maps.values())
+      .filter((m) => m.ownerId === user.uid)
+      .map((m) => m.xml);
+    const ownedMapIds = new Set(
+      Array.from(this.maps.values())
+        .filter((m) => m.ownerId === user.uid)
+        .map((m) => m.id),
+    );
+    const histXmls = this.histories
+      .filter((h) => ownedMapIds.has(h.mindmapId))
+      .map((h) => h.xml);
+    return [...mapXmls, ...histXmls];
+  }
+
+  async getOwnerXmlStats(user: RepoUser): Promise<{
+    mapCount: number;
+    historyCount: number;
+    totalXmlBytes: number;
+    mapsWithInlineImages: number;
+  }> {
+    const ownedMaps = Array.from(this.maps.values()).filter((m) => m.ownerId === user.uid);
+    const ownedIds = new Set(ownedMaps.map((m) => m.id));
+    const ownedHist = this.histories.filter((h) => ownedIds.has(h.mindmapId));
+    let totalXmlBytes = 0;
+    let mapsWithInlineImages = 0;
+    for (const m of ownedMaps) {
+      totalXmlBytes += Buffer.byteLength(m.xml, 'utf8');
+      if (m.xml.includes('data:image')) {
+        mapsWithInlineImages += 1;
+      }
+    }
+    for (const h of ownedHist) {
+      totalXmlBytes += Buffer.byteLength(h.xml, 'utf8');
+    }
+    return {
+      mapCount: ownedMaps.length,
+      historyCount: ownedHist.length,
+      totalXmlBytes,
+      mapsWithInlineImages,
+    };
+  }
 }

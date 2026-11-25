@@ -23,6 +23,7 @@ import {
   LineType,
   TopicShapeType,
   ThemeType,
+  TopicImageValue,
 } from '@wisemapping/mindplot';
 import NodeProperty from '../node-property';
 import { SwitchValueDirection, fontSizes, getPreviousValue, getNextValue } from '../value-stepper';
@@ -57,6 +58,7 @@ class NodePropertyBuilder {
   private imageEmojiCharModel: NodeProperty<string | undefined> | undefined;
 
   private imageGalleryIconNameModel: NodeProperty<string | undefined> | undefined;
+  private topicImageModel: NodeProperty<TopicImageValue | undefined> | undefined;
   private _themeModel: NodeProperty<ThemeType> | undefined;
 
   constructor(designer: Designer) {
@@ -170,6 +172,28 @@ class NodePropertyBuilder {
         setValue: (value: string | undefined) => this.designer.changeImageGalleryIconName(value),
       };
     return this.imageGalleryIconNameModel;
+  }
+
+  getTopicImageModel(): NodeProperty<TopicImageValue | undefined> {
+    if (!this.topicImageModel) {
+      this.topicImageModel = {
+        getValue: () => {
+          const topic = this.selectedTopic();
+          const url = topic?.getImageUrl();
+          if (!url) {
+            return undefined;
+          }
+          const size = topic?.getImageSize();
+          return {
+            url,
+            width: size?.width ?? 130,
+            height: size?.height ?? 90,
+          };
+        },
+        setValue: (value: TopicImageValue | undefined) => this.designer.changeTopicImage(value),
+      };
+    }
+    return this.topicImageModel;
   }
 
   getThemeModel(): NodeProperty<ThemeType> {

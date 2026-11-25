@@ -192,7 +192,11 @@ abstract class INodeModel {
     return result;
   }
 
-  setImageSize(width: number, height: number): void {
+  setImageSize(width: number | undefined, height: number | undefined): void {
+    if (width === undefined || height === undefined) {
+      this.putProperty('imageSize', undefined);
+      return;
+    }
     if (!Number.isFinite(width) || !Number.isFinite(height)) {
       console.warn(`Ignoring invalid image size (${width},${height}) for topic ${this.getId()}`);
       return;
@@ -207,7 +211,7 @@ abstract class INodeModel {
       : undefined;
   }
 
-  setImageUrl(url: string) {
+  setImageUrl(url: string | undefined) {
     this.putProperty('imageUrl', url);
   }
 

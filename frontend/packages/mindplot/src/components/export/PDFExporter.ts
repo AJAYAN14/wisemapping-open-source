@@ -16,6 +16,7 @@
  *   limitations under the License.
  */
 import Exporter from './Exporter';
+import { inlineExternalImagesInElement } from './inlineExternalImages';
 
 class PDFExporter extends Exporter {
   private static RENDER_SCALE = 2;
@@ -44,10 +45,12 @@ class PDFExporter extends Exporter {
     tempContainer.style.top = '-9999px';
     tempContainer.style.width = '100%';
     tempContainer.style.height = '100%';
-    tempContainer.appendChild(this.svgElement.cloneNode(true));
+    const clonedSvg = this.svgElement.cloneNode(true) as Element;
+    tempContainer.appendChild(clonedSvg);
     document.body.appendChild(tempContainer);
 
     try {
+      await inlineExternalImagesInElement(clonedSvg);
       // Loaded on export: together they are about 530 KB, which a map never needs otherwise.
       const [{ default: html2canvas }, { default: jsPDF }] = await Promise.all([
         import('html2canvas'),

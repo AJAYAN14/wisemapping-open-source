@@ -42,9 +42,10 @@ import { KeyboardContext } from '../../classes/provider/keyboard-context';
 import SessionExpiredDialog from '../common-page/session-expired-dialog';
 import VersionConflictDialog from './version-conflict-dialog';
 import queryClient from '../../queryClient';
-import type { EditorConfiguration } from '@wisemapping/editor';
+import type { EditorConfiguration, UploadTopicImageFn } from '@wisemapping/editor';
 import { createThemeVariantStorage } from '../../services/createThemeVariantStorage';
 import type { ActionType } from '../maps-page/action-chooser';
+import { uploadBlobToMapAssets } from '../../utils/mapAssets';
 
 const escapeXmlAttr = (value: string): string =>
   value
@@ -180,6 +181,36 @@ const LoadedEditorPage = ({
     };
   }, []);
 
+  const uploadTopicImage: UploadTopicImageFn | undefined = useMemo(() => {
+    if (!AppConfig.isRestClient()) {
+      return undefined;
+    }
+    return async (blob, _filename, size) => {
+      const publicUrl = await uploadBlobToMapAssets(client, blob);
+      if (publicUrl) {
+        return {
+          url: publicUrl,
+          width: size?.width ?? 130,
+          height: size?.height ?? 90,
+        };
+      }
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () =>
+          typeof reader.result === 'string'
+            ? resolve(reader.result)
+            : reject(new Error('读取图片失败'));
+        reader.onerror = () => reject(reader.error ?? new Error('读取图片失败'));
+        reader.readAsDataURL(blob);
+      });
+      return {
+        url: dataUrl,
+        width: size?.width ?? 130,
+        height: size?.height ?? 90,
+      };
+    };
+  }, [client]);
+
   // Account loads asynchronously and should NOT block editor rendering.
   // AppI18n.getUserLocale() handles undefined account gracefully by falling back to default locale.
   const enableAppBar = pageMode !== 'view-private';
@@ -190,6 +221,7 @@ const LoadedEditorPage = ({
     enableAppBar: enableAppBar,
     zoom: editorMetadata.zoom,
     hideCreatorInfo: hideCreatorInfoParam === 'true',
+    ...(uploadTopicImage ? { uploadTopicImage } : {}),
     ...((themeParam === 'dark' || themeParam === 'light') && { initialThemeVariant: themeParam }),
     ...(editorMetadata.bootstrapXML !== undefined && { bootstrapXML: editorMetadata.bootstrapXML }),
   };

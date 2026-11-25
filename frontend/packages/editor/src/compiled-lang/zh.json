@@ -665,6 +665,12 @@
       "value": "显示图像"
     }
   ],
+  "icon-picker.upload-image": [
+    {
+      "type": 0,
+      "value": "上传图片"
+    }
+  ],
   "layout-selector.accept": [
     {
       "type": 0,
@@ -1447,6 +1453,30 @@
     {
       "type": 0,
       "value": "恢复默认"
+    }
+  ],
+  "topic-image.choose-file": [
+    {
+      "type": 0,
+      "value": "点击选择图片，或拖拽图片到此处"
+    }
+  ],
+  "topic-image.paste-hint": [
+    {
+      "type": 0,
+      "value": "支持选中节点后直接 Ctrl+V 粘贴截图 · 自动转 WebP 节省空间"
+    }
+  ],
+  "topic-image.remove": [
+    {
+      "type": 0,
+      "value": "移除图片"
+    }
+  ],
+  "topic-image.uploading": [
+    {
+      "type": 0,
+      "value": "正在压缩并上传至云端存储..."
     }
   ],
   "unified-styling.background-color": [

@@ -1726,6 +1726,17 @@ class Designer extends EventDispispatcher<DesignerEvents> {
     }
   }
 
+  changeTopicImage(
+    image: { url: string; width: number; height: number } | undefined,
+  ): void {
+    const topicsIds = this.getModel()
+      .filterSelectedTopics()
+      .map((topic) => topic.getId());
+    if (topicsIds.length > 0) {
+      this._actionDispatcher.changeImageToTopic(topicsIds, image);
+    }
+  }
+
   changeShapeType(shape: TopicShapeType | undefined): void {
     const validateFunc = (topic: Topic) =>
       !(topic.getType() === 'CentralTopic' && (shape === 'line' || shape === 'none'));

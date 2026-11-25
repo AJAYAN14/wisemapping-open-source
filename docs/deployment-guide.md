@@ -124,6 +124,7 @@ Before beginning deployment, ensure you have:
 |---|---|---|---|
 | `SUPABASE_URL` | Yes | `https://<project-id>.supabase.co` | Your Supabase Project API URL. |
 | `SUPABASE_ANON_KEY` | Yes | `eyJ...` | Supabase Public Anonymous API Key. |
+| `SUPABASE_SERVICE_ROLE_KEY` | Yes (for Storage) | `eyJ...` / `sb_secret_...` | Server-only Supabase Service Role key used by Netlify Functions to issue `map-assets` signed upload URLs and clean up orphaned images. |
 | `DATABASE_URL` | Yes | `postgresql://postgres.[ref]:[pass]@aws-0-...pooler.supabase.com:6543/postgres` | PostgreSQL connection string for `pg` connection pool. |
 | `JWT_SECRET` | Yes | At least 32 random characters | Secret key used to sign and verify 7-day HS256 auth tokens. `JWT_SECRET` must be >= 32 characters (e.g. 64-char hex string generated with `openssl rand -hex 32`). |
 | `ALLOWED_EMAIL` | Yes | `a.jian0629@gmail.com` | Case-insensitive single-owner email allowlist. Sign-ins from any other Google account are rejected with 403 Forbidden. |

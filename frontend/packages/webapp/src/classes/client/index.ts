@@ -166,6 +166,42 @@ export type ForgotPasswordResult = {
   action: 'EMAIL_SENT' | 'OAUTH2_USER';
 };
 
+export type AssetUploadUrlRequest = {
+  sha256: string;
+  mimeType: string;
+  size?: number;
+};
+
+export type AssetUploadUrlItem = {
+  sha256: string;
+  objectPath: string;
+  publicUrl: string;
+  exists: boolean;
+  signedUrl?: string;
+  token?: string;
+};
+
+export type AssetStorageStats = {
+  db: {
+    mapCount: number;
+    historyCount: number;
+    totalXmlBytes: number;
+    mapsWithInlineImages: number;
+  };
+  storage: {
+    bucket: string;
+    objectCount: number;
+    totalBytes: number;
+    configured: boolean;
+  };
+};
+
+export type AssetCleanupResult = {
+  scannedCount: number;
+  deletedCount: number;
+  freedBytes: number;
+};
+
 interface Client {
   login(auth: JwtAuth): Promise<void>;
   logout(): Promise<void>;
@@ -214,6 +250,10 @@ interface Client {
 
   fetchHistory(id: number): Promise<ChangeHistory[]>;
   revertHistory(id: number, cid: number): Promise<void>;
+
+  requestAssetUploadUrls?(items: AssetUploadUrlRequest[]): Promise<AssetUploadUrlItem[]>;
+  fetchAssetStorageStats?(): Promise<AssetStorageStats>;
+  cleanupOrphanedAssets?(): Promise<AssetCleanupResult>;
 
   onSessionExpired(callback?: () => void): (() => void) | undefined;
 }

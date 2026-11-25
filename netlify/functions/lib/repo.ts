@@ -148,6 +148,13 @@ export interface MindmapRepository {
   deleteLabel(user: RepoUser, labelId: number): Promise<void>;
   addLabelToMap(user: RepoUser, mapId: number, labelId: number): Promise<void>;
   removeLabelFromMap(user: RepoUser, mapId: number, labelId: number): Promise<void>;
+  listAllXmlForOwner(user: RepoUser): Promise<string[]>;
+  getOwnerXmlStats(user: RepoUser): Promise<{
+    mapCount: number;
+    historyCount: number;
+    totalXmlBytes: number;
+    mapsWithInlineImages: number;
+  }>;
 }
 
 interface RawMindmapRow {
@@ -976,6 +983,53 @@ export class PgMindmapRepository implements MindmapRepository {
          WHERE mindmap_id = $1 AND label_id = $2 AND owner_id = $3`,
         [mapId, labelId, user.uid],
       );
+    });
+  }
+
+  async listAllXmlForOwner(user: RepoUser): Promise<string[]> {
+    return this.runInTx(user, async (client) => {
+      const mapsRes = await client.query<{ xml: string }>(
+        `SELECT xml FROM public.mindmaps WHERE owner_id = $1`,
+        [user.uid],
+      );
+      const histRes = await client.query<{ xml: string }>(
+        `SELECT xml FROM public.mindmap_history WHERE owner_id = $1`,
+        [user.uid],
+      );
+      return [...mapsRes.rows.map((r) => r.xml), ...histRes.rows.map((r) => r.xml)];
+    });
+  }
+
+  async getOwnerXmlStats(user: RepoUser): Promise<{
+    mapCount: number;
+    historyCount: number;
+    totalXmlBytes: number;
+    mapsWithInlineImages: number;
+  }> {
+    return this.runInTx(user, async (client) => {
+      const res = await client.query<{
+        map_count: string | number;
+        history_count: string | number;
+        total_xml_bytes: string | number;
+        maps_with_inline_images: string | number;
+      }>(
+        `SELECT
+           (SELECT count(*) FROM public.mindmaps WHERE owner_id = $1) AS map_count,
+           (SELECT count(*) FROM public.mindmap_history WHERE owner_id = $1) AS history_count,
+           (
+             COALESCE((SELECT sum(octet_length(xml)) FROM public.mindmaps WHERE owner_id = $1), 0)
+             + COALESCE((SELECT sum(octet_length(xml)) FROM public.mindmap_history WHERE owner_id = $1), 0)
+           ) AS total_xml_bytes,
+           (SELECT count(*) FROM public.mindmaps WHERE owner_id = $1 AND xml LIKE '%data:image%') AS maps_with_inline_images`,
+        [user.uid],
+      );
+      const row = res.rows[0];
+      return {
+        mapCount: toInt(row?.map_count ?? 0),
+        historyCount: toInt(row?.history_count ?? 0),
+        totalXmlBytes: toInt(row?.total_xml_bytes ?? 0),
+        mapsWithInlineImages: toInt(row?.maps_with_inline_images ?? 0),
+      };
     });
   }
 }

@@ -20,13 +20,16 @@ import Tab from '@mui/material/Tab';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import SentimentSatisfiedAltRoundedIcon from '@mui/icons-material/SentimentSatisfiedAltRounded';
 import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
+import AddPhotoAlternateRoundedIcon from '@mui/icons-material/AddPhotoAlternateRounded';
 import { FormattedMessage, useIntl } from 'react-intl';
 import type { EmojiClickData } from 'emoji-picker-react';
 import EmojiPicker from '../shared/emoji-picker';
 
 import NodeProperty from '../../../../classes/model/node-property';
-import { DesignerKeyboard } from '@wisemapping/mindplot';
+import { DesignerKeyboard, TopicImageValue } from '@wisemapping/mindplot';
 import TopicImageTab from './image-icon-tab';
+import ImageUploadTab from './image-upload-tab';
+import type { UploadTopicImageFn } from '../../../../hooks/useEditor';
 import { StyledEditorsTabs } from '../shared/StyledTabs';
 import {
   PickerCloseButton,
@@ -42,12 +45,16 @@ type TopicImagePickerProp = {
   triggerClose: () => void;
   emojiModel: NodeProperty<string | undefined>;
   iconsGalleryModel: NodeProperty<string | undefined>;
+  topicImageModel?: NodeProperty<TopicImageValue | undefined> | undefined;
+  onUploadTopicImage?: UploadTopicImageFn | undefined;
 };
 
 const TopicImagePicker = ({
   triggerClose,
   emojiModel,
   iconsGalleryModel,
+  topicImageModel,
+  onUploadTopicImage,
 }: TopicImagePickerProp): ReactElement => {
   const [tabValue, setTabValue] = React.useState(0); // 0 = Image Gallery, 1 = Emojis
   const { mode } = useTheme();
@@ -101,11 +108,19 @@ const TopicImagePicker = ({
             icon={<ImageOutlinedIcon />}
             label={<FormattedMessage id="icon-picker.icons" defaultMessage="Icons Gallery" />}
             iconPosition="start"
+            sx={{ minWidth: 0, px: 1 }}
           />
           <Tab
             icon={<SentimentSatisfiedAltRoundedIcon />}
             label={<FormattedMessage id="icon-picker.emojis" defaultMessage="Emojis" />}
             iconPosition="start"
+            sx={{ minWidth: 0, px: 1 }}
+          />
+          <Tab
+            icon={<AddPhotoAlternateRoundedIcon />}
+            label={<FormattedMessage id="icon-picker.upload-image" defaultMessage="Upload Image" />}
+            iconPosition="start"
+            sx={{ minWidth: 0, px: 1 }}
           />
         </StyledEditorsTabs>
       </PickerTabsBar>
@@ -128,6 +143,15 @@ const TopicImagePicker = ({
               })}
             />
           </PickerEmojiArea>
+        )}
+        {tabValue === 2 && (
+          <PickerScrollArea>
+            <ImageUploadTab
+              topicImageModel={topicImageModel}
+              onUploadTopicImage={onUploadTopicImage}
+              onImageApplied={triggerClose}
+            />
+          </PickerScrollArea>
         )}
       </PickerContent>
     </StyledEditorContainer>

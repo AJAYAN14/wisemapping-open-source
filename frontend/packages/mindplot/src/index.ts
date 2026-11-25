@@ -107,6 +107,7 @@ export {
 };
 
 export type { TopicShapeType } from './components/model/INodeModel';
+export type { TopicImageValue } from './components/ActionDispatcher';
 export { StrokeStyle } from './components/model/RelationshipModel';
 export { LineType } from './components/ConnectionLine';
 export { ContentType } from './components/ContentType';

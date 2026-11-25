@@ -29,10 +29,12 @@ import { styled } from '@mui/material/styles';
 import React, { use } from 'react';
 import { FormattedMessage } from 'react-intl';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
+import StorageRoundedIcon from '@mui/icons-material/StorageRounded';
 import { useFetchAccount } from '../../../classes/middleware';
 import { ClientContext } from '../../../classes/provider/client-context';
 import JwtTokenConfig from '../../../classes/jwt-token-config';
 import { appleColors, applePressMixin, isDarkTheme } from '../appleDesign';
+import StorageQuotaDialog from './StorageQuotaDialog';
 
 const AvatarTrigger = styled(IconButton)(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
@@ -75,6 +77,7 @@ const AvatarCircle = styled('span')(({ theme }) => {
 
 const AccountMenu = (): React.ReactElement => {
   const [anchorEl, setAnchorEl] = React.useState<HTMLElement>();
+  const [storageOpen, setStorageOpen] = React.useState(false);
   const open = Boolean(anchorEl);
   const client = use(ClientContext);
   const queryClient = useQueryClient();
@@ -172,6 +175,20 @@ const AccountMenu = (): React.ReactElement => {
           </Box>
         </MenuItem>
         <Divider />
+        {client.fetchAssetStorageStats && (
+          <MenuItem
+            onClick={() => {
+              handleClose();
+              setStorageOpen(true);
+            }}
+            sx={{ fontWeight: 600 }}
+          >
+            <ListItemIcon>
+              <StorageRoundedIcon fontSize="small" />
+            </ListItemIcon>
+            存储空间管理
+          </MenuItem>
+        )}
         <MenuItem onClick={handleLogout} sx={{ fontWeight: 600 }}>
           <ListItemIcon>
             <LogoutRoundedIcon fontSize="small" />
@@ -179,6 +196,7 @@ const AccountMenu = (): React.ReactElement => {
           <FormattedMessage id="menu.signout" defaultMessage="Sign Out" />
         </MenuItem>
       </Menu>
+      <StorageQuotaDialog open={storageOpen} onClose={() => setStorageOpen(false)} />
     </span>
   );
 };

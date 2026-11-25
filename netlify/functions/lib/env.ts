@@ -4,6 +4,7 @@ export interface EnvRecord {
   DATABASE_URL?: string;
   SUPABASE_URL?: string;
   SUPABASE_ANON_KEY?: string;
+  SUPABASE_SERVICE_ROLE_KEY?: string;
   JWT_SECRET?: string;
   ALLOWED_EMAIL?: string;
   DATABASE_SSL_REJECT_UNAUTHORIZED?: string;
@@ -54,6 +55,21 @@ export function getSupabaseClientConfig(
     throw new Error('SUPABASE_ANON_KEY environment variable is required.');
   }
   return { supabaseUrl, supabaseAnonKey };
+}
+
+export function getSupabaseServiceRoleConfig(
+  env: Pick<EnvRecord, 'DATABASE_URL' | 'SUPABASE_URL' | 'SUPABASE_SERVICE_ROLE_KEY'> = process.env,
+): { supabaseUrl: string; serviceRoleKey: string } {
+  assertNotNemoTarget(env);
+  const supabaseUrl = env.SUPABASE_URL?.trim();
+  const serviceRoleKey = env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if (!supabaseUrl) {
+    throw new Error('SUPABASE_URL environment variable is required.');
+  }
+  if (!serviceRoleKey) {
+    throw new Error('SUPABASE_SERVICE_ROLE_KEY environment variable is required for Storage access.');
+  }
+  return { supabaseUrl, serviceRoleKey };
 }
 
 export function getDatabaseSslRejectUnauthorized(

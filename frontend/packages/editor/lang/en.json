@@ -320,6 +320,9 @@
   "icon-picker.show-images": {
     "defaultMessage": "Show images"
   },
+  "icon-picker.upload-image": {
+    "defaultMessage": "Upload Image"
+  },
   "layout-selector.accept": {
     "defaultMessage": "Accept"
   },
@@ -709,6 +712,18 @@
   },
   "topic-font-editor.reset-to-default": {
     "defaultMessage": "Reset to Default"
+  },
+  "topic-image.choose-file": {
+    "defaultMessage": "Click to choose or drop an image here"
+  },
+  "topic-image.paste-hint": {
+    "defaultMessage": "Or select a topic and press Ctrl+V to paste a screenshot · Auto-compressed to WebP"
+  },
+  "topic-image.remove": {
+    "defaultMessage": "Remove image"
+  },
+  "topic-image.uploading": {
+    "defaultMessage": "Compressing and uploading to cloud storage..."
   },
   "unified-styling.background-color": {
     "defaultMessage": "Background Color"

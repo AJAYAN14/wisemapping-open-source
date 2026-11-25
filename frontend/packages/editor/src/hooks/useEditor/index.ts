@@ -19,6 +19,7 @@ import {
   DesignerKeyboard,
   EditorRenderMode,
   PersistenceManager,
+  TopicImageValue,
   WidgetBuilder,
 } from '@wisemapping/mindplot';
 import { useState, useRef, useEffect, useMemo, useReducer } from 'react';
@@ -28,6 +29,12 @@ import Model from '../../classes/model/editor';
 import { logCriticalError } from '../../utils/error-logger';
 import DefaultWidgetBuilder from '../../classes/default-widget-manager';
 import BootstrapPersistenceManager from '../../classes/persistence/BootstrapPersistenceManager';
+
+export type UploadTopicImageFn = (
+  file: Blob,
+  filename?: string,
+  size?: { width: number; height: number },
+) => Promise<TopicImageValue>;
 
 export type EditorOptions = {
   mode: EditorRenderMode;
@@ -39,6 +46,7 @@ export type EditorOptions = {
   hideCreatorInfo?: boolean; // Hide creator info pane in embedded/public view
   initialThemeVariant?: 'light' | 'dark'; // Set initial theme variant via query parameter
   bootstrapXML?: string; // Bootstrap XML to use instead of fetching from server
+  uploadTopicImage?: UploadTopicImageFn;
 };
 
 type UseEditorProps = {

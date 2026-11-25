@@ -31,6 +31,10 @@ import Client, {
   JwtAuth,
   MapMetadata,
   LoginErrorInfo,
+  AssetUploadUrlRequest,
+  AssetUploadUrlItem,
+  AssetStorageStats,
+  AssetCleanupResult,
 } from '..';
 import AppI18n, { Locale, LocaleCode, Locales, localeFromStr } from '../../app-i18n';
 import JwtTokenConfig from '../../jwt-token-config';
@@ -493,6 +497,37 @@ export default class RestClient implements Client {
         });
     };
     return new Promise(handler);
+  }
+
+  requestAssetUploadUrls(items: AssetUploadUrlRequest[]): Promise<AssetUploadUrlItem[]> {
+    return this.axios
+      .post<{ items: AssetUploadUrlItem[] }>(
+        `${this.baseUrl}/api/restful/assets/upload-urls`,
+        { items },
+        { headers: { 'Content-Type': 'application/json' } },
+      )
+      .then((response) => response.data.items ?? [])
+      .catch((error) => Promise.reject(this.parseResponseOnError(error.response)));
+  }
+
+  fetchAssetStorageStats(): Promise<AssetStorageStats> {
+    return this.axios
+      .get<AssetStorageStats>(`${this.baseUrl}/api/restful/assets/stats`, {
+        headers: { 'Content-Type': 'application/json' },
+      })
+      .then((response) => response.data)
+      .catch((error) => Promise.reject(this.parseResponseOnError(error.response)));
+  }
+
+  cleanupOrphanedAssets(): Promise<AssetCleanupResult> {
+    return this.axios
+      .post<AssetCleanupResult>(
+        `${this.baseUrl}/api/restful/assets/cleanup`,
+        {},
+        { headers: { 'Content-Type': 'application/json' } },
+      )
+      .then((response) => response.data)
+      .catch((error) => Promise.reject(this.parseResponseOnError(error.response)));
   }
 
   protected getDefaultLocale(): Locale {

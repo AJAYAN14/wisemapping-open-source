@@ -48,6 +48,7 @@ import { ActionType } from './action-chooser';
 import AccountMenu from './account-menu';
 import ThemeToggleButton from '../common/theme-toggle-button';
 import AppI18n, { Locales } from '../../classes/app-i18n';
+import { externalizeXmlInlineImages } from '../../utils/mapAssets';
 import { useLocaleMessages } from '../../classes/app-i18n/messages';
 import { useFetchAccount } from '../../classes/middleware';
 
@@ -183,7 +184,7 @@ const MapsPage = (): ReactElement => {
           '@wisemapping/mindplot/components/import/TextImporterFactory'
         );
         const importer = TextImporterFactory.create(single.extension, fileContent);
-        const content = await importer.import(single.title, '');
+        const importedXml = await importer.import(single.title, '');
 
         setImportState((prev) => ({
           ...prev,
@@ -191,6 +192,7 @@ const MapsPage = (): ReactElement => {
           progress: 85,
         }));
 
+        const content = await externalizeXmlInlineImages(importedXml, client);
         const contentType =
           single.extension === 'xmind' ? 'application/vnd.xmind.workbook' : 'application/xml';
         const mapId = await client.importMap({
@@ -267,7 +269,8 @@ const MapsPage = (): ReactElement => {
         try {
           const fileContent = await readFileContent(item.file, item.extension);
           const importer = TextImporterFactory.create(item.extension, fileContent);
-          const content = await importer.import(item.title, '');
+          const importedXml = await importer.import(item.title, '');
+          const content = await externalizeXmlInlineImages(importedXml, client);
           const contentType =
             item.extension === 'xmind' ? 'application/vnd.xmind.workbook' : 'application/xml';
 

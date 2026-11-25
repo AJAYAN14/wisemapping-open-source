@@ -29,6 +29,14 @@ import {
 import { getDbPool } from './lib/db';
 import type { MindmapRepository, RepoUser } from './lib/repo';
 import {
+  MAP_ASSETS_BUCKET,
+  StorageConfigurationError,
+  StorageValidationError,
+  createDefaultAssetStorageService,
+  extractReferencedAssetPaths,
+} from './lib/storage';
+import type { AssetStorageService, UploadUrlRequestItem } from './lib/storage';
+import {
   buildDefaultMindmapXml,
   validateDescription,
   validateLabelInput,
@@ -44,6 +52,7 @@ export interface ApiHandlerDeps {
   authenticate?: (req: Request) => Promise<SessionJwtUser>;
   oauthHandler?: (req: Request, context?: unknown) => Promise<Response>;
   oauthDeps?: OAuthHandlerDeps;
+  assetStorage?: AssetStorageService;
 }
 
 const VALID_LOCALE_REGEX = /^[a-z]{2}(?:-[A-Z]{2})?$/;
@@ -90,6 +99,18 @@ function handleError(req: Request, err: unknown): Response {
       },
     });
   }
+  if (err instanceof StorageValidationError) {
+    return restErrorResponse(req, 400, [err.message], {
+      globalSeverity: 'WARNING',
+      errorCode: err.errorCode,
+    });
+  }
+  if (err instanceof StorageConfigurationError) {
+    return restErrorResponse(req, 503, [err.message], {
+      globalSeverity: 'WARNING',
+      errorCode: err.errorCode,
+    });
+  }
   console.error('[api] Unhandled error:', err);
   return restErrorResponse(req, 500, ['Internal server error.'], {
     globalSeverity: 'SEVERE',
@@ -107,6 +128,21 @@ export function createApiHandler(
   const repo: MindmapRepository = deps.repo ?? new PgMindmapRepository();
   const authenticate = deps.authenticate ?? requireAuth;
   const oauthHandler = deps.oauthHandler ?? createOAuthHandler(deps.oauthDeps);
+  const resolveAssetStorage = (): AssetStorageService =>
+    deps.assetStorage ?? createDefaultAssetStorageService();
+
+  const cleanupOrphansBestEffort = async (user: RepoUser): Promise<void> => {
+    try {
+      const storage = resolveAssetStorage();
+      const xmls = await repo.listAllXmlForOwner(user);
+      const referenced = extractReferencedAssetPaths(xmls, MAP_ASSETS_BUCKET);
+      await storage.cleanupOrphanedAssets(user.uid, referenced);
+    } catch (err) {
+      if (!(err instanceof StorageConfigurationError)) {
+        console.warn('[api] Best-effort orphan asset cleanup failed:', err);
+      }
+    }
+  };
 
   return async (req: Request, context?: unknown): Promise<Response> => {
     const method = req.method.toUpperCase();
@@ -281,6 +317,46 @@ export function createApiHandler(
         );
       }
 
+      // Asset storage routes: /assets/*
+      if (path === '/assets/upload-urls' && method === 'POST') {
+        const body = await readJsonBody<{ items?: UploadUrlRequestItem[] }>(req);
+        const storage = resolveAssetStorage();
+        const items = await storage.issueSignedUploadUrls(user.uid, body.items ?? []);
+        return jsonResponse(req, 200, {
+          bucket: MAP_ASSETS_BUCKET,
+          items,
+        });
+      }
+
+      if (path === '/assets/stats' && method === 'GET') {
+        const dbStats = await repo.getOwnerXmlStats(user);
+        let storageSummary = {
+          bucket: MAP_ASSETS_BUCKET,
+          objectCount: 0,
+          totalBytes: 0,
+          configured: false,
+        };
+        try {
+          storageSummary = await resolveAssetStorage().getStorageUsage(user.uid);
+        } catch (err) {
+          if (!(err instanceof StorageConfigurationError)) {
+            throw err;
+          }
+        }
+        return jsonResponse(req, 200, {
+          db: dbStats,
+          storage: storageSummary,
+        });
+      }
+
+      if (path === '/assets/cleanup' && method === 'POST') {
+        const storage = resolveAssetStorage();
+        const xmls = await repo.listAllXmlForOwner(user);
+        const referenced = extractReferencedAssetPaths(xmls, MAP_ASSETS_BUCKET);
+        const result = await storage.cleanupOrphanedAssets(user.uid, referenced);
+        return jsonResponse(req, 200, result);
+      }
+
       // Note validation endpoint (must match before /maps/{id})
       if (path === '/maps/validate-note' && method === 'POST') {
         const note = await readTextBody(req);
@@ -305,6 +381,7 @@ export function createApiHandler(
         }
         const ids = parts.map((p) => parsePositiveInt(p, 'ids'));
         await repo.deleteMapsBatch(user, ids);
+        await cleanupOrphansBestEffort(user);
         return emptyResponse(req, 204);
       }
 
@@ -881,6 +958,7 @@ export function createApiHandler(
 
         if (method === 'DELETE') {
           await repo.deleteMap(user, mapId);
+          await cleanupOrphansBestEffort(user);
           return emptyResponse(req, 204);
         }
       }

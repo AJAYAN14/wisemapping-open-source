@@ -39,6 +39,7 @@ import { IntlShape } from 'react-intl';
 import CanvasStyleEditor, { CanvasStyle } from '../action-widget/pane/canvas-style-editor';
 import { formatTooltip } from '../visualization-toolbar/utils';
 import type { SelectionSnapshot } from '../../hooks/useSelection';
+import type { UploadTopicImageFn } from '../../hooks/useEditor';
 
 /**
  * `selection` is a snapshot from useSelection rather than something read off
@@ -50,6 +51,7 @@ export function buildEditorPanelConfig(
   model: Editor,
   intl: IntlShape,
   selection: SelectionSnapshot,
+  uploadTopicImage?: UploadTopicImageFn | undefined,
 ): ActionConfig[] {
   const modelBuilder = new NodePropertyValueModelBuilder(model.getDesigner());
   const noTopicSelected = selection.topicCount === 0;
@@ -264,6 +266,8 @@ export function buildEditorPanelConfig(
               triggerClose={closeModal}
               emojiModel={modelBuilder.getImageEmojiCharModel()}
               iconsGalleryModel={modelBuilder.getImageGalleryIconNameModel()}
+              topicImageModel={modelBuilder.getTopicImageModel()}
+              onUploadTopicImage={uploadTopicImage}
             />
           );
         },

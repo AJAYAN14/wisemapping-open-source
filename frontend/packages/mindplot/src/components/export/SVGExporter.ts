@@ -17,6 +17,7 @@
  */
 import type SizeType from '../SizeType';
 import Exporter from './Exporter';
+import { inlineExternalImagesInElement } from './inlineExternalImages';
 
 class SVGExporter extends Exporter {
   private svgElement: Element;
@@ -40,7 +41,7 @@ class SVGExporter extends Exporter {
     this.backgroundColor = backgroundColor;
   }
 
-  export(): Promise<string> {
+  async export(): Promise<string> {
     // Replace all images for in-line images ...
     let svgTxt: string = new XMLSerializer().serializeToString(this.svgElement);
     svgTxt = SVGExporter.prolog + svgTxt;
@@ -59,14 +60,16 @@ class SVGExporter extends Exporter {
     svgElement.setAttribute('style', `background-color:${this.backgroundColor}`);
     svgElement.setAttribute('focusable', 'false');
 
+    // Inline external CDN images on the cloned SVG document so standalone SVG and
+    // SVG-as-<img> raster exports (PNG/JPEG) do not drop remote Storage assets.
+    await inlineExternalImagesInElement(svgElement);
+
     // Does need to be adjust ?.
     if (this.adjustToFit) {
       svgDoc = this._normalizeToFit(svgDoc);
     }
 
-    const result = new XMLSerializer().serializeToString(svgDoc);
-
-    return Promise.resolve(result);
+    return new XMLSerializer().serializeToString(svgDoc);
   }
 
   private _calcualteDimensions(): { minX: number; maxX: number; minY: number; maxY: number } {

@@ -16,7 +16,7 @@
  *   limitations under the License.
  */
 import { $assert } from './util/assert';
-import type { ActionDispatcherCommands } from './ActionDispatcher';
+import type { ActionDispatcherCommands, TopicImageValue } from './ActionDispatcher';
 import ActionDispatcher from './ActionDispatcher';
 import DesignerActionRunner from './DesignerActionRunner';
 import AddTopicCommand from './commands/AddTopicCommand';
@@ -262,6 +262,32 @@ class StandaloneActionDispatcher extends ActionDispatcher implements ActionDispa
     };
 
     const command = new GenericFunctionCommand(commandFunc, topicsIds, imageGalleryIconName);
+    this.execute(command);
+  }
+
+  changeImageToTopic(topicsIds: number[], image: TopicImageValue | undefined) {
+    const commandFunc = (topic: Topic, nextImage: TopicImageValue | undefined) => {
+      const prevUrl = topic.getImageUrl();
+      const prevSize = topic.getImageSize();
+      const prevValue: TopicImageValue | undefined = prevUrl
+        ? {
+            url: prevUrl,
+            width: prevSize?.width ?? 130,
+            height: prevSize?.height ?? 90,
+          }
+        : undefined;
+
+      if (nextImage) {
+        topic.setImageUrl(nextImage.url);
+        topic.setImageSize(nextImage.width, nextImage.height);
+      } else {
+        topic.setImageUrl(undefined);
+      }
+      topic.redraw(topic.getThemeVariant(), false);
+      return prevValue;
+    };
+
+    const command = new GenericFunctionCommand(commandFunc, topicsIds, image);
     this.execute(command);
   }
 
