@@ -51,6 +51,13 @@
    - **Footer & Tracking**: Replaced 3-column commercial footer with a minimal dark/light bar. Removed AdSense, Google Consent Mode, and New Relic injection scripts from `index.html`.
    - **Maps Dashboard**: Wiped 50 hardcoded fake maps from `mock-client/index.ts`. Removed "创建人" (Creator) column. Pruned sidebar filters to strictly "所有" (All) and "收藏" (Starred). Removed floating yellow `?` help button and "AI 副驾驶" promotional dialog.
    - **Account Menu**: Removed "账号信息" modal dialog (name/password editor) and Admin Console; kept only owner profile email (`a.jian0629@gmail.com`) and sign out.
+9. **Single-Locale Chinese Enforcement & Purging of Dead/Tracking Files**
+   - **Chinese-Only Enforcement**: Removed `<LanguageMenu />` from the top bar entirely and deleted its component folder. Set `AppI18n.getUserLocale()` and `getDefaultLocale()` to always return `Locales.ZH`, pre-bundled Chinese in `messages.ts` and `i18n-msg`, and set `index.html` to `lang="zh-CN"`.
+   - **Purged Dead "Shitcode" & Ad Tracking**:
+     - Deleted `frontend/packages/editor/images/note-add.svg` (a 1049-line Nuxt HTML error page containing Google AdSense scripts saved with an `.svg` extension).
+     - Deleted `frontend/packages/webapp/newrelic-snippet.html` and stripped all `window.newrelic` calls.
+     - Deleted `frontend/packages/webapp/src/components/maps-page/help-menu/` (floating yellow help button with PayPal donation link).
+     - Removed `window.adsbygoogle` push on route changes and stripped unused type definitions.
 
 ---
 
