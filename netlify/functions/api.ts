@@ -319,6 +319,7 @@ export function createApiHandler(
               id: m.id,
               title: m.title,
               description: m.description,
+              folderPath: m.folderPath,
               creator: user.name,
               lastModifierUser: m.lastModificationBy || user.name,
               role: 'owner',
@@ -352,6 +353,7 @@ export function createApiHandler(
 
           const title = (titleCheck as { valid: true; value: string }).value;
           const description = (descCheck as { valid: true; value: string }).value;
+          const folderPath = url.searchParams.get('folderPath')?.trim() || '';
           const layout = url.searchParams.get('layout')?.trim() || 'mindmap';
 
           const rawBody = await readTextBody(req);
@@ -369,7 +371,7 @@ export function createApiHandler(
             xml = buildDefaultMindmapXml(title, layout);
           }
 
-          const created = await repo.createMap(user, { title, description, xml });
+          const created = await repo.createMap(user, { title, description, xml, folderPath });
           return emptyResponse(req, 201, {
             Location: `/api/restful/maps/${created.id}`,
             ResourceId: String(created.id),
@@ -506,6 +508,7 @@ export function createApiHandler(
             creatorFullName: user.name,
             role: 'owner',
             description: map.description,
+            folderPath: map.folderPath,
             createdBy: user.email,
             creationTime: map.creationTime,
             lastModificationBy: map.lastModificationBy || user.name,

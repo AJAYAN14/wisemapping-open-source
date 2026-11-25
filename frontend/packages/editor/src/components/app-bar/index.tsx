@@ -35,12 +35,13 @@ import Tooltip from '@mui/material/Tooltip';
 import UndoRoundedIcon from '@mui/icons-material/UndoRounded';
 import RedoRoundedIcon from '@mui/icons-material/RedoRounded';
 import RestoreRoundedIcon from '@mui/icons-material/RestoreRounded';
-import SaveRoundedIcon from '@mui/icons-material/SaveRounded';
+import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
 import FileDownloadRoundedIcon from '@mui/icons-material/FileDownloadRounded';
 import StarRateRoundedIcon from '@mui/icons-material/StarRateRounded';
+import StarBorderRoundedIcon from '@mui/icons-material/StarBorderRounded';
 import ArrowBackIosNewRoundedIcon from '@mui/icons-material/ArrowBackIosNewRounded';
-import PaletteRoundedIcon from '@mui/icons-material/PaletteRounded';
-import DarkModeRoundedIcon from '@mui/icons-material/DarkModeRounded';
+import PaletteOutlinedIcon from '@mui/icons-material/PaletteOutlined';
+import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined';
 import LightModeRoundedIcon from '@mui/icons-material/LightModeRounded';
 import Typography from '@mui/material/Typography';
 import UndoAndRedo from '../action-widget/button/undo-and-redo';
@@ -435,7 +436,7 @@ const AppBar = ({
     },
     undefined,
     {
-      icon: <SaveRoundedIcon />,
+      icon: <SaveOutlinedIcon />,
       onClick: handleDebouncedSave,
       tooltip: formatTooltip(
         intl.formatMessage({ id: 'appbar.tooltip-save', defaultMessage: 'Save' }),
@@ -456,24 +457,19 @@ const AppBar = ({
       visible: !capability.isHidden('history'),
     },
     {
-      render: () => (
-        <Tooltip
-          title={intl.formatMessage({ id: 'appbar.tooltip-starred', defaultMessage: 'Starred' })}
-        >
-          <IconButton size="small" onClick={handleStarredOnClick}>
-            <StarRateRoundedIcon
-              color="action"
-              style={isStarred ? StarredOnStyle : StarredOffStyle}
-            />
-          </IconButton>
-        </Tooltip>
+      icon: isStarred ? (
+        <StarRateRoundedIcon sx={{ color: '#FDDA0D' }} />
+      ) : (
+        <StarBorderRoundedIcon />
       ),
+      onClick: handleStarredOnClick,
+      tooltip: intl.formatMessage({ id: 'appbar.tooltip-starred', defaultMessage: 'Starred' }),
       visible: !capability.isHidden('starred'),
-      disabled: () => isStarred !== undefined,
+      disabled: () => isStarred === undefined,
     },
     appBarDivisor,
     {
-      icon: <PaletteRoundedIcon />,
+      icon: <PaletteOutlinedIcon />,
       tooltip: intl.formatMessage({ id: 'appbar.tooltip-theme', defaultMessage: 'Theme' }),
       options: [
         {
@@ -501,7 +497,7 @@ const AppBar = ({
       disabled: () => !isMapLoaded,
     },
     {
-      icon: mode === 'dark' ? <LightModeRoundedIcon /> : <DarkModeRoundedIcon />,
+      icon: mode === 'dark' ? <LightModeRoundedIcon /> : <DarkModeOutlinedIcon />,
       tooltip: intl.formatMessage({
         id: 'appbar.tooltip-theme-toggle',
         defaultMessage: 'Toggle Theme',

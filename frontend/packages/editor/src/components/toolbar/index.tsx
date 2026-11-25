@@ -74,7 +74,7 @@ export const ToolbarButtonOption = (props: {
           sx={{
             overflow: 'visible',
             position: 'relative',
-            borderRadius: '10px',
+            borderRadius: '50%',
             p: 0.75,
             ...applePressMixin,
             '&.Mui-disabled': {

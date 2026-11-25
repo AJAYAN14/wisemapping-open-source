@@ -19,7 +19,7 @@ import React, { ReactElement, useEffect } from 'react';
 import Tab from '@mui/material/Tab';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import SentimentSatisfiedAltRoundedIcon from '@mui/icons-material/SentimentSatisfiedAltRounded';
-import ImageRoundedIcon from '@mui/icons-material/ImageRounded';
+import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
 import { FormattedMessage, useIntl } from 'react-intl';
 import type { EmojiClickData } from 'emoji-picker-react';
 import EmojiPicker from '../shared/emoji-picker';
@@ -98,7 +98,7 @@ const TopicImagePicker = ({
           aria-label="icon picker tabs"
         >
           <Tab
-            icon={<ImageRoundedIcon />}
+            icon={<ImageOutlinedIcon />}
             label={<FormattedMessage id="icon-picker.icons" defaultMessage="Icons Gallery" />}
             iconPosition="start"
           />

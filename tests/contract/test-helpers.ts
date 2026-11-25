@@ -101,8 +101,13 @@ export class InMemoryMindmapRepo implements MindmapRepository {
   }
 
   async createMap(user: RepoUser, input: CreateMapInput): Promise<MindmapRecord> {
+    const folderPath = input.folderPath?.trim() ?? '';
     for (const existing of this.maps.values()) {
-      if (existing.ownerId === user.uid && existing.title === input.title) {
+      if (
+        existing.ownerId === user.uid &&
+        existing.title === input.title &&
+        (existing.folderPath ?? '') === folderPath
+      ) {
         throw new RepoValidationError(
           [],
           { title: 'You have already a map with the same name' },
@@ -116,6 +121,7 @@ export class InMemoryMindmapRepo implements MindmapRepository {
       ownerId: user.uid,
       title: input.title,
       description: input.description,
+      folderPath,
       xml: input.xml,
       properties: input.properties ?? '{"zoom":0.8}',
       starred: false,

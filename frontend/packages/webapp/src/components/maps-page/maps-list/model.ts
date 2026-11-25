@@ -82,7 +82,10 @@ export const mapsFilter =
     }
 
     if (search && result) {
-      result = mapInfo.title.toLowerCase().indexOf(search.toLowerCase()) != -1;
+      const q = search.toLowerCase();
+      result =
+        mapInfo.title.toLowerCase().indexOf(q) !== -1 ||
+        (mapInfo.folderPath ? mapInfo.folderPath.toLowerCase().indexOf(q) !== -1 : false);
     }
     return result;
   };

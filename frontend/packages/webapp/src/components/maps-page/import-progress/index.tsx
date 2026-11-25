@@ -26,6 +26,7 @@ import { useTheme } from '@mui/material/styles';
 import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import ErrorOutlineRoundedIcon from '@mui/icons-material/ErrorOutlineRounded';
 import InsertDriveFileRoundedIcon from '@mui/icons-material/InsertDriveFileRounded';
+import FolderRoundedIcon from '@mui/icons-material/FolderRounded';
 import SyncRoundedIcon from '@mui/icons-material/SyncRounded';
 import { appleColors, isDarkTheme, APPLE_FONT_STACK, applePressMixin } from '../appleDesign';
 
@@ -37,6 +38,12 @@ export interface ImportProgressDialogProps {
   stage: ImportStage;
   error?: string | null;
   progressPercent?: number; // 0-100 or undefined for indeterminate
+  isBatch?: boolean;
+  totalCount?: number;
+  currentCount?: number;
+  currentPath?: string;
+  successCount?: number;
+  skippedCount?: number;
   onClose: () => void;
   onRetry?: () => void;
 }
@@ -63,6 +70,12 @@ export const ImportProgressDialog: React.FC<ImportProgressDialogProps> = ({
   stage,
   error,
   progressPercent,
+  isBatch,
+  totalCount = 0,
+  currentCount = 0,
+  currentPath,
+  successCount = 0,
+  skippedCount = 0,
   onClose,
   onRetry,
 }) => {
@@ -72,6 +85,23 @@ export const ImportProgressDialog: React.FC<ImportProgressDialogProps> = ({
 
   const isError = stage === 'error';
   const isSuccess = stage === 'success';
+
+  const titleText = isBatch
+    ? isSuccess
+      ? '批量导入完成'
+      : isError
+      ? '导入遇到问题'
+      : `正在导入导图 (${currentCount}/${totalCount})`
+    : STAGE_TITLES[stage];
+
+  const descText =
+    isBatch && isSuccess
+      ? `已成功导入 ${successCount} 个思维导图${
+          skippedCount > 0 ? `，${skippedCount} 个文件跳过` : ''
+        }。已按目录归类呈现在列表中。`
+      : STAGE_DESCRIPTIONS[stage];
+
+  const displayPath = currentPath || fileName;
 
   return (
     <Dialog
@@ -174,11 +204,11 @@ export const ImportProgressDialog: React.FC<ImportProgressDialogProps> = ({
             mb: 0.7,
           }}
         >
-          {STAGE_TITLES[stage]}
+          {titleText}
         </Typography>
 
-        {/* Subtle File Capsule */}
-        {fileName && (
+        {/* Subtle File/Path Capsule */}
+        {displayPath && (
           <Box
             sx={{
               display: 'inline-flex',
@@ -193,9 +223,15 @@ export const ImportProgressDialog: React.FC<ImportProgressDialogProps> = ({
               mb: 1.8,
             }}
           >
-            <InsertDriveFileRoundedIcon
-              sx={{ fontSize: 13, color: isDark ? '#A1A1A6' : '#6E6E73', flexShrink: 0 }}
-            />
+            {currentPath ? (
+              <FolderRoundedIcon
+                sx={{ fontSize: 13, color: isDark ? '#A1A1A6' : '#6E6E73', flexShrink: 0 }}
+              />
+            ) : (
+              <InsertDriveFileRoundedIcon
+                sx={{ fontSize: 13, color: isDark ? '#A1A1A6' : '#6E6E73', flexShrink: 0 }}
+              />
+            )}
             <Typography
               variant="caption"
               sx={{
@@ -209,7 +245,7 @@ export const ImportProgressDialog: React.FC<ImportProgressDialogProps> = ({
                 lineHeight: 1.3,
               }}
             >
-              {fileName}
+              {displayPath}
             </Typography>
           </Box>
         )}
@@ -268,8 +304,37 @@ export const ImportProgressDialog: React.FC<ImportProgressDialogProps> = ({
               px: 0.5,
             }}
           >
-            {STAGE_DESCRIPTIONS[stage]}
+            {descText}
           </Typography>
+        )}
+
+        {/* Batch Success Action */}
+        {isBatch && isSuccess && (
+          <Box sx={{ display: 'flex', width: '100%', mt: 2 }}>
+            <Button
+              fullWidth
+              variant="contained"
+              onClick={onClose}
+              sx={{
+                ...applePressMixin,
+                borderRadius: '11px',
+                background: colors.textPrimary,
+                color: colors.surface,
+                fontFamily: APPLE_FONT_STACK,
+                fontSize: '13px',
+                fontWeight: 600,
+                textTransform: 'none',
+                py: 0.7,
+                boxShadow: 'none',
+                '&:hover': {
+                  background: colors.textPrimary,
+                  opacity: 0.92,
+                },
+              }}
+            >
+              完成
+            </Button>
+          </Box>
         )}
 
         {/* Tactile Actions (Error state only) */}

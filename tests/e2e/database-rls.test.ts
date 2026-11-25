@@ -119,6 +119,10 @@ describe('F5/F6 — Supabase 4-Table Schema, Plain TEXT XML, RLS & nemo Guard E2
 
     beforeAll(async () => {
       pool = createSafePool();
+      for (const migrationFile of listMigrationFiles()) {
+        const sql = fs.readFileSync(migrationFile, 'utf8');
+        await pool.query(sql);
+      }
       // Ensure test auth.users rows exist if schema has FK to auth.users(id).
       const hasAuthUsers = await pool.query<{ exists: boolean }>(
         `SELECT to_regclass('auth.users') IS NOT NULL AS exists`,

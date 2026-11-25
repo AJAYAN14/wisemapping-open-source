@@ -34,6 +34,7 @@ export interface FakeMindmapRecord {
   ownerId: string;
   title: string;
   description: string;
+  folderPath: string;
   xml: string;
   properties: string;
   starred: boolean;
@@ -163,11 +164,17 @@ export class FakeStore {
     ownerName?: string;
     title: string;
     description?: string;
+    folderPath?: string;
     xml?: string;
     properties?: string;
   }): FakeMindmapRecord {
+    const folderPath = input.folderPath?.trim() ?? '';
     for (const existing of this.mindmaps.values()) {
-      if (existing.ownerId === input.ownerId && existing.title === input.title) {
+      if (
+        existing.ownerId === input.ownerId &&
+        existing.title === input.title &&
+        (existing.folderPath ?? '') === folderPath
+      ) {
         throw new FakePgError('23505', `Duplicate mindmap title "${input.title}" for owner`);
       }
     }
@@ -180,6 +187,7 @@ export class FakeStore {
       ownerId: input.ownerId,
       title: input.title,
       description: input.description ?? '',
+      folderPath,
       xml: input.xml ?? createDefaultMapXml(input.title),
       properties: input.properties ?? '{"zoom":0.8}',
       starred: false,
@@ -732,6 +740,7 @@ export function createFakeMindmapRepository(
     ownerId: m.ownerId,
     title: m.title,
     description: m.description,
+    folderPath: m.folderPath,
     xml: m.xml,
     properties: m.properties,
     starred: m.starred,
@@ -753,7 +762,7 @@ export function createFakeMindmapRepository(
 
     async createMap(
       user: RepoUserLike,
-      input: { title: string; description: string; xml: string; properties?: string },
+      input: { title: string; description: string; xml: string; properties?: string; folderPath?: string },
     ) {
       try {
         return store.createMindmap({
@@ -762,6 +771,7 @@ export function createFakeMindmapRepository(
           ownerName: user.name,
           title: input.title,
           description: input.description,
+          folderPath: input.folderPath,
           xml: input.xml,
           properties: input.properties,
         });

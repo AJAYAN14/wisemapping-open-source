@@ -347,11 +347,14 @@ export default class RestClient implements Client {
 
   importMap(model: ImportMapInfo): Promise<number> {
     const handler = (success: (mapId: number) => void, reject: (error: ErrorInfo) => void) => {
+      const folderParam = model.folderPath
+        ? `&folderPath=${encodeURIComponent(model.folderPath)}`
+        : '';
       this.axios
         .post(
           `${this.baseUrl}/api/restful/maps?title=${encodeURIComponent(
             model.title,
-          )}&description=${encodeURIComponent(model.description ? model.description : '')}`,
+          )}&description=${encodeURIComponent(model.description ? model.description : '')}${folderParam}`,
           model.content,
           { headers: { 'Content-Type': 'application/xml' } },
         )
@@ -580,6 +583,7 @@ export default class RestClient implements Client {
               id: m.id,
               starred: m.starred,
               title: m.title,
+              folderPath: m.folderPath,
               labels: m.labels,
               createdBy: m.creator,
               creationTime: m.creationTime,

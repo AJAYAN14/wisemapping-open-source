@@ -6,7 +6,8 @@ import type { PoolClient } from 'pg';
 
 export const ROOT = path.resolve(import.meta.dirname, '../..');
 export const ENV_LOCAL_PATH = path.join(ROOT, '.env.local');
-export const MIGRATION_FILE = path.join(ROOT, 'supabase/migrations/0001_initial_schema.sql');
+export const MIGRATION_DIR = path.join(ROOT, 'supabase/migrations');
+export const MIGRATION_FILE = path.join(MIGRATION_DIR, '0001_initial_schema.sql');
 
 export class NemoProtectionError extends Error {
   readonly targetKey: string;
@@ -223,16 +224,30 @@ export function createDbPool(databaseUrl: string): Pool {
 
 export async function applyMigrationFile(
   pool: Pool,
-  migrationPath = MIGRATION_FILE,
+  migrationPath?: string,
 ): Promise<void> {
-  const sql = fs.readFileSync(migrationPath, 'utf8');
-  if (NEMO_PATTERN.test(sql)) {
-    throw new NemoProtectionError('MIGRATION_SQL');
-  }
-
   const client = await pool.connect();
   try {
-    await client.query(sql);
+    if (migrationPath) {
+      const sql = fs.readFileSync(migrationPath, 'utf8');
+      if (NEMO_PATTERN.test(sql)) {
+        throw new NemoProtectionError('MIGRATION_SQL');
+      }
+      await client.query(sql);
+    } else {
+      const files = fs
+        .readdirSync(MIGRATION_DIR)
+        .filter((f) => f.endsWith('.sql'))
+        .sort();
+      for (const file of files) {
+        const fullPath = path.join(MIGRATION_DIR, file);
+        const sql = fs.readFileSync(fullPath, 'utf8');
+        if (NEMO_PATTERN.test(sql)) {
+          throw new NemoProtectionError('MIGRATION_SQL');
+        }
+        await client.query(sql);
+      }
+    }
   } finally {
     client.release();
   }

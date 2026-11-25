@@ -20,7 +20,7 @@ import React, { ReactElement, useEffect } from 'react';
 import Tab from '@mui/material/Tab';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import SentimentSatisfiedAltRoundedIcon from '@mui/icons-material/SentimentSatisfiedAltRounded';
-import ImageRoundedIcon from '@mui/icons-material/ImageRounded';
+import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
 import { FormattedMessage } from 'react-intl';
 import type { EmojiClickData } from 'emoji-picker-react';
 import EmojiPicker from '../shared/emoji-picker';
@@ -87,7 +87,7 @@ const TopicIconEditor = ({ closeModal, iconModel }: TopicIconEditorProps): React
             iconPosition="start"
           />
           <Tab
-            icon={<ImageRoundedIcon />}
+            icon={<ImageOutlinedIcon />}
             label={<FormattedMessage id="icon-picker.icons" defaultMessage="Icons Gallery" />}
             iconPosition="start"
           />

@@ -94,7 +94,7 @@ export const ZoomDisplay = ({ model }: ZoomDisplayProps): ReactElement => {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        borderRadius: '6px',
+        borderRadius: '9999px',
         backgroundColor: (theme) =>
           theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
       }}

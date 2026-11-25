@@ -16,7 +16,13 @@
  *   limitations under the License.
  */
 import React, { ErrorInfo, ReactElement, use, useEffect, useMemo } from 'react';
+import Box from '@mui/material/Box';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
 import Toolbar from '@mui/material/Toolbar';
+import Typography from '@mui/material/Typography';
 import {
   DesktopDrawer,
   DesktopDrawerToggle,
@@ -51,6 +57,9 @@ import NavigateBeforeRoundedIcon from '@mui/icons-material/NavigateBeforeRounded
 
 import AddCircleRoundedIcon from '@mui/icons-material/AddCircleRounded';
 import CloudUploadRoundedIcon from '@mui/icons-material/CloudUploadRounded';
+import FolderRoundedIcon from '@mui/icons-material/FolderRounded';
+import InsertDriveFileRoundedIcon from '@mui/icons-material/InsertDriveFileRounded';
+import KeyboardArrowDownRoundedIcon from '@mui/icons-material/KeyboardArrowDownRounded';
 import LabelRoundedIcon from '@mui/icons-material/LabelRounded';
 import GridViewRoundedIcon from '@mui/icons-material/GridViewRounded';
 import StarRateRoundedIcon from '@mui/icons-material/StarRateRounded';
@@ -58,9 +67,10 @@ import Tooltip from '@mui/material/Tooltip';
 
 import LabelDeleteConfirm from './maps-list/label-delete-confirm';
 import DrawerNav, { ToolbarButtonInfo } from './drawer-nav';
-import { ClientContext } from '../../classes/provider/client-context';
-import { readStorage, writeStorage, removeStorage } from '../../utils/storage';
 import { useSpringValue } from './useSpringValue';
+import { ClientContext } from '../../classes/provider/client-context';
+import { ScannedMapFile, scanFileList, scanDataTransferItems } from './directoryScanner';
+import { readStorage, writeStorage, removeStorage } from '../../utils/storage';
 
 export type Filter = GenericFilter | LabelFilter;
 
@@ -84,12 +94,23 @@ const MapsPage = (): ReactElement => {
     () => readStorage('desktopDrawerOpen') === 'true',
   );
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const folderInputRef = React.useRef<HTMLInputElement>(null);
+  const [importMenuAnchor, setImportMenuAnchor] = React.useState<null | HTMLElement>(null);
+  const [isDraggingOver, setIsDraggingOver] = React.useState(false);
+  const dragCounter = React.useRef(0);
+
   const [importState, setImportState] = React.useState<{
     open: boolean;
     fileName: string;
     stage: ImportStage;
     error?: string | null;
     progress?: number;
+    isBatch?: boolean;
+    totalCount?: number;
+    currentCount?: number;
+    currentPath?: string;
+    successCount?: number;
+    skippedCount?: number;
   }>({
     open: false,
     fileName: '',
@@ -112,66 +133,57 @@ const MapsPage = (): ReactElement => {
     setDesktopDrawerOpen(!desktopDrawerOpen);
   };
 
-  const handleImportButtonClick = () => {
-    fileInputRef.current?.click();
+  const readFileContent = (file: File, extension: string): Promise<string | ArrayBuffer> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => resolve(e.target?.result ?? '');
+      reader.onerror = () => reject(new Error(`读取本地文件失败: ${file.name}`));
+      if (extension === 'xmind' || extension === 'mmap') {
+        reader.readAsArrayBuffer(file);
+      } else {
+        reader.readAsText(file);
+      }
+    });
   };
 
-  const handleDirectFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    // Reset input so re-selecting the same file fires change event
-    event.target.value = '';
-
-    const extensionFile = file.name.split('.').pop()?.toLowerCase();
-    const extensionAccept = ['wxml', 'mm', 'mmx', 'xmind', 'mmap', 'opml'];
-    if (!extensionFile || !extensionAccept.includes(extensionFile)) {
+  const executeBatchImport = async (scannedFiles: ScannedMapFile[]) => {
+    if (scannedFiles.length === 0) {
       setImportState({
         open: true,
-        fileName: file.name,
+        fileName: '',
         stage: 'error',
+        isBatch: false,
         error:
-          '不支持的文件格式。支持导入 WiseMapping (.wxml)、FreeMind (.mm)、Freeplane (.mmx)、XMind (.xmind)、MindManager (.mmap) 和 OPML (.opml) 文件。',
+          '未在选定的文件或文件夹中发现支持的思维导图格式文件（支持 .wxml, .mm, .mmx, .xmind, .mmap, .opml）。',
       });
       return;
     }
 
-    // Name is automatically the file name without extension
-    const title = file.name.replace(/\.[^.]*$/, '');
-    const contentType =
-      extensionFile === 'xmind' ? 'application/vnd.xmind.workbook' : 'application/xml';
+    // Single flat file without folder path -> fast direct edit flow
+    if (scannedFiles.length === 1 && !scannedFiles[0].folderPath) {
+      const single = scannedFiles[0];
+      setImportState({
+        open: true,
+        fileName: single.file.name,
+        stage: 'reading',
+        progress: 25,
+        isBatch: false,
+        error: null,
+      });
 
-    setImportState({
-      open: true,
-      fileName: file.name,
-      stage: 'reading',
-      progress: 25,
-      error: null,
-    });
-
-    const reader = new FileReader();
-
-    reader.onprogress = (pe) => {
-      if (pe.lengthComputable && pe.total > 0) {
-        const percent = Math.min(45, Math.round((pe.loaded / pe.total) * 45));
-        setImportState((prev) => ({ ...prev, progress: percent }));
-      }
-    };
-
-    reader.onload = async (loadEvent) => {
       try {
+        const fileContent = await readFileContent(single.file, single.extension);
         setImportState((prev) => ({
           ...prev,
           stage: 'parsing',
           progress: 55,
         }));
 
-        const fileContent = loadEvent.target?.result ?? '';
         const { default: TextImporterFactory } = await import(
           '@wisemapping/mindplot/components/import/TextImporterFactory'
         );
-        const importer = TextImporterFactory.create(extensionFile, fileContent);
-        const content = await importer.import(title, '');
+        const importer = TextImporterFactory.create(single.extension, fileContent);
+        const content = await importer.import(single.title, '');
 
         setImportState((prev) => ({
           ...prev,
@@ -179,7 +191,15 @@ const MapsPage = (): ReactElement => {
           progress: 85,
         }));
 
-        const mapId = await client.importMap({ title, description: '', contentType, content });
+        const contentType =
+          single.extension === 'xmind' ? 'application/vnd.xmind.workbook' : 'application/xml';
+        const mapId = await client.importMap({
+          title: single.title,
+          description: '',
+          contentType,
+          content,
+          folderPath: '',
+        });
 
         setImportState((prev) => ({
           ...prev,
@@ -201,20 +221,148 @@ const MapsPage = (): ReactElement => {
               : '导入思维导图失败，请检查文件内容是否正确或网络是否畅通。',
         }));
       }
+      return;
+    }
+
+    // Batch / Folder Import Flow
+    const total = scannedFiles.length;
+    setImportState({
+      open: true,
+      fileName: scannedFiles[0].relativePath,
+      stage: 'reading',
+      progress: 5,
+      isBatch: true,
+      totalCount: total,
+      currentCount: 0,
+      currentPath: scannedFiles[0].relativePath,
+      successCount: 0,
+      skippedCount: 0,
+      error: null,
+    });
+
+    const { default: TextImporterFactory } = await import(
+      '@wisemapping/mindplot/components/import/TextImporterFactory'
+    );
+
+    let successCount = 0;
+    let skippedCount = 0;
+    let processed = 0;
+
+    // Process files with bounded concurrency pool (up to 3 parallel workers)
+    const concurrency = 3;
+    let currentIndex = 0;
+
+    const processNext = async (): Promise<void> => {
+      while (currentIndex < scannedFiles.length) {
+        const idx = currentIndex++;
+        const item = scannedFiles[idx];
+        setImportState((prev) => ({
+          ...prev,
+          currentCount: processed + 1,
+          currentPath: item.relativePath,
+          stage: 'parsing',
+          progress: Math.min(95, Math.round(((processed + 1) / total) * 90)),
+        }));
+
+        try {
+          const fileContent = await readFileContent(item.file, item.extension);
+          const importer = TextImporterFactory.create(item.extension, fileContent);
+          const content = await importer.import(item.title, '');
+          const contentType =
+            item.extension === 'xmind' ? 'application/vnd.xmind.workbook' : 'application/xml';
+
+          await client.importMap({
+            title: item.title,
+            description: '',
+            contentType,
+            content,
+            folderPath: item.folderPath,
+          });
+          successCount++;
+        } catch (err) {
+          console.warn(`Failed to import map "${item.relativePath}":`, err);
+          skippedCount++;
+        } finally {
+          processed++;
+          setImportState((prev) => ({
+            ...prev,
+            currentCount: processed,
+            successCount,
+            skippedCount,
+            progress: Math.min(95, Math.round((processed / total) * 90)),
+          }));
+        }
+      }
     };
 
-    reader.onerror = () => {
-      setImportState((prev) => ({
-        ...prev,
-        stage: 'error',
-        error: '读取本地文件时发生错误，请重新选择文件。',
-      }));
-    };
+    const workers = Array.from({ length: Math.min(concurrency, total) }, () => processNext());
+    await Promise.all(workers);
 
-    if (extensionFile === 'xmind' || extensionFile === 'mmap') {
-      reader.readAsArrayBuffer(file);
-    } else {
-      reader.readAsText(file);
+    // Invalidate maps cache so the fresh maps immediately appear in the list
+    queryClient.invalidateQueries({ queryKey: ['maps'] });
+
+    setImportState((prev) => ({
+      ...prev,
+      stage: 'success',
+      progress: 100,
+      successCount,
+      skippedCount,
+      currentPath: '',
+    }));
+  };
+
+  const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+    event.target.value = '';
+    const scanned = scanFileList(files);
+    executeBatchImport(scanned);
+  };
+
+  const handleFolderInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+    event.target.value = '';
+    const scanned = scanFileList(files);
+    executeBatchImport(scanned);
+  };
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current++;
+    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+      setIsDraggingOver(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current--;
+    if (dragCounter.current <= 0) {
+      dragCounter.current = 0;
+      setIsDraggingOver(false);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dragCounter.current = 0;
+    setIsDraggingOver(false);
+
+    if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
+      const scanned = await scanDataTransferItems(e.dataTransfer.items);
+      executeBatchImport(scanned);
+    } else if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const scanned = scanFileList(e.dataTransfer.files);
+      executeBatchImport(scanned);
     }
   };
   const account = useFetchAccount();
@@ -315,7 +463,61 @@ const MapsPage = (): ReactElement => {
     >
       <PageRoot
         style={{ '--drawer-width': `${springDrawerWidth.toFixed(1)}px` } as React.CSSProperties}
+        onDragEnter={handleDragEnter}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
       >
+        {isDraggingOver && (
+          <Box
+            sx={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 9999,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backdropFilter: 'blur(16px)',
+              background: 'rgba(0, 0, 0, 0.28)',
+              pointerEvents: 'none',
+            }}
+          >
+            <Box
+              sx={{
+                p: 4,
+                borderRadius: '24px',
+                textAlign: 'center',
+                background: 'rgba(255, 255, 255, 0.92)',
+                boxShadow: '0 24px 60px rgba(0, 0, 0, 0.25)',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 1.5,
+              }}
+            >
+              <Box
+                sx={{
+                  width: 64,
+                  height: 64,
+                  borderRadius: '18px',
+                  background: 'linear-gradient(135deg, #FFB340 0%, #F59E0B 100%)',
+                  color: '#FFF',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <FolderRoundedIcon sx={{ fontSize: 36 }} />
+              </Box>
+              <Typography variant="h6" sx={{ fontWeight: 700, color: '#1D1D1F' }}>
+                松开鼠标即可导入文件夹或文件
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#86868B', maxWidth: 360 }}>
+                自动递归读取子目录，保留文件夹层级并在列表中归类展示
+              </Typography>
+            </Box>
+          </Box>
+        )}
         <PageAppBar position="fixed" expanded={desktopDrawerOpen} variant="outlined" elevation={0}>
           <Toolbar role="banner">
             <MobileDrawerToggle
@@ -377,19 +579,77 @@ const MapsPage = (): ReactElement => {
                 type="button"
                 disableElevation={true}
                 startIcon={<CloudUploadRoundedIcon />}
-                onClick={handleImportButtonClick}
+                endIcon={<KeyboardArrowDownRoundedIcon sx={{ fontSize: 18, ml: -0.5, opacity: 0.7 }} />}
+                onClick={(e) => setImportMenuAnchor(e.currentTarget)}
               >
                 <span className="message">
                   <FormattedMessage id="action.import" defaultMessage="Import" />
                 </span>
               </SecondaryToolbarButton>
             </Tooltip>
+            <Menu
+              anchorEl={importMenuAnchor}
+              open={Boolean(importMenuAnchor)}
+              onClose={() => setImportMenuAnchor(null)}
+              PaperProps={{
+                elevation: 0,
+                sx: {
+                  borderRadius: '14px',
+                  minWidth: 190,
+                  p: 0.6,
+                  background: 'rgba(255, 255, 255, 0.88)',
+                  backdropFilter: 'blur(24px)',
+                  boxShadow: '0 12px 32px rgba(0, 0, 0, 0.15)',
+                  border: '1px solid rgba(0, 0, 0, 0.08)',
+                },
+              }}
+            >
+              <MenuItem
+                onClick={() => {
+                  setImportMenuAnchor(null);
+                  fileInputRef.current?.click();
+                }}
+                sx={{ borderRadius: '8px', py: 1, gap: 1.2 }}
+              >
+                <ListItemIcon sx={{ minWidth: 26, color: 'text.primary' }}>
+                  <InsertDriveFileRoundedIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText
+                  primary="导入文件"
+                  primaryTypographyProps={{ fontSize: '13.5px', fontWeight: 500 }}
+                />
+              </MenuItem>
+              <MenuItem
+                onClick={() => {
+                  setImportMenuAnchor(null);
+                  folderInputRef.current?.click();
+                }}
+                sx={{ borderRadius: '8px', py: 1, gap: 1.2 }}
+              >
+                <ListItemIcon sx={{ minWidth: 26, color: 'text.primary' }}>
+                  <FolderRoundedIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText
+                  primary="导入文件夹 (含子目录)"
+                  primaryTypographyProps={{ fontSize: '13.5px', fontWeight: 500 }}
+                />
+              </MenuItem>
+            </Menu>
             <input
               type="file"
               ref={fileInputRef}
               accept=".wxml,.mm,.mmx,.xmind,.mmap,.opml"
+              multiple
               style={{ display: 'none' }}
-              onChange={handleDirectFileImport}
+              onChange={handleFileInputChange}
+            />
+            <input
+              type="file"
+              ref={folderInputRef}
+              {...({ webkitdirectory: '', directory: '' } as any)}
+              multiple
+              style={{ display: 'none' }}
+              onChange={handleFolderInputChange}
             />
             <ActionDispatcher
               action={activeDialog}
@@ -444,6 +704,12 @@ const MapsPage = (): ReactElement => {
         stage={importState.stage}
         error={importState.error}
         progressPercent={importState.progress}
+        isBatch={importState.isBatch}
+        totalCount={importState.totalCount}
+        currentCount={importState.currentCount}
+        currentPath={importState.currentPath}
+        successCount={importState.successCount}
+        skippedCount={importState.skippedCount}
         onClose={() => setImportState((prev) => ({ ...prev, open: false }))}
         onRetry={() => {
           setImportState((prev) => ({ ...prev, open: false }));

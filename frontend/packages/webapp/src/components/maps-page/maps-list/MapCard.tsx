@@ -18,10 +18,12 @@
 
 import React, { memo } from 'react';
 import { useIntl } from 'react-intl';
+import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import Link from '@mui/material/Link';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
+import FolderRoundedIcon from '@mui/icons-material/FolderRounded';
 import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
 import { MapInfo } from '../../../classes/client';
 import { useDate } from '../../../classes/app-i18n/dates';
@@ -85,7 +87,31 @@ const MapCardComponent = ({ map, onStar, onOpenMenu }: MapCardProps): React.Reac
             </Tooltip>
           }
           // Not a Typography itself, so the header wraps it in its title Typography.
-          title={<CardTitle noWrap>{map.title}</CardTitle>}
+          title={
+            <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+              {map.folderPath && (
+                <Box
+                  sx={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 0.4,
+                    fontSize: '0.72rem',
+                    fontWeight: 500,
+                    color: 'text.secondary',
+                    opacity: 0.85,
+                    mb: 0.2,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  <FolderRoundedIcon sx={{ fontSize: 13, opacity: 0.7 }} />
+                  <span>{map.folderPath}</span>
+                </Box>
+              )}
+              <CardTitle noWrap>{map.title}</CardTitle>
+            </Box>
+          }
           subheader={
             <Typography
               variant="subtitle2"

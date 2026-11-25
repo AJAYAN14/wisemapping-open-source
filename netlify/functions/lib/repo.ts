@@ -12,6 +12,7 @@ export interface MindmapRecord {
   ownerId: string;
   title: string;
   description: string;
+  folderPath: string;
   xml: string;
   properties: string;
   starred: boolean;
@@ -38,6 +39,7 @@ export interface CreateMapInput {
   description: string;
   xml: string;
   properties?: string;
+  folderPath?: string;
 }
 
 export interface UpdateDocumentInput {
@@ -153,6 +155,7 @@ interface RawMindmapRow {
   owner_id: string;
   title: string;
   description: string | null;
+  folder_path?: string | null;
   xml: string;
   properties: string;
   starred: boolean;
@@ -197,6 +200,7 @@ function mapMindmapRow(row: RawMindmapRow): MindmapRecord {
     ownerId: row.owner_id,
     title: row.title,
     description: row.description ?? '',
+    folderPath: row.folder_path ?? '',
     xml: row.xml,
     properties: row.properties,
     starred: Boolean(row.starred),
@@ -261,7 +265,7 @@ export class PgMindmapRepository implements MindmapRepository {
 
       if (normalizedFilter === '' || normalizedFilter === 'all' || normalizedFilter === 'my_maps') {
         const res = await client.query<RawMindmapRow>(
-          `SELECT id, owner_id, title, description, xml, properties, starred, version,
+          `SELECT id, owner_id, title, description, folder_path, xml, properties, starred, version,
                   last_modification_by, creation_time, last_modification_time
            FROM public.mindmaps
            WHERE owner_id = $1
@@ -272,7 +276,7 @@ export class PgMindmapRepository implements MindmapRepository {
         rows = res.rows;
       } else if (normalizedFilter === 'starred') {
         const res = await client.query<RawMindmapRow>(
-          `SELECT id, owner_id, title, description, xml, properties, starred, version,
+          `SELECT id, owner_id, title, description, folder_path, xml, properties, starred, version,
                   last_modification_by, creation_time, last_modification_time
            FROM public.mindmaps
            WHERE owner_id = $1 AND starred = TRUE
@@ -283,7 +287,7 @@ export class PgMindmapRepository implements MindmapRepository {
         rows = res.rows;
       } else {
         const res = await client.query<RawMindmapRow>(
-          `SELECT m.id, m.owner_id, m.title, m.description, m.xml, m.properties, m.starred, m.version,
+          `SELECT m.id, m.owner_id, m.title, m.description, m.folder_path, m.xml, m.properties, m.starred, m.version,
                   m.last_modification_by, m.creation_time, m.last_modification_time
            FROM public.mindmaps m
            INNER JOIN public.mindmap_labels ml ON ml.mindmap_id = m.id
@@ -311,10 +315,11 @@ export class PgMindmapRepository implements MindmapRepository {
   }
 
   async createMap(user: RepoUser, input: CreateMapInput): Promise<MindmapRecord> {
+    const folderPath = input.folderPath?.trim() ?? '';
     return this.runInTx(user, async (client) => {
       const dup = await client.query<{ id: string | number }>(
-        `SELECT id FROM public.mindmaps WHERE owner_id = $1 AND title = $2 LIMIT 1`,
-        [user.uid, input.title],
+        `SELECT id FROM public.mindmaps WHERE owner_id = $1 AND title = $2 AND folder_path = $3 LIMIT 1`,
+        [user.uid, input.title, folderPath],
       );
       if (dup.rows.length > 0) {
         throw new RepoValidationError(
@@ -326,15 +331,16 @@ export class PgMindmapRepository implements MindmapRepository {
 
       const res = await client.query<RawMindmapRow>(
         `INSERT INTO public.mindmaps (
-           owner_id, title, description, xml, properties, starred, version, last_modification_by
+           owner_id, title, description, folder_path, xml, properties, starred, version, last_modification_by
          )
-         VALUES ($1, $2, $3, $4, $5, FALSE, 1, $6)
-         RETURNING id, owner_id, title, description, xml, properties, starred, version,
+         VALUES ($1, $2, $3, $4, $5, $6, FALSE, 1, $7)
+         RETURNING id, owner_id, title, description, folder_path, xml, properties, starred, version,
                    last_modification_by, creation_time, last_modification_time`,
         [
           user.uid,
           input.title,
           input.description,
+          folderPath,
           input.xml,
           input.properties ?? '{"zoom":0.8}',
           user.name,
@@ -352,7 +358,7 @@ export class PgMindmapRepository implements MindmapRepository {
   async getMap(user: RepoUser, mapId: number): Promise<MindmapWithLabels> {
     return this.runInTx(user, async (client) => {
       const res = await client.query<RawMindmapRow>(
-        `SELECT id, owner_id, title, description, xml, properties, starred, version,
+        `SELECT id, owner_id, title, description, folder_path, xml, properties, starred, version,
                 last_modification_by, creation_time, last_modification_time
          FROM public.mindmaps
          WHERE id = $1 AND owner_id = $2
@@ -640,7 +646,7 @@ export class PgMindmapRepository implements MindmapRepository {
   ): Promise<MindmapRecord> {
     return this.runInTx(user, async (client) => {
       const sourceRes = await client.query<RawMindmapRow>(
-        `SELECT id, owner_id, title, description, xml, properties, starred, version,
+        `SELECT id, owner_id, title, description, folder_path, xml, properties, starred, version,
                 last_modification_by, creation_time, last_modification_time
          FROM public.mindmaps
          WHERE id = $1 AND owner_id = $2
@@ -652,9 +658,10 @@ export class PgMindmapRepository implements MindmapRepository {
         throw new NotFoundOrForbiddenError();
       }
 
+      const folderPath = source.folder_path ?? '';
       const dup = await client.query<{ id: string | number }>(
-        `SELECT id FROM public.mindmaps WHERE owner_id = $1 AND title = $2 LIMIT 1`,
-        [user.uid, input.title],
+        `SELECT id FROM public.mindmaps WHERE owner_id = $1 AND title = $2 AND folder_path = $3 LIMIT 1`,
+        [user.uid, input.title, folderPath],
       );
       if (dup.rows.length > 0) {
         throw new RepoValidationError(
@@ -666,15 +673,16 @@ export class PgMindmapRepository implements MindmapRepository {
 
       const insertRes = await client.query<RawMindmapRow>(
         `INSERT INTO public.mindmaps (
-           owner_id, title, description, xml, properties, starred, version, last_modification_by
+           owner_id, title, description, folder_path, xml, properties, starred, version, last_modification_by
          )
-         VALUES ($1, $2, $3, $4, $5, FALSE, 1, $6)
-         RETURNING id, owner_id, title, description, xml, properties, starred, version,
+         VALUES ($1, $2, $3, $4, $5, $6, FALSE, 1, $7)
+         RETURNING id, owner_id, title, description, folder_path, xml, properties, starred, version,
                    last_modification_by, creation_time, last_modification_time`,
         [
           user.uid,
           input.title,
           input.description ?? source.description ?? '',
+          folderPath,
           source.xml,
           source.properties,
           user.name,

@@ -18,11 +18,13 @@
 
 import React, { memo } from 'react';
 import { useIntl } from 'react-intl';
+import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import TableRow from '@mui/material/TableRow';
 import Tooltip from '@mui/material/Tooltip';
 import CheckBoxOutlineBlankRoundedIcon from '@mui/icons-material/CheckBoxOutlineBlankRounded';
 import CheckBoxRoundedIcon from '@mui/icons-material/CheckBoxRounded';
+import FolderRoundedIcon from '@mui/icons-material/FolderRounded';
 import HubRoundedIcon from '@mui/icons-material/HubRounded';
 import MoreHorizRoundedIcon from '@mui/icons-material/MoreHorizRounded';
 import { Label, MapInfo } from '../../../classes/client';
@@ -109,23 +111,46 @@ const MapRowComponent = ({
           <MapGlyphBadge aria-hidden="true">
             <HubRoundedIcon />
           </MapGlyphBadge>
-          <Tooltip
-            arrow={true}
-            title={intl.formatMessage({
-              id: 'maps.tooltip-open',
-              defaultMessage: 'Open for edition',
-            })}
-            placement="bottom-start"
-          >
-            <TitleLink
-              id={`map-title-${map.id}`}
-              href={`/c/maps/${map.id}/edit`}
-              underline="none"
-              onClick={(e) => e.stopPropagation()}
+          <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 0, justifyContent: 'center' }}>
+            {map.folderPath && (
+              <Box
+                sx={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 0.4,
+                  fontSize: '0.74rem',
+                  fontWeight: 500,
+                  color: 'text.secondary',
+                  opacity: 0.85,
+                  lineHeight: 1.2,
+                  mb: 0.3,
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                <FolderRoundedIcon sx={{ fontSize: 13, opacity: 0.75, flexShrink: 0 }} />
+                <span>{map.folderPath}</span>
+              </Box>
+            )}
+            <Tooltip
+              arrow={true}
+              title={intl.formatMessage({
+                id: 'maps.tooltip-open',
+                defaultMessage: 'Open for edition',
+              })}
+              placement="bottom-start"
             >
-              {map.title}
-            </TitleLink>
-          </Tooltip>
+              <TitleLink
+                id={`map-title-${map.id}`}
+                href={`/c/maps/${map.id}/edit`}
+                underline="none"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {map.title}
+              </TitleLink>
+            </Tooltip>
+          </Box>
         </MapRowTitleWrap>
       </BodyCell>
       <LabelsBodyCell>

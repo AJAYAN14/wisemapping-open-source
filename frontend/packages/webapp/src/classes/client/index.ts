@@ -34,6 +34,7 @@ export type NewUser = {
 export type ImportMapInfo = {
   title: string;
   description?: string;
+  folderPath?: string;
   contentType?: string;
   content?: ArrayBuffer | string;
 };
@@ -51,6 +52,7 @@ export type MapInfo = {
   id: number;
   starred: boolean;
   title: string;
+  folderPath?: string;
   labels: Label[];
   createdBy: string;
   creationTime: string;
@@ -71,6 +73,7 @@ export type MapMetadata = {
   role: Role; // User's role for this map (owner, editor, viewer, or none)
   // Extended fields to match MapInfo
   description?: string;
+  folderPath?: string;
   createdBy?: string; // Email
   creationTime?: string;
   lastModificationBy?: string;

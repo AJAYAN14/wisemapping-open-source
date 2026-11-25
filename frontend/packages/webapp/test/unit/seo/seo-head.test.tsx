@@ -24,7 +24,7 @@ const head = (selector: string) => document.head.querySelector(selector);
 describe('SEOHead', () => {
   beforeEach(() => {
     // index.html ships a static title, as the deployed page does.
-    document.head.innerHTML = '<title>WiseMapping - Free &amp; Open-Source Mind Mapping</title>';
+    document.head.innerHTML = '<title>WiseMapping - 免费开源思维导图</title>';
     document.documentElement.lang = '';
   });
 
@@ -60,7 +60,7 @@ describe('SEOHead', () => {
     unmount();
 
     expect(head('meta[name="description"]')).toBeNull();
-    expect(document.title).toBe('WiseMapping - Free & Open-Source Mind Mapping');
+    expect(document.title).toBe('WiseMapping - 免费开源思维导图');
   });
 
   test('renders the structured data as JSON-LD', () => {

@@ -1,7 +1,7 @@
 {
-  "name": "WiseMapping - Free & Open-Source Mind Mapping",
+  "name": "WiseMapping - 免费开源思维导图",
   "short_name": "WiseMapping",
-  "description": "Visual thinking and mind mapping application",
+  "description": "极简、高效的可视化思维导图工具",
   "start_url": "/c/login?redirect=/c/maps/",
   "display": "standalone",
   "background_color": "#ffffff",
