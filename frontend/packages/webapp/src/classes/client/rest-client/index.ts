@@ -354,11 +354,12 @@ export default class RestClient implements Client {
       const folderParam = model.folderPath
         ? `&folderPath=${encodeURIComponent(model.folderPath)}`
         : '';
+      const overwriteParam = model.overwrite ? '&overwrite=true' : '';
       this.axios
         .post(
           `${this.baseUrl}/api/restful/maps?title=${encodeURIComponent(
             model.title,
-          )}&description=${encodeURIComponent(model.description ? model.description : '')}${folderParam}`,
+          )}&description=${encodeURIComponent(model.description ? model.description : '')}${folderParam}${overwriteParam}`,
           model.content,
           { headers: { 'Content-Type': 'application/xml' } },
         )
@@ -1009,6 +1010,9 @@ export default class RestClient implements Client {
           if (data) {
             // Set global errors ...
             result = {};
+            if (typeof data.errorCode === 'string') {
+              result.errorCode = data.errorCode;
+            }
             const globalErrors = data.globalErrors;
             if (globalErrors && globalErrors.length > 0) {
               result.msg = globalErrors[0];

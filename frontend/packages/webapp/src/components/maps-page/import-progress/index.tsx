@@ -28,9 +28,10 @@ import ErrorOutlineRoundedIcon from '@mui/icons-material/ErrorOutlineRounded';
 import InsertDriveFileRoundedIcon from '@mui/icons-material/InsertDriveFileRounded';
 import FolderRoundedIcon from '@mui/icons-material/FolderRounded';
 import SyncRoundedIcon from '@mui/icons-material/SyncRounded';
+import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
 import { appleColors, isDarkTheme, APPLE_FONT_STACK, applePressMixin } from '../appleDesign';
 
-export type ImportStage = 'reading' | 'parsing' | 'saving' | 'success' | 'error';
+export type ImportStage = 'reading' | 'parsing' | 'saving' | 'duplicate' | 'success' | 'error';
 
 export interface ImportProgressDialogProps {
   open: boolean;
@@ -49,12 +50,15 @@ export interface ImportProgressDialogProps {
   onRetry?: () => void;
   onOpenMap?: () => void;
   onImportMore?: () => void;
+  onOverwrite?: () => void;
+  onSkipDuplicate?: () => void;
 }
 
 const STAGE_TITLES: Record<ImportStage, string> = {
   reading: '正在读取文件',
   parsing: '正在解析导图',
   saving: '正在同步云端',
+  duplicate: '发现同名导图',
   success: '导入完成',
   error: '导入失败',
 };
@@ -63,6 +67,7 @@ const STAGE_DESCRIPTIONS: Record<ImportStage, string> = {
   reading: '正在校验并载入本地思维导图数据',
   parsing: '正在提取主题分支、关联关系与图文素材',
   saving: '正在存入云端数据库并准备画布',
+  duplicate: '当前位置已存在同名思维导图，请选择覆盖或跳过',
   success: '导图已安全同步到云端，请选择下一步操作',
   error: '导入过程中遇到问题，请检查文件格式后重试',
 };
@@ -84,6 +89,8 @@ export const ImportProgressDialog: React.FC<ImportProgressDialogProps> = ({
   onRetry,
   onOpenMap,
   onImportMore,
+  onOverwrite,
+  onSkipDuplicate,
 }) => {
   const theme = useTheme();
   const isDark = isDarkTheme(theme);
@@ -92,9 +99,10 @@ export const ImportProgressDialog: React.FC<ImportProgressDialogProps> = ({
 
   const isError = stage === 'error';
   const isSuccess = stage === 'success';
+  const isDuplicate = stage === 'duplicate';
 
   useEffect(() => {
-    if (!open || isError || isSuccess) {
+    if (!open || isError || isSuccess || isDuplicate) {
       if (!open) {
         setElapsedSeconds(0);
       }
@@ -106,13 +114,15 @@ export const ImportProgressDialog: React.FC<ImportProgressDialogProps> = ({
       setElapsedSeconds(Math.floor((Date.now() - startedAt) / 1000));
     }, 1000);
     return () => window.clearInterval(timer);
-  }, [open, isError, isSuccess]);
+  }, [open, isError, isSuccess, isDuplicate]);
 
   const titleText = isBatch
     ? isSuccess
       ? '批量导入完成'
       : isError
       ? '导入遇到问题'
+      : isDuplicate
+      ? '发现同名导图'
       : `正在导入导图 (${currentCount}/${totalCount})`
     : STAGE_TITLES[stage];
 
@@ -125,7 +135,7 @@ export const ImportProgressDialog: React.FC<ImportProgressDialogProps> = ({
 
   const displayPath = currentPath || fileName;
 
-  const canDismiss = isError || isSuccess;
+  const canDismiss = isError || isSuccess || isDuplicate;
 
   return (
     <Dialog
@@ -210,6 +220,8 @@ export const ImportProgressDialog: React.FC<ImportProgressDialogProps> = ({
         >
           {isError ? (
             <ErrorOutlineRoundedIcon sx={{ fontSize: 27 }} />
+          ) : isDuplicate ? (
+            <WarningAmberRoundedIcon sx={{ fontSize: 28 }} />
           ) : isSuccess ? (
             <CheckRoundedIcon sx={{ fontSize: 29, stroke: '#FFFFFF', strokeWidth: 0.5 }} />
           ) : (
@@ -286,7 +298,7 @@ export const ImportProgressDialog: React.FC<ImportProgressDialogProps> = ({
         )}
 
         {/* Delicate Inset Progress Bar (Apple HIG §16: contained, restrained) */}
-        {!isError && (
+        {!isError && !isDuplicate && (
           <Box sx={{ width: '100%', px: 0.5, mb: 1.6 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2 }}>
               <LinearProgress
@@ -363,7 +375,7 @@ export const ImportProgressDialog: React.FC<ImportProgressDialogProps> = ({
             >
               {detailText || descText}
             </Typography>
-            {!isSuccess && elapsedSeconds >= 2 && (
+            {!isSuccess && !isDuplicate && elapsedSeconds >= 2 && (
               <Typography
                 variant="caption"
                 sx={{
@@ -377,6 +389,87 @@ export const ImportProgressDialog: React.FC<ImportProgressDialogProps> = ({
               >
                 已用时 {elapsedSeconds} 秒 · 图片正在并发上传，请勿关闭页面
               </Typography>
+            )}
+          </Box>
+        )}
+
+        {/* Duplicate File Actions: Overwrite vs Skip */}
+        {isDuplicate && (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '100%', mt: 2 }}>
+            <Box sx={{ display: 'flex', gap: 1.5, width: '100%' }}>
+              {onSkipDuplicate && (
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  onClick={onSkipDuplicate}
+                  sx={{
+                    ...applePressMixin,
+                    borderRadius: '11px',
+                    borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.12)',
+                    color: colors.textPrimary,
+                    fontFamily: APPLE_FONT_STACK,
+                    fontSize: '13.5px',
+                    fontWeight: 600,
+                    textTransform: 'none',
+                    py: 0.9,
+                    '&:hover': {
+                      borderColor: colors.textSecondary,
+                      background: colors.hoverFill,
+                    },
+                  }}
+                >
+                  {isBatch ? '跳过同名' : '跳过'}
+                </Button>
+              )}
+              {onOverwrite && (
+                <Button
+                  fullWidth
+                  variant="contained"
+                  onClick={onOverwrite}
+                  sx={{
+                    ...applePressMixin,
+                    borderRadius: '11px',
+                    background: colors.amber,
+                    color: '#FFFFFF',
+                    fontFamily: APPLE_FONT_STACK,
+                    fontSize: '13.5px',
+                    fontWeight: 600,
+                    textTransform: 'none',
+                    py: 0.9,
+                    boxShadow: 'none',
+                    '&:hover': {
+                      background: colors.amberHover,
+                    },
+                  }}
+                >
+                  {isBatch ? '覆盖同名' : '覆盖原导图'}
+                </Button>
+              )}
+            </Box>
+            {isBatch && (
+              <Button
+                size="small"
+                variant="text"
+                onClick={onClose}
+                sx={{
+                  ...applePressMixin,
+                  alignSelf: 'center',
+                  borderRadius: '8px',
+                  color: colors.textSecondary,
+                  fontFamily: APPLE_FONT_STACK,
+                  fontSize: '12.5px',
+                  fontWeight: 500,
+                  textTransform: 'none',
+                  px: 1.5,
+                  py: 0.4,
+                  '&:hover': {
+                    color: colors.textPrimary,
+                    background: colors.hoverFill,
+                  },
+                }}
+              >
+                取消导入
+              </Button>
             )}
           </Box>
         )}

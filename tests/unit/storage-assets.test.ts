@@ -259,6 +259,27 @@ describe('API /assets/* endpoints', () => {
       new Set([`${TEST_OWNER_UID}/${hash}.webp`]),
     );
 
+    // Duplicate title fails without overwrite, succeeds and triggers cleanup when overwrite=true
+    const dupRes = await handler(
+      new Request('http://localhost:8888/api/restful/maps?title=With%20Asset', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${jwt}`, 'Content-Type': 'application/xml' },
+        body: '<map version="tango"><topic central="true" text="Replaced"/></map>',
+      }),
+    );
+    expect(dupRes.status).toBe(400);
+
+    const overwriteRes = await handler(
+      new Request('http://localhost:8888/api/restful/maps?title=With%20Asset&overwrite=true', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${jwt}`, 'Content-Type': 'application/xml' },
+        body: '<map version="tango"><topic central="true" text="Replaced"/></map>',
+      }),
+    );
+    expect(overwriteRes.status).toBe(201);
+    expect(cleanupMock).toHaveBeenCalledTimes(2);
+    expect(cleanupMock).toHaveBeenLastCalledWith(TEST_OWNER_UID, new Set());
+
     // Deleting the map also triggers best-effort orphan cleanup
     await handler(
       new Request('http://localhost:8888/api/restful/maps/1', {
@@ -266,7 +287,7 @@ describe('API /assets/* endpoints', () => {
         headers: { Authorization: `Bearer ${jwt}` },
       }),
     );
-    expect(cleanupMock).toHaveBeenCalledTimes(2);
+    expect(cleanupMock).toHaveBeenCalledTimes(3);
     expect(cleanupMock).toHaveBeenLastCalledWith(TEST_OWNER_UID, new Set());
   });
 

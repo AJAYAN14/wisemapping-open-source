@@ -444,6 +444,7 @@ export function createApiHandler(
           const title = (titleCheck as { valid: true; value: string }).value;
           const description = (descCheck as { valid: true; value: string }).value;
           const folderPath = url.searchParams.get('folderPath')?.trim() || '';
+          const overwrite = url.searchParams.get('overwrite') === 'true';
           const layout = url.searchParams.get('layout')?.trim() || 'mindmap';
 
           const rawBody = await readTextBody(req);
@@ -461,7 +462,16 @@ export function createApiHandler(
             xml = buildDefaultMindmapXml(title, layout);
           }
 
-          const created = await repo.createMap(user, { title, description, xml, folderPath });
+          const created = await repo.createMap(user, {
+            title,
+            description,
+            xml,
+            folderPath,
+            overwrite,
+          });
+          if (overwrite) {
+            await cleanupOrphansBestEffort(user);
+          }
           return emptyResponse(req, 201, {
             Location: `/api/restful/maps/${created.id}`,
             ResourceId: String(created.id),

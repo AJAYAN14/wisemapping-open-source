@@ -37,6 +37,7 @@ export type ImportMapInfo = {
   folderPath?: string;
   contentType?: string;
   content?: ArrayBuffer | string;
+  overwrite?: boolean;
 };
 
 export type Label = {
@@ -120,6 +121,7 @@ export type FieldError = {
 export type ErrorInfo = {
   isAuth?: boolean;
   msg?: string;
+  errorCode?: string;
   // A plain record, not a Map: this is what the REST client assigns straight
   // from the server's `fieldErrors` payload, and what `form/input` indexes by
   // field name.

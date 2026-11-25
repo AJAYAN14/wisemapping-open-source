@@ -40,6 +40,7 @@ export interface CreateMapInput {
   xml: string;
   properties?: string;
   folderPath?: string;
+  overwrite?: boolean;
 }
 
 export interface UpdateDocumentInput {
@@ -329,11 +330,38 @@ export class PgMindmapRepository implements MindmapRepository {
         [user.uid, input.title, folderPath],
       );
       if (dup.rows.length > 0) {
-        throw new RepoValidationError(
-          [],
-          { title: 'You have already a map with the same name' },
-          'DUPLICATE_MAP_TITLE',
+        if (!input.overwrite) {
+          throw new RepoValidationError(
+            [],
+            { title: 'You have already a map with the same name' },
+            'DUPLICATE_MAP_TITLE',
+          );
+        }
+
+        const existingId = toInt(dup.rows[0]!.id);
+        await client.query(
+          `DELETE FROM public.mindmap_history WHERE mindmap_id = $1 AND owner_id = $2`,
+          [existingId, user.uid],
         );
+
+        const updatedRes = await client.query<RawMindmapRow>(
+          `UPDATE public.mindmaps
+           SET xml = $1,
+               description = $2,
+               properties = COALESCE($3, properties),
+               last_modification_by = $4,
+               last_modification_time = NOW(),
+               version = version + 1
+           WHERE id = $5 AND owner_id = $6
+           RETURNING id, owner_id, title, description, folder_path, xml, properties, starred, version,
+                     last_modification_by, creation_time, last_modification_time`,
+          [input.xml, input.description, input.properties ?? null, user.name, existingId, user.uid],
+        );
+        const updated = updatedRes.rows[0];
+        if (!updated) {
+          throw new Error('Failed to overwrite mindmap record.');
+        }
+        return mapMindmapRow(updated);
       }
 
       const res = await client.query<RawMindmapRow>(

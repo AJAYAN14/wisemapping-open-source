@@ -108,11 +108,30 @@ export class InMemoryMindmapRepo implements MindmapRepository {
         existing.title === input.title &&
         (existing.folderPath ?? '') === folderPath
       ) {
-        throw new RepoValidationError(
-          [],
-          { title: 'You have already a map with the same name' },
-          'DUPLICATE_MAP_TITLE',
-        );
+        if (!input.overwrite) {
+          throw new RepoValidationError(
+            [],
+            { title: 'You have already a map with the same name' },
+            'DUPLICATE_MAP_TITLE',
+          );
+        }
+        const now = new Date().toISOString();
+        const updated: MindmapRecord = {
+          ...existing,
+          description: input.description,
+          xml: input.xml,
+          properties: input.properties ?? existing.properties,
+          version: existing.version + 1,
+          lastModificationBy: user.name,
+          lastModificationTime: now,
+        };
+        this.maps.set(existing.id, updated);
+        for (let i = this.histories.length - 1; i >= 0; i -= 1) {
+          if (this.histories[i]?.mindmapId === existing.id) {
+            this.histories.splice(i, 1);
+          }
+        }
+        return { ...updated };
       }
     }
     const now = new Date().toISOString();

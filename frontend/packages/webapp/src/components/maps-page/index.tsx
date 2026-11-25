@@ -99,6 +99,44 @@ const MapsPage = (): ReactElement => {
   const [importMenuAnchor, setImportMenuAnchor] = React.useState<null | HTMLElement>(null);
   const [isDraggingOver, setIsDraggingOver] = React.useState(false);
   const dragCounter = React.useRef(0);
+  const duplicateResolverRef = React.useRef<
+    ((decision: 'overwrite' | 'skip' | 'cancel') => void) | null
+  >(null);
+
+  const resolveDuplicateDecision = (decision: 'overwrite' | 'skip' | 'cancel') => {
+    const resolver = duplicateResolverRef.current;
+    duplicateResolverRef.current = null;
+    resolver?.(decision);
+  };
+
+  const askDuplicateDecision = (): Promise<'overwrite' | 'skip' | 'cancel'> => {
+    return new Promise((resolve) => {
+      duplicateResolverRef.current?.('cancel');
+      duplicateResolverRef.current = resolve;
+    });
+  };
+
+  const isDuplicateTitleError = (err: unknown): boolean => {
+    if (!err || typeof err !== 'object') {
+      return false;
+    }
+    const e = err as { errorCode?: unknown; msg?: unknown; fields?: Record<string, unknown> };
+    return (
+      e.errorCode === 'DUPLICATE_MAP_TITLE' ||
+      (typeof e.fields?.title === 'string' && e.fields.title.toLowerCase().includes('same name')) ||
+      (typeof e.msg === 'string' && e.msg.toLowerCase().includes('same name'))
+    );
+  };
+
+  const extractImportErrorMessage = (err: unknown): string => {
+    if (err instanceof Error && err.message) {
+      return err.message;
+    }
+    if (err && typeof err === 'object' && 'msg' in err && typeof err.msg === 'string' && err.msg) {
+      return err.msg;
+    }
+    return '导入思维导图失败，请检查文件内容是否正确或网络是否畅通。';
+  };
 
   const [importState, setImportState] = React.useState<{
     open: boolean;
@@ -191,6 +229,25 @@ const MapsPage = (): ReactElement => {
         const importer = TextImporterFactory.create(single.extension, fileContent);
         const importedXml = await importer.import(single.title, '');
 
+        let shouldOverwrite = false;
+        const existingMaps = await client.fetchAllMaps().catch(() => []);
+        const hasDuplicate = existingMaps.some(
+          (m) => (m.folderPath ?? '').trim() === '' && m.title === single.title,
+        );
+        if (hasDuplicate) {
+          setImportState((prev) => ({
+            ...prev,
+            stage: 'duplicate',
+            detailText: `当前列表中已存在同名导图《${single.title}》，要覆盖原导图还是跳过本次导入？`,
+          }));
+          const decision = await askDuplicateDecision();
+          if (decision !== 'overwrite') {
+            setImportState((prev) => ({ ...prev, open: false }));
+            return;
+          }
+          shouldOverwrite = true;
+        }
+
         setImportState((prev) => ({
           ...prev,
           stage: 'saving',
@@ -230,18 +287,53 @@ const MapsPage = (): ReactElement => {
           ...prev,
           stage: 'saving',
           progress: 95,
-          detailText: '正在写入导图到云端数据库...',
+          detailText: shouldOverwrite ? '正在覆盖原导图数据...' : '正在写入导图到云端数据库...',
         }));
 
         const contentType =
           single.extension === 'xmind' ? 'application/vnd.xmind.workbook' : 'application/xml';
-        const mapId = await client.importMap({
-          title: single.title,
-          description: '',
-          contentType,
-          content,
-          folderPath: '',
-        });
+
+        let mapId: number;
+        try {
+          mapId = await client.importMap({
+            title: single.title,
+            description: '',
+            contentType,
+            content,
+            folderPath: '',
+            overwrite: shouldOverwrite,
+          });
+        } catch (err) {
+          if (!shouldOverwrite && isDuplicateTitleError(err)) {
+            setImportState((prev) => ({
+              ...prev,
+              stage: 'duplicate',
+              detailText: `当前列表中已存在同名导图《${single.title}》，要覆盖原导图还是跳过本次导入？`,
+            }));
+            const decision = await askDuplicateDecision();
+            if (decision !== 'overwrite') {
+              setImportState((prev) => ({ ...prev, open: false }));
+              void client.cleanupOrphanedAssets?.().catch(() => undefined);
+              return;
+            }
+            setImportState((prev) => ({
+              ...prev,
+              stage: 'saving',
+              progress: 97,
+              detailText: '正在覆盖原导图数据...',
+            }));
+            mapId = await client.importMap({
+              title: single.title,
+              description: '',
+              contentType,
+              content,
+              folderPath: '',
+              overwrite: true,
+            });
+          } else {
+            throw err;
+          }
+        }
 
         void queryClient.invalidateQueries({ queryKey: ['maps'] });
 
@@ -257,10 +349,7 @@ const MapsPage = (): ReactElement => {
         setImportState((prev) => ({
           ...prev,
           stage: 'error',
-          error:
-            err instanceof Error
-              ? err.message
-              : '导入思维导图失败，请检查文件内容是否正确或网络是否畅通。',
+          error: extractImportErrorMessage(err),
         }));
       }
       return;
@@ -273,6 +362,7 @@ const MapsPage = (): ReactElement => {
       fileName: scannedFiles[0].relativePath,
       stage: 'reading',
       progress: 5,
+      detailText: '正在检查是否存在同名导图...',
       isBatch: true,
       totalCount: total,
       currentCount: 0,
@@ -282,28 +372,73 @@ const MapsPage = (): ReactElement => {
       error: null,
     });
 
+    const existingMaps = await client.fetchAllMaps().catch(() => []);
+    const existingKeys = new Set(
+      existingMaps.map((m) => `${(m.folderPath ?? '').trim()}::${m.title}`),
+    );
+    const keyOf = (item: ScannedMapFile) => `${item.folderPath.trim()}::${item.title}`;
+    const duplicateItems = scannedFiles.filter((item) => existingKeys.has(keyOf(item)));
+
+    let overwriteDuplicates = false;
+    let filesToImport = scannedFiles;
+    let preSkippedCount = 0;
+
+    if (duplicateItems.length > 0) {
+      setImportState((prev) => ({
+        ...prev,
+        stage: 'duplicate',
+        detailText: `发现 ${duplicateItems.length} 份同名导图（如《${duplicateItems[0]!.title}》），批量导入时要覆盖还是跳过？`,
+      }));
+      const decision = await askDuplicateDecision();
+      if (decision === 'cancel') {
+        setImportState((prev) => ({ ...prev, open: false }));
+        return;
+      }
+      if (decision === 'overwrite') {
+        overwriteDuplicates = true;
+      } else {
+        filesToImport = scannedFiles.filter((item) => !existingKeys.has(keyOf(item)));
+        preSkippedCount = duplicateItems.length;
+      }
+    }
+
+    if (filesToImport.length === 0) {
+      setImportState((prev) => ({
+        ...prev,
+        stage: 'success',
+        progress: 100,
+        successCount: 0,
+        skippedCount: preSkippedCount,
+        currentPath: '',
+      }));
+      return;
+    }
+
     const { default: TextImporterFactory } = await import(
       '@wisemapping/mindplot/components/import/TextImporterFactory'
     );
 
     let successCount = 0;
-    let skippedCount = 0;
+    let skippedCount = preSkippedCount;
     let processed = 0;
+    const activeTotal = filesToImport.length;
 
     // Process files with bounded concurrency pool (up to 3 parallel workers)
     const concurrency = 3;
     let currentIndex = 0;
 
     const processNext = async (): Promise<void> => {
-      while (currentIndex < scannedFiles.length) {
+      while (currentIndex < filesToImport.length) {
         const idx = currentIndex++;
-        const item = scannedFiles[idx];
+        const item = filesToImport[idx];
         setImportState((prev) => ({
           ...prev,
+          totalCount: activeTotal,
           currentCount: processed + 1,
           currentPath: item.relativePath,
           stage: 'parsing',
-          progress: Math.min(95, Math.round(((processed + 1) / total) * 90)),
+          detailText: undefined,
+          progress: Math.min(95, Math.round(((processed + 1) / activeTotal) * 90)),
         }));
 
         try {
@@ -320,6 +455,7 @@ const MapsPage = (): ReactElement => {
             contentType,
             content,
             folderPath: item.folderPath,
+            overwrite: overwriteDuplicates && existingKeys.has(keyOf(item)),
           });
           successCount++;
         } catch (err) {
@@ -332,13 +468,13 @@ const MapsPage = (): ReactElement => {
             currentCount: processed,
             successCount,
             skippedCount,
-            progress: Math.min(95, Math.round((processed / total) * 90)),
+            progress: Math.min(95, Math.round((processed / activeTotal) * 90)),
           }));
         }
       }
     };
 
-    const workers = Array.from({ length: Math.min(concurrency, total) }, () => processNext());
+    const workers = Array.from({ length: Math.min(concurrency, activeTotal) }, () => processNext());
     await Promise.all(workers);
 
     // Invalidate maps cache so the fresh maps immediately appear in the list
@@ -351,6 +487,7 @@ const MapsPage = (): ReactElement => {
       successCount,
       skippedCount,
       currentPath: '',
+      detailText: undefined,
     }));
   };
 
@@ -752,7 +889,12 @@ const MapsPage = (): ReactElement => {
         currentPath={importState.currentPath}
         successCount={importState.successCount}
         skippedCount={importState.skippedCount}
-        onClose={() => setImportState((prev) => ({ ...prev, open: false }))}
+        onClose={() => {
+          resolveDuplicateDecision('cancel');
+          setImportState((prev) => ({ ...prev, open: false }));
+        }}
+        onOverwrite={() => resolveDuplicateDecision('overwrite')}
+        onSkipDuplicate={() => resolveDuplicateDecision('skip')}
         onOpenMap={
           importState.createdMapId
             ? () => {
