@@ -245,6 +245,12 @@
       "value": "添加标签"
     }
   ],
+  "action.move-to-folder": [
+    {
+      "type": 0,
+      "value": "移动到文件夹"
+    }
+  ],
   "action.new": [
     {
       "type": 0,
@@ -2429,6 +2435,132 @@
     {
       "type": 0,
       "value": "导出到图像（SVG，PNG，JPEG，PDF）仅在编辑器工具栏中可用。"
+    }
+  ],
+  "folder.create-button": [
+    {
+      "type": 0,
+      "value": "创建"
+    }
+  ],
+  "folder.create-description": [
+    {
+      "type": 0,
+      "value": "请输入文件夹名称。"
+    }
+  ],
+  "folder.create-title": [
+    {
+      "type": 0,
+      "value": "新建文件夹"
+    }
+  ],
+  "folder.delete": [
+    {
+      "type": 0,
+      "value": "删除文件夹"
+    }
+  ],
+  "folder.delete-description": [
+    {
+      "type": 0,
+      "value": "删除后，该文件夹内的导图和子文件夹将自动移回根目录，不会删除导图本身。"
+    }
+  ],
+  "folder.delete-title": [
+    {
+      "type": 0,
+      "value": "确认删除文件夹"
+    }
+  ],
+  "folder.empty": [
+    {
+      "type": 0,
+      "value": "暂无文件夹"
+    }
+  ],
+  "folder.move-button": [
+    {
+      "type": 0,
+      "value": "移动到此处"
+    }
+  ],
+  "folder.move-description": [
+    {
+      "type": 0,
+      "value": "选择目标文件夹，或先在下方新建文件夹。"
+    }
+  ],
+  "folder.move-title": [
+    {
+      "type": 0,
+      "value": "移动到文件夹"
+    }
+  ],
+  "folder.name-placeholder": [
+    {
+      "type": 0,
+      "value": "文件夹名称"
+    }
+  ],
+  "folder.new": [
+    {
+      "type": 0,
+      "value": "新建文件夹"
+    }
+  ],
+  "folder.new-subfolder": [
+    {
+      "type": 0,
+      "value": "新建子文件夹"
+    }
+  ],
+  "folder.parent-label": [
+    {
+      "type": 0,
+      "value": "所属上级目录"
+    }
+  ],
+  "folder.rename": [
+    {
+      "type": 0,
+      "value": "重命名文件夹"
+    }
+  ],
+  "folder.rename-button": [
+    {
+      "type": 0,
+      "value": "保存"
+    }
+  ],
+  "folder.rename-description": [
+    {
+      "type": 0,
+      "value": "请输入新的文件夹名称。"
+    }
+  ],
+  "folder.rename-title": [
+    {
+      "type": 0,
+      "value": "重命名文件夹"
+    }
+  ],
+  "folder.root": [
+    {
+      "type": 0,
+      "value": "根目录（未分类）"
+    }
+  ],
+  "folder.section-title": [
+    {
+      "type": 0,
+      "value": "文件夹"
+    }
+  ],
+  "folder.tooltip-move": [
+    {
+      "type": 0,
+      "value": "将选中导图移动到文件夹"
     }
   ],
   "footer.aboutus": [

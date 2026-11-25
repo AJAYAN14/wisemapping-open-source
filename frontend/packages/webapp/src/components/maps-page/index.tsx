@@ -42,7 +42,7 @@ import { MapsList } from './maps-list';
 import { ImportProgressDialog, ImportStage } from './import-progress';
 import { createIntl, FormattedMessage, IntlProvider } from 'react-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Label } from '../../classes/client';
+import { Folder, Label } from '../../classes/client';
 import ActionDispatcher from './action-dispatcher';
 import { ActionType } from './action-chooser';
 import AccountMenu from './account-menu';
@@ -67,13 +67,19 @@ import StarRateRoundedIcon from '@mui/icons-material/StarRateRounded';
 import Tooltip from '@mui/material/Tooltip';
 
 import LabelDeleteConfirm from './maps-list/label-delete-confirm';
+import {
+  FolderCreateDialog,
+  FolderDeleteDialog,
+  FolderRenameDialog,
+} from './folder-dialogs';
+import { getFolderPathString } from './folderTree';
 import DrawerNav, { ToolbarButtonInfo } from './drawer-nav';
 import { useSpringValue } from './useSpringValue';
 import { ClientContext } from '../../classes/provider/client-context';
 import { ScannedMapFile, scanFileList, scanDataTransferItems } from './directoryScanner';
 import { readStorage, writeStorage, removeStorage } from '../../utils/storage';
 
-export type Filter = GenericFilter | LabelFilter;
+export type Filter = GenericFilter | LabelFilter | FolderFilter;
 
 export interface GenericFilter {
   type: 'public' | 'all' | 'starred' | 'shared' | 'label' | 'owned';
@@ -84,12 +90,24 @@ export interface LabelFilter {
   label: Label;
 }
 
+export interface FolderFilter {
+  type: 'folder';
+  folderId: number;
+}
+
+type FolderDialogState =
+  | { mode: 'create'; parentId: number | null }
+  | { mode: 'rename'; folder: Folder }
+  | { mode: 'delete'; folder: Folder }
+  | undefined;
+
 const MapsPage = (): ReactElement => {
   const [filter, setFilter] = React.useState<Filter>({ type: 'all' });
   const client = use(ClientContext);
   const queryClient = useQueryClient();
   const [activeDialog, setActiveDialog] = React.useState<ActionType | undefined>(undefined);
   const [labelToDelete, setLabelToDelete] = React.useState<number>();
+  const [folderDialog, setFolderDialog] = React.useState<FolderDialogState>(undefined);
   const [mobileDrawerOpen, setMobileDrawerOpen] = React.useState(false);
   const [desktopDrawerOpen, setDesktopDrawerOpen] = React.useState(
     () => readStorage('desktopDrawerOpen') === 'true',
@@ -232,7 +250,7 @@ const MapsPage = (): ReactElement => {
         let shouldOverwrite = false;
         const existingMaps = await client.fetchAllMaps().catch(() => []);
         const hasDuplicate = existingMaps.some(
-          (m) => (m.folderPath ?? '').trim() === '' && m.title === single.title,
+          (m) => (m.folderId ?? null) === activeFolderId && m.title === single.title,
         );
         if (hasDuplicate) {
           setImportState((prev) => ({
@@ -300,6 +318,7 @@ const MapsPage = (): ReactElement => {
             description: '',
             contentType,
             content,
+            folderId: activeFolderId,
             folderPath: '',
             overwrite: shouldOverwrite,
           });
@@ -327,6 +346,7 @@ const MapsPage = (): ReactElement => {
               description: '',
               contentType,
               content,
+              folderId: activeFolderId,
               folderPath: '',
               overwrite: true,
             });
@@ -336,6 +356,7 @@ const MapsPage = (): ReactElement => {
         }
 
         void queryClient.invalidateQueries({ queryKey: ['maps'] });
+        void queryClient.invalidateQueries({ queryKey: ['folders'] });
 
         setImportState((prev) => ({
           ...prev,
@@ -372,11 +393,15 @@ const MapsPage = (): ReactElement => {
       error: null,
     });
 
+    const baseFolderPath =
+      activeFolderId !== null ? getFolderPathString(folders, activeFolderId) : '';
     const existingMaps = await client.fetchAllMaps().catch(() => []);
     const existingKeys = new Set(
       existingMaps.map((m) => `${(m.folderPath ?? '').trim()}::${m.title}`),
     );
-    const keyOf = (item: ScannedMapFile) => `${item.folderPath.trim()}::${item.title}`;
+    const targetFolderPathOf = (item: ScannedMapFile) =>
+      `${baseFolderPath}${item.folderPath.trim()}`;
+    const keyOf = (item: ScannedMapFile) => `${targetFolderPathOf(item)}::${item.title}`;
     const duplicateItems = scannedFiles.filter((item) => existingKeys.has(keyOf(item)));
 
     let overwriteDuplicates = false;
@@ -449,12 +474,16 @@ const MapsPage = (): ReactElement => {
           const contentType =
             item.extension === 'xmind' ? 'application/vnd.xmind.workbook' : 'application/xml';
 
+          const targetFolderPath = targetFolderPathOf(item);
           await client.importMap({
             title: item.title,
             description: '',
             contentType,
             content,
-            folderPath: item.folderPath,
+            ...(targetFolderPath === '' && activeFolderId !== null
+              ? { folderId: activeFolderId }
+              : {}),
+            folderPath: targetFolderPath,
             overwrite: overwriteDuplicates && existingKeys.has(keyOf(item)),
           });
           successCount++;
@@ -477,8 +506,9 @@ const MapsPage = (): ReactElement => {
     const workers = Array.from({ length: Math.min(concurrency, activeTotal) }, () => processNext());
     await Promise.all(workers);
 
-    // Invalidate maps cache so the fresh maps immediately appear in the list
+    // Invalidate maps and folders cache so the fresh maps & folders immediately appear in the list
     queryClient.invalidateQueries({ queryKey: ['maps'] });
+    queryClient.invalidateQueries({ queryKey: ['folders'] });
 
     setImportState((prev) => ({
       ...prev,
@@ -591,6 +621,13 @@ const MapsPage = (): ReactElement => {
     mutation.mutate(id);
   };
 
+  const { data: foldersData } = useQuery<unknown, ErrorInfo, Folder[]>({
+    queryKey: ['folders'],
+    queryFn: () => (client.fetchFolders ? client.fetchFolders() : Promise.resolve([])),
+  });
+  const folders: Folder[] = foldersData ?? [];
+  const activeFolderId = filter.type === 'folder' ? filter.folderId : null;
+
   const { data } = useQuery<unknown, ErrorInfo, Label[]>({
     queryKey: ['labels'],
     queryFn: () => client.fetchLabels(),
@@ -623,9 +660,13 @@ const MapsPage = (): ReactElement => {
       account={account}
       drawerOpen={desktopDrawerOpen || mobileDrawerOpen}
       filterButtons={filterButtons}
+      folders={folders}
       activeFilter={filter}
       onFilterClick={handleMenuClick}
       onLabelDelete={setLabelToDelete}
+      onCreateFolder={(parentId) => setFolderDialog({ mode: 'create', parentId })}
+      onRenameFolder={(folder) => setFolderDialog({ mode: 'rename', folder })}
+      onDeleteFolder={(folder) => setFolderDialog({ mode: 'delete', folder })}
     />
   );
 
@@ -831,6 +872,7 @@ const MapsPage = (): ReactElement => {
             />
             <ActionDispatcher
               action={activeDialog}
+              folderId={activeFolderId}
               onClose={() => setActiveDialog(undefined)}
               mapsId={[]}
               fromEditor
@@ -862,10 +904,43 @@ const MapsPage = (): ReactElement => {
           <section
             aria-label={intl.formatMessage({ id: 'common.maps-list', defaultMessage: 'Maps list' })}
           >
-            <MapsList filter={filter} />
+            <MapsList filter={filter} folders={folders} onFilterChange={handleMenuClick} />
           </section>
         </PageContent>
       </PageRoot>
+      {folderDialog?.mode === 'create' && (
+        <FolderCreateDialog
+          parentId={folderDialog.parentId}
+          parentName={
+            folderDialog.parentId !== null
+              ? folders.find((f) => f.id === folderDialog.parentId)?.name
+              : undefined
+          }
+          onClose={() => setFolderDialog(undefined)}
+          onCreated={(created) => {
+            if (folderDialog.parentId === null) {
+              setFilter({ type: 'folder', folderId: created.id });
+            }
+          }}
+        />
+      )}
+      {folderDialog?.mode === 'rename' && (
+        <FolderRenameDialog
+          folder={folderDialog.folder}
+          onClose={() => setFolderDialog(undefined)}
+        />
+      )}
+      {folderDialog?.mode === 'delete' && (
+        <FolderDeleteDialog
+          folder={folderDialog.folder}
+          onClose={() => setFolderDialog(undefined)}
+          onDeleted={(deletedId) => {
+            if (filter.type === 'folder' && filter.folderId === deletedId) {
+              setFilter({ type: 'all' });
+            }
+          }}
+        />
+      )}
       {label && labelToDelete !== undefined && (
         <LabelDeleteConfirm
           onClose={() => setLabelToDelete(undefined)}

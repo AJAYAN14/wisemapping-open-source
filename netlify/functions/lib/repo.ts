@@ -7,11 +7,30 @@ export interface LabelDto {
   color: string;
 }
 
+export interface FolderDto {
+  id: number;
+  name: string;
+  parentId: number | null;
+  creationTime: string;
+  updatedTime: string;
+}
+
+export interface CreateFolderInput {
+  name: string;
+  parentId?: number | null;
+}
+
+export interface UpdateFolderInput {
+  name?: string;
+  parentId?: number | null;
+}
+
 export interface MindmapRecord {
   id: number;
   ownerId: string;
   title: string;
   description: string;
+  folderId: number | null;
   folderPath: string;
   xml: string;
   properties: string;
@@ -39,6 +58,7 @@ export interface CreateMapInput {
   description: string;
   xml: string;
   properties?: string;
+  folderId?: number | null;
   folderPath?: string;
   overwrite?: boolean;
 }
@@ -149,6 +169,11 @@ export interface MindmapRepository {
   deleteLabel(user: RepoUser, labelId: number): Promise<void>;
   addLabelToMap(user: RepoUser, mapId: number, labelId: number): Promise<void>;
   removeLabelFromMap(user: RepoUser, mapId: number, labelId: number): Promise<void>;
+  listFolders(user: RepoUser): Promise<FolderDto[]>;
+  createFolder(user: RepoUser, input: CreateFolderInput): Promise<FolderDto>;
+  updateFolder(user: RepoUser, folderId: number, input: UpdateFolderInput): Promise<FolderDto>;
+  deleteFolder(user: RepoUser, folderId: number): Promise<void>;
+  moveMapsToFolder(user: RepoUser, mapIds: number[], folderId: number | null): Promise<void>;
   listAllXmlForOwner(user: RepoUser): Promise<string[]>;
   getOwnerXmlStats(user: RepoUser): Promise<{
     mapCount: number;
@@ -163,6 +188,7 @@ interface RawMindmapRow {
   owner_id: string;
   title: string;
   description: string | null;
+  folder_id?: string | number | null;
   folder_path?: string | null;
   xml: string;
   properties: string;
@@ -171,6 +197,14 @@ interface RawMindmapRow {
   last_modification_by: string;
   creation_time: Date | string;
   last_modification_time: Date | string;
+}
+
+interface RawFolderRow {
+  id: string | number;
+  name: string;
+  parent_id: string | number | null;
+  creation_time: Date | string;
+  updated_time: Date | string;
 }
 
 interface RawLabelRow {
@@ -208,6 +242,7 @@ function mapMindmapRow(row: RawMindmapRow): MindmapRecord {
     ownerId: row.owner_id,
     title: row.title,
     description: row.description ?? '',
+    folderId: row.folder_id !== undefined && row.folder_id !== null ? toInt(row.folder_id) : null,
     folderPath: row.folder_path ?? '',
     xml: row.xml,
     properties: row.properties,
@@ -217,6 +252,52 @@ function mapMindmapRow(row: RawMindmapRow): MindmapRecord {
     creationTime: toIso(row.creation_time),
     lastModificationTime: toIso(row.last_modification_time),
   };
+}
+
+function mapFolderRow(row: RawFolderRow): FolderDto {
+  return {
+    id: toInt(row.id),
+    name: row.name,
+    parentId: row.parent_id !== null && row.parent_id !== undefined ? toInt(row.parent_id) : null,
+    creationTime: toIso(row.creation_time),
+    updatedTime: toIso(row.updated_time),
+  };
+}
+
+function buildFolderPathFromMap(byId: Map<number, FolderDto>, folderId: number | null): string {
+  if (folderId === null) {
+    return '';
+  }
+  const parts: string[] = [];
+  const visited = new Set<number>();
+  let cur: number | null = folderId;
+  while (cur !== null && !visited.has(cur)) {
+    visited.add(cur);
+    const folder = byId.get(cur);
+    if (!folder) {
+      break;
+    }
+    parts.unshift(folder.name);
+    cur = folder.parentId;
+  }
+  return parts.length > 0 ? `${parts.join('/')}/` : '';
+}
+
+function resolveUniqueName(baseName: string, existingNames: Set<string>, maxLen: number): string {
+  if (!existingNames.has(baseName)) {
+    return baseName;
+  }
+  let counter = 2;
+  while (counter < 10000) {
+    const suffix = ` (${counter})`;
+    const truncatedBase = baseName.slice(0, Math.max(1, maxLen - suffix.length));
+    const candidate = `${truncatedBase}${suffix}`;
+    if (!existingNames.has(candidate)) {
+      return candidate;
+    }
+    counter += 1;
+  }
+  return `${baseName.slice(0, Math.max(1, maxLen - 8))}-${Date.now()}`;
 }
 
 export class PgMindmapRepository implements MindmapRepository {
@@ -262,6 +343,96 @@ export class PgMindmapRepository implements MindmapRepository {
     return byMap;
   }
 
+  private async fetchAllFoldersTx(client: DbClient, ownerId: string): Promise<FolderDto[]> {
+    const res = await client.query<RawFolderRow>(
+      `SELECT id, name, parent_id, creation_time, updated_time
+       FROM public.folders
+       WHERE owner_id = $1
+       ORDER BY name ASC, id ASC`,
+      [ownerId],
+    );
+    return res.rows.map(mapFolderRow);
+  }
+
+  private async syncFolderPathsTx(client: DbClient, ownerId: string): Promise<void> {
+    const folders = await this.fetchAllFoldersTx(client, ownerId);
+    if (folders.length === 0) {
+      await client.query(
+        `UPDATE public.mindmaps
+         SET folder_path = ''
+         WHERE owner_id = $1 AND folder_id IS NULL AND folder_path <> ''`,
+        [ownerId],
+      );
+      return;
+    }
+    const byId = new Map(folders.map((f) => [f.id, f]));
+    const fids: number[] = [];
+    const fpaths: string[] = [];
+    for (const f of folders) {
+      fids.push(f.id);
+      fpaths.push(buildFolderPathFromMap(byId, f.id));
+    }
+    await client.query(
+      `UPDATE public.mindmaps AS m
+       SET folder_path = v.fpath
+       FROM (
+         SELECT unnest($1::bigint[]) AS fid,
+                unnest($2::text[]) AS fpath
+       ) AS v
+       WHERE m.owner_id = $3
+         AND m.folder_id = v.fid
+         AND m.folder_path IS DISTINCT FROM v.fpath`,
+      [fids, fpaths, ownerId],
+    );
+    await client.query(
+      `UPDATE public.mindmaps
+       SET folder_path = ''
+       WHERE owner_id = $1 AND folder_id IS NULL AND folder_path <> ''`,
+      [ownerId],
+    );
+  }
+
+  private async resolveOrCreateFolderPathTx(
+    client: DbClient,
+    ownerId: string,
+    rawPath: string,
+  ): Promise<{ folderId: number | null; folderPath: string }> {
+    const segments = rawPath
+      .split('/')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+    if (segments.length === 0) {
+      return { folderId: null, folderPath: '' };
+    }
+    let parentId: number | null = null;
+    const normalizedSegments: string[] = [];
+    for (const rawSeg of segments) {
+      const seg = rawSeg.slice(0, 100);
+      normalizedSegments.push(seg);
+      const existing = await client.query<{ id: string | number }>(
+        `SELECT id FROM public.folders
+         WHERE owner_id = $1 AND parent_id IS NOT DISTINCT FROM $2 AND name = $3
+         LIMIT 1`,
+        [ownerId, parentId, seg],
+      );
+      if (existing.rows[0]) {
+        parentId = toInt(existing.rows[0].id);
+      } else {
+        const inserted = await client.query<{ id: string | number }>(
+          `INSERT INTO public.folders (owner_id, name, parent_id)
+           VALUES ($1, $2, $3)
+           RETURNING id`,
+          [ownerId, seg, parentId],
+        );
+        parentId = toInt(inserted.rows[0]!.id);
+      }
+    }
+    return {
+      folderId: parentId,
+      folderPath: `${normalizedSegments.join('/')}/`,
+    };
+  }
+
   async listMaps(user: RepoUser, filter?: string): Promise<MindmapWithLabels[]> {
     const normalizedFilter = filter?.trim() ?? '';
     if (normalizedFilter === 'shared_with_me' || normalizedFilter === 'public') {
@@ -273,7 +444,7 @@ export class PgMindmapRepository implements MindmapRepository {
 
       if (normalizedFilter === '' || normalizedFilter === 'all' || normalizedFilter === 'my_maps') {
         const res = await client.query<RawMindmapRow>(
-          `SELECT id, owner_id, title, description, folder_path, xml, properties, starred, version,
+          `SELECT id, owner_id, title, description, folder_id, folder_path, xml, properties, starred, version,
                   last_modification_by, creation_time, last_modification_time
            FROM public.mindmaps
            WHERE owner_id = $1
@@ -284,7 +455,7 @@ export class PgMindmapRepository implements MindmapRepository {
         rows = res.rows;
       } else if (normalizedFilter === 'starred') {
         const res = await client.query<RawMindmapRow>(
-          `SELECT id, owner_id, title, description, folder_path, xml, properties, starred, version,
+          `SELECT id, owner_id, title, description, folder_id, folder_path, xml, properties, starred, version,
                   last_modification_by, creation_time, last_modification_time
            FROM public.mindmaps
            WHERE owner_id = $1 AND starred = TRUE
@@ -295,7 +466,7 @@ export class PgMindmapRepository implements MindmapRepository {
         rows = res.rows;
       } else {
         const res = await client.query<RawMindmapRow>(
-          `SELECT m.id, m.owner_id, m.title, m.description, m.folder_path, m.xml, m.properties, m.starred, m.version,
+          `SELECT m.id, m.owner_id, m.title, m.description, m.folder_id, m.folder_path, m.xml, m.properties, m.starred, m.version,
                   m.last_modification_by, m.creation_time, m.last_modification_time
            FROM public.mindmaps m
            INNER JOIN public.mindmap_labels ml ON ml.mindmap_id = m.id
@@ -323,11 +494,28 @@ export class PgMindmapRepository implements MindmapRepository {
   }
 
   async createMap(user: RepoUser, input: CreateMapInput): Promise<MindmapRecord> {
-    const folderPath = input.folderPath?.trim() ?? '';
     return this.runInTx(user, async (client) => {
+      let folderId: number | null = input.folderId ?? null;
+      let folderPath = '';
+
+      if (folderId !== null) {
+        const folders = await this.fetchAllFoldersTx(client, user.uid);
+        const byId = new Map(folders.map((f) => [f.id, f]));
+        if (!byId.has(folderId)) {
+          throw new NotFoundOrForbiddenError('Folder could not be found.', 'FOLDER_NOT_FOUND');
+        }
+        folderPath = buildFolderPathFromMap(byId, folderId);
+      } else if (input.folderPath?.trim()) {
+        const resolved = await this.resolveOrCreateFolderPathTx(client, user.uid, input.folderPath);
+        folderId = resolved.folderId;
+        folderPath = resolved.folderPath;
+      }
+
       const dup = await client.query<{ id: string | number }>(
-        `SELECT id FROM public.mindmaps WHERE owner_id = $1 AND title = $2 AND folder_path = $3 LIMIT 1`,
-        [user.uid, input.title, folderPath],
+        `SELECT id FROM public.mindmaps
+         WHERE owner_id = $1 AND title = $2 AND folder_id IS NOT DISTINCT FROM $3
+         LIMIT 1`,
+        [user.uid, input.title, folderId],
       );
       if (dup.rows.length > 0) {
         if (!input.overwrite) {
@@ -349,13 +537,24 @@ export class PgMindmapRepository implements MindmapRepository {
            SET xml = $1,
                description = $2,
                properties = COALESCE($3, properties),
-               last_modification_by = $4,
+               folder_id = $4,
+               folder_path = $5,
+               last_modification_by = $6,
                last_modification_time = NOW(),
                version = version + 1
-           WHERE id = $5 AND owner_id = $6
-           RETURNING id, owner_id, title, description, folder_path, xml, properties, starred, version,
+           WHERE id = $7 AND owner_id = $8
+           RETURNING id, owner_id, title, description, folder_id, folder_path, xml, properties, starred, version,
                      last_modification_by, creation_time, last_modification_time`,
-          [input.xml, input.description, input.properties ?? null, user.name, existingId, user.uid],
+          [
+            input.xml,
+            input.description,
+            input.properties ?? null,
+            folderId,
+            folderPath,
+            user.name,
+            existingId,
+            user.uid,
+          ],
         );
         const updated = updatedRes.rows[0];
         if (!updated) {
@@ -366,15 +565,16 @@ export class PgMindmapRepository implements MindmapRepository {
 
       const res = await client.query<RawMindmapRow>(
         `INSERT INTO public.mindmaps (
-           owner_id, title, description, folder_path, xml, properties, starred, version, last_modification_by
+           owner_id, title, description, folder_id, folder_path, xml, properties, starred, version, last_modification_by
          )
-         VALUES ($1, $2, $3, $4, $5, $6, FALSE, 1, $7)
-         RETURNING id, owner_id, title, description, folder_path, xml, properties, starred, version,
+         VALUES ($1, $2, $3, $4, $5, $6, $7, FALSE, 1, $8)
+         RETURNING id, owner_id, title, description, folder_id, folder_path, xml, properties, starred, version,
                    last_modification_by, creation_time, last_modification_time`,
         [
           user.uid,
           input.title,
           input.description,
+          folderId,
           folderPath,
           input.xml,
           input.properties ?? '{"zoom":0.8}',
@@ -393,7 +593,7 @@ export class PgMindmapRepository implements MindmapRepository {
   async getMap(user: RepoUser, mapId: number): Promise<MindmapWithLabels> {
     return this.runInTx(user, async (client) => {
       const res = await client.query<RawMindmapRow>(
-        `SELECT id, owner_id, title, description, folder_path, xml, properties, starred, version,
+        `SELECT id, owner_id, title, description, folder_id, folder_path, xml, properties, starred, version,
                 last_modification_by, creation_time, last_modification_time
          FROM public.mindmaps
          WHERE id = $1 AND owner_id = $2
@@ -512,11 +712,20 @@ export class PgMindmapRepository implements MindmapRepository {
   ): Promise<{ version: number; lastModificationTime: string }> {
     return this.runInTx(user, async (client) => {
       if (input.title !== undefined) {
+        const curRes = await client.query<{ folder_id: string | number | null }>(
+          `SELECT folder_id FROM public.mindmaps WHERE id = $1 AND owner_id = $2 LIMIT 1`,
+          [mapId, user.uid],
+        );
+        const cur = curRes.rows[0];
+        if (!cur) {
+          throw new NotFoundOrForbiddenError();
+        }
+        const curFolderId = cur.folder_id !== null ? toInt(cur.folder_id) : null;
         const dup = await client.query<{ id: string | number }>(
           `SELECT id FROM public.mindmaps
-           WHERE owner_id = $1 AND title = $2 AND id <> $3
+           WHERE owner_id = $1 AND title = $2 AND folder_id IS NOT DISTINCT FROM $3 AND id <> $4
            LIMIT 1`,
-          [user.uid, input.title, mapId],
+          [user.uid, input.title, curFolderId, mapId],
         );
         if (dup.rows.length > 0) {
           throw new RepoValidationError(
@@ -589,17 +798,21 @@ export class PgMindmapRepository implements MindmapRepository {
 
   async updateTitle(user: RepoUser, mapId: number, title: string): Promise<void> {
     await this.runInTx(user, async (client) => {
-      const exists = await client.query<{ id: string | number }>(
-        `SELECT id FROM public.mindmaps WHERE id = $1 AND owner_id = $2 LIMIT 1`,
+      const exists = await client.query<{ id: string | number; folder_id: string | number | null }>(
+        `SELECT id, folder_id FROM public.mindmaps WHERE id = $1 AND owner_id = $2 LIMIT 1`,
         [mapId, user.uid],
       );
-      if (exists.rows.length === 0) {
+      const current = exists.rows[0];
+      if (!current) {
         throw new NotFoundOrForbiddenError();
       }
 
+      const curFolderId = current.folder_id !== null ? toInt(current.folder_id) : null;
       const dup = await client.query<{ id: string | number }>(
-        `SELECT id FROM public.mindmaps WHERE owner_id = $1 AND title = $2 AND id <> $3 LIMIT 1`,
-        [user.uid, title, mapId],
+        `SELECT id FROM public.mindmaps
+         WHERE owner_id = $1 AND title = $2 AND folder_id IS NOT DISTINCT FROM $3 AND id <> $4
+         LIMIT 1`,
+        [user.uid, title, curFolderId, mapId],
       );
       if (dup.rows.length > 0) {
         throw new RepoValidationError(
@@ -681,7 +894,7 @@ export class PgMindmapRepository implements MindmapRepository {
   ): Promise<MindmapRecord> {
     return this.runInTx(user, async (client) => {
       const sourceRes = await client.query<RawMindmapRow>(
-        `SELECT id, owner_id, title, description, folder_path, xml, properties, starred, version,
+        `SELECT id, owner_id, title, description, folder_id, folder_path, xml, properties, starred, version,
                 last_modification_by, creation_time, last_modification_time
          FROM public.mindmaps
          WHERE id = $1 AND owner_id = $2
@@ -693,10 +906,13 @@ export class PgMindmapRepository implements MindmapRepository {
         throw new NotFoundOrForbiddenError();
       }
 
+      const folderId = source.folder_id !== undefined && source.folder_id !== null ? toInt(source.folder_id) : null;
       const folderPath = source.folder_path ?? '';
       const dup = await client.query<{ id: string | number }>(
-        `SELECT id FROM public.mindmaps WHERE owner_id = $1 AND title = $2 AND folder_path = $3 LIMIT 1`,
-        [user.uid, input.title, folderPath],
+        `SELECT id FROM public.mindmaps
+         WHERE owner_id = $1 AND title = $2 AND folder_id IS NOT DISTINCT FROM $3
+         LIMIT 1`,
+        [user.uid, input.title, folderId],
       );
       if (dup.rows.length > 0) {
         throw new RepoValidationError(
@@ -708,15 +924,16 @@ export class PgMindmapRepository implements MindmapRepository {
 
       const insertRes = await client.query<RawMindmapRow>(
         `INSERT INTO public.mindmaps (
-           owner_id, title, description, folder_path, xml, properties, starred, version, last_modification_by
+           owner_id, title, description, folder_id, folder_path, xml, properties, starred, version, last_modification_by
          )
-         VALUES ($1, $2, $3, $4, $5, $6, FALSE, 1, $7)
-         RETURNING id, owner_id, title, description, folder_path, xml, properties, starred, version,
+         VALUES ($1, $2, $3, $4, $5, $6, $7, FALSE, 1, $8)
+         RETURNING id, owner_id, title, description, folder_id, folder_path, xml, properties, starred, version,
                    last_modification_by, creation_time, last_modification_time`,
         [
           user.uid,
           input.title,
           input.description ?? source.description ?? '',
+          folderId,
           folderPath,
           source.xml,
           source.properties,
@@ -1010,6 +1227,234 @@ export class PgMindmapRepository implements MindmapRepository {
         `DELETE FROM public.mindmap_labels
          WHERE mindmap_id = $1 AND label_id = $2 AND owner_id = $3`,
         [mapId, labelId, user.uid],
+      );
+    });
+  }
+
+  async listFolders(user: RepoUser): Promise<FolderDto[]> {
+    return this.runInTx(user, async (client) => {
+      return this.fetchAllFoldersTx(client, user.uid);
+    });
+  }
+
+  async createFolder(user: RepoUser, input: CreateFolderInput): Promise<FolderDto> {
+    return this.runInTx(user, async (client) => {
+      const parentId = input.parentId ?? null;
+      if (parentId !== null) {
+        const parentRes = await client.query<{ id: string | number }>(
+          `SELECT id FROM public.folders WHERE id = $1 AND owner_id = $2 LIMIT 1`,
+          [parentId, user.uid],
+        );
+        if (parentRes.rows.length === 0) {
+          throw new NotFoundOrForbiddenError('Parent folder could not be found.', 'FOLDER_NOT_FOUND');
+        }
+      }
+
+      const dup = await client.query<{ id: string | number }>(
+        `SELECT id FROM public.folders
+         WHERE owner_id = $1 AND parent_id IS NOT DISTINCT FROM $2 AND name = $3
+         LIMIT 1`,
+        [user.uid, parentId, input.name],
+      );
+      if (dup.rows.length > 0) {
+        throw new RepoValidationError(
+          [],
+          { name: '同级目录下已存在同名文件夹。' },
+          'DUPLICATE_FOLDER_NAME',
+        );
+      }
+
+      const res = await client.query<RawFolderRow>(
+        `INSERT INTO public.folders (owner_id, name, parent_id)
+         VALUES ($1, $2, $3)
+         RETURNING id, name, parent_id, creation_time, updated_time`,
+        [user.uid, input.name, parentId],
+      );
+      const row = res.rows[0];
+      if (!row) {
+        throw new Error('Failed to create folder.');
+      }
+      return mapFolderRow(row);
+    });
+  }
+
+  async updateFolder(
+    user: RepoUser,
+    folderId: number,
+    input: UpdateFolderInput,
+  ): Promise<FolderDto> {
+    return this.runInTx(user, async (client) => {
+      const folders = await this.fetchAllFoldersTx(client, user.uid);
+      const byId = new Map(folders.map((f) => [f.id, f]));
+      const existing = byId.get(folderId);
+      if (!existing) {
+        throw new NotFoundOrForbiddenError('Folder could not be found.', 'FOLDER_NOT_FOUND');
+      }
+
+      const nextName = input.name !== undefined ? input.name : existing.name;
+      const nextParentId = input.parentId !== undefined ? input.parentId : existing.parentId;
+
+      if (nextParentId !== null) {
+        if (!byId.has(nextParentId)) {
+          throw new NotFoundOrForbiddenError('Parent folder could not be found.', 'FOLDER_NOT_FOUND');
+        }
+        // Prevent cycles: walk up from nextParentId and ensure folderId is never reached
+        const visited = new Set<number>();
+        let cur: number | null = nextParentId;
+        while (cur !== null && !visited.has(cur)) {
+          if (cur === folderId) {
+            throw new RepoValidationError(
+              ['不能将文件夹移动到自身或其子文件夹下。'],
+              { parentId: '不能将文件夹移动到自身或其子文件夹下。' },
+              'FOLDER_CYCLE',
+            );
+          }
+          visited.add(cur);
+          cur = byId.get(cur)?.parentId ?? null;
+        }
+      }
+
+      const dup = folders.find(
+        (f) => f.id !== folderId && f.parentId === nextParentId && f.name === nextName,
+      );
+      if (dup) {
+        throw new RepoValidationError(
+          [],
+          { name: '同级目录下已存在同名文件夹。' },
+          'DUPLICATE_FOLDER_NAME',
+        );
+      }
+
+      const res = await client.query<RawFolderRow>(
+        `UPDATE public.folders
+         SET name = $1, parent_id = $2, updated_time = NOW()
+         WHERE id = $3 AND owner_id = $4
+         RETURNING id, name, parent_id, creation_time, updated_time`,
+        [nextName, nextParentId, folderId, user.uid],
+      );
+      const updated = res.rows[0];
+      if (!updated) {
+        throw new NotFoundOrForbiddenError('Folder could not be found.', 'FOLDER_NOT_FOUND');
+      }
+
+      await this.syncFolderPathsTx(client, user.uid);
+      return mapFolderRow(updated);
+    });
+  }
+
+  async deleteFolder(user: RepoUser, folderId: number): Promise<void> {
+    await this.runInTx(user, async (client) => {
+      const folders = await this.fetchAllFoldersTx(client, user.uid);
+      const target = folders.find((f) => f.id === folderId);
+      if (!target) {
+        throw new NotFoundOrForbiddenError('Folder could not be found.', 'FOLDER_NOT_FOUND');
+      }
+
+      // 1. Move direct child folders back to root, resolving any root folder name collision
+      const rootFolderNames = new Set(
+        folders.filter((f) => f.parentId === null && f.id !== folderId).map((f) => f.name),
+      );
+      const childFolders = folders.filter((f) => f.parentId === folderId);
+      for (const child of childFolders) {
+        const resolvedName = resolveUniqueName(child.name, rootFolderNames, 100);
+        rootFolderNames.add(resolvedName);
+        await client.query(
+          `UPDATE public.folders
+           SET parent_id = NULL, name = $1, updated_time = NOW()
+           WHERE id = $2 AND owner_id = $3`,
+          [resolvedName, child.id, user.uid],
+        );
+      }
+
+      // 2. Move direct child mindmaps back to root, resolving any root title collision
+      const rootMapTitlesRes = await client.query<{ title: string }>(
+        `SELECT title FROM public.mindmaps WHERE owner_id = $1 AND folder_id IS NULL`,
+        [user.uid],
+      );
+      const rootMapTitles = new Set(rootMapTitlesRes.rows.map((r) => r.title));
+      const childMapsRes = await client.query<{ id: string | number; title: string }>(
+        `SELECT id, title FROM public.mindmaps WHERE owner_id = $1 AND folder_id = $2 ORDER BY id ASC`,
+        [user.uid, folderId],
+      );
+      for (const row of childMapsRes.rows) {
+        const resolvedTitle = resolveUniqueName(row.title, rootMapTitles, 512);
+        rootMapTitles.add(resolvedTitle);
+        await client.query(
+          `UPDATE public.mindmaps
+           SET folder_id = NULL, folder_path = '', title = $1
+           WHERE id = $2 AND owner_id = $3`,
+          [resolvedTitle, toInt(row.id), user.uid],
+        );
+      }
+
+      // 3. Delete the folder row itself
+      await client.query(
+        `DELETE FROM public.folders WHERE id = $1 AND owner_id = $2`,
+        [folderId, user.uid],
+      );
+
+      // 4. Recompute cached folder_path for any descendant maps under moved child folders
+      await this.syncFolderPathsTx(client, user.uid);
+    });
+  }
+
+  async moveMapsToFolder(
+    user: RepoUser,
+    mapIds: number[],
+    folderId: number | null,
+  ): Promise<void> {
+    const uniqueIds = Array.from(new Set(mapIds));
+    if (uniqueIds.length === 0) {
+      return;
+    }
+
+    await this.runInTx(user, async (client) => {
+      let targetFolderPath = '';
+      if (folderId !== null) {
+        const folders = await this.fetchAllFoldersTx(client, user.uid);
+        const byId = new Map(folders.map((f) => [f.id, f]));
+        if (!byId.has(folderId)) {
+          throw new NotFoundOrForbiddenError('Target folder could not be found.', 'FOLDER_NOT_FOUND');
+        }
+        targetFolderPath = buildFolderPathFromMap(byId, folderId);
+      }
+
+      const mapsToMoveRes = await client.query<{ id: string | number; title: string }>(
+        `SELECT id, title FROM public.mindmaps WHERE owner_id = $1 AND id = ANY($2::bigint[])`,
+        [user.uid, uniqueIds],
+      );
+      if (mapsToMoveRes.rows.length !== uniqueIds.length) {
+        throw new NotFoundOrForbiddenError('One or more maps could not be found.');
+      }
+
+      const existingTargetRes = await client.query<{ id: string | number; title: string }>(
+        `SELECT id, title FROM public.mindmaps
+         WHERE owner_id = $1 AND folder_id IS NOT DISTINCT FROM $2`,
+        [user.uid, folderId],
+      );
+      const movingIdSet = new Set(uniqueIds);
+      const occupiedTitles = new Set(
+        existingTargetRes.rows
+          .filter((r) => !movingIdSet.has(toInt(r.id)))
+          .map((r) => r.title),
+      );
+
+      for (const row of mapsToMoveRes.rows) {
+        if (occupiedTitles.has(row.title)) {
+          throw new RepoValidationError(
+            [`目标文件夹中已存在同名导图“${row.title}”。`],
+            { title: `目标文件夹中已存在同名导图“${row.title}”。` },
+            'DUPLICATE_MAP_TITLE',
+          );
+        }
+        occupiedTitles.add(row.title);
+      }
+
+      await client.query(
+        `UPDATE public.mindmaps
+         SET folder_id = $1, folder_path = $2
+         WHERE owner_id = $3 AND id = ANY($4::bigint[])`,
+        [folderId, targetFolderPath, user.uid, uniqueIds],
       );
     });
   }

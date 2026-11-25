@@ -22,6 +22,7 @@ import Client, {
   BasicMapInfo,
   NewUser,
   Label,
+  Folder,
   ChangeHistory,
   AccountInfo,
   ImportMapInfo,
@@ -351,6 +352,10 @@ export default class RestClient implements Client {
 
   importMap(model: ImportMapInfo): Promise<number> {
     const handler = (success: (mapId: number) => void, reject: (error: ErrorInfo) => void) => {
+      const folderIdParam =
+        model.folderId !== undefined && model.folderId !== null
+          ? `&folderId=${encodeURIComponent(String(model.folderId))}`
+          : '';
       const folderParam = model.folderPath
         ? `&folderPath=${encodeURIComponent(model.folderPath)}`
         : '';
@@ -359,7 +364,7 @@ export default class RestClient implements Client {
         .post(
           `${this.baseUrl}/api/restful/maps?title=${encodeURIComponent(
             model.title,
-          )}&description=${encodeURIComponent(model.description ? model.description : '')}${folderParam}${overwriteParam}`,
+          )}&description=${encodeURIComponent(model.description ? model.description : '')}${folderIdParam}${folderParam}${overwriteParam}`,
           model.content,
           { headers: { 'Content-Type': 'application/xml' } },
         )
@@ -571,12 +576,16 @@ export default class RestClient implements Client {
   createMap(model: BasicMapInfo): Promise<number> {
     const handler = (success: (mapId: number) => void, reject: (error: ErrorInfo) => void) => {
       const theme = 'prism';
+      const folderIdParam =
+        model.folderId !== undefined && model.folderId !== null
+          ? `&folderId=${encodeURIComponent(String(model.folderId))}`
+          : '';
 
       this.axios
         .post(
           `${this.baseUrl}/api/restful/maps?title=${encodeURIComponent(
             model.title,
-          )}&description=${encodeURIComponent(model.description ? model.description : '')}&theme=${encodeURIComponent(theme)}`,
+          )}&description=${encodeURIComponent(model.description ? model.description : '')}&theme=${encodeURIComponent(theme)}${folderIdParam}`,
           undefined,
           { headers: { 'Content-Type': 'application/json' } },
         )
@@ -619,6 +628,7 @@ export default class RestClient implements Client {
               id: m.id,
               starred: m.starred,
               title: m.title,
+              folderId: m.folderId ?? null,
               folderPath: m.folderPath,
               labels: m.labels,
               createdBy: m.creator,
@@ -866,6 +876,80 @@ export default class RestClient implements Client {
         });
     };
     return new Promise(handler);
+  }
+
+  fetchFolders(): Promise<Folder[]> {
+    return this.axios
+      .get<{ folders: Folder[] }>(`${this.baseUrl}/api/restful/folders`, {
+        headers: { 'Content-Type': 'application/json' },
+      })
+      .then((response) =>
+        (response.data.folders ?? []).map((f) => ({
+          id: f.id,
+          name: f.name,
+          parentId: f.parentId ?? null,
+          creationTime: f.creationTime,
+          updatedTime: f.updatedTime,
+        })),
+      )
+      .catch((error) => Promise.reject(this.parseResponseOnError(error.response)));
+  }
+
+  createFolder(name: string, parentId: number | null = null): Promise<Folder> {
+    return this.axios
+      .post<{ folder: Folder }>(
+        `${this.baseUrl}/api/restful/folders`,
+        { name, parentId },
+        { headers: { 'Content-Type': 'application/json' } },
+      )
+      .then((response) => ({
+        ...response.data.folder,
+        parentId: response.data.folder.parentId ?? null,
+      }))
+      .catch((error) => Promise.reject(this.parseResponseOnError(error.response)));
+  }
+
+  updateFolder(
+    id: number,
+    changes: { name?: string; parentId?: number | null },
+  ): Promise<Folder> {
+    return this.axios
+      .put<{ folder: Folder }>(`${this.baseUrl}/api/restful/folders/${id}`, changes, {
+        headers: { 'Content-Type': 'application/json' },
+      })
+      .then((response) => ({
+        ...response.data.folder,
+        parentId: response.data.folder.parentId ?? null,
+      }))
+      .catch((error) => Promise.reject(this.parseResponseOnError(error.response)));
+  }
+
+  deleteFolder(id: number): Promise<void> {
+    return this.axios
+      .delete(`${this.baseUrl}/api/restful/folders/${id}`)
+      .then(() => undefined)
+      .catch((error) => Promise.reject(this.parseResponseOnError(error.response)));
+  }
+
+  moveMapsToFolder(mapIds: number[], folderId: number | null): Promise<void> {
+    if (mapIds.length === 1) {
+      return this.axios
+        .put(
+          `${this.baseUrl}/api/restful/maps/${mapIds[0]}/folder`,
+          { folderId },
+          { headers: { 'Content-Type': 'application/json' } },
+        )
+        .then(() => undefined)
+        .catch((error) => Promise.reject(this.parseResponseOnError(error.response)));
+    }
+    return this.axios
+      .put(
+        `${this.baseUrl}/api/restful/maps/batch/folder`,
+        { mapIds, folderId },
+        { headers: { 'Content-Type': 'application/json' } },
+      )
+      .then(() => undefined)
+      .catch((error) => Promise.reject(this.parseResponseOnError(error.response)));
   }
 
   processGoogleCallback(code: string): Promise<Oauth2CallbackResult> {

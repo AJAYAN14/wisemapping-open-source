@@ -29,11 +29,21 @@ export interface FakeUserRecord {
   createdAt: string;
 }
 
+export interface FakeFolderRecord {
+  id: number;
+  ownerId: string;
+  name: string;
+  parentId: number | null;
+  creationTime: string;
+  updatedTime: string;
+}
+
 export interface FakeMindmapRecord {
   id: number;
   ownerId: string;
   title: string;
   description: string;
+  folderId: number | null;
   folderPath: string;
   xml: string;
   properties: string;
@@ -74,11 +84,13 @@ export class FakeStore {
   private mindmaps = new Map<number, FakeMindmapRecord>();
   private mindmapHistory = new Map<number, FakeHistoryRecord>();
   private labels = new Map<number, FakeLabelRecord>();
+  private folders = new Map<number, FakeFolderRecord>();
   private mindmapLabels = new Set<string>();
 
   private nextMapId = 1;
   private nextHistoryId = 1;
   private nextLabelId = 1;
+  private nextFolderId = 1;
 
   constructor() {
     this.seedDefaultOwner();
@@ -89,10 +101,12 @@ export class FakeStore {
     this.mindmaps.clear();
     this.mindmapHistory.clear();
     this.labels.clear();
+    this.folders.clear();
     this.mindmapLabels.clear();
     this.nextMapId = 1;
     this.nextHistoryId = 1;
     this.nextLabelId = 1;
+    this.nextFolderId = 1;
     this.seedDefaultOwner();
   }
 
@@ -158,22 +172,101 @@ export class FakeStore {
     return { ...existing };
   }
 
+  private buildFolderPath(ownerId: string, folderId: number | null): string {
+    if (folderId === null) {
+      return '';
+    }
+    const parts: string[] = [];
+    const visited = new Set<number>();
+    let cur: number | null = folderId;
+    while (cur !== null && !visited.has(cur)) {
+      visited.add(cur);
+      const f = this.folders.get(cur);
+      if (!f || f.ownerId !== ownerId) {
+        break;
+      }
+      parts.unshift(f.name);
+      cur = f.parentId;
+    }
+    return parts.length > 0 ? `${parts.join('/')}/` : '';
+  }
+
+  private syncFolderPaths(ownerId: string): void {
+    for (const m of this.mindmaps.values()) {
+      if (m.ownerId === ownerId) {
+        m.folderPath = this.buildFolderPath(ownerId, m.folderId);
+      }
+    }
+  }
+
+  private resolveOrCreateFolderPath(
+    ownerId: string,
+    rawPath: string,
+  ): { folderId: number | null; folderPath: string } {
+    const segments = rawPath
+      .split('/')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+    if (segments.length === 0) {
+      return { folderId: null, folderPath: '' };
+    }
+    let parentId: number | null = null;
+    const normalized: string[] = [];
+    for (const rawSeg of segments) {
+      const seg = rawSeg.slice(0, 100);
+      normalized.push(seg);
+      const existing = Array.from(this.folders.values()).find(
+        (f) => f.ownerId === ownerId && f.parentId === parentId && f.name === seg,
+      );
+      if (existing) {
+        parentId = existing.id;
+      } else {
+        const now = new Date().toISOString();
+        const id = this.nextFolderId++;
+        this.folders.set(id, {
+          id,
+          ownerId,
+          name: seg,
+          parentId,
+          creationTime: now,
+          updatedTime: now,
+        });
+        parentId = id;
+      }
+    }
+    return { folderId: parentId, folderPath: `${normalized.join('/')}/` };
+  }
+
   createMindmap(input: {
     ownerId: string;
     ownerEmail: string;
     ownerName?: string;
     title: string;
     description?: string;
+    folderId?: number | null;
     folderPath?: string;
     xml?: string;
     properties?: string;
   }): FakeMindmapRecord {
-    const folderPath = input.folderPath?.trim() ?? '';
+    let folderId: number | null = input.folderId ?? null;
+    let folderPath = '';
+    if (folderId !== null) {
+      const folder = this.folders.get(folderId);
+      if (!folder || folder.ownerId !== input.ownerId) {
+        throw new FakePgError('23503', 'Folder not found');
+      }
+      folderPath = this.buildFolderPath(input.ownerId, folderId);
+    } else if (input.folderPath?.trim()) {
+      const resolved = this.resolveOrCreateFolderPath(input.ownerId, input.folderPath);
+      folderId = resolved.folderId;
+      folderPath = resolved.folderPath;
+    }
+
     for (const existing of this.mindmaps.values()) {
       if (
         existing.ownerId === input.ownerId &&
         existing.title === input.title &&
-        (existing.folderPath ?? '') === folderPath
+        existing.folderId === folderId
       ) {
         throw new FakePgError('23505', `Duplicate mindmap title "${input.title}" for owner`);
       }
@@ -187,6 +280,7 @@ export class FakeStore {
       ownerId: input.ownerId,
       title: input.title,
       description: input.description ?? '',
+      folderId,
       folderPath,
       xml: input.xml ?? createDefaultMapXml(input.title),
       properties: input.properties ?? '{"zoom":0.8}',
@@ -265,7 +359,12 @@ export class FakeStore {
 
     if (input.title !== undefined && input.title !== record.title) {
       for (const other of this.mindmaps.values()) {
-        if (other.ownerId === input.ownerId && other.id !== record.id && other.title === input.title) {
+        if (
+          other.ownerId === input.ownerId &&
+          other.id !== record.id &&
+          other.folderId === record.folderId &&
+          other.title === input.title
+        ) {
           throw new FakePgError('23505', `Duplicate mindmap title "${input.title}"`);
         }
       }
@@ -322,7 +421,12 @@ export class FakeStore {
       return undefined;
     }
     for (const other of this.mindmaps.values()) {
-      if (other.ownerId === ownerId && other.id !== id && other.title === title) {
+      if (
+        other.ownerId === ownerId &&
+        other.id !== id &&
+        other.folderId === record.folderId &&
+        other.title === title
+      ) {
         throw new FakePgError('23505', `Duplicate mindmap title "${title}"`);
       }
     }
@@ -379,6 +483,7 @@ export class FakeStore {
       ownerName,
       title: newTitle,
       description: newDescription ?? source.description,
+      folderId: source.folderId,
       xml: source.xml,
       properties: source.properties,
     });
@@ -585,6 +690,184 @@ export class FakeStore {
   private joinKey(mindmapId: number, labelId: number, ownerId: string): string {
     return `${mindmapId}:${labelId}:${ownerId}`;
   }
+
+  listFolders(ownerId: string): FakeFolderRecord[] {
+    return Array.from(this.folders.values())
+      .filter((f) => f.ownerId === ownerId)
+      .sort((a, b) => a.name.localeCompare(b.name) || a.id - b.id)
+      .map((f) => ({ ...f }));
+  }
+
+  createFolder(input: { ownerId: string; name: string; parentId?: number | null }): FakeFolderRecord {
+    const parentId = input.parentId ?? null;
+    if (parentId !== null) {
+      const parent = this.folders.get(parentId);
+      if (!parent || parent.ownerId !== input.ownerId) {
+        throw new FakePgError('23503', 'Parent folder not found');
+      }
+    }
+    for (const existing of this.folders.values()) {
+      if (
+        existing.ownerId === input.ownerId &&
+        existing.parentId === parentId &&
+        existing.name === input.name
+      ) {
+        throw new FakePgError('23505', `Duplicate folder "${input.name}"`);
+      }
+    }
+    const now = new Date().toISOString();
+    const record: FakeFolderRecord = {
+      id: this.nextFolderId++,
+      ownerId: input.ownerId,
+      name: input.name,
+      parentId,
+      creationTime: now,
+      updatedTime: now,
+    };
+    this.folders.set(record.id, record);
+    return { ...record };
+  }
+
+  updateFolder(input: {
+    ownerId: string;
+    folderId: number;
+    name?: string;
+    parentId?: number | null;
+  }): FakeFolderRecord | 'not_found' | 'cycle' {
+    const record = this.folders.get(input.folderId);
+    if (!record || record.ownerId !== input.ownerId) {
+      return 'not_found';
+    }
+    const nextName = input.name !== undefined ? input.name : record.name;
+    const nextParentId = input.parentId !== undefined ? input.parentId : record.parentId;
+    if (nextParentId !== null) {
+      const parent = this.folders.get(nextParentId);
+      if (!parent || parent.ownerId !== input.ownerId) {
+        return 'not_found';
+      }
+      const visited = new Set<number>();
+      let cur: number | null = nextParentId;
+      while (cur !== null && !visited.has(cur)) {
+        if (cur === input.folderId) {
+          return 'cycle';
+        }
+        visited.add(cur);
+        const f = this.folders.get(cur);
+        cur = f && f.ownerId === input.ownerId ? f.parentId : null;
+      }
+    }
+    for (const other of this.folders.values()) {
+      if (
+        other.ownerId === input.ownerId &&
+        other.id !== input.folderId &&
+        other.parentId === nextParentId &&
+        other.name === nextName
+      ) {
+        throw new FakePgError('23505', `Duplicate folder "${nextName}"`);
+      }
+    }
+    record.name = nextName;
+    record.parentId = nextParentId;
+    record.updatedTime = new Date().toISOString();
+    this.syncFolderPaths(input.ownerId);
+    return { ...record };
+  }
+
+  deleteFolder(ownerId: string, folderId: number): boolean {
+    const record = this.folders.get(folderId);
+    if (!record || record.ownerId !== ownerId) {
+      return false;
+    }
+    const resolveUnique = (base: string, occupied: Set<string>, maxLen: number): string => {
+      if (!occupied.has(base)) {
+        return base;
+      }
+      let n = 2;
+      while (n < 10000) {
+        const suffix = ` (${n})`;
+        const candidate = `${base.slice(0, Math.max(1, maxLen - suffix.length))}${suffix}`;
+        if (!occupied.has(candidate)) {
+          return candidate;
+        }
+        n += 1;
+      }
+      return base;
+    };
+
+    const rootFolderNames = new Set(
+      Array.from(this.folders.values())
+        .filter((f) => f.ownerId === ownerId && f.parentId === null && f.id !== folderId)
+        .map((f) => f.name),
+    );
+    for (const child of this.folders.values()) {
+      if (child.ownerId === ownerId && child.parentId === folderId) {
+        const nextName = resolveUnique(child.name, rootFolderNames, 100);
+        rootFolderNames.add(nextName);
+        child.parentId = null;
+        child.name = nextName;
+        child.updatedTime = new Date().toISOString();
+      }
+    }
+
+    const rootMapTitles = new Set(
+      Array.from(this.mindmaps.values())
+        .filter((m) => m.ownerId === ownerId && m.folderId === null)
+        .map((m) => m.title),
+    );
+    for (const m of this.mindmaps.values()) {
+      if (m.ownerId === ownerId && m.folderId === folderId) {
+        const nextTitle = resolveUnique(m.title, rootMapTitles, 512);
+        rootMapTitles.add(nextTitle);
+        m.folderId = null;
+        m.folderPath = '';
+        m.title = nextTitle;
+      }
+    }
+
+    this.folders.delete(folderId);
+    this.syncFolderPaths(ownerId);
+    return true;
+  }
+
+  moveMapsToFolder(
+    ownerId: string,
+    mapIds: number[],
+    folderId: number | null,
+  ): 'ok' | 'map_not_found' | 'folder_not_found' {
+    if (folderId !== null) {
+      const folder = this.folders.get(folderId);
+      if (!folder || folder.ownerId !== ownerId) {
+        return 'folder_not_found';
+      }
+    }
+    const uniqueIds = Array.from(new Set(mapIds));
+    for (const id of uniqueIds) {
+      const m = this.mindmaps.get(id);
+      if (!m || m.ownerId !== ownerId) {
+        return 'map_not_found';
+      }
+    }
+    const movingSet = new Set(uniqueIds);
+    const occupied = new Set(
+      Array.from(this.mindmaps.values())
+        .filter((m) => m.ownerId === ownerId && m.folderId === folderId && !movingSet.has(m.id))
+        .map((m) => m.title),
+    );
+    for (const id of uniqueIds) {
+      const m = this.mindmaps.get(id)!;
+      if (occupied.has(m.title)) {
+        throw new FakePgError('23505', m.title);
+      }
+      occupied.add(m.title);
+    }
+    const targetPath = this.buildFolderPath(ownerId, folderId);
+    for (const id of uniqueIds) {
+      const m = this.mindmaps.get(id)!;
+      m.folderId = folderId;
+      m.folderPath = targetPath;
+    }
+    return 'ok';
+  }
 }
 
 export interface FakeOAuthProfile {
@@ -740,6 +1023,7 @@ export function createFakeMindmapRepository(
     ownerId: m.ownerId,
     title: m.title,
     description: m.description,
+    folderId: m.folderId,
     folderPath: m.folderPath,
     xml: m.xml,
     properties: m.properties,
@@ -762,7 +1046,14 @@ export function createFakeMindmapRepository(
 
     async createMap(
       user: RepoUserLike,
-      input: { title: string; description: string; xml: string; properties?: string; folderPath?: string },
+      input: {
+        title: string;
+        description: string;
+        xml: string;
+        properties?: string;
+        folderId?: number | null;
+        folderPath?: string;
+      },
     ) {
       try {
         return store.createMindmap({
@@ -771,11 +1062,15 @@ export function createFakeMindmapRepository(
           ownerName: user.name,
           title: input.title,
           description: input.description,
+          folderId: input.folderId,
           folderPath: input.folderPath,
           xml: input.xml,
           properties: input.properties,
         });
       } catch (err) {
+        if (err instanceof FakePgError && err.code === '23503') {
+          throw new errors.NotFoundOrForbiddenError('Folder could not be found.', 'FOLDER_NOT_FOUND');
+        }
         if (err instanceof FakePgError && err.code === '23505') {
           throw new errors.RepoValidationError(
             [],
@@ -1056,6 +1351,113 @@ export function createFakeMindmapRepository(
         throw new errors.NotFoundOrForbiddenError();
       }
       store.removeLabelFromMap(user.uid, mapId, labelId);
+    },
+
+    async listFolders(user: RepoUserLike) {
+      return store.listFolders(user.uid).map((f) => ({
+        id: f.id,
+        name: f.name,
+        parentId: f.parentId,
+        creationTime: f.creationTime,
+        updatedTime: f.updatedTime,
+      }));
+    },
+
+    async createFolder(user: RepoUserLike, input: { name: string; parentId?: number | null }) {
+      try {
+        const f = store.createFolder({
+          ownerId: user.uid,
+          name: input.name,
+          parentId: input.parentId ?? null,
+        });
+        return {
+          id: f.id,
+          name: f.name,
+          parentId: f.parentId,
+          creationTime: f.creationTime,
+          updatedTime: f.updatedTime,
+        };
+      } catch (err) {
+        if (err instanceof FakePgError && err.code === '23503') {
+          throw new errors.NotFoundOrForbiddenError('Parent folder could not be found.', 'FOLDER_NOT_FOUND');
+        }
+        if (err instanceof FakePgError && err.code === '23505') {
+          throw new errors.RepoValidationError(
+            [],
+            { name: '同级目录下已存在同名文件夹。' },
+            'DUPLICATE_FOLDER_NAME',
+          );
+        }
+        throw err;
+      }
+    },
+
+    async updateFolder(
+      user: RepoUserLike,
+      folderId: number,
+      input: { name?: string; parentId?: number | null },
+    ) {
+      try {
+        const res = store.updateFolder({
+          ownerId: user.uid,
+          folderId,
+          name: input.name,
+          parentId: input.parentId,
+        });
+        if (res === 'not_found') {
+          throw new errors.NotFoundOrForbiddenError('Folder could not be found.', 'FOLDER_NOT_FOUND');
+        }
+        if (res === 'cycle') {
+          throw new errors.RepoValidationError(
+            ['不能将文件夹移动到自身或其子文件夹下。'],
+            { parentId: '不能将文件夹移动到自身或其子文件夹下。' },
+            'FOLDER_CYCLE',
+          );
+        }
+        return {
+          id: res.id,
+          name: res.name,
+          parentId: res.parentId,
+          creationTime: res.creationTime,
+          updatedTime: res.updatedTime,
+        };
+      } catch (err) {
+        if (err instanceof FakePgError && err.code === '23505') {
+          throw new errors.RepoValidationError(
+            [],
+            { name: '同级目录下已存在同名文件夹。' },
+            'DUPLICATE_FOLDER_NAME',
+          );
+        }
+        throw err;
+      }
+    },
+
+    async deleteFolder(user: RepoUserLike, folderId: number) {
+      if (!store.deleteFolder(user.uid, folderId)) {
+        throw new errors.NotFoundOrForbiddenError('Folder could not be found.', 'FOLDER_NOT_FOUND');
+      }
+    },
+
+    async moveMapsToFolder(user: RepoUserLike, mapIds: number[], folderId: number | null) {
+      try {
+        const res = store.moveMapsToFolder(user.uid, mapIds, folderId);
+        if (res === 'folder_not_found') {
+          throw new errors.NotFoundOrForbiddenError('Target folder could not be found.', 'FOLDER_NOT_FOUND');
+        }
+        if (res === 'map_not_found') {
+          throw new errors.NotFoundOrForbiddenError();
+        }
+      } catch (err) {
+        if (err instanceof FakePgError && err.code === '23505') {
+          throw new errors.RepoValidationError(
+            [`目标文件夹中已存在同名导图“${err.message}”。`],
+            { title: `目标文件夹中已存在同名导图“${err.message}”。` },
+            'DUPLICATE_MAP_TITLE',
+          );
+        }
+        throw err;
+      }
     },
   };
 }

@@ -6,9 +6,11 @@ import {
   VersionConflictError,
 } from '../../netlify/functions/lib/repo';
 import type {
+  CreateFolderInput,
   CreateLabelInput,
   CreateMapInput,
   DuplicateMapInput,
+  FolderDto,
   LabelDto,
   MindmapHistoryRecord,
   MindmapRecord,
@@ -16,6 +18,7 @@ import type {
   MindmapWithLabels,
   RepoUser,
   UpdateDocumentInput,
+  UpdateFolderInput,
   UpdateMapInput,
 } from '../../netlify/functions/lib/repo';
 
@@ -50,10 +53,77 @@ export class InMemoryMindmapRepo implements MindmapRepository {
   private nextMapId = 1;
   private nextHistoryId = 1;
   private nextLabelId = 1;
+  private nextFolderId = 1;
   private readonly maps = new Map<number, MindmapRecord>();
   private readonly histories: MindmapHistoryRecord[] = [];
   private readonly labels = new Map<number, { ownerId: string; dto: LabelDto }>();
+  private readonly folders = new Map<number, { ownerId: string; dto: FolderDto }>();
   private readonly mapLabels = new Map<number, Set<number>>();
+
+  private buildFolderPath(ownerId: string, folderId: number | null): string {
+    if (folderId === null) {
+      return '';
+    }
+    const parts: string[] = [];
+    const visited = new Set<number>();
+    let cur: number | null = folderId;
+    while (cur !== null && !visited.has(cur)) {
+      visited.add(cur);
+      const entry = this.folders.get(cur);
+      if (!entry || entry.ownerId !== ownerId) {
+        break;
+      }
+      parts.unshift(entry.dto.name);
+      cur = entry.dto.parentId;
+    }
+    return parts.length > 0 ? `${parts.join('/')}/` : '';
+  }
+
+  private syncFolderPaths(ownerId: string): void {
+    for (const m of this.maps.values()) {
+      if (m.ownerId === ownerId) {
+        m.folderPath = this.buildFolderPath(ownerId, m.folderId);
+      }
+    }
+  }
+
+  private resolveOrCreatePath(ownerId: string, rawPath: string): { folderId: number | null; folderPath: string } {
+    const segments = rawPath
+      .split('/')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+    if (segments.length === 0) {
+      return { folderId: null, folderPath: '' };
+    }
+    let parentId: number | null = null;
+    const normalized: string[] = [];
+    for (const rawSeg of segments) {
+      const seg = rawSeg.slice(0, 100);
+      normalized.push(seg);
+      let found: FolderDto | undefined;
+      for (const entry of this.folders.values()) {
+        if (entry.ownerId === ownerId && entry.dto.parentId === parentId && entry.dto.name === seg) {
+          found = entry.dto;
+          break;
+        }
+      }
+      if (found) {
+        parentId = found.id;
+      } else {
+        const now = new Date().toISOString();
+        const dto: FolderDto = {
+          id: this.nextFolderId++,
+          name: seg,
+          parentId,
+          creationTime: now,
+          updatedTime: now,
+        };
+        this.folders.set(dto.id, { ownerId, dto });
+        parentId = dto.id;
+      }
+    }
+    return { folderId: parentId, folderPath: `${normalized.join('/')}/` };
+  }
 
   getHistoryCount(mapId: number): number {
     return this.histories.filter((h) => h.mindmapId === mapId).length;
@@ -101,12 +171,25 @@ export class InMemoryMindmapRepo implements MindmapRepository {
   }
 
   async createMap(user: RepoUser, input: CreateMapInput): Promise<MindmapRecord> {
-    const folderPath = input.folderPath?.trim() ?? '';
+    let folderId: number | null = input.folderId ?? null;
+    let folderPath = '';
+    if (folderId !== null) {
+      const folderEntry = this.folders.get(folderId);
+      if (!folderEntry || folderEntry.ownerId !== user.uid) {
+        throw new NotFoundOrForbiddenError('Folder could not be found.', 'FOLDER_NOT_FOUND');
+      }
+      folderPath = this.buildFolderPath(user.uid, folderId);
+    } else if (input.folderPath?.trim()) {
+      const resolved = this.resolveOrCreatePath(user.uid, input.folderPath);
+      folderId = resolved.folderId;
+      folderPath = resolved.folderPath;
+    }
+
     for (const existing of this.maps.values()) {
       if (
         existing.ownerId === user.uid &&
         existing.title === input.title &&
-        (existing.folderPath ?? '') === folderPath
+        existing.folderId === folderId
       ) {
         if (!input.overwrite) {
           throw new RepoValidationError(
@@ -119,6 +202,8 @@ export class InMemoryMindmapRepo implements MindmapRepository {
         const updated: MindmapRecord = {
           ...existing,
           description: input.description,
+          folderId,
+          folderPath,
           xml: input.xml,
           properties: input.properties ?? existing.properties,
           version: existing.version + 1,
@@ -140,6 +225,7 @@ export class InMemoryMindmapRepo implements MindmapRepository {
       ownerId: user.uid,
       title: input.title,
       description: input.description,
+      folderId,
       folderPath,
       xml: input.xml,
       properties: input.properties ?? '{"zoom":0.8}',
@@ -210,7 +296,12 @@ export class InMemoryMindmapRepo implements MindmapRepository {
     }
     if (input.title !== undefined) {
       for (const existing of this.maps.values()) {
-        if (existing.ownerId === user.uid && existing.id !== mapId && existing.title === input.title) {
+        if (
+          existing.ownerId === user.uid &&
+          existing.id !== mapId &&
+          existing.folderId === map.folderId &&
+          existing.title === input.title
+        ) {
           throw new RepoValidationError(
             [],
             { title: 'You have already a map with the same name' },
@@ -256,7 +347,12 @@ export class InMemoryMindmapRepo implements MindmapRepository {
       throw new NotFoundOrForbiddenError();
     }
     for (const existing of this.maps.values()) {
-      if (existing.ownerId === user.uid && existing.id !== mapId && existing.title === title) {
+      if (
+        existing.ownerId === user.uid &&
+        existing.id !== mapId &&
+        existing.folderId === map.folderId &&
+        existing.title === title
+      ) {
         throw new RepoValidationError(
           [],
           { title: 'You have already a map with the same name' },
@@ -311,6 +407,7 @@ export class InMemoryMindmapRepo implements MindmapRepository {
     return this.createMap(user, {
       title: input.title,
       description: input.description ?? source.description,
+      folderId: source.folderId,
       xml: source.xml,
       properties: source.properties,
     });
@@ -448,6 +545,183 @@ export class InMemoryMindmapRepo implements MindmapRepository {
     }
     await this.assertMapOwned(user, mapId);
     this.mapLabels.get(mapId)?.delete(labelId);
+  }
+
+  async listFolders(user: RepoUser): Promise<FolderDto[]> {
+    return Array.from(this.folders.values())
+      .filter((entry) => entry.ownerId === user.uid)
+      .map((entry) => ({ ...entry.dto }))
+      .sort((a, b) => a.name.localeCompare(b.name) || a.id - b.id);
+  }
+
+  async createFolder(user: RepoUser, input: CreateFolderInput): Promise<FolderDto> {
+    const parentId = input.parentId ?? null;
+    if (parentId !== null) {
+      const parent = this.folders.get(parentId);
+      if (!parent || parent.ownerId !== user.uid) {
+        throw new NotFoundOrForbiddenError('Parent folder could not be found.', 'FOLDER_NOT_FOUND');
+      }
+    }
+    for (const entry of this.folders.values()) {
+      if (entry.ownerId === user.uid && entry.dto.parentId === parentId && entry.dto.name === input.name) {
+        throw new RepoValidationError(
+          [],
+          { name: '同级目录下已存在同名文件夹。' },
+          'DUPLICATE_FOLDER_NAME',
+        );
+      }
+    }
+    const now = new Date().toISOString();
+    const dto: FolderDto = {
+      id: this.nextFolderId++,
+      name: input.name,
+      parentId,
+      creationTime: now,
+      updatedTime: now,
+    };
+    this.folders.set(dto.id, { ownerId: user.uid, dto });
+    return { ...dto };
+  }
+
+  async updateFolder(user: RepoUser, folderId: number, input: UpdateFolderInput): Promise<FolderDto> {
+    const entry = this.folders.get(folderId);
+    if (!entry || entry.ownerId !== user.uid) {
+      throw new NotFoundOrForbiddenError('Folder could not be found.', 'FOLDER_NOT_FOUND');
+    }
+    const nextName = input.name !== undefined ? input.name : entry.dto.name;
+    const nextParentId = input.parentId !== undefined ? input.parentId : entry.dto.parentId;
+    if (nextParentId !== null) {
+      const parent = this.folders.get(nextParentId);
+      if (!parent || parent.ownerId !== user.uid) {
+        throw new NotFoundOrForbiddenError('Parent folder could not be found.', 'FOLDER_NOT_FOUND');
+      }
+      const visited = new Set<number>();
+      let cur: number | null = nextParentId;
+      while (cur !== null && !visited.has(cur)) {
+        if (cur === folderId) {
+          throw new RepoValidationError(
+            ['不能将文件夹移动到自身或其子文件夹下。'],
+            { parentId: '不能将文件夹移动到自身或其子文件夹下。' },
+            'FOLDER_CYCLE',
+          );
+        }
+        visited.add(cur);
+        const curEntry = this.folders.get(cur);
+        cur = curEntry?.ownerId === user.uid ? curEntry.dto.parentId : null;
+      }
+    }
+    for (const other of this.folders.values()) {
+      if (
+        other.ownerId === user.uid &&
+        other.dto.id !== folderId &&
+        other.dto.parentId === nextParentId &&
+        other.dto.name === nextName
+      ) {
+        throw new RepoValidationError(
+          [],
+          { name: '同级目录下已存在同名文件夹。' },
+          'DUPLICATE_FOLDER_NAME',
+        );
+      }
+    }
+    entry.dto = {
+      ...entry.dto,
+      name: nextName,
+      parentId: nextParentId,
+      updatedTime: new Date().toISOString(),
+    };
+    this.syncFolderPaths(user.uid);
+    return { ...entry.dto };
+  }
+
+  async deleteFolder(user: RepoUser, folderId: number): Promise<void> {
+    const entry = this.folders.get(folderId);
+    if (!entry || entry.ownerId !== user.uid) {
+      throw new NotFoundOrForbiddenError('Folder could not be found.', 'FOLDER_NOT_FOUND');
+    }
+    const resolveUnique = (base: string, occupied: Set<string>, maxLen: number): string => {
+      if (!occupied.has(base)) {
+        return base;
+      }
+      let n = 2;
+      while (occupied.has(`${base.slice(0, Math.max(1, maxLen - ` (${n})`.length))} (${n})`)) {
+        n += 1;
+      }
+      const suffix = ` (${n})`;
+      return `${base.slice(0, Math.max(1, maxLen - suffix.length))}${suffix}`;
+    };
+
+    const rootFolderNames = new Set(
+      Array.from(this.folders.values())
+        .filter((f) => f.ownerId === user.uid && f.dto.parentId === null && f.dto.id !== folderId)
+        .map((f) => f.dto.name),
+    );
+    for (const child of this.folders.values()) {
+      if (child.ownerId === user.uid && child.dto.parentId === folderId) {
+        const nextName = resolveUnique(child.dto.name, rootFolderNames, 100);
+        rootFolderNames.add(nextName);
+        child.dto = { ...child.dto, parentId: null, name: nextName, updatedTime: new Date().toISOString() };
+      }
+    }
+
+    const rootMapTitles = new Set(
+      Array.from(this.maps.values())
+        .filter((m) => m.ownerId === user.uid && m.folderId === null)
+        .map((m) => m.title),
+    );
+    for (const m of this.maps.values()) {
+      if (m.ownerId === user.uid && m.folderId === folderId) {
+        const nextTitle = resolveUnique(m.title, rootMapTitles, 512);
+        rootMapTitles.add(nextTitle);
+        m.folderId = null;
+        m.folderPath = '';
+        m.title = nextTitle;
+      }
+    }
+
+    this.folders.delete(folderId);
+    this.syncFolderPaths(user.uid);
+  }
+
+  async moveMapsToFolder(user: RepoUser, mapIds: number[], folderId: number | null): Promise<void> {
+    const uniqueIds = Array.from(new Set(mapIds));
+    if (uniqueIds.length === 0) {
+      return;
+    }
+    let targetPath = '';
+    if (folderId !== null) {
+      const folder = this.folders.get(folderId);
+      if (!folder || folder.ownerId !== user.uid) {
+        throw new NotFoundOrForbiddenError('Target folder could not be found.', 'FOLDER_NOT_FOUND');
+      }
+      targetPath = this.buildFolderPath(user.uid, folderId);
+    }
+
+    for (const id of uniqueIds) {
+      await this.assertMapOwned(user, id);
+    }
+    const movingSet = new Set(uniqueIds);
+    const occupied = new Set(
+      Array.from(this.maps.values())
+        .filter((m) => m.ownerId === user.uid && m.folderId === folderId && !movingSet.has(m.id))
+        .map((m) => m.title),
+    );
+    for (const id of uniqueIds) {
+      const m = this.maps.get(id)!;
+      if (occupied.has(m.title)) {
+        throw new RepoValidationError(
+          [`目标文件夹中已存在同名导图“${m.title}”。`],
+          { title: `目标文件夹中已存在同名导图“${m.title}”。` },
+          'DUPLICATE_MAP_TITLE',
+        );
+      }
+      occupied.add(m.title);
+    }
+    for (const id of uniqueIds) {
+      const m = this.maps.get(id)!;
+      m.folderId = folderId;
+      m.folderPath = targetPath;
+    }
   }
 
   async listAllXmlForOwner(user: RepoUser): Promise<string[]> {

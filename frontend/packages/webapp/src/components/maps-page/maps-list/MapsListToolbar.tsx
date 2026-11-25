@@ -19,11 +19,18 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import Tooltip from '@mui/material/Tooltip';
+import Box from '@mui/material/Box';
+import Link from '@mui/material/Link';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
+import DriveFileMoveRoundedIcon from '@mui/icons-material/DriveFileMoveRounded';
 import LabelRoundedIcon from '@mui/icons-material/LabelRounded';
+import NavigateNextRoundedIcon from '@mui/icons-material/NavigateNextRounded';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
+import type { Folder } from '../../../classes/client';
 import type { Filter } from '..';
-import { isLabelFilter } from './model';
+import { getFolderBreadcrumbs } from '../folderTree';
+import { isFolderFilter, isLabelFilter } from './model';
+import { APPLE_FONT_STACK } from '../appleDesign';
 import {
   BulkActionButton,
   CountPill,
@@ -42,10 +49,13 @@ import {
 
 interface MapsListToolbarProps {
   filter?: Filter;
+  folders?: Folder[];
   totalCount?: number;
   selectedCount: number;
   onDeleteSelected: () => void;
   onLabelSelected: () => void;
+  onMoveSelected?: (() => void) | undefined;
+  onFilterChange?: ((filter: Filter) => void) | undefined;
   onSearchChange: (value: string) => void;
   /** Shown at the end of the toolbar: the pagination, on wide screens. */
   end?: React.ReactNode;
@@ -54,10 +64,13 @@ interface MapsListToolbarProps {
 /** Above the list: workspace heading / bulk actions, Spotlight search, and pagination. */
 export const MapsListToolbar = ({
   filter,
+  folders = [],
   totalCount,
   selectedCount,
   onDeleteSelected,
   onLabelSelected,
+  onMoveSelected,
+  onFilterChange,
   onSearchChange,
   end,
 }: MapsListToolbarProps): React.ReactElement => {
@@ -77,6 +90,9 @@ export const MapsListToolbar = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
+  const folderBreadcrumbs =
+    filter && isFolderFilter(filter) ? getFolderBreadcrumbs(folders, filter.folderId) : [];
+
   const headingText = (() => {
     if (!filter || filter.type === 'all') {
       return intl.formatMessage({ id: 'maps.nav-all', defaultMessage: 'All' });
@@ -86,6 +102,9 @@ export const MapsListToolbar = ({
     }
     if (filter && isLabelFilter(filter)) {
       return filter.label.title;
+    }
+    if (filter && isFolderFilter(filter)) {
+      return folderBreadcrumbs[folderBreadcrumbs.length - 1]?.name ?? '文件夹';
     }
     return intl.formatMessage({ id: 'maps.nav-all', defaultMessage: 'All' });
   })();
@@ -136,12 +155,87 @@ export const MapsListToolbar = ({
                 </span>
               </BulkActionButton>
             </Tooltip>
+
+            {onMoveSelected && (
+              <Tooltip
+                arrow={true}
+                title={intl.formatMessage({
+                  id: 'folder.tooltip-move',
+                  defaultMessage: '将选中导图移动到文件夹',
+                })}
+              >
+                <BulkActionButton
+                  size="medium"
+                  variant="text"
+                  type="button"
+                  disableElevation={true}
+                  startIcon={<DriveFileMoveRoundedIcon />}
+                  onClick={onMoveSelected}
+                >
+                  <span className="button-text">
+                    <FormattedMessage id="action.move-to-folder" defaultMessage="移动到文件夹" />
+                  </span>
+                </BulkActionButton>
+              </Tooltip>
+            )}
           </>
         ) : (
-          <WorkspaceHeading>
-            <WorkspaceTitle>{headingText}</WorkspaceTitle>
-            {typeof totalCount === 'number' && <CountPill>{totalCount}</CountPill>}
-          </WorkspaceHeading>
+          <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 0, gap: '2px' }}>
+            {folderBreadcrumbs.length > 0 && onFilterChange && (
+              <Box
+                aria-label="文件夹路径"
+                sx={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: '2px',
+                  fontFamily: APPLE_FONT_STACK,
+                  fontSize: '0.76rem',
+                  fontWeight: 600,
+                  color: 'text.secondary',
+                }}
+              >
+                <Link
+                  component="button"
+                  type="button"
+                  underline="hover"
+                  color="inherit"
+                  onClick={() => onFilterChange({ type: 'all' })}
+                  sx={{ fontFamily: APPLE_FONT_STACK, fontSize: '0.76rem', fontWeight: 600 }}
+                >
+                  {intl.formatMessage({ id: 'maps.nav-all', defaultMessage: '所有' })}
+                </Link>
+                {folderBreadcrumbs.map((crumb, idx) => {
+                  const isLast = idx === folderBreadcrumbs.length - 1;
+                  return (
+                    <React.Fragment key={crumb.id}>
+                      <NavigateNextRoundedIcon sx={{ fontSize: 14, opacity: 0.55 }} />
+                      {isLast ? (
+                        <Box component="span" sx={{ color: 'text.primary', fontWeight: 700 }}>
+                          {crumb.name}
+                        </Box>
+                      ) : (
+                        <Link
+                          component="button"
+                          type="button"
+                          underline="hover"
+                          color="inherit"
+                          onClick={() => onFilterChange({ type: 'folder', folderId: crumb.id })}
+                          sx={{ fontFamily: APPLE_FONT_STACK, fontSize: '0.76rem', fontWeight: 600 }}
+                        >
+                          {crumb.name}
+                        </Link>
+                      )}
+                    </React.Fragment>
+                  );
+                })}
+              </Box>
+            )}
+            <WorkspaceHeading>
+              <WorkspaceTitle>{headingText}</WorkspaceTitle>
+              {typeof totalCount === 'number' && <CountPill>{totalCount}</CountPill>}
+            </WorkspaceHeading>
+          </Box>
         )}
       </ToolbarActions>
 

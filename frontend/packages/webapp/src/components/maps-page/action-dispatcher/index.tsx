@@ -27,6 +27,7 @@ import CreateDialog from './create-dialog';
 import HistoryDialog from './history-dialog';
 import DeleteMultiselectDialog from './delete-multiselect-dialog';
 import LabelDialog from './label-dialog';
+import MoveFolderDialog from './move-folder-dialog';
 import type { Designer } from '@wisemapping/editor';
 
 // Uses the editor's exporters: loaded lazily on demand.
@@ -40,6 +41,7 @@ export type BasicMapInfo = {
 type ActionDialogProps = {
   action?: ActionType;
   mapsId: number[];
+  folderId?: number | null | undefined;
   onClose: (success?: boolean) => void;
   fromEditor?: boolean;
   pageMode?: PageModeType;
@@ -52,6 +54,7 @@ type ActionDialogProps = {
 const ActionDispatcher = ({
   mapsId,
   action,
+  folderId,
   onClose,
   fromEditor = false,
   designer,
@@ -82,7 +85,7 @@ const ActionDispatcher = ({
 
   return (
     <Suspense fallback={null}>
-      {action === 'create' && <CreateDialog onClose={handleOnClose} />}
+      {action === 'create' && <CreateDialog onClose={handleOnClose} folderId={folderId} />}
       {action === 'delete' && mapsId.length == 1 && singleMap && (
         <DeleteDialog onClose={handleOnClose} mapId={mapId} />
       )}
@@ -105,6 +108,7 @@ const ActionDispatcher = ({
         />
       )}
       {action === 'label' && <LabelDialog onClose={handleOnClose} mapsId={mapsId} />}
+      {action === 'move-folder' && <MoveFolderDialog onClose={handleOnClose} mapsId={mapsId} />}
     </Suspense>
   );
 };

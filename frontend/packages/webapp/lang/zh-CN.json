@@ -110,6 +110,9 @@
   "action.label": {
     "defaultMessage": "添加标签"
   },
+  "action.move-to-folder": {
+    "defaultMessage": "移动到文件夹"
+  },
   "action.new": {
     "defaultMessage": "新建导图"
   },
@@ -1081,6 +1084,69 @@
   },
   "export.warning": {
     "defaultMessage": "导出为图像（SVG、PNG、JPEG、PDF）仅在编辑器工具栏中可用。"
+  },
+  "folder.create-button": {
+    "defaultMessage": "创建"
+  },
+  "folder.create-description": {
+    "defaultMessage": "请输入文件夹名称。"
+  },
+  "folder.create-title": {
+    "defaultMessage": "新建文件夹"
+  },
+  "folder.delete": {
+    "defaultMessage": "删除文件夹"
+  },
+  "folder.delete-description": {
+    "defaultMessage": "删除后，该文件夹内的导图和子文件夹将自动移回根目录，不会删除导图本身。"
+  },
+  "folder.delete-title": {
+    "defaultMessage": "确认删除文件夹"
+  },
+  "folder.empty": {
+    "defaultMessage": "暂无文件夹"
+  },
+  "folder.move-button": {
+    "defaultMessage": "移动到此处"
+  },
+  "folder.move-description": {
+    "defaultMessage": "选择目标文件夹，或先在下方新建文件夹。"
+  },
+  "folder.move-title": {
+    "defaultMessage": "移动到文件夹"
+  },
+  "folder.name-placeholder": {
+    "defaultMessage": "文件夹名称"
+  },
+  "folder.new": {
+    "defaultMessage": "新建文件夹"
+  },
+  "folder.new-subfolder": {
+    "defaultMessage": "新建子文件夹"
+  },
+  "folder.parent-label": {
+    "defaultMessage": "所属上级目录"
+  },
+  "folder.rename": {
+    "defaultMessage": "重命名文件夹"
+  },
+  "folder.rename-button": {
+    "defaultMessage": "保存"
+  },
+  "folder.rename-description": {
+    "defaultMessage": "请输入新的文件夹名称。"
+  },
+  "folder.rename-title": {
+    "defaultMessage": "重命名文件夹"
+  },
+  "folder.root": {
+    "defaultMessage": "根目录（未分类）"
+  },
+  "folder.section-title": {
+    "defaultMessage": "文件夹"
+  },
+  "folder.tooltip-move": {
+    "defaultMessage": "将选中导图移动到文件夹"
   },
   "footer.aboutus": {
     "defaultMessage": "关于我们"

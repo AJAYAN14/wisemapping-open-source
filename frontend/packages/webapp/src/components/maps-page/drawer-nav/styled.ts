@@ -77,13 +77,53 @@ export const LogoText = styled('div')(({ theme }) => {
 export const SectionHeader = styled('div')(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
-    padding: '10px 18px 4px 18px',
+    padding: '10px 14px 4px 18px',
     fontSize: '11.5px',
     fontWeight: 700,
     letterSpacing: '0.03em',
     textTransform: 'uppercase',
     color: c.textTertiary,
     fontFamily: APPLE_FONT_STACK,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  };
+});
+
+export const SectionActionButton = styled(IconButton)(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    padding: '3px',
+    color: c.textTertiary,
+    borderRadius: '8px',
+    ...applePressMixin,
+    '&:hover': {
+      color: c.amber,
+      backgroundColor: c.hoverFill,
+    },
+  };
+});
+
+export const FolderItemRoot = styled(Box)({
+  position: 'relative',
+  '&:hover .folder-more-button, &:focus-within .folder-more-button': {
+    opacity: '1 !important',
+  },
+});
+
+export const FolderMoreButton = styled(IconButton)(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    opacity: 0,
+    transition: 'opacity 0.16s ease, color 0.14s ease, background-color 0.14s ease',
+    padding: '3px',
+    borderRadius: '8px',
+    color: c.textTertiary,
+    '&:hover': {
+      opacity: 1,
+      color: c.textPrimary,
+      backgroundColor: c.hoverFill,
+    },
   };
 });
 

@@ -23,6 +23,7 @@ import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
 import CloudDownloadRoundedIcon from '@mui/icons-material/CloudDownloadRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import LabelRoundedIcon from '@mui/icons-material/LabelRounded';
+import DriveFileMoveRoundedIcon from '@mui/icons-material/DriveFileMoveRounded';
 import HistoryRoundedIcon from '@mui/icons-material/HistoryRounded';
 
 import { FormattedMessage } from 'react-intl';
@@ -39,6 +40,7 @@ export type ActionType =
   | 'duplicate'
   | 'export'
   | 'label'
+  | 'move-folder'
   | 'rename'
   | 'history'
   | 'back'
@@ -124,6 +126,13 @@ const ActionChooser = (props: ActionProps): React.ReactElement => {
           <LabelRoundedIcon fontSize="small" />
         </ListItemIcon>
         <FormattedMessage id="action.label" defaultMessage="Add Label" />
+      </MenuItem>
+
+      <MenuItem onClick={handleOnClose('move-folder')}>
+        <ListItemIcon>
+          <DriveFileMoveRoundedIcon fontSize="small" />
+        </ListItemIcon>
+        <FormattedMessage id="action.move-to-folder" defaultMessage="移动到文件夹" />
       </MenuItem>
 
       <MenuItem onClick={handleOnClose('delete')} sx={{ color: 'error.main' }}>

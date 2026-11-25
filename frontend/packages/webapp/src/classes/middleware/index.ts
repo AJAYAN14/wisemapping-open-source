@@ -62,6 +62,8 @@ export const useFetchMapById = (id: number): MapLoadResult => {
             lastModificationBy: data.lastModificationBy ?? '',
             lastModificationTime: data.lastModificationTime ?? '',
             description: data.description ?? '',
+            folderId: data.folderId ?? null,
+            folderPath: data.folderPath ?? '',
             public: data.public ?? false,
             role: data.role,
           }

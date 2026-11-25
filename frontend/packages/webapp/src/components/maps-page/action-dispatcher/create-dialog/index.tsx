@@ -34,14 +34,16 @@ import { ClientContext } from '../../../../classes/provider/client-context';
 export type CreateModel = {
   title: string;
   description?: string;
+  folderId?: number | null | undefined;
 };
 
 export type CreateProps = {
   onClose: () => void;
+  folderId?: number | null | undefined;
 };
 
 const defaultModel: CreateModel = { title: '', description: '' };
-const CreateDialog = ({ onClose }: CreateProps): React.ReactElement => {
+const CreateDialog = ({ onClose, folderId }: CreateProps): React.ReactElement => {
   const client = use(ClientContext);
   const [model, setModel] = React.useState<CreateModel>(defaultModel);
   const [error, setError] = React.useState<ErrorInfo>();
@@ -49,7 +51,10 @@ const CreateDialog = ({ onClose }: CreateProps): React.ReactElement => {
 
   const mutation = useMutation<number, ErrorInfo, CreateModel>({
     mutationFn: (model: CreateModel) => {
-      return client.createMap(model);
+      return client.createMap({
+        ...model,
+        ...(folderId !== undefined ? { folderId } : {}),
+      });
     },
     onSuccess: (mapId: number) => {
       window.location.href = `/c/maps/${mapId}/edit`;

@@ -604,4 +604,153 @@ describe('API Contract Tests (/api/restful/*)', () => {
       ).status,
     ).toBe(400);
   });
+
+  it('supports full folder CRUD, move-to-folder (single & batch), cycle prevention, and delete-to-root', async () => {
+    // 1. Create parent & child folders
+    const createParentRes = await handler(
+      new Request('http://localhost:8888/api/restful/folders', {
+        method: 'POST',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ name: '工作' }),
+      }),
+    );
+    expect(createParentRes.status).toBe(201);
+    const parentBody = (await createParentRes.json()) as { folder: { id: number; name: string; parentId: number | null } };
+    const parentId = parentBody.folder.id;
+    expect(parentBody.folder.parentId).toBeNull();
+
+    const createChildRes = await handler(
+      new Request('http://localhost:8888/api/restful/folders', {
+        method: 'POST',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ name: '2026', parentId }),
+      }),
+    );
+    expect(createChildRes.status).toBe(201);
+    const childId = ((await createChildRes.json()) as { folder: { id: number } }).folder.id;
+
+    // Invalid folder name with slash -> 400
+    const badNameRes = await handler(
+      new Request('http://localhost:8888/api/restful/folders', {
+        method: 'POST',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ name: 'a/b' }),
+      }),
+    );
+    expect(badNameRes.status).toBe(400);
+
+    // Cycle check -> 400
+    const cycleRes = await handler(
+      new Request(`http://localhost:8888/api/restful/folders/${parentId}`, {
+        method: 'PUT',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ parentId: childId }),
+      }),
+    );
+    expect(cycleRes.status).toBe(400);
+
+    // 2. Create a map inside child folder and a map at root
+    const mapInChildRes = await handler(
+      new Request(`http://localhost:8888/api/restful/maps?title=SubMap&folderId=${childId}`, {
+        method: 'POST',
+        headers: authHeaders(),
+      }),
+    );
+    expect(mapInChildRes.status).toBe(201);
+    const mapInChildId = Number.parseInt(mapInChildRes.headers.get('resourceid')!, 10);
+
+    const rootMapRes = await handler(
+      new Request('http://localhost:8888/api/restful/maps?title=RootMap', {
+        method: 'POST',
+        headers: authHeaders(),
+      }),
+    );
+    expect(rootMapRes.status).toBe(201);
+    const rootMapId = Number.parseInt(rootMapRes.headers.get('resourceid')!, 10);
+
+    // 3. Move root map into parent folder (single) and then batch move both into child folder
+    const moveSingleRes = await handler(
+      new Request(`http://localhost:8888/api/restful/maps/${rootMapId}/folder`, {
+        method: 'PUT',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ folderId: parentId }),
+      }),
+    );
+    expect(moveSingleRes.status).toBe(204);
+
+    const moveBatchRes = await handler(
+      new Request('http://localhost:8888/api/restful/maps/batch/folder', {
+        method: 'PUT',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ mapIds: [rootMapId, mapInChildId], folderId: childId }),
+      }),
+    );
+    expect(moveBatchRes.status).toBe(204);
+
+    // Verify list maps reflects folderId and folderPath
+    const listRes = await handler(
+      new Request('http://localhost:8888/api/restful/maps', {
+        headers: authHeaders(),
+      }),
+    );
+    expect(listRes.status).toBe(200);
+    const listBody = (await listRes.json()) as {
+      mindmapsInfo: Array<{ id: number; folderId: number | null; folderPath: string }>;
+    };
+    expect(listBody.mindmapsInfo.find((m) => m.id === rootMapId)).toMatchObject({
+      folderId: childId,
+      folderPath: '工作/2026/',
+    });
+
+    // 4. Rename parent folder and confirm map folderPath updates
+    const renameRes = await handler(
+      new Request(`http://localhost:8888/api/restful/folders/${parentId}`, {
+        method: 'PUT',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ name: '归档' }),
+      }),
+    );
+    expect(renameRes.status).toBe(200);
+
+    const listAfterRename = await handler(
+      new Request('http://localhost:8888/api/restful/maps', {
+        headers: authHeaders(),
+      }),
+    );
+    const listAfterRenameBody = (await listAfterRename.json()) as {
+      mindmapsInfo: Array<{ id: number; folderId: number | null; folderPath: string }>;
+    };
+    expect(listAfterRenameBody.mindmapsInfo.find((m) => m.id === mapInChildId)?.folderPath).toBe(
+      '归档/2026/',
+    );
+
+    // 5. Delete child folder -> maps move back to root, not deleted
+    const delRes = await handler(
+      new Request(`http://localhost:8888/api/restful/folders/${childId}`, {
+        method: 'DELETE',
+        headers: authHeaders(),
+      }),
+    );
+    expect(delRes.status).toBe(204);
+
+    const listAfterDelete = await handler(
+      new Request('http://localhost:8888/api/restful/maps', {
+        headers: authHeaders(),
+      }),
+    );
+    const listAfterDeleteBody = (await listAfterDelete.json()) as {
+      mindmapsInfo: Array<{ id: number; folderId: number | null; folderPath: string }>;
+    };
+    expect(listAfterDeleteBody.mindmapsInfo).toHaveLength(2);
+    expect(listAfterDeleteBody.mindmapsInfo.every((m) => m.folderId === null && m.folderPath === '')).toBe(true);
+
+    const foldersAfterDelete = await handler(
+      new Request('http://localhost:8888/api/restful/folders', {
+        headers: authHeaders(),
+      }),
+    );
+    expect(((await foldersAfterDelete.json()) as { folders: Array<{ id: number }> }).folders.map((f) => f.id)).toEqual([
+      parentId,
+    ]);
+  });
 });

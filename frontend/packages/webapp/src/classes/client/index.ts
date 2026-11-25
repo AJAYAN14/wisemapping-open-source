@@ -34,6 +34,7 @@ export type NewUser = {
 export type ImportMapInfo = {
   title: string;
   description?: string;
+  folderId?: number | null | undefined;
   folderPath?: string;
   contentType?: string;
   content?: ArrayBuffer | string;
@@ -46,6 +47,14 @@ export type Label = {
   color: string;
 };
 
+export type Folder = {
+  id: number;
+  name: string;
+  parentId: number | null;
+  creationTime?: string | undefined;
+  updatedTime?: string | undefined;
+};
+
 // 'none': the map is public and the signed-in user (or the anonymous visitor) is no collaborator.
 export type Role = 'owner' | 'editor' | 'viewer' | 'none';
 
@@ -53,6 +62,7 @@ export type MapInfo = {
   id: number;
   starred: boolean;
   title: string;
+  folderId?: number | null | undefined;
   folderPath?: string;
   labels: Label[];
   createdBy: string;
@@ -74,6 +84,7 @@ export type MapMetadata = {
   role: Role; // User's role for this map (owner, editor, viewer, or none)
   // Extended fields to match MapInfo
   description?: string;
+  folderId?: number | null | undefined;
   folderPath?: string;
   createdBy?: string; // Email
   creationTime?: string;
@@ -94,6 +105,7 @@ export type ChangeHistory = {
 export type BasicMapInfo = {
   title: string;
   description?: string;
+  folderId?: number | null | undefined;
 };
 
 /**
@@ -102,6 +114,9 @@ export type BasicMapInfo = {
  * dialog, all limit the name to it.
  */
 export const MAP_TITLE_MAX_LENGTH = 255;
+
+/** The longest folder name the backend accepts (`public.folders.name` is VARCHAR(100)). */
+export const FOLDER_NAME_MAX_LENGTH = 100;
 
 /** The longest label title the backend accepts (Constants.MAX_LABEL_NAME_LENGTH). */
 export const LABEL_TITLE_MAX_LENGTH = 30;
@@ -238,6 +253,11 @@ interface Client {
   deleteLabel(id: number): Promise<void>;
   addLabelToMap(labelId: number, mapId: number): Promise<void>;
   deleteLabelFromMap(labelId: number, mapId: number): Promise<void>;
+  fetchFolders?(): Promise<Folder[]>;
+  createFolder?(name: string, parentId?: number | null): Promise<Folder>;
+  updateFolder?(id: number, changes: { name?: string; parentId?: number | null }): Promise<Folder>;
+  deleteFolder?(id: number): Promise<void>;
+  moveMapsToFolder?(mapIds: number[], folderId: number | null): Promise<void>;
   fetchAccountInfo(): Promise<AccountInfo>;
 
   registerNewUser(user: NewUser): Promise<void>;

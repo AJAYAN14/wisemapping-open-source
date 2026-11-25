@@ -130,6 +130,81 @@ describe('Folder import and path preservation contract', () => {
         'utf8',
       );
       expect(mapsListModel).toContain('mapInfo.folderPath');
+      expect(mapsListModel).toContain("case 'folder':");
+    });
+  });
+
+  describe('Migration 0004_folders.sql and full folder lifecycle', () => {
+    it('defines idempotent folders table, folder_id FK, RLS, and folder_path backfill', () => {
+      const migrationFile = path.join(ROOT, 'supabase/migrations/0004_folders.sql');
+      expect(fs.existsSync(migrationFile)).toBe(true);
+      const sql = fs.readFileSync(migrationFile, 'utf8');
+
+      expect(sql).toContain('CREATE TABLE IF NOT EXISTS public.folders');
+      expect(sql).toContain('ADD COLUMN IF NOT EXISTS folder_id BIGINT');
+      expect(sql).toContain('ON DELETE SET NULL');
+      expect(sql).toContain('ALTER TABLE public.folders ENABLE ROW LEVEL SECURITY');
+      expect(sql).toContain('ALTER TABLE public.folders FORCE ROW LEVEL SECURITY');
+      expect(sql).toContain('public.is_valid_parent_folder');
+      expect(sql).toContain('public.is_valid_mindmap_folder');
+    });
+
+    it('supports creating, nesting, renaming, moving maps, and safe-deleting folders back to root', async () => {
+      const store = new FakeStore();
+      const repo = createFakeMindmapRepository(store);
+      const user = { uid: 'u-1', email: 'owner@test.com', name: 'Owner' };
+
+      const rootFolder = await repo.createFolder(user, { name: '工作' });
+      const childFolder = await repo.createFolder(user, { name: '2026', parentId: rootFolder.id });
+
+      // Duplicate folder in same parent must fail
+      await expect(
+        repo.createFolder(user, { name: '2026', parentId: rootFolder.id }),
+      ).rejects.toThrow();
+
+      // Cycle prevention: moving parent under its own child must fail
+      await expect(
+        repo.updateFolder(user, rootFolder.id, { parentId: childFolder.id }),
+      ).rejects.toThrow();
+
+      const m1 = await repo.createMap(user, {
+        title: '路线图',
+        description: '',
+        xml: '<map/>',
+      });
+      expect(m1.folderId).toBeNull();
+      expect(m1.folderPath).toBe('');
+
+      // Move m1 into nested childFolder
+      await repo.moveMapsToFolder(user, [m1.id], childFolder.id);
+      let listed = await repo.listMaps(user);
+      expect(listed.find((m) => m.id === m1.id)?.folderId).toBe(childFolder.id);
+      expect(listed.find((m) => m.id === m1.id)?.folderPath).toBe('工作/2026/');
+
+      // Rename parent folder -> descendant map folderPath must sync
+      await repo.updateFolder(user, rootFolder.id, { name: '项目' });
+      listed = await repo.listMaps(user);
+      expect(listed.find((m) => m.id === m1.id)?.folderPath).toBe('项目/2026/');
+
+      // Create another map directly in root with same title "路线图" (allowed across different folders)
+      const rootDup = await repo.createMap(user, {
+        title: '路线图',
+        description: '',
+        xml: '<map/>',
+      });
+      expect(rootDup.folderId).toBeNull();
+
+      // Delete childFolder -> m1 moves back to root with collision-safe title suffix, map is preserved
+      await repo.deleteFolder(user, childFolder.id);
+      const foldersAfter = await repo.listFolders(user);
+      expect(foldersAfter.map((f) => f.id)).toEqual([rootFolder.id]);
+
+      listed = await repo.listMaps(user);
+      expect(listed).toHaveLength(2);
+      const movedBack = listed.find((m) => m.id === m1.id);
+      expect(movedBack?.folderId).toBeNull();
+      expect(movedBack?.folderPath).toBe('');
+      expect(movedBack?.title).toBe('路线图 (2)');
     });
   });
 });

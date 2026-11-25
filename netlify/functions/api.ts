@@ -39,6 +39,7 @@ import type { AssetStorageService, UploadUrlRequestItem } from './lib/storage';
 import {
   buildDefaultMindmapXml,
   validateDescription,
+  validateFolderName,
   validateLabelInput,
   validateMindmapXml,
   validateNoteContent,
@@ -376,6 +377,24 @@ export function createApiHandler(
         return jsonResponse(req, 200, validateNoteContent(note));
       }
 
+      // Batch move maps to folder endpoint (must match before /maps/{id})
+      if (path === '/maps/batch/folder' && method === 'PUT') {
+        const body = await readJsonBody<{ mapIds?: unknown; folderId?: unknown }>(req);
+        if (!Array.isArray(body.mapIds) || body.mapIds.length === 0) {
+          throw new BadRequestError(['Missing required field: mapIds.'], {
+            globalSeverity: 'WARNING',
+            errorCode: 'INVALID_BATCH_IDS',
+          });
+        }
+        const mapIds = body.mapIds.map((id) => parsePositiveInt(String(id), 'mapIds'));
+        const folderId =
+          body.folderId === null || body.folderId === undefined
+            ? null
+            : parsePositiveInt(String(body.folderId), 'folderId');
+        await repo.moveMapsToFolder(user, mapIds, folderId);
+        return emptyResponse(req, 204);
+      }
+
       // Batch delete endpoint (must match before /maps/{id})
       if (path === '/maps/batch' && method === 'DELETE') {
         const idsParam = url.searchParams.get('ids')?.trim() ?? '';
@@ -409,6 +428,7 @@ export function createApiHandler(
               id: m.id,
               title: m.title,
               description: m.description,
+              folderId: m.folderId,
               folderPath: m.folderPath,
               creator: user.name,
               lastModifierUser: m.lastModificationBy || user.name,
@@ -443,6 +463,8 @@ export function createApiHandler(
 
           const title = (titleCheck as { valid: true; value: string }).value;
           const description = (descCheck as { valid: true; value: string }).value;
+          const rawFolderId = url.searchParams.get('folderId')?.trim();
+          const folderId = rawFolderId ? parsePositiveInt(rawFolderId, 'folderId') : null;
           const folderPath = url.searchParams.get('folderPath')?.trim() || '';
           const overwrite = url.searchParams.get('overwrite') === 'true';
           const layout = url.searchParams.get('layout')?.trim() || 'mindmap';
@@ -466,6 +488,7 @@ export function createApiHandler(
             title,
             description,
             xml,
+            folderId,
             folderPath,
             overwrite,
           });
@@ -524,6 +547,75 @@ export function createApiHandler(
         const labelId = parsePositiveInt(labelMatch[1], 'labelId');
         await repo.deleteLabel(user, labelId);
         return emptyResponse(req, 204);
+      }
+
+      // Folders collection: GET/POST /folders
+      if (path === '/folders') {
+        if (method === 'GET') {
+          const folders = await repo.listFolders(user);
+          return jsonResponse(req, 200, { folders });
+        }
+        if (method === 'POST') {
+          const body = await readJsonBody<{ name?: unknown; parentId?: unknown }>(req);
+          const nameCheck = validateFolderName(body.name);
+          if (!nameCheck.valid) {
+            return restErrorResponse(req, 400, [], {
+              fieldErrors: nameCheck.fieldErrors,
+              globalSeverity: 'WARNING',
+            });
+          }
+          const parentId =
+            body.parentId !== undefined && body.parentId !== null
+              ? parsePositiveInt(String(body.parentId), 'parentId')
+              : null;
+          const folder = await repo.createFolder(user, {
+            name: nameCheck.value,
+            parentId,
+          });
+          return jsonResponse(
+            req,
+            201,
+            { folder },
+            {
+              Location: `/api/restful/folders/${folder.id}`,
+              ResourceId: String(folder.id),
+            },
+          );
+        }
+      }
+
+      // PUT/DELETE /folders/{id}
+      const folderMatch = /^\/folders\/([^/]+)$/.exec(path);
+      if (folderMatch) {
+        const folderId = parsePositiveInt(folderMatch[1], 'folderId');
+        if (method === 'PUT') {
+          const body = await readJsonBody<{ name?: unknown; parentId?: unknown }>(req);
+          let validatedName: string | undefined;
+          if (body.name !== undefined) {
+            const nameCheck = validateFolderName(body.name);
+            if (!nameCheck.valid) {
+              return restErrorResponse(req, 400, [], {
+                fieldErrors: nameCheck.fieldErrors,
+                globalSeverity: 'WARNING',
+              });
+            }
+            validatedName = nameCheck.value;
+          }
+          let nextParentId: number | null | undefined;
+          if (body.parentId !== undefined) {
+            nextParentId =
+              body.parentId === null ? null : parsePositiveInt(String(body.parentId), 'parentId');
+          }
+          const folder = await repo.updateFolder(user, folderId, {
+            name: validatedName,
+            parentId: nextParentId,
+          });
+          return jsonResponse(req, 200, { folder });
+        }
+        if (method === 'DELETE') {
+          await repo.deleteFolder(user, folderId);
+          return emptyResponse(req, 204);
+        }
       }
 
       // -----------------------------------------------------------------------
@@ -608,6 +700,7 @@ export function createApiHandler(
             creatorFullName: user.name,
             role: 'owner',
             description: map.description,
+            folderId: map.folderId,
             folderPath: map.folderPath,
             createdBy: user.email,
             creationTime: map.creationTime,
@@ -702,6 +795,19 @@ export function createApiHandler(
             'X-Mindmap-Version': String(result.version),
           });
         }
+      }
+
+      // PUT /maps/{id}/folder
+      const mapFolderMatch = /^\/maps\/([^/]+)\/folder$/.exec(path);
+      if (mapFolderMatch && method === 'PUT') {
+        const mapId = parsePositiveInt(mapFolderMatch[1], 'mapId');
+        const body = await readJsonBody<{ folderId?: unknown }>(req);
+        const folderId =
+          body.folderId === null || body.folderId === undefined
+            ? null
+            : parsePositiveInt(String(body.folderId), 'folderId');
+        await repo.moveMapsToFolder(user, [mapId], folderId);
+        return emptyResponse(req, 204);
       }
 
       // PUT /maps/{id}/title
@@ -850,6 +956,8 @@ export function createApiHandler(
               id: map.id,
               title: map.title,
               description: map.description,
+              folderId: map.folderId,
+              folderPath: map.folderPath,
               creator: user.email,
               owner: user.email,
               lastModifierUser: {

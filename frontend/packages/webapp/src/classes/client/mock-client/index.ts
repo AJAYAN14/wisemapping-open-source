@@ -22,6 +22,7 @@ import Client, {
   ChangeHistory,
   ImportMapInfo,
   Label,
+  Folder,
   MapInfo,
   NewUser,
   Permission,
@@ -36,6 +37,7 @@ import { appLogger as log } from '../../../utils/logger';
 
 const MOCK_MAPS_KEY = 'wisemapping.mock.maps';
 const MOCK_LABELS_KEY = 'wisemapping.mock.labels';
+const MOCK_FOLDERS_KEY = 'wisemapping.mock.folders';
 const MOCK_SEQ_KEY = 'wisemapping.mock.seq';
 const MOCK_XML_PREFIX = 'wisemapping.mock.xml.';
 const MOCK_PROPS_PREFIX = 'wisemapping.mock.props.';
@@ -131,6 +133,89 @@ const loadMockLabels = (): Label[] => readJsonArray<Label>(MOCK_LABELS_KEY);
 
 const saveMockLabels = (labels: Label[]): void => {
   writeJson(MOCK_LABELS_KEY, labels);
+};
+
+const loadMockFolders = (): Folder[] => readJsonArray<Folder>(MOCK_FOLDERS_KEY);
+
+const saveMockFolders = (folders: Folder[]): void => {
+  writeJson(MOCK_FOLDERS_KEY, folders);
+};
+
+const buildMockFolderPath = (folders: Folder[], folderId: number | null | undefined): string => {
+  if (folderId === undefined || folderId === null) {
+    return '';
+  }
+  const byId = new Map(folders.map((f) => [f.id, f]));
+  const parts: string[] = [];
+  const visited = new Set<number>();
+  let cur: number | null = folderId;
+  while (cur !== null && !visited.has(cur)) {
+    visited.add(cur);
+    const f = byId.get(cur);
+    if (!f) {
+      break;
+    }
+    parts.unshift(f.name);
+    cur = f.parentId ?? null;
+  }
+  return parts.length > 0 ? `${parts.join('/')}/` : '';
+};
+
+const resolveOrCreateMockFolderPath = (
+  rawPath: string,
+): { folderId: number | null; folderPath: string } => {
+  const segments = rawPath
+    .split('/')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+  if (segments.length === 0) {
+    return { folderId: null, folderPath: '' };
+  }
+  const folders = loadMockFolders();
+  let parentId: number | null = null;
+  let changed = false;
+  const normalized: string[] = [];
+  for (const rawSeg of segments) {
+    const seg = rawSeg.slice(0, 100);
+    normalized.push(seg);
+    const existing = folders.find((f) => (f.parentId ?? null) === parentId && f.name === seg);
+    if (existing) {
+      parentId = existing.id;
+    } else {
+      const maxId = folders.reduce((max, f) => (f.id > max ? f.id : max), 0);
+      const id = nextMockSeq(maxId);
+      const now = new Date().toISOString();
+      folders.push({
+        id,
+        name: seg,
+        parentId,
+        creationTime: now,
+        updatedTime: now,
+      });
+      changed = true;
+      parentId = id;
+    }
+  }
+  if (changed) {
+    saveMockFolders(folders);
+  }
+  return { folderId: parentId, folderPath: `${normalized.join('/')}/` };
+};
+
+const resolveUniqueMockName = (base: string, occupied: Set<string>, maxLen: number): string => {
+  if (!occupied.has(base)) {
+    return base;
+  }
+  let n = 2;
+  while (n < 10000) {
+    const suffix = ` (${n})`;
+    const candidate = `${base.slice(0, Math.max(1, maxLen - suffix.length))}${suffix}`;
+    if (!occupied.has(candidate)) {
+      return candidate;
+    }
+    n += 1;
+  }
+  return base;
 };
 
 const loadMockXml = (id: number): string | null => {
@@ -229,6 +314,8 @@ class MockClient implements Client {
       jsonProps: savedProps ?? '{ "zoom": 0.8 }',
       role: map.role,
       description: map.description,
+      folderId: map.folderId ?? null,
+      folderPath: map.folderPath ?? '',
       createdBy: map.createdBy,
       creationTime: map.creationTime,
       lastModificationBy: map.lastModificationBy,
@@ -319,6 +406,40 @@ class MockClient implements Client {
   importMap(model: ImportMapInfo): Promise<number> {
     log.debug('model:' + model.title);
     const maps = loadMockMaps();
+    const folders = loadMockFolders();
+    let folderId: number | null = model.folderId ?? null;
+    let folderPath = '';
+    if (folderId !== null) {
+      folderPath = buildMockFolderPath(folders, folderId);
+    } else if (model.folderPath?.trim()) {
+      const resolved = resolveOrCreateMockFolderPath(model.folderPath);
+      folderId = resolved.folderId;
+      folderPath = resolved.folderPath;
+    }
+
+    const existing = maps.find(
+      (m) => (m.folderId ?? null) === folderId && m.title === model.title,
+    );
+    if (existing) {
+      if (!model.overwrite) {
+        return Promise.reject({
+          errorCode: 'DUPLICATE_MAP_TITLE',
+          fields: { title: 'You have already a map with the same name' },
+          msg: 'You have already a map with the same name',
+        });
+      }
+      const now = new Date().toISOString();
+      const { email } = getCurrentUserIdentity();
+      existing.description = model.description || '';
+      existing.lastModificationTime = now;
+      existing.lastModificationBy = email;
+      saveMockMaps(maps);
+      if (typeof model.content === 'string' && model.content.trim()) {
+        saveMockXml(existing.id, model.content);
+      }
+      return Promise.resolve(existing.id);
+    }
+
     const maxMapId = maps.reduce((max, m) => (m.id > max ? m.id : max), 0);
     const id = nextMockSeq(maxMapId);
     const now = new Date().toISOString();
@@ -327,7 +448,8 @@ class MockClient implements Client {
       id,
       description: model.description || '',
       title: model.title,
-      folderPath: model.folderPath || '',
+      folderId,
+      folderPath,
       starred: false,
       createdBy: email,
       labels: [],
@@ -440,6 +562,19 @@ class MockClient implements Client {
 
   createMap(map: BasicMapInfo): Promise<number> {
     const maps = loadMockMaps();
+    const folders = loadMockFolders();
+    const folderId = map.folderId ?? null;
+    const folderPath = buildMockFolderPath(folders, folderId);
+    if (maps.some((m) => (m.folderId ?? null) === folderId && m.title === map.title)) {
+      return Promise.reject({
+        errorCode: 'DUPLICATE_MAP_TITLE',
+        msg: 'Map already exists: ' + map.title,
+        fields: {
+          name: 'name already exists ',
+          title: 'name already exists ',
+        },
+      });
+    }
     const maxMapId = maps.reduce((max, m) => (m.id > max ? m.id : max), 0);
     const id = nextMockSeq(maxMapId);
     const now = new Date().toISOString();
@@ -448,7 +583,8 @@ class MockClient implements Client {
       id,
       description: map.description || '',
       title: map.title,
-      folderPath: '',
+      folderId,
+      folderPath,
       starred: false,
       createdBy: email,
       labels: [],
@@ -500,7 +636,12 @@ class MockClient implements Client {
 
     const exists =
       basicInfo.title !== undefined &&
-      maps.some((m) => m.id !== id && m.title === basicInfo.title);
+      maps.some(
+        (m) =>
+          m.id !== id &&
+          (m.folderId ?? null) === (target.folderId ?? null) &&
+          m.title === basicInfo.title,
+      );
     if (!exists) {
       const now = new Date().toISOString();
       const { email } = getCurrentUserIdentity();
@@ -559,7 +700,9 @@ class MockClient implements Client {
       return Promise.reject({ msg: `Map could not be found ${id}`, status: 404 });
     }
 
-    const exists = maps.some((m) => m.title === basicInfo.title);
+    const exists = maps.some(
+      (m) => (m.folderId ?? null) === (source.folderId ?? null) && m.title === basicInfo.title,
+    );
     if (exists) {
       return Promise.reject({
         msg: 'Maps name must be unique:' + basicInfo.title,
@@ -579,6 +722,8 @@ class MockClient implements Client {
       id: newId,
       description: basicInfo.description || '',
       title: basicInfo.title,
+      folderId: source.folderId ?? null,
+      folderPath: source.folderPath ?? '',
       starred: false,
       createdBy: email,
       labels: [],
@@ -652,6 +797,178 @@ class MockClient implements Client {
     }
     map.labels = map.labels.filter((l) => l.id !== labelId);
     saveMockMaps(maps);
+    return Promise.resolve();
+  }
+
+  fetchFolders(): Promise<Folder[]> {
+    const folders = loadMockFolders();
+    return Promise.resolve(
+      [...folders].sort((a, b) => a.name.localeCompare(b.name) || a.id - b.id),
+    );
+  }
+
+  createFolder(name: string, parentId: number | null = null): Promise<Folder> {
+    const trimmed = name.trim();
+    if (!trimmed || /[\\/]/.test(trimmed)) {
+      return Promise.reject({
+        fields: { name: '文件夹名称不能为空且不能包含斜杠。' },
+        msg: '文件夹名称不能为空且不能包含斜杠。',
+      });
+    }
+    const folders = loadMockFolders();
+    if (parentId !== null && !folders.some((f) => f.id === parentId)) {
+      return Promise.reject({ msg: 'Parent folder not found', status: 404 });
+    }
+    if (folders.some((f) => (f.parentId ?? null) === parentId && f.name === trimmed)) {
+      return Promise.reject({
+        errorCode: 'DUPLICATE_FOLDER_NAME',
+        fields: { name: '同级目录下已存在同名文件夹。' },
+        msg: '同级目录下已存在同名文件夹。',
+      });
+    }
+    const maxId = folders.reduce((max, f) => (f.id > max ? f.id : max), 0);
+    const id = nextMockSeq(maxId);
+    const now = new Date().toISOString();
+    const folder: Folder = {
+      id,
+      name: trimmed,
+      parentId,
+      creationTime: now,
+      updatedTime: now,
+    };
+    folders.push(folder);
+    saveMockFolders(folders);
+    return Promise.resolve(folder);
+  }
+
+  updateFolder(
+    id: number,
+    changes: { name?: string; parentId?: number | null },
+  ): Promise<Folder> {
+    const folders = loadMockFolders();
+    const target = folders.find((f) => f.id === id);
+    if (!target) {
+      return Promise.reject({ msg: 'Folder not found', status: 404 });
+    }
+    const nextName = changes.name !== undefined ? changes.name.trim() : target.name;
+    const nextParentId =
+      changes.parentId !== undefined ? changes.parentId : (target.parentId ?? null);
+    if (!nextName || /[\\/]/.test(nextName)) {
+      return Promise.reject({
+        fields: { name: '文件夹名称不能为空且不能包含斜杠。' },
+        msg: '文件夹名称不能为空且不能包含斜杠。',
+      });
+    }
+    if (nextParentId !== null) {
+      if (!folders.some((f) => f.id === nextParentId)) {
+        return Promise.reject({ msg: 'Parent folder not found', status: 404 });
+      }
+      const byId = new Map(folders.map((f) => [f.id, f]));
+      const visited = new Set<number>();
+      let cur: number | null = nextParentId;
+      while (cur !== null && !visited.has(cur)) {
+        if (cur === id) {
+          return Promise.reject({
+            errorCode: 'FOLDER_CYCLE',
+            msg: '不能将文件夹移动到自身或其子文件夹下。',
+          });
+        }
+        visited.add(cur);
+        cur = byId.get(cur)?.parentId ?? null;
+      }
+    }
+    if (
+      folders.some(
+        (f) => f.id !== id && (f.parentId ?? null) === nextParentId && f.name === nextName,
+      )
+    ) {
+      return Promise.reject({
+        errorCode: 'DUPLICATE_FOLDER_NAME',
+        fields: { name: '同级目录下已存在同名文件夹。' },
+        msg: '同级目录下已存在同名文件夹。',
+      });
+    }
+    target.name = nextName;
+    target.parentId = nextParentId;
+    target.updatedTime = new Date().toISOString();
+    saveMockFolders(folders);
+
+    const maps = loadMockMaps().map((m) => ({
+      ...m,
+      folderPath: buildMockFolderPath(folders, m.folderId),
+    }));
+    saveMockMaps(maps);
+    return Promise.resolve({ ...target });
+  }
+
+  deleteFolder(id: number): Promise<void> {
+    const folders = loadMockFolders();
+    const target = folders.find((f) => f.id === id);
+    if (!target) {
+      return Promise.reject({ msg: 'Folder not found', status: 404 });
+    }
+    const remainingFolders = folders.filter((f) => f.id !== id);
+    const rootFolderNames = new Set(
+      remainingFolders.filter((f) => (f.parentId ?? null) === null).map((f) => f.name),
+    );
+    remainingFolders.forEach((f) => {
+      if (f.parentId === id) {
+        const nextName = resolveUniqueMockName(f.name, rootFolderNames, 100);
+        rootFolderNames.add(nextName);
+        f.parentId = null;
+        f.name = nextName;
+        f.updatedTime = new Date().toISOString();
+      }
+    });
+    saveMockFolders(remainingFolders);
+
+    const maps = loadMockMaps();
+    const rootMapTitles = new Set(
+      maps.filter((m) => (m.folderId ?? null) === null).map((m) => m.title),
+    );
+    const updatedMaps = maps.map((m) => {
+      if (m.folderId === id) {
+        const nextTitle = resolveUniqueMockName(m.title, rootMapTitles, 255);
+        rootMapTitles.add(nextTitle);
+        return { ...m, folderId: null, folderPath: '', title: nextTitle };
+      }
+      return {
+        ...m,
+        folderPath: buildMockFolderPath(remainingFolders, m.folderId),
+      };
+    });
+    saveMockMaps(updatedMaps);
+    return Promise.resolve();
+  }
+
+  moveMapsToFolder(mapIds: number[], folderId: number | null): Promise<void> {
+    const folders = loadMockFolders();
+    if (folderId !== null && !folders.some((f) => f.id === folderId)) {
+      return Promise.reject({ msg: 'Target folder not found', status: 404 });
+    }
+    const maps = loadMockMaps();
+    const idSet = new Set(mapIds);
+    const occupied = new Set(
+      maps
+        .filter((m) => (m.folderId ?? null) === folderId && !idSet.has(m.id))
+        .map((m) => m.title),
+    );
+    for (const m of maps) {
+      if (idSet.has(m.id)) {
+        if (occupied.has(m.title)) {
+          return Promise.reject({
+            errorCode: 'DUPLICATE_MAP_TITLE',
+            msg: `目标文件夹中已存在同名导图“${m.title}”。`,
+          });
+        }
+        occupied.add(m.title);
+      }
+    }
+    const targetPath = buildMockFolderPath(folders, folderId);
+    const updatedMaps = maps.map((m) =>
+      idSet.has(m.id) ? { ...m, folderId, folderPath: targetPath } : m,
+    );
+    saveMockMaps(updatedMaps);
     return Promise.resolve();
   }
 

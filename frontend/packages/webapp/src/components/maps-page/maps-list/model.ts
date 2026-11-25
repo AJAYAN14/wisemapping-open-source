@@ -17,7 +17,7 @@
  */
 
 import Client, { Label, MapInfo } from '../../../classes/client';
-import type { Filter, LabelFilter } from '..';
+import type { Filter, FolderFilter, LabelFilter } from '..';
 
 /**
  * The pure part of the map list: sorting, filtering and the label change. No React here, so it
@@ -51,6 +51,8 @@ export const stableSort = <T>(array: T[], comparator: (a: T, b: T) => number): T
 
 export const isLabelFilter = (filter: Filter): filter is LabelFilter => filter.type === 'label';
 
+export const isFolderFilter = (filter: Filter): filter is FolderFilter => filter.type === 'folder';
+
 /** The maps the sidebar entry selects, narrowed by the text typed in the search box. */
 export const mapsFilter =
   (filter: Filter, search: string): ((mapInfo: MapInfo) => boolean) =>
@@ -73,6 +75,9 @@ export const mapsFilter =
         result =
           !mapInfo.labels ||
           mapInfo.labels.some((label) => label.id === (filter as LabelFilter).label.id);
+        break;
+      case 'folder':
+        result = (mapInfo.folderId ?? null) === (filter as FolderFilter).folderId;
         break;
       case 'public':
         result = mapInfo.public;

@@ -3,6 +3,7 @@ export const MAX_MAP_TITLE_LENGTH = 512;
 export const MAX_MAP_DESCRIPTION_LENGTH = 512;
 export const MAX_LABEL_TITLE_LENGTH = 30;
 export const MAX_LABEL_COLOR_LENGTH = 7;
+export const MAX_FOLDER_NAME_LENGTH = 100;
 export const MAX_NOTE_LENGTH = 10000;
 
 export type XmlValidationResult =
@@ -136,6 +137,28 @@ export function validateLabelInput(
     return { valid: false, fieldErrors };
   }
   return { valid: true, title: trimmedTitle, color: trimmedColor };
+}
+
+export function validateFolderName(
+  name: unknown,
+): { valid: true; value: string } | { valid: false; fieldErrors: Record<string, string> } {
+  const trimmed = typeof name === 'string' ? name.trim() : '';
+  if (!trimmed) {
+    return { valid: false, fieldErrors: { name: '文件夹名称不能为空。' } };
+  }
+  if (trimmed.length > MAX_FOLDER_NAME_LENGTH) {
+    return {
+      valid: false,
+      fieldErrors: { name: `文件夹名称不能超过 ${MAX_FOLDER_NAME_LENGTH} 个字符。` },
+    };
+  }
+  if (/[\\/]/.test(trimmed)) {
+    return {
+      valid: false,
+      fieldErrors: { name: '文件夹名称不能包含斜杠（/ 或 \\）。' },
+    };
+  }
+  return { valid: true, value: trimmed };
 }
 
 function decodeBasicHtmlEntities(text: string): string {

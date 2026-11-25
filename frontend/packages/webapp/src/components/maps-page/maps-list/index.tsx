@@ -26,7 +26,7 @@ import TableCell from '@mui/material/TableCell';
 import TableRow from '@mui/material/TableRow';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import type { Theme } from '@mui/material/styles';
-import { ErrorInfo, MapInfo } from '../../../classes/client';
+import { ErrorInfo, Folder, MapInfo } from '../../../classes/client';
 import { ClientContext } from '../../../classes/provider/client-context';
 import { Filter } from '..';
 import ActionChooser, { ActionType } from '../action-chooser';
@@ -36,7 +36,7 @@ import { MapCard } from './MapCard';
 import { MapRow } from './MapRow';
 import { MapsListToolbar } from './MapsListToolbar';
 import { MapsTableHead } from './MapsTableHead';
-import { ChangeLabelMutationFunctionParam, getChangeLabelMutationFunction } from './model';
+import { ChangeLabelMutationFunctionParam, getChangeLabelMutationFunction, isFolderFilter } from './model';
 import {
   ListPagination,
   ListPaper,
@@ -64,9 +64,15 @@ type ActiveDialog = { actionType: ActionType; mapsId: number[] };
 
 interface MapsListProps {
   filter: Filter;
+  folders?: Folder[];
+  onFilterChange?: ((filter: Filter) => void) | undefined;
 }
 
-export const MapsList = ({ filter }: MapsListProps): React.ReactElement => {
+export const MapsList = ({
+  filter,
+  folders = [],
+  onFilterChange,
+}: MapsListProps): React.ReactElement => {
   const client = use(ClientContext);
   // Read on the first render (`noSsr`): the page never paints the other view first.
   const isMobile = useMediaQuery(narrowScreen, { noSsr: true });
@@ -222,10 +228,13 @@ export const MapsList = ({ filter }: MapsListProps): React.ReactElement => {
       <ListPaper elevation={0}>
         <MapsListToolbar
           filter={filter}
+          folders={folders}
           totalCount={filteredMaps.length}
           selectedCount={selected.length}
           onDeleteSelected={() => openBulkDialog('delete')}
           onLabelSelected={() => openBulkDialog('label')}
+          onMoveSelected={() => openBulkDialog('move-folder')}
+          onFilterChange={onFilterChange}
           onSearchChange={changeSearch}
           end={!isMobile && pagination && <PaginationDesktop>{pagination}</PaginationDesktop>}
         />
@@ -239,6 +248,7 @@ export const MapsList = ({ filter }: MapsListProps): React.ReactElement => {
       </ListPaper>
       <ActionDispatcher
         action={activeDialog?.actionType}
+        folderId={isFolderFilter(filter) ? filter.folderId : null}
         onClose={(success) => {
           setActiveDialog(undefined);
           // A dialog that did its job leaves nothing selected.
