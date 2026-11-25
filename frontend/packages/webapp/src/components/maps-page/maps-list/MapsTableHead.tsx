@@ -66,14 +66,9 @@ const MapsTableHeadComponent = ({
         ariaLabel: intl.formatMessage({ id: 'map.labels', defaultMessage: 'Labels' }),
       },
       {
-        id: 'createdBy',
-        label: intl.formatMessage({ id: 'map.creator', defaultMessage: 'Creator' }),
-        sx: { width: '150px', whiteSpace: 'nowrap' },
-      },
-      {
         id: 'lastModificationTime',
         label: intl.formatMessage({ id: 'map.last-update', defaultMessage: 'Last Update' }),
-        sx: { width: '70px', whiteSpace: 'nowrap' },
+        sx: { width: '120px', whiteSpace: 'nowrap' },
       },
     ],
     [intl],

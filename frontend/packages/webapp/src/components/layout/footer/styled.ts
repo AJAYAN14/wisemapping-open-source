@@ -17,89 +17,42 @@
  */
 
 import { styled } from '@mui/material/styles';
-/* Footer */
 
+/* Modern Minimalist Footer for Personal Private Edition */
 export const StyledFooter = styled('footer')(({ theme }) => ({
-  marginTop: '80px',
-  padding: '30px 0 10px 0',
-  backgroundColor: theme.palette.primary.main,
+  marginTop: 'auto',
+  padding: '12px 24px',
+  backgroundColor: theme.palette.mode === 'dark' ? 'rgba(0, 0, 0, 0.35)' : '#f8f9fa',
+  borderTop: `1px solid ${theme.palette.divider}`,
   display: 'flex',
   justifyContent: 'center',
-  overflow: 'hidden',
+
+  '& .footer-inner': {
+    maxWidth: '1200px',
+    width: '100%',
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '0 8px',
+  },
+
+  '& .footer-brand': {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '14px',
+    '& img': {
+      height: '20px',
+      opacity: 0.85,
+    },
+  },
 
   '& .copyright': {
-    marginTop: '12px',
     fontSize: '12px',
-    color: 'white',
+    color: theme.palette.text.secondary,
   },
 
-  '& > div': {
-    maxWidth: '950px',
-    width: '100%',
-    display: 'grid',
-    gridTemplateColumns: '200px 1fr 1fr 1fr auto',
-    gap: '20px',
-    padding: '0 20px',
-    alignItems: 'start',
-
-    '& > div:nth-of-type(1)': {
-      gridColumn: '1',
-      padding: 0,
-      margin: 0,
-    },
-
-    '& > div:nth-of-type(2)': {
-      gridColumn: '2',
-    },
-
-    '& > div:nth-of-type(3)': {
-      gridColumn: '3',
-    },
-
-    '& > div:nth-of-type(4)': {
-      gridColumn: '4',
-    },
-
-    // The theme switch.
-    '& > div:nth-of-type(5)': {
-      gridColumn: '5',
-      textAlign: 'right',
-      display: 'flex',
-      visibility: 'visible',
-      justifyContent: 'flex-end',
-      alignItems: 'flex-start',
-      marginTop: '10px',
-    },
-  },
-
-  '& a': {
-    fontSize: '14px',
-    color: 'white',
-    whiteSpace: 'nowrap',
-    lineHeight: 1.5,
-    display: 'inline-block',
-    textDecoration: 'none',
-    '&:hover': {
-      textDecoration: 'underline',
-    },
-  },
-
-  '& h4': {
-    fontSize: '14px',
-    color: 'white',
-    whiteSpace: 'nowrap',
-    fontWeight: 700,
-    margin: '0 0 6px 0',
-  },
-
-  '& .donate-link': {
-    display: 'inline-flex',
+  '& .footer-actions': {
+    display: 'flex',
     alignItems: 'center',
-    gap: '4px',
-    fontWeight: 600,
-  },
-
-  '& .donate-icon': {
-    fontSize: '14px',
   },
 }));

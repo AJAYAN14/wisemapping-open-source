@@ -197,37 +197,10 @@ const MapsPage = (): ReactElement => {
       ),
     },
     {
-      filter: { type: 'owned' },
-      label: intl.formatMessage({ id: 'maps.nav-onwned', defaultMessage: 'My Maps' }),
-      icon: (
-        <PersonOutlineTwoTone
-          htmlColor={getIconColor()}
-          color={getIconColor() ? undefined : 'secondary'}
-        />
-      ),
-    },
-    {
       filter: { type: 'starred' },
       label: intl.formatMessage({ id: 'maps.nav-starred', defaultMessage: 'Starred' }),
       icon: (
         <StarTwoTone htmlColor={getIconColor()} color={getIconColor() ? undefined : 'secondary'} />
-      ),
-    },
-    {
-      filter: { type: 'shared' },
-      label: intl.formatMessage({ id: 'maps.nav-shared', defaultMessage: 'Shared with me' }),
-      icon: (
-        <ShareTwoTone htmlColor={getIconColor()} color={getIconColor() ? undefined : 'secondary'} />
-      ),
-    },
-    {
-      filter: { type: 'public' },
-      label: intl.formatMessage({ id: 'maps.nav-public', defaultMessage: 'Public' }),
-      icon: (
-        <PublicTwoTone
-          htmlColor={getIconColor()}
-          color={getIconColor() ? undefined : 'secondary'}
-        />
       ),
     },
   ];
@@ -450,10 +423,6 @@ const MapsPage = (): ReactElement => {
           </section>
         </PageContent>
 
-        {/* Floating Help Button */}
-        <HelpButtonBox>
-          <HelpMenu />
-        </HelpButtonBox>
       </PageRoot>
       {label && labelToDelete !== undefined && (
         <LabelDeleteConfirm

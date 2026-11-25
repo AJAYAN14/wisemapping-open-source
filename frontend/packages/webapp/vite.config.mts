@@ -152,6 +152,10 @@ export default defineConfig(({ mode }) => {
           target: 'http://localhost:8080',
           changeOrigin: true,
         },
+        '/oauth2': {
+          target: 'http://localhost:8080',
+          changeOrigin: true,
+        },
       },
     },
     build: {

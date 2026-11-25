@@ -57,9 +57,6 @@ export const TableRowSkeleton: React.FC = () => {
         <SkeletonText animation="wave" variant="text" width="40%" />
       </BodyCell>
       <BodyCell>
-        <SkeletonText animation="wave" variant="text" width={100} />
-      </BodyCell>
-      <BodyCell>
         <SkeletonText animation="wave" variant="text" width={80} />
       </BodyCell>
       <BodyCell padding="checkbox">

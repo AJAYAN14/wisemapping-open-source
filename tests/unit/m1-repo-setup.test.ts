@@ -12,6 +12,9 @@ const readText = (relPath: string): string =>
 function walkFiles(dir: string): string[] {
   const results: string[] = [];
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (entry.name === 'node_modules' || entry.name === '.git') {
+      continue;
+    }
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) {
       results.push(...walkFiles(full));
@@ -72,7 +75,11 @@ describe('M1 repository restructuring, backup, frontend R1 & R4 integration', ()
   it('integrates clean official wisemapping-frontend without .git, node_modules, or nemo references', () => {
     expect(fs.existsSync(path.join(FRONTEND, 'packages/webapp/package.json'))).toBe(true);
     expect(fs.existsSync(path.join(FRONTEND, '.git'))).toBe(false);
-    expect(fs.existsSync(path.join(FRONTEND, 'node_modules'))).toBe(false);
+    const trackedNodeModules = execFileSync('git', ['ls-files', 'frontend/node_modules'], {
+      cwd: ROOT,
+      encoding: 'utf8',
+    }).trim();
+    expect(trackedNodeModules).toBe('');
 
     const textExtensions = new Set(['.ts', '.tsx', '.js', '.jsx', '.mts', '.mjs', '.json', '.md', '.yml', '.yaml', '.html', '.css']);
     const matches: string[] = [];

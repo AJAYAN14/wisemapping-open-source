@@ -23,6 +23,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { Link } from 'react-router';
 import Button from '@mui/material/Button';
 import { useTheme } from '@mui/material/styles';
+import AppConfig from '../../../classes/app-config';
 
 import { JSX } from '@emotion/react/jsx-runtime';
 
@@ -38,14 +39,19 @@ export const Header = ({ type }: HeaderProps): React.ReactElement => {
   let signInButton: string | JSX.Element | undefined;
 
   if (type === 'only-signup') {
-    text = (
-      <span className="header-area-content-span">
-        <span>
-          <FormattedMessage id="header.donthaveaccount" defaultMessage="Don't have an account ?" />
+    if (!AppConfig.isRegistrationEnabled()) {
+      text = '';
+      signUpButton = '';
+    } else {
+      text = (
+        <span className="header-area-content-span">
+          <span>
+            <FormattedMessage id="header.donthaveaccount" defaultMessage="Don't have an account ?" />
+          </span>
         </span>
-      </span>
-    );
-    signUpButton = <SignUpButton className="header-area-right2" />;
+      );
+      signUpButton = <SignUpButton className="header-area-right2" />;
+    }
   } else if (type === 'only-signin') {
     text = (
       <span className="header-area-content-span">

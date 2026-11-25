@@ -18,6 +18,9 @@ function walkFiles(dir: string): string[] {
   if (!fs.existsSync(dir)) return [];
   const results: string[] = [];
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+    if (entry.name === 'node_modules' || entry.name === '.git' || entry.name === 'dist' || entry.name === '.yarn') {
+      continue;
+    }
     const full = path.join(dir, entry.name);
     if (entry.isDirectory()) results.push(...walkFiles(full));
     else if (entry.isFile()) results.push(full);

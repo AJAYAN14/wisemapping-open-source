@@ -116,9 +116,6 @@ const MapRowComponent = ({
         />
       </LabelsBodyCell>
       <BodyCell>
-        <CellText variant="body2">{map.createdBy}</CellText>
-      </BodyCell>
-      <BodyCell>
         <Tooltip
           arrow={true}
           title={intl.formatMessage(
