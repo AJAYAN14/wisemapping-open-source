@@ -106,38 +106,46 @@ export const ImportProgressDialog: React.FC<ImportProgressDialogProps> = ({
   return (
     <Dialog
       open={open}
-      onClose={isError ? onClose : undefined}
-      disableEscapeKeyDown={!isError}
-      PaperProps={{
-        elevation: 0,
-        sx: {
-          borderRadius: '22px',
-          width: '100%',
-          maxWidth: 340,
-          m: 2,
-          p: '26px 24px 22px',
-          background: isDark ? 'rgba(32, 32, 36, 0.82)' : 'rgba(255, 255, 255, 0.85)',
-          backdropFilter: 'blur(40px) saturate(200%)',
-          WebkitBackdropFilter: 'blur(40px) saturate(200%)',
-          border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.14)' : 'rgba(255, 255, 255, 0.8)'}`,
-          boxShadow: isDark
-            ? '0 24px 50px -10px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.28), inset 0 1px 1px 0 rgba(255, 255, 255, 0.16)'
-            : '0 20px 48px -12px rgba(0, 0, 0, 0.14), 0 2px 8px rgba(0, 0, 0, 0.04), inset 0 1px 1px 0 rgba(255, 255, 255, 1)',
-          overflow: 'hidden',
-          fontFamily: APPLE_FONT_STACK,
-          animation: 'appleCardSpring 360ms cubic-bezier(0.16, 1, 0.3, 1)',
-          '@keyframes appleCardSpring': {
-            '0%': { opacity: 0, transform: 'scale(0.92) translateY(8px)' },
-            '100%': { opacity: 1, transform: 'scale(1) translateY(0)' },
+      onClose={(_event, reason) => {
+        if (!isError && reason === 'escapeKeyDown') {
+          return;
+        }
+        if (isError) {
+          onClose();
+        }
+      }}
+      maxWidth={false}
+      slotProps={{
+        paper: {
+          elevation: 0,
+          sx: {
+            borderRadius: '22px',
+            width: 'calc(100% - 32px)',
+            maxWidth: 420,
+            m: 2,
+            background: isDark ? 'rgba(32, 32, 36, 0.88)' : 'rgba(255, 255, 255, 0.92)',
+            backdropFilter: 'blur(40px) saturate(200%)',
+            WebkitBackdropFilter: 'blur(40px) saturate(200%)',
+            border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.14)' : 'rgba(0, 0, 0, 0.08)'}`,
+            boxShadow: isDark
+              ? '0 24px 50px -10px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.28), inset 0 1px 1px 0 rgba(255, 255, 255, 0.16)'
+              : '0 20px 48px -12px rgba(0, 0, 0, 0.16), 0 2px 8px rgba(0, 0, 0, 0.05), inset 0 1px 1px 0 rgba(255, 255, 255, 1)',
+            overflow: 'hidden',
+            fontFamily: APPLE_FONT_STACK,
+            animation: 'appleCardSpring 360ms cubic-bezier(0.16, 1, 0.3, 1)',
+            '@keyframes appleCardSpring': {
+              '0%': { opacity: 0, transform: 'scale(0.92) translateY(8px)' },
+              '100%': { opacity: 1, transform: 'scale(1) translateY(0)' },
+            },
           },
         },
-      }}
-      BackdropProps={{
-        sx: {
-          background: isDark ? 'rgba(0, 0, 0, 0.45)' : 'rgba(0, 0, 0, 0.18)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          transition: 'all 240ms ease-out',
+        backdrop: {
+          sx: {
+            background: isDark ? 'rgba(0, 0, 0, 0.45)' : 'rgba(0, 0, 0, 0.22)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            transition: 'all 240ms ease-out',
+          },
         },
       }}
     >
@@ -147,18 +155,21 @@ export const ImportProgressDialog: React.FC<ImportProgressDialogProps> = ({
           flexDirection: 'column',
           alignItems: 'center',
           textAlign: 'center',
+          px: 3.5,
+          pt: 3.5,
+          pb: 3,
         }}
       >
         {/* Apple-grade Squircle Emblem Badge */}
         <Box
           sx={{
-            width: 50,
-            height: 50,
+            width: 52,
+            height: 52,
             borderRadius: '15px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            mb: 1.8,
+            mb: 2,
             transition: 'all 280ms cubic-bezier(0.16, 1, 0.3, 1)',
             background: isError
               ? 'linear-gradient(135deg, #F87171 0%, #EF4444 100%)'
@@ -197,11 +208,11 @@ export const ImportProgressDialog: React.FC<ImportProgressDialogProps> = ({
           sx={{
             fontFamily: APPLE_FONT_STACK,
             fontWeight: 600,
-            fontSize: '17px',
+            fontSize: '18px',
             color: colors.textPrimary,
             letterSpacing: '-0.022em',
-            lineHeight: 1.25,
-            mb: 0.7,
+            lineHeight: 1.3,
+            mb: 1.2,
           }}
         >
           {titleText}
@@ -276,15 +287,18 @@ export const ImportProgressDialog: React.FC<ImportProgressDialogProps> = ({
           <Box
             sx={{
               width: '100%',
-              p: 1.5,
+              boxSizing: 'border-box',
+              px: 2,
+              py: 1.5,
               borderRadius: '12px',
               background: isDark ? 'rgba(239, 68, 68, 0.12)' : 'rgba(254, 242, 242, 0.95)',
               border: `1px solid ${isDark ? 'rgba(239, 68, 68, 0.28)' : 'rgba(239, 68, 68, 0.2)'}`,
               color: isDark ? '#FCA5A5' : '#B91C1C',
-              fontSize: '12.5px',
+              fontSize: '13px',
               fontFamily: APPLE_FONT_STACK,
-              lineHeight: 1.45,
-              mb: 2.2,
+              lineHeight: 1.55,
+              mt: 0.5,
+              mb: 2.5,
               textAlign: 'left',
               wordBreak: 'break-word',
             }}
@@ -299,7 +313,7 @@ export const ImportProgressDialog: React.FC<ImportProgressDialogProps> = ({
               fontSize: '12.5px',
               fontWeight: 400,
               color: isDark ? '#8E8E93' : '#86868B',
-              lineHeight: 1.4,
+              lineHeight: 1.5,
               minHeight: 34,
               px: 0.5,
             }}
@@ -310,7 +324,7 @@ export const ImportProgressDialog: React.FC<ImportProgressDialogProps> = ({
 
         {/* Batch Success Action */}
         {isBatch && isSuccess && (
-          <Box sx={{ display: 'flex', width: '100%', mt: 2 }}>
+          <Box sx={{ display: 'flex', width: '100%', mt: 2.2 }}>
             <Button
               fullWidth
               variant="contained"
@@ -321,10 +335,10 @@ export const ImportProgressDialog: React.FC<ImportProgressDialogProps> = ({
                 background: colors.textPrimary,
                 color: colors.surface,
                 fontFamily: APPLE_FONT_STACK,
-                fontSize: '13px',
+                fontSize: '13.5px',
                 fontWeight: 600,
                 textTransform: 'none',
-                py: 0.7,
+                py: 0.9,
                 boxShadow: 'none',
                 '&:hover': {
                   background: colors.textPrimary,
@@ -339,7 +353,7 @@ export const ImportProgressDialog: React.FC<ImportProgressDialogProps> = ({
 
         {/* Tactile Actions (Error state only) */}
         {isError && (
-          <Box sx={{ display: 'flex', gap: 1.2, width: '100%', mt: 0.5 }}>
+          <Box sx={{ display: 'flex', gap: 1.5, width: '100%', mt: 0.5 }}>
             {onRetry && (
               <Button
                 fullWidth
@@ -351,10 +365,10 @@ export const ImportProgressDialog: React.FC<ImportProgressDialogProps> = ({
                   borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.12)',
                   color: colors.textPrimary,
                   fontFamily: APPLE_FONT_STACK,
-                  fontSize: '13px',
+                  fontSize: '13.5px',
                   fontWeight: 600,
                   textTransform: 'none',
-                  py: 0.7,
+                  py: 0.9,
                   '&:hover': {
                     borderColor: colors.textSecondary,
                     background: colors.hoverFill,
@@ -374,10 +388,10 @@ export const ImportProgressDialog: React.FC<ImportProgressDialogProps> = ({
                 background: colors.textPrimary,
                 color: colors.surface,
                 fontFamily: APPLE_FONT_STACK,
-                fontSize: '13px',
+                fontSize: '13.5px',
                 fontWeight: 600,
                 textTransform: 'none',
-                py: 0.7,
+                py: 0.9,
                 boxShadow: 'none',
                 '&:hover': {
                   background: colors.textPrimary,

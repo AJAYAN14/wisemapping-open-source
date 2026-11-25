@@ -590,16 +590,18 @@ const MapsPage = (): ReactElement => {
               anchorEl={importMenuAnchor}
               open={Boolean(importMenuAnchor)}
               onClose={() => setImportMenuAnchor(null)}
-              PaperProps={{
-                elevation: 0,
-                sx: {
-                  borderRadius: '14px',
-                  minWidth: 190,
-                  p: 0.6,
-                  background: 'rgba(255, 255, 255, 0.88)',
-                  backdropFilter: 'blur(24px)',
-                  boxShadow: '0 12px 32px rgba(0, 0, 0, 0.15)',
-                  border: '1px solid rgba(0, 0, 0, 0.08)',
+              slotProps={{
+                paper: {
+                  elevation: 0,
+                  sx: {
+                    borderRadius: '14px',
+                    minWidth: 190,
+                    p: 0.6,
+                    background: 'rgba(255, 255, 255, 0.88)',
+                    backdropFilter: 'blur(24px)',
+                    boxShadow: '0 12px 32px rgba(0, 0, 0, 0.15)',
+                    border: '1px solid rgba(0, 0, 0, 0.08)',
+                  },
                 },
               }}
             >
