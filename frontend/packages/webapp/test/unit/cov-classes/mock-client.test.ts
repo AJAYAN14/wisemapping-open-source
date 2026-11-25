@@ -239,6 +239,76 @@ describe('MockClient maps', () => {
     await expect(client.revertHistory(id, 999999)).rejects.toMatchObject({ status: 400 });
   });
 
+  it('revertHistory uses account displayName when set and rejects storage quota errors without partial writes', async () => {
+    await client.login({ email: 'editor@x.y', password: 'p' });
+    await client.updateAccountInfo('Jian', 'Tan');
+    const id = await client.createMap({ title: 'QuotaTest' });
+
+    const persistence = new MockPersistenceManager(
+      '<map version="tango"><topic central="true" text="Init" id="1"/></map>',
+      { editorName: 'Jian Tan' },
+    );
+    const docV1 = new DOMParser().parseFromString(
+      '<map version="tango"><topic central="true" text="V1" id="1"/></map>',
+      'text/xml',
+    );
+    const docV2 = new DOMParser().parseFromString(
+      '<map version="tango"><topic central="true" text="V2" id="1"/></map>',
+      'text/xml',
+    );
+    persistence.saveMapXml(String(id), docV1, '{}', true);
+    persistence.saveMapXml(String(id), docV2, '{}', true);
+
+    const historyBefore = await client.fetchHistory(id);
+    const v1Id = defined(historyBefore[1]).id;
+
+    // Simulate quota failure when writing history array during revert.
+    const originalSetItem = Storage.prototype.setItem;
+    const setItemSpy = jest.spyOn(Storage.prototype, 'setItem').mockImplementation(function (
+      this: Storage,
+      key: string,
+      value: string,
+    ) {
+      if (key === `wisemapping.mock.history.${id}`) {
+        throw new DOMException('Quota exceeded', 'QuotaExceededError');
+      }
+      return originalSetItem.call(this, key, value);
+    });
+
+    await expect(client.revertHistory(id, v1Id)).rejects.toMatchObject({
+      msg: expect.stringContaining('Quota exceeded'),
+    });
+    expect((await client.fetchMapMetadata(id, true)).xml).toContain('V2');
+    expect(await client.fetchHistory(id)).toHaveLength(2);
+
+    setItemSpy.mockRestore();
+    await client.revertHistory(id, v1Id);
+    const historyAfter = await client.fetchHistory(id);
+    expect(historyAfter).toHaveLength(3);
+    expect(defined(historyAfter[0]).lastModificationBy).toBe('Jian Tan');
+    expect((await client.fetchMapMetadata(id, true)).xml).toContain('V1');
+  });
+
+  it('fetchMapMetadata falls back to valid XML when stored XML is empty and fetchHistory ignores corrupt entries', async () => {
+    const id = await client.createMap({ title: 'Resilient' });
+    localStorage.setItem(`wisemapping.mock.xml.${id}`, '');
+    const meta = await client.fetchMapMetadata(id, true);
+    expect(meta.xml).toContain('<map');
+    expect(meta.xml).toContain('Resilient');
+
+    localStorage.setItem(
+      `wisemapping.mock.history.${id}`,
+      JSON.stringify([
+        null,
+        { id: 'bad' },
+        { id: 5, lastModificationBy: 'Owner', lastModificationTime: '2026-01-01T00:00:00Z' },
+      ]),
+    );
+    await expect(client.fetchHistory(id)).resolves.toEqual([
+      { id: 5, lastModificationBy: 'Owner', lastModificationTime: '2026-01-01T00:00:00Z' },
+    ]);
+  });
+
   it('importMap persists the imported map and XML with 0 initial history', async () => {
     const importedId = await client.importMap({
       title: 'Imported',

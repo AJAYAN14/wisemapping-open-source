@@ -15,9 +15,9 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-import KeyboardOutlined from '@mui/icons-material/KeyboardOutlined';
-import Brightness4 from '@mui/icons-material/Brightness4';
-import Brightness7 from '@mui/icons-material/Brightness7';
+import KeyboardRoundedIcon from '@mui/icons-material/KeyboardRounded';
+import DarkModeRoundedIcon from '@mui/icons-material/DarkModeRounded';
+import LightModeRoundedIcon from '@mui/icons-material/LightModeRounded';
 import { ReactElement, useState, useEffect, useMemo } from 'react';
 import { IntlShape, useIntl } from 'react-intl';
 import ActionConfig from '../../classes/action/action-config';
@@ -29,13 +29,13 @@ import OutlineViewDialog from '../action-widget/pane/outline-view-dialog';
 import FindInMapPanel from '../action-widget/pane/find-in-map';
 import { DesignerKeyboard, isMacPlatform } from '@wisemapping/mindplot';
 import Toolbar from '../toolbar';
-import ZoomOutOutlinedIcon from '@mui/icons-material/ZoomOutOutlined';
-import ZoomInOutlinedIcon from '@mui/icons-material/ZoomInOutlined';
-import CenterFocusStrongOutlinedIcon from '@mui/icons-material/CenterFocusStrongOutlined';
-import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
-import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
-import TocOutlinedIcon from '@mui/icons-material/TocOutlined';
-import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
+import ZoomOutRoundedIcon from '@mui/icons-material/ZoomOutRounded';
+import ZoomInRoundedIcon from '@mui/icons-material/ZoomInRounded';
+import CenterFocusStrongRoundedIcon from '@mui/icons-material/CenterFocusStrongRounded';
+import UnfoldLessRoundedIcon from '@mui/icons-material/UnfoldLessRounded';
+import UnfoldMoreRoundedIcon from '@mui/icons-material/UnfoldMoreRounded';
+import TocRoundedIcon from '@mui/icons-material/TocRounded';
+import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import { handleExpandByLevel, buildExpandByLevelConfig } from './expand-by-level-icon';
 import { formatTooltip } from './utils';
 import { EDITOR_LAYOUT, EDITOR_Z_INDEX } from '../../theme/layout';
@@ -83,7 +83,7 @@ export function buildVisualizationToolbarConfig(
 
   return [
     {
-      icon: <CenterFocusStrongOutlinedIcon />,
+      icon: <CenterFocusStrongRoundedIcon />,
       tooltip: formatTooltip(zoomToFitLabel, '0'),
       ariaLabel: zoomToFitLabel,
       onClick: () => {
@@ -92,7 +92,7 @@ export function buildVisualizationToolbarConfig(
       disabled: () => !model?.isMapLoadded(),
     },
     {
-      icon: <ZoomOutOutlinedIcon />,
+      icon: <ZoomOutRoundedIcon />,
       tooltip: formatTooltip(zoomOutLabel, '-'),
       ariaLabel: zoomOutLabel,
       onClick: () => {
@@ -105,7 +105,7 @@ export function buildVisualizationToolbarConfig(
       disabled: () => !model?.isMapLoadded(),
     },
     {
-      icon: <ZoomInOutlinedIcon />,
+      icon: <ZoomInRoundedIcon />,
       tooltip: formatTooltip(
         intl.formatMessage({
           id: 'visualization-toolbar.tooltip-zoom-in',
@@ -125,7 +125,7 @@ export function buildVisualizationToolbarConfig(
     // Separator between zoom controls and outline view
     undefined as ActionConfig | undefined,
     {
-      icon: <SearchOutlinedIcon />,
+      icon: <SearchRoundedIcon />,
       tooltip: formatTooltip(
         intl.formatMessage({
           id: 'visualization-toolbar.tooltip-find-in-map',
@@ -151,7 +151,7 @@ export function buildVisualizationToolbarConfig(
     // Separator between find and outline view
     undefined as ActionConfig | undefined,
     {
-      icon: <TocOutlinedIcon />,
+      icon: <TocRoundedIcon />,
       tooltip: formatTooltip(
         intl.formatMessage({
           id: 'visualization-toolbar.tooltip-outline-view',
@@ -179,7 +179,7 @@ export function buildVisualizationToolbarConfig(
     // Separator between outline view and expand/collapse controls
     undefined as ActionConfig | undefined,
     {
-      icon: nodesCollapsed ? <UnfoldMoreIcon /> : <UnfoldLessIcon />,
+      icon: nodesCollapsed ? <UnfoldMoreRoundedIcon /> : <UnfoldLessRoundedIcon />,
       tooltip: formatTooltip(
         nodesCollapsed
           ? intl.formatMessage({
@@ -217,7 +217,7 @@ export function buildVisualizationToolbarConfig(
     // Separator between expand controls and keyboard shortcuts
     undefined as ActionConfig | undefined,
     {
-      icon: <KeyboardOutlined />,
+      icon: <KeyboardRoundedIcon />,
       tooltip: intl.formatMessage({
         id: 'visualization-toolbar.tooltip-keyboard',
         defaultMessage: 'Keyboard Shortcuts',
@@ -235,7 +235,7 @@ export function buildVisualizationToolbarConfig(
     ...(isPublicOrEmbedded && toggleTheme
       ? [
           {
-            icon: themeMode === 'light' ? <Brightness4 /> : <Brightness7 />,
+            icon: themeMode === 'light' ? <DarkModeRoundedIcon /> : <LightModeRoundedIcon />,
             tooltip:
               themeMode === 'light'
                 ? intl.formatMessage({

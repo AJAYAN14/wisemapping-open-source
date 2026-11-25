@@ -18,9 +18,9 @@
 import Box from '@mui/material/Box';
 import MenuItem from '@mui/material/MenuItem';
 import Popover from '@mui/material/Popover';
-import CloseIcon from '@mui/icons-material/Close';
-import FormatIndentIncreaseIcon from '@mui/icons-material/FormatIndentIncrease';
-import FormatIndentDecreaseIcon from '@mui/icons-material/FormatIndentDecrease';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import FormatIndentIncreaseRoundedIcon from '@mui/icons-material/FormatIndentIncreaseRounded';
+import FormatIndentDecreaseRoundedIcon from '@mui/icons-material/FormatIndentDecreaseRounded';
 import { useTheme } from '@mui/material/styles';
 import React, {
   ReactElement,
@@ -332,7 +332,7 @@ const RichTextNoteEditor = ({ closeModal, noteModel }: RichTextNoteEditorProps):
   return (
     <NoteEditorFrame>
       <CloseNoteButton onClick={closeModal}>
-        <CloseIcon />
+        <CloseRoundedIcon />
       </CloseNoteButton>
       {/* Toolbar */}
       <ToolbarFrame>
@@ -459,7 +459,7 @@ const RichTextNoteEditor = ({ closeModal, noteModel }: RichTextNoteEditorProps):
                 defaultMessage: 'Decrease Indent (Shift+Tab)',
               })}
             >
-              <FormatIndentDecreaseIcon fontSize="small" />
+              <FormatIndentDecreaseRoundedIcon fontSize="small" />
             </ToolButton>
             <ToolButton
               onMouseDown={(e) => e.preventDefault()}
@@ -469,7 +469,7 @@ const RichTextNoteEditor = ({ closeModal, noteModel }: RichTextNoteEditorProps):
                 defaultMessage: 'Increase Indent (Tab)',
               })}
             >
-              <FormatIndentIncreaseIcon fontSize="small" />
+              <FormatIndentIncreaseRoundedIcon fontSize="small" />
             </ToolButton>
           </ToolGroup>
         </ToolbarRow>

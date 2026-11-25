@@ -32,16 +32,16 @@ import ActionConfig from '../../classes/action/action-config';
 import Editor from '../../classes/model/editor';
 import Capability from '../../classes/action/capability';
 import Tooltip from '@mui/material/Tooltip';
-import UndoOutlinedIcon from '@mui/icons-material/UndoOutlined';
-import RedoOutlinedIcon from '@mui/icons-material/RedoOutlined';
-import RestoreOutlinedIcon from '@mui/icons-material/RestoreOutlined';
-import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
-import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
+import UndoRoundedIcon from '@mui/icons-material/UndoRounded';
+import RedoRoundedIcon from '@mui/icons-material/RedoRounded';
+import RestoreRoundedIcon from '@mui/icons-material/RestoreRounded';
+import SaveRoundedIcon from '@mui/icons-material/SaveRounded';
+import FileDownloadRoundedIcon from '@mui/icons-material/FileDownloadRounded';
 import StarRateRoundedIcon from '@mui/icons-material/StarRateRounded';
-import ArrowBackIosNewOutlinedIcon from '@mui/icons-material/ArrowBackIosNewOutlined';
-import PaletteOutlinedIcon from '@mui/icons-material/PaletteOutlined';
-import Brightness4 from '@mui/icons-material/Brightness4';
-import Brightness7 from '@mui/icons-material/Brightness7';
+import ArrowBackIosNewRoundedIcon from '@mui/icons-material/ArrowBackIosNewRounded';
+import PaletteRoundedIcon from '@mui/icons-material/PaletteRounded';
+import DarkModeRoundedIcon from '@mui/icons-material/DarkModeRounded';
+import LightModeRoundedIcon from '@mui/icons-material/LightModeRounded';
 import Typography from '@mui/material/Typography';
 import UndoAndRedo from '../action-widget/button/undo-and-redo';
 import LogoTextBlackSvg from '../../../images/logo-text-black.svg';
@@ -318,7 +318,7 @@ const AppBar = ({
 
   const config: (ActionConfig | undefined)[] = [
     {
-      icon: <ArrowBackIosNewOutlinedIcon />,
+      icon: <ArrowBackIosNewRoundedIcon sx={{ fontSize: 18 }} />,
       tooltip: intl.formatMessage({
         id: 'appbar.back-to-map-list',
         defaultMessage: 'Back to maps list',
@@ -397,7 +397,7 @@ const AppBar = ({
       render: () => (
         <UndoAndRedo
           configuration={{
-            icon: <UndoOutlinedIcon />,
+            icon: <UndoRoundedIcon />,
             tooltip: formatTooltip(
               intl.formatMessage({ id: 'appbar.tooltip-undo', defaultMessage: 'Undo' }),
               'Z',
@@ -417,7 +417,7 @@ const AppBar = ({
       render: () => (
         <UndoAndRedo
           configuration={{
-            icon: <RedoOutlinedIcon />,
+            icon: <RedoRoundedIcon />,
             tooltip: formatTooltip(
               intl.formatMessage({ id: 'appbar.tooltip-redo', defaultMessage: 'Redo' }),
               'Shift + Z',
@@ -435,7 +435,7 @@ const AppBar = ({
     },
     undefined,
     {
-      icon: <SaveOutlinedIcon />,
+      icon: <SaveRoundedIcon />,
       onClick: handleDebouncedSave,
       tooltip: formatTooltip(
         intl.formatMessage({ id: 'appbar.tooltip-save', defaultMessage: 'Save' }),
@@ -445,7 +445,7 @@ const AppBar = ({
       disabled: () => !model?.isMapLoadded(),
     },
     {
-      icon: <RestoreOutlinedIcon />,
+      icon: <RestoreRoundedIcon />,
       onClick: () => {
         onAction('history');
       },
@@ -473,7 +473,7 @@ const AppBar = ({
     },
     appBarDivisor,
     {
-      icon: <PaletteOutlinedIcon />,
+      icon: <PaletteRoundedIcon />,
       tooltip: intl.formatMessage({ id: 'appbar.tooltip-theme', defaultMessage: 'Theme' }),
       options: [
         {
@@ -492,7 +492,7 @@ const AppBar = ({
       disabled: () => !isMapLoaded,
     },
     {
-      icon: <FileDownloadOutlinedIcon />,
+      icon: <FileDownloadRoundedIcon />,
       onClick: () => {
         onAction('export');
       },
@@ -501,7 +501,7 @@ const AppBar = ({
       disabled: () => !isMapLoaded,
     },
     {
-      icon: mode === 'dark' ? <Brightness7 /> : <Brightness4 />,
+      icon: mode === 'dark' ? <LightModeRoundedIcon /> : <DarkModeRoundedIcon />,
       tooltip: intl.formatMessage({
         id: 'appbar.tooltip-theme-toggle',
         defaultMessage: 'Toggle Theme',

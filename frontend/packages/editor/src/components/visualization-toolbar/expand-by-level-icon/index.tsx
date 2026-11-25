@@ -15,7 +15,7 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-import FormatLineSpacingIcon from '@mui/icons-material/FormatLineSpacing';
+import FormatLineSpacingRoundedIcon from '@mui/icons-material/FormatLineSpacingRounded';
 import { IntlShape } from 'react-intl';
 import { Topic } from '@wisemapping/mindplot';
 import ActionConfig from '../../../classes/action/action-config';
@@ -94,7 +94,7 @@ export const buildExpandByLevelConfig = (
   return {
     icon: () => (
       <IconWithBadgeContainer>
-        <FormatLineSpacingIcon />
+        <FormatLineSpacingRoundedIcon />
         {currentExpandLevel > 0 && (
           <LevelBadge data-testid="expand-level-badge">
             {getVisibleLevelCount(currentExpandLevel)}

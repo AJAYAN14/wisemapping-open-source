@@ -19,11 +19,11 @@
 import React, { ReactElement, useState } from 'react';
 import Tooltip from '@mui/material/Tooltip';
 import Tab from '@mui/material/Tab';
-import CloseIcon from '@mui/icons-material/Close';
-import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
-import GridOnIcon from '@mui/icons-material/GridOn';
-import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
-import NotInterestedOutlined from '@mui/icons-material/NotInterestedOutlined';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import CheckBoxOutlineBlankRoundedIcon from '@mui/icons-material/CheckBoxOutlineBlankRounded';
+import GridOnRoundedIcon from '@mui/icons-material/GridOnRounded';
+import FiberManualRecordRoundedIcon from '@mui/icons-material/FiberManualRecordRounded';
+import BlockRoundedIcon from '@mui/icons-material/BlockRounded';
 import { FormattedMessage } from 'react-intl';
 import ColorPicker from '../color-picker';
 import {

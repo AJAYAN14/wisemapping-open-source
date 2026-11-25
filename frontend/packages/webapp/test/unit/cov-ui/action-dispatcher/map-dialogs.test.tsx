@@ -16,7 +16,12 @@
  *   limitations under the License.
  */
 
-import { fireEvent, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { IntlProvider } from 'react-intl';
+import { ThemeProvider } from '@mui/material/styles';
+import { ClientContext } from '../../../../src/classes/provider/client-context';
+import { createAppTheme } from '../../../../src/theme';
 
 // `useFetchMapById` is stubbed, as in test/unit/action-dispatcher: these suites are about the
 // dialogs, not about the query behind them.
@@ -468,6 +473,53 @@ describe('HistoryDialog', () => {
 
     expect(await screen.findByText('Could not load history')).toBeTruthy();
     expect(screen.queryByText('There is no changes available')).toBeNull();
+  });
+
+  test('renders a friendly fallback instead of [object Object] when error lacks msg', async () => {
+    const fetchHistory = jest.fn(() => Promise.reject({ status: 500 }));
+    const revertHistory = jest.fn<Promise<void>, [number, number]>(() => Promise.resolve());
+    renderWithProviders(<HistoryDialog mapId={7} onClose={jest.fn()} />, {
+      client: { fetchHistory, revertHistory } as unknown as Client,
+    });
+
+    expect(
+      await screen.findByText('An unexpected error occurred. Please try again later.'),
+    ).toBeTruthy();
+    expect(screen.queryByText('[object Object]')).toBeNull();
+    expect(screen.queryByText('There is no changes available')).toBeNull();
+  });
+
+  test('always refetches history on remount even with a 5-minute global staleTime', async () => {
+    const sharedQueryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false, staleTime: 5 * 60 * 1000 } },
+    });
+    const fetchHistory = jest
+      .fn()
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce(history);
+    const client = {
+      fetchHistory,
+      revertHistory: jest.fn(() => Promise.resolve()),
+    } as unknown as Client;
+
+    const wrap = (ui: React.ReactElement) => (
+      <ThemeProvider theme={createAppTheme('light')}>
+        <IntlProvider locale="en" messages={{}} onError={() => undefined}>
+          <QueryClientProvider client={sharedQueryClient}>
+            <ClientContext value={client}>{ui}</ClientContext>
+          </QueryClientProvider>
+        </IntlProvider>
+      </ThemeProvider>
+    );
+
+    const first = render(wrap(<HistoryDialog mapId={7} onClose={jest.fn()} />));
+    expect(await screen.findByText('There is no changes available')).toBeTruthy();
+    first.unmount();
+
+    const second = render(wrap(<HistoryDialog mapId={7} onClose={jest.fn()} />));
+    expect(await screen.findByText('ana@wisemapping.com')).toBeTruthy();
+    expect(fetchHistory).toHaveBeenCalledTimes(2);
+    second.unmount();
   });
 
   test('says when the map has no recorded changes', async () => {

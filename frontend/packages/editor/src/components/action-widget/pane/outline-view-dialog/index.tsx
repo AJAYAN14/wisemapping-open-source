@@ -22,13 +22,13 @@ import Box from '@mui/material/Box';
 import Collapse from '@mui/material/Collapse';
 import Tooltip from '@mui/material/Tooltip';
 import Popover from '@mui/material/Popover';
-import CloseIcon from '@mui/icons-material/Close';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
-import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
-import LinkIcon from '@mui/icons-material/Link';
-import StickyNote2Icon from '@mui/icons-material/StickyNote2';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import ExpandMoreRoundedIcon from '@mui/icons-material/ExpandMoreRounded';
+import ChevronRightRoundedIcon from '@mui/icons-material/ChevronRightRounded';
+import UnfoldMoreRoundedIcon from '@mui/icons-material/UnfoldMoreRounded';
+import UnfoldLessRoundedIcon from '@mui/icons-material/UnfoldLessRounded';
+import LinkRoundedIcon from '@mui/icons-material/LinkRounded';
+import StickyNote2RoundedIcon from '@mui/icons-material/StickyNote2Rounded';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Mindmap, INodeModel, HtmlSanitizer } from '@wisemapping/mindplot';
 import { OutlineBuilder, OutlineNodeData } from './OutlineBuilder';
@@ -172,7 +172,7 @@ const OutlineViewDialog = ({ open, onClose, mindmap }: OutlineViewDialogProps): 
                   : intl.formatMessage({ id: 'outline.expand', defaultMessage: 'Expand' })
               }
             >
-              {node.isExpanded ? <ExpandMoreIcon /> : <ChevronRightIcon />}
+              {node.isExpanded ? <ExpandMoreRoundedIcon /> : <ChevronRightRoundedIcon />}
             </ExpandButton>
           ) : (
             <ExpandPlaceholder />
@@ -225,7 +225,7 @@ const OutlineViewDialog = ({ open, onClose, mindmap }: OutlineViewDialogProps): 
             {node.linkUrl && (
               <Tooltip title={node.linkUrl}>
                 <FeatureIcon onMouseEnter={(e) => handleLinkHover(e, node.node)} aria-label="link">
-                  <LinkIcon
+                  <LinkRoundedIcon
                     sx={{
                       fontSize: 'small',
                     }}
@@ -239,7 +239,7 @@ const OutlineViewDialog = ({ open, onClose, mindmap }: OutlineViewDialogProps): 
                 title={intl.formatMessage({ id: 'outline.has-note', defaultMessage: 'Has note' })}
               >
                 <FeatureIcon onMouseEnter={(e) => handleNoteHover(e, node.node)} aria-label="note">
-                  <StickyNote2Icon fontSize="small" />
+                  <StickyNote2RoundedIcon fontSize="small" />
                 </FeatureIcon>
               </Tooltip>
             )}
@@ -265,7 +265,7 @@ const OutlineViewDialog = ({ open, onClose, mindmap }: OutlineViewDialogProps): 
       >
         <StyledDialogContent>
           <CloseButton onClick={onClose} size="small">
-            <CloseIcon />
+            <CloseRoundedIcon />
           </CloseButton>
 
           <OutlineContainer>
@@ -298,7 +298,7 @@ const OutlineViewDialog = ({ open, onClose, mindmap }: OutlineViewDialogProps): 
                   defaultMessage: 'Expand All',
                 })}
               >
-                <UnfoldMoreIcon fontSize="small" />
+                <UnfoldMoreRoundedIcon fontSize="small" />
               </ToolbarButton>
             </Tooltip>
             <Tooltip
@@ -312,7 +312,7 @@ const OutlineViewDialog = ({ open, onClose, mindmap }: OutlineViewDialogProps): 
                   defaultMessage: 'Collapse All',
                 })}
               >
-                <UnfoldLessIcon fontSize="small" />
+                <UnfoldLessRoundedIcon fontSize="small" />
               </ToolbarButton>
             </Tooltip>
           </FloatingToolbar>

@@ -51,17 +51,31 @@ type HistoryDialogProps = SimpleDialogProps & {
   beforeRevert?: (() => Promise<void>) | undefined;
 };
 
-const normalizeError = (err: ErrorInfo | null | undefined): ErrorInfo | undefined => {
+const normalizeError = (
+  err: ErrorInfo | null | undefined,
+  fallbackMessage: string,
+): ErrorInfo | undefined => {
   if (!err) {
     return undefined;
+  }
+  if (typeof err === 'string') {
+    return { msg: err };
   }
   if (err.msg) {
     return err;
   }
+  if (err.fields && Object.keys(err.fields).length > 0) {
+    const firstFieldMsg = Object.values(err.fields).find(
+      (value) => typeof value === 'string' && value.trim().length > 0,
+    );
+    if (firstFieldMsg) {
+      return { ...err, msg: firstFieldMsg };
+    }
+  }
   if (err instanceof Error && err.message) {
     return { msg: err.message };
   }
-  return { msg: String(err) };
+  return { msg: fallbackMessage };
 };
 
 const HistoryDialog = ({
@@ -80,6 +94,8 @@ const HistoryDialog = ({
     queryKey: [`history-${mapId}`],
     queryFn: () => client.fetchHistory(mapId),
     gcTime: 0, // Force reload...
+    staleTime: 0,
+    refetchOnMount: 'always',
   });
 
   const changeHistory: ChangeHistory[] = data ? data : [];
@@ -107,7 +123,13 @@ const HistoryDialog = ({
     }
   };
 
-  const dialogError = normalizeError(revert.error) ?? normalizeError(fetchError);
+  const fallbackErrorMessage = intl.formatMessage({
+    id: 'login.server-error',
+    defaultMessage: 'An unexpected error occurred. Please try again later.',
+  });
+  const dialogError =
+    normalizeError(revert.error, fallbackErrorMessage) ??
+    normalizeError(fetchError, fallbackErrorMessage);
 
   return (
     <BaseDialog

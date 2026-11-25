@@ -72,13 +72,11 @@ const readJsonArray = <T>(storage: Storage, key: string): T[] => {
   return [];
 };
 
-const nextMockSeq = (storage: Storage, minFloor = 0): number => {
+const peekNextMockSeq = (storage: Storage, minFloor = 0): number => {
   const raw = storage.getItem(MOCK_SEQ_KEY);
   const parsed = raw ? Number.parseInt(raw, 10) : 0;
   const current = Number.isSafeInteger(parsed) && parsed > 0 ? parsed : 0;
-  const next = Math.max(current, minFloor) + 1;
-  storage.setItem(MOCK_SEQ_KEY, String(next));
-  return next;
+  return Math.max(current, minFloor) + 1;
 };
 
 class MockPersistenceManager extends PersistenceManager {
@@ -133,15 +131,9 @@ class MockPersistenceManager extends PersistenceManager {
     try {
       const xmlStr = new XMLSerializer().serializeToString(mapXml);
       const now = new Date().toISOString();
-
-      storage.setItem(`${MOCK_XML_PREFIX}${mapId}`, xmlStr);
-      storage.removeItem(LEGACY_XML_KEY(mapId));
-
-      if (pref !== undefined) {
-        storage.setItem(`${MOCK_PROPS_PREFIX}${mapId}`, pref);
-      }
-
-      const mapModifier = this.updateMapModification(storage, mapId, now);
+      const maps = readJsonArray<StoredMapSummary>(storage, MOCK_MAPS_KEY);
+      const currentMap = maps.find((m) => String(m.id) === String(mapId));
+      const mapModifier = currentMap ? this.editorName || currentMap.lastModificationBy : undefined;
 
       if (saveHistory === true) {
         const historyKey = `${MOCK_HISTORY_PREFIX}${mapId}`;
@@ -150,15 +142,26 @@ class MockPersistenceManager extends PersistenceManager {
           (max, entry) => (Number.isInteger(entry.id) && entry.id > max ? entry.id : max),
           0,
         );
-        const snapshotId = nextMockSeq(storage, maxExistingId);
+        const snapshotId = peekNextMockSeq(storage, maxExistingId);
         const entry: MockHistoryEntry = {
           id: snapshotId,
           xml: xmlStr,
           lastModificationBy: this.editorName || mapModifier || 'Local User',
           lastModificationTime: now,
         };
+        // Persist the largest payload (history) first so a quota error leaves current XML/seq intact.
         storage.setItem(historyKey, JSON.stringify([entry, ...history]));
+        storage.setItem(MOCK_SEQ_KEY, String(snapshotId));
       }
+
+      storage.setItem(`${MOCK_XML_PREFIX}${mapId}`, xmlStr);
+      storage.removeItem(LEGACY_XML_KEY(mapId));
+
+      if (pref !== undefined) {
+        storage.setItem(`${MOCK_PROPS_PREFIX}${mapId}`, pref);
+      }
+
+      this.updateMapModification(storage, mapId, now);
       events?.onSuccess();
     } catch (e) {
       console.warn('Failed to save mock map to localStorage:', e);
@@ -183,7 +186,7 @@ class MockPersistenceManager extends PersistenceManager {
       storage.removeItem(LEGACY_XML_KEY(mapId));
       const history = readJsonArray<MockHistoryEntry>(storage, `${MOCK_HISTORY_PREFIX}${mapId}`);
       const latest = history[0];
-      if (!latest?.xml) {
+      if (!latest?.xml || !latest.xml.includes('<map') || !latest.xml.includes('<topic')) {
         return;
       }
       storage.setItem(`${MOCK_XML_PREFIX}${mapId}`, latest.xml);

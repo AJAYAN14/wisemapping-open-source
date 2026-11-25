@@ -15,14 +15,14 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-import BrushIcon from '@mui/icons-material/Brush';
-import FontDownloadOutlinedIcon from '@mui/icons-material/FontDownloadOutlined';
-import SettingsEthernetIcon from '@mui/icons-material/SettingsEthernet';
-import NoteOutlinedIcon from '@mui/icons-material/NoteOutlined';
-import LinkOutlinedIcon from '@mui/icons-material/LinkOutlined';
-import SentimentSatisfiedAltIcon from '@mui/icons-material/SentimentSatisfiedAlt';
-import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
-import TextureIcon from '@mui/icons-material/Texture';
+import BrushRoundedIcon from '@mui/icons-material/BrushRounded';
+import FontDownloadRoundedIcon from '@mui/icons-material/FontDownloadRounded';
+import SettingsEthernetRoundedIcon from '@mui/icons-material/SettingsEthernetRounded';
+import NoteRoundedIcon from '@mui/icons-material/NoteRounded';
+import LinkRoundedIcon from '@mui/icons-material/LinkRounded';
+import SentimentSatisfiedAltRoundedIcon from '@mui/icons-material/SentimentSatisfiedAltRounded';
+import ImageRoundedIcon from '@mui/icons-material/ImageRounded';
+import TextureRoundedIcon from '@mui/icons-material/TextureRounded';
 
 import ActionConfig from '../../classes/action/action-config';
 import NodePropertyValueModelBuilder from '../../classes/model/node-property-builder';
@@ -56,7 +56,7 @@ export function buildEditorPanelConfig(
   const noRelationshipSelected = selection.relationshipCount === 0;
 
   const styleConfiguration: ActionConfig = {
-    icon: <BrushIcon />,
+    icon: <BrushRoundedIcon />,
     tooltip: intl.formatMessage({
       id: 'editor-panel.tooltip-unified-styling',
       defaultMessage: 'Style Topic & Connections',
@@ -109,7 +109,7 @@ export function buildEditorPanelConfig(
    * submenu to manipulate node font
    */
   const fontFormatToolbarConfiguration: ActionConfig = {
-    icon: <FontDownloadOutlinedIcon />,
+    icon: <FontDownloadRoundedIcon />,
     tooltip: intl.formatMessage({
       id: 'editor-panel.tooltip-topic-font-style',
       defaultMessage: 'Font Style',
@@ -139,7 +139,7 @@ export function buildEditorPanelConfig(
    * button to show relation pivot
    */
   const addRelationConfiguration: ActionConfig = {
-    icon: <SettingsEthernetIcon />,
+    icon: <SettingsEthernetRoundedIcon />,
     tooltip: intl.formatMessage({
       id: 'editor-panel.tooltip-add-relationship',
       defaultMessage: 'Add Relationship',
@@ -154,7 +154,7 @@ export function buildEditorPanelConfig(
    * tool for node link edition
    */
   const editLinkUrlConfiguration: ActionConfig = {
-    icon: <LinkOutlinedIcon />,
+    icon: <LinkRoundedIcon />,
     tooltip: formatTooltip(
       intl.formatMessage({ id: 'editor-panel.tooltip-add-link', defaultMessage: 'Add Link' }),
       'L',
@@ -173,7 +173,7 @@ export function buildEditorPanelConfig(
    * tool for background customization
    */
   const editCanvasStyleConfiguration: ActionConfig = {
-    icon: <TextureIcon />,
+    icon: <TextureRoundedIcon />,
     tooltip: intl.formatMessage({
       id: 'editor-panel.tooltip-canvas-style',
       defaultMessage: 'Background',
@@ -201,7 +201,7 @@ export function buildEditorPanelConfig(
    * tool for node note edition
    */
   const editNoteConfiguration: ActionConfig = {
-    icon: <NoteOutlinedIcon />,
+    icon: <NoteRoundedIcon />,
     tooltip: formatTooltip(
       intl.formatMessage({ id: 'editor-panel.tooltip-add-note', defaultMessage: 'Add Note' }),
       'K',
@@ -226,7 +226,7 @@ export function buildEditorPanelConfig(
    * tool for emoji selection
    */
   const editIconConfiguration: ActionConfig = {
-    icon: <SentimentSatisfiedAltIcon />,
+    icon: <SentimentSatisfiedAltRoundedIcon />,
     tooltip: intl.formatMessage({
       id: 'editor-panel.tooltip-add-icon',
       defaultMessage: 'Add Icon',
@@ -247,7 +247,7 @@ export function buildEditorPanelConfig(
    * tool for topic image selection
    */
   const editTopicImageConfiguration: ActionConfig = {
-    icon: <ImageOutlinedIcon />,
+    icon: <ImageRoundedIcon />,
     tooltip: intl.formatMessage({
       id: 'editor-panel.tooltip-add-topic-image',
       defaultMessage: 'Add Topic Image',

@@ -202,6 +202,57 @@ describe('MockPersistenceManager', () => {
     manager.discardChanges('1');
     expect(localStorage.getItem('wisemapping.mock.xml.1')).toContain('Version 1');
   });
+
+  it('discardChanges ignores malformed history XML without overwriting current XML', () => {
+    const manager = new MockPersistenceManager(MAP_XML, { editorName: 'Alice' });
+    manager.saveMapXml('1', buildDocFrom(MAP_XML_V1), '{}', false);
+    localStorage.setItem(
+      'wisemapping.mock.history.1',
+      JSON.stringify([
+        {
+          id: 5,
+          xml: 'not-valid-map',
+          lastModificationBy: 'Alice',
+          lastModificationTime: '2026-01-01T00:00:00Z',
+        },
+      ]),
+    );
+
+    manager.discardChanges('1');
+    expect(localStorage.getItem('wisemapping.mock.xml.1')).toContain('Version 1');
+  });
+
+  it('leaves current XML, maps, and seq intact if writing history snapshot throws QuotaExceededError', () => {
+    const manager = new MockPersistenceManager(MAP_XML, { editorName: 'Alice' });
+    manager.saveMapXml('1', buildDocFrom(MAP_XML_V1), '{}', true);
+    const seqBefore = localStorage.getItem('wisemapping.mock.seq');
+    const mapsBefore = JSON.stringify([
+      { id: 1, title: 'Demo', lastModificationTime: '2020-01-01T00:00:00Z' },
+    ]);
+    localStorage.setItem('wisemapping.mock.maps', mapsBefore);
+
+    jest.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const originalSetItem = Storage.prototype.setItem;
+    jest.spyOn(Storage.prototype, 'setItem').mockImplementation(function (
+      this: Storage,
+      key: string,
+      value: string,
+    ) {
+      if (key === 'wisemapping.mock.history.1') {
+        throw new DOMException('Quota exceeded', 'QuotaExceededError');
+      }
+      return originalSetItem.call(this, key, value);
+    });
+
+    const events = buildEvents();
+    manager.saveMapXml('1', buildDocFrom(MAP_XML_V2), '{"zoom":2}', true, events);
+
+    expect(events.onError).toHaveBeenCalledTimes(1);
+    expect(events.onSuccess).not.toHaveBeenCalled();
+    expect(localStorage.getItem('wisemapping.mock.xml.1')).toContain('Version 1');
+    expect(localStorage.getItem('wisemapping.mock.maps')).toBe(mapsBefore);
+    expect(localStorage.getItem('wisemapping.mock.seq')).toBe(seqBefore);
+  });
 });
 
 describe('PersistenceManager.save', () => {

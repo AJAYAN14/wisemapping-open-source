@@ -21,10 +21,10 @@ import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
 import IconButton from '@mui/material/IconButton';
 import Box from '@mui/material/Box';
-import SearchIcon from '@mui/icons-material/Search';
-import ClearIcon from '@mui/icons-material/Clear';
-import KeyboardArrowUpIcon from '@mui/icons-material/KeyboardArrowUp';
-import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
+import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
+import ClearRoundedIcon from '@mui/icons-material/ClearRounded';
+import KeyboardArrowUpRoundedIcon from '@mui/icons-material/KeyboardArrowUpRounded';
+import KeyboardArrowDownRoundedIcon from '@mui/icons-material/KeyboardArrowDownRounded';
 import { Designer, DesignerKeyboard } from '@wisemapping/mindplot';
 import { collectSearchableNodes, filterSearchableNodes, SearchableNode } from './findInMapUtils';
 import {
@@ -155,7 +155,7 @@ const FindInMapPanel = ({ designer, closeModal }: FindInMapPanelProps): ReactEle
             input: {
               startAdornment: (
                 <InputAdornment position="start">
-                  <SearchIcon fontSize="small" />
+                  <SearchRoundedIcon fontSize="small" />
                 </InputAdornment>
               ),
               endAdornment: query ? (
@@ -168,7 +168,7 @@ const FindInMapPanel = ({ designer, closeModal }: FindInMapPanelProps): ReactEle
                       defaultMessage: 'Clear search',
                     })}
                   >
-                    <ClearIcon fontSize="small" />
+                    <ClearRoundedIcon fontSize="small" />
                   </IconButton>
                 </InputAdornment>
               ) : undefined,
@@ -196,7 +196,7 @@ const FindInMapPanel = ({ designer, closeModal }: FindInMapPanelProps): ReactEle
                 defaultMessage: 'Previous match',
               })}
             >
-              <KeyboardArrowUpIcon fontSize="small" />
+              <KeyboardArrowUpRoundedIcon fontSize="small" />
             </IconButton>
             <IconButton
               size="small"
@@ -207,7 +207,7 @@ const FindInMapPanel = ({ designer, closeModal }: FindInMapPanelProps): ReactEle
                 defaultMessage: 'Next match',
               })}
             >
-              <KeyboardArrowDownIcon fontSize="small" />
+              <KeyboardArrowDownRoundedIcon fontSize="small" />
             </IconButton>
           </Box>
         </HeaderRow>

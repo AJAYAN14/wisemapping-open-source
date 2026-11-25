@@ -20,7 +20,7 @@ import { ReactElement } from 'react';
 import NodeProperty from '../../../../classes/model/node-property';
 import colors from './colors.json';
 import { styled } from '@mui/material/styles';
-import NotInterestedOutlined from '@mui/icons-material/NotInterestedOutlined';
+import BlockRoundedIcon from '@mui/icons-material/BlockRounded';
 import { useIntl } from 'react-intl';
 
 const NoneColorCircle = styled(Box)<{ selected?: boolean }>(({ selected, theme }) => ({

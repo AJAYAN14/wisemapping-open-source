@@ -91,12 +91,17 @@ const writeJson = (key: string, value: unknown): void => {
   }
 };
 
-const nextMockSeq = (minFloor = 0): number => {
+const peekNextMockSeq = (minFloor = 0): number => {
   const storage = getStorage();
   const raw = storage?.getItem(MOCK_SEQ_KEY);
   const parsed = raw ? Number.parseInt(raw, 10) : 0;
   const current = Number.isSafeInteger(parsed) && parsed > 0 ? parsed : 0;
-  const next = Math.max(current, minFloor) + 1;
+  return Math.max(current, minFloor) + 1;
+};
+
+const nextMockSeq = (minFloor = 0): number => {
+  const storage = getStorage();
+  const next = peekNextMockSeq(minFloor);
   try {
     storage?.setItem(MOCK_SEQ_KEY, String(next));
   } catch {
@@ -166,10 +171,6 @@ const saveMockProps = (id: number, props: string): void => {
 const loadMockHistory = (id: number): MockHistoryEntry[] =>
   readJsonArray<MockHistoryEntry>(`${MOCK_HISTORY_PREFIX}${id}`);
 
-const saveMockHistory = (id: number, history: MockHistoryEntry[]): void => {
-  writeJson(`${MOCK_HISTORY_PREFIX}${id}`, history);
-};
-
 const getStoredAccount = (): StoredMockAccount => {
   try {
     const raw = getStorage()?.getItem(MOCK_ACCOUNT_KEY);
@@ -238,7 +239,10 @@ class MockClient implements Client {
 
     if (includeXml) {
       const savedXml = loadMockXml(id);
-      metadata.xml = savedXml ?? buildDefaultMapXml(id, map.title);
+      const hasValidXml = Boolean(
+        savedXml && savedXml.includes('<map') && savedXml.includes('<topic'),
+      );
+      metadata.xml = hasValidXml && savedXml ? savedXml : buildDefaultMapXml(id, map.title);
     }
 
     return Promise.resolve(metadata);
@@ -386,31 +390,49 @@ class MockClient implements Client {
     }
 
     const history = loadMockHistory(id);
-    const target = history.find((entry) => entry.id === cid);
-    if (!target) {
+    const target = history.find((entry) => entry && entry.id === cid);
+    if (!target || typeof target.xml !== 'string' || !target.xml.trim()) {
       return Promise.reject({ msg: 'History entry could not be found.', status: 400 });
     }
 
+    const storage = getStorage();
+    if (!storage) {
+      return Promise.reject({ msg: 'Local storage is unavailable.' });
+    }
+
     const now = new Date().toISOString();
-    const { email } = getCurrentUserIdentity();
-    saveMockXml(id, target.xml);
-
-    maps[mapIndex] = {
-      ...currentMap,
-      lastModificationTime: now,
-      lastModificationBy: email,
-    };
-    saveMockMaps(maps);
-
-    const maxHistId = history.reduce((max, entry) => (entry.id > max ? entry.id : max), 0);
-    const newHistId = nextMockSeq(maxHistId);
+    const { displayName } = getCurrentUserIdentity();
+    const maxHistId = history.reduce(
+      (max, entry) => (entry && Number.isInteger(entry.id) && entry.id > max ? entry.id : max),
+      0,
+    );
+    const newHistId = peekNextMockSeq(maxHistId);
     const revertSnapshot: MockHistoryEntry = {
       id: newHistId,
       xml: target.xml,
-      lastModificationBy: email,
+      lastModificationBy: displayName,
       lastModificationTime: now,
     };
-    saveMockHistory(id, [revertSnapshot, ...history]);
+
+    const updatedMaps = [...maps];
+    updatedMaps[mapIndex] = {
+      ...currentMap,
+      lastModificationTime: now,
+      lastModificationBy: displayName,
+    };
+
+    try {
+      // Persist the largest payload (history) first so a quota error leaves current XML/maps intact.
+      storage.setItem(`${MOCK_HISTORY_PREFIX}${id}`, JSON.stringify([revertSnapshot, ...history]));
+      storage.setItem(MOCK_SEQ_KEY, String(newHistId));
+      storage.setItem(`${MOCK_XML_PREFIX}${id}`, target.xml);
+      storage.removeItem(LEGACY_XML_KEY(id));
+      storage.setItem(MOCK_MAPS_KEY, JSON.stringify(updatedMaps));
+    } catch (e) {
+      return Promise.reject({
+        msg: e instanceof Error && e.message ? e.message : 'Failed to revert history.',
+      });
+    }
     return Promise.resolve();
   }
 
@@ -511,11 +533,19 @@ class MockClient implements Client {
       return Promise.reject({ msg: `Map could not be found ${id}`, status: 404 });
     }
 
-    const history = loadMockHistory(id).map((entry) => ({
-      id: entry.id,
-      lastModificationBy: entry.lastModificationBy,
-      lastModificationTime: entry.lastModificationTime,
-    }));
+    const history = loadMockHistory(id)
+      .filter(
+        (entry): entry is MockHistoryEntry =>
+          Boolean(entry) &&
+          typeof entry.id === 'number' &&
+          Number.isFinite(entry.id) &&
+          typeof entry.lastModificationTime === 'string',
+      )
+      .map((entry) => ({
+        id: entry.id,
+        lastModificationBy: entry.lastModificationBy || 'Local User',
+        lastModificationTime: entry.lastModificationTime,
+      }));
     return Promise.resolve(history);
   }
 

@@ -19,12 +19,12 @@
 import { ReactElement, useState, useEffect } from 'react';
 import FormControl from '@mui/material/FormControl';
 import MenuItem from '@mui/material/MenuItem';
-import CloseIcon from '@mui/icons-material/Close';
-import TextIncreaseOutlinedIcon from '@mui/icons-material/TextIncreaseOutlined';
-import TextDecreaseOutlinedIcon from '@mui/icons-material/TextDecreaseOutlined';
-import FormatBoldOutlinedIcon from '@mui/icons-material/FormatBoldOutlined';
-import FormatItalicIcon from '@mui/icons-material/FormatItalic';
-import NotInterestedOutlined from '@mui/icons-material/NotInterestedOutlined';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import TextIncreaseRoundedIcon from '@mui/icons-material/TextIncreaseRounded';
+import TextDecreaseRoundedIcon from '@mui/icons-material/TextDecreaseRounded';
+import FormatBoldRoundedIcon from '@mui/icons-material/FormatBoldRounded';
+import FormatItalicRoundedIcon from '@mui/icons-material/FormatItalicRounded';
+import BlockRoundedIcon from '@mui/icons-material/BlockRounded';
 import { FormattedMessage, useIntl } from 'react-intl';
 import type { SelectChangeEvent } from '@mui/material/Select';
 
@@ -148,7 +148,7 @@ const TopicFontEditor = (props: TopicFontEditorProps): ReactElement => {
   return (
     <FontPaneContainer>
       <PaneCloseButton onClick={props.closeModal}>
-        <CloseIcon />
+        <CloseRoundedIcon />
       </PaneCloseButton>
       {/* Font Family */}
       <PaneSection>
@@ -241,7 +241,7 @@ const TopicFontEditor = (props: TopicFontEditorProps): ReactElement => {
               defaultMessage: 'Increase font size',
             })}
           >
-            <TextIncreaseOutlinedIcon />
+            <TextIncreaseRoundedIcon />
           </ActionButton>
           <ActionButton
             onClick={handleFontSizeDecrease}
@@ -254,7 +254,7 @@ const TopicFontEditor = (props: TopicFontEditorProps): ReactElement => {
               defaultMessage: 'Decrease font size',
             })}
           >
-            <TextDecreaseOutlinedIcon />
+            <TextDecreaseRoundedIcon />
           </ActionButton>
 
           <PaneDivider orientation="vertical" flexItem />
@@ -279,7 +279,7 @@ const TopicFontEditor = (props: TopicFontEditorProps): ReactElement => {
               defaultMessage: 'Toggle bold',
             })}
           >
-            <FormatBoldOutlinedIcon />
+            <FormatBoldRoundedIcon />
           </ActionButton>
           <ActionButton
             onClick={handleItalicToggle}
@@ -301,7 +301,7 @@ const TopicFontEditor = (props: TopicFontEditorProps): ReactElement => {
               defaultMessage: 'Toggle italic',
             })}
           >
-            <FormatItalicIcon />
+            <FormatItalicRoundedIcon />
           </ActionButton>
         </PaneControlRow>
       </PaneSection>
@@ -311,7 +311,7 @@ const TopicFontEditor = (props: TopicFontEditorProps): ReactElement => {
           <ResetButton
             variant="outlined"
             size="small"
-            startIcon={<NotInterestedOutlined />}
+            startIcon={<BlockRoundedIcon />}
             onClick={handleResetToDefault}
             fullWidth
           >

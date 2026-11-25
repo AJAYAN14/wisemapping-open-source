@@ -18,18 +18,18 @@
 
 import React, { ReactElement, useState } from 'react';
 import Tab from '@mui/material/Tab';
-import CloseIcon from '@mui/icons-material/Close';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import { FormattedMessage } from 'react-intl';
 import { StyledEditorsTabs } from '../shared/StyledTabs';
 import { StyledEditorContainer } from '../shared/StyledEditorContainer';
 
 // Icons
-import SquareOutlinedIcon from '@mui/icons-material/SquareOutlined';
-import CheckBoxOutlineBlankOutlinedIcon from '@mui/icons-material/CheckBoxOutlineBlankOutlined';
-import HorizontalRuleOutlinedIcon from '@mui/icons-material/HorizontalRuleOutlined';
-import RadioButtonUncheckedOutlinedIcon from '@mui/icons-material/RadioButtonUncheckedOutlined';
-import NotInterestedOutlined from '@mui/icons-material/NotInterestedOutlined';
-import BorderClearOutlinedIcon from '@mui/icons-material/BorderClearOutlined';
+import SquareRoundedIcon from '@mui/icons-material/SquareRounded';
+import CheckBoxOutlineBlankRoundedIcon from '@mui/icons-material/CheckBoxOutlineBlankRounded';
+import HorizontalRuleRoundedIcon from '@mui/icons-material/HorizontalRuleRounded';
+import RadioButtonUncheckedRoundedIcon from '@mui/icons-material/RadioButtonUncheckedRounded';
+import BlockRoundedIcon from '@mui/icons-material/BlockRounded';
+import BorderClearRoundedIcon from '@mui/icons-material/BorderClearRounded';
 
 import NodeProperty from '../../../../classes/model/node-property';
 import { TopicShapeType, LineType, StrokeStyle } from '@wisemapping/mindplot';
@@ -174,7 +174,7 @@ function TabPanel(props: TabPanelProps) {
 const borderStyles = [
   {
     type: undefined,
-    icon: <NotInterestedOutlined />,
+    icon: <BlockRoundedIcon />,
     label: <FormattedMessage id="icon-collection.border.default" defaultMessage="Default" />,
     tooltip: (
       <FormattedMessage
@@ -185,7 +185,7 @@ const borderStyles = [
   },
   {
     type: StrokeStyle.SOLID,
-    icon: <HorizontalRuleOutlinedIcon />,
+    icon: <HorizontalRuleRoundedIcon />,
     label: <FormattedMessage id="icon-collection.border.solid" defaultMessage="Solid" />,
   },
   {
@@ -203,7 +203,7 @@ const borderStyles = [
 const connectionStyles = [
   {
     type: undefined,
-    icon: <NotInterestedOutlined />,
+    icon: <BlockRoundedIcon />,
     label: <FormattedMessage id="icon-collection.connection.default" defaultMessage="Default" />,
     tooltip: (
       <FormattedMessage
@@ -343,7 +343,7 @@ const TopicStyleEditor = (props: TopicStyleEditorProps): ReactElement => {
   return (
     <StyledEditorContainer>
       <StyleCloseButton onClick={props.closeModal}>
-        <CloseIcon />
+        <CloseRoundedIcon />
       </StyleCloseButton>
       <TabsBar>
         <StyledEditorsTabs
@@ -383,7 +383,7 @@ const TopicStyleEditor = (props: TopicStyleEditorProps): ReactElement => {
               styles={[
                 {
                   type: undefined,
-                  icon: <NotInterestedOutlined />,
+                  icon: <BlockRoundedIcon />,
                   label: (
                     <FormattedMessage id="icon-collection.shape.default" defaultMessage="Default" />
                   ),
@@ -396,12 +396,12 @@ const TopicStyleEditor = (props: TopicStyleEditorProps): ReactElement => {
                 },
                 {
                   type: 'line',
-                  icon: <HorizontalRuleOutlinedIcon />,
+                  icon: <HorizontalRuleRoundedIcon />,
                   label: <FormattedMessage id="icon-collection.shape.line" defaultMessage="Line" />,
                 },
                 {
                   type: 'rectangle',
-                  icon: <SquareOutlinedIcon />,
+                  icon: <SquareRoundedIcon />,
                   label: (
                     <FormattedMessage
                       id="icon-collection.shape.rectangle"
@@ -411,21 +411,21 @@ const TopicStyleEditor = (props: TopicStyleEditorProps): ReactElement => {
                 },
                 {
                   type: 'rounded rectangle',
-                  icon: <CheckBoxOutlineBlankOutlinedIcon />,
+                  icon: <CheckBoxOutlineBlankRoundedIcon />,
                   label: (
                     <FormattedMessage id="icon-collection.shape.rounded" defaultMessage="Rounded" />
                   ),
                 },
                 {
                   type: 'elipse',
-                  icon: <RadioButtonUncheckedOutlinedIcon />,
+                  icon: <RadioButtonUncheckedRoundedIcon />,
                   label: (
                     <FormattedMessage id="icon-collection.shape.ellipse" defaultMessage="Ellipse" />
                   ),
                 },
                 {
                   type: 'none',
-                  icon: <BorderClearOutlinedIcon />,
+                  icon: <BorderClearRoundedIcon />,
                   label: <FormattedMessage id="icon-collection.shape.none" defaultMessage="None" />,
                   tooltip: (
                     <FormattedMessage
