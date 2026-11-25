@@ -16,15 +16,7 @@
  *   limitations under the License.
  */
 
-declare global {
-  interface Window {
-    newrelic: { noticeError: (error: string) => void };
-  }
-}
-
 export const logCriticalError = (msg: string, exception: unknown): void => {
-  window.newrelic?.noticeError(`${msg}. Exception: ${exception}`);
-
   console.error(`${msg}. Exception: ${exception}`);
   console.error(exception);
 };

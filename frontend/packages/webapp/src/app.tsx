@@ -62,11 +62,6 @@ import { useFetchAccount } from './classes/middleware';
 
 const EditorPage = React.lazy(() => import('./components/editor-page'));
 const MapsPage = React.lazy(() => import('./components/maps-page'));
-const AdminConsole = React.lazy(() => import('./components/admin-console'));
-const AdminLayout = React.lazy(() => import('./components/admin-console/layout'));
-const AccountsPage = React.lazy(() => import('./components/admin-console/accounts-page'));
-const MapsAdminPage = React.lazy(() => import('./components/admin-console/maps-page'));
-const SystemPage = React.lazy(() => import('./components/admin-console/system-page'));
 
 const PageEditorWrapper = ({ mode }: { mode: PageModeType }) => {
   const id = useParams()['id'];
@@ -191,48 +186,6 @@ const buildRouter = () =>
           />
 
           <Route element={<CommonPage />}>
-            {/* Admin routes */}
-            <Route
-              path="/c/admin"
-              element={
-                <Suspense fallback={<LoadingFallback />}>
-                  <AdminConsole />
-                </Suspense>
-              }
-            />
-            <Route
-              element={
-                <Suspense fallback={<LoadingFallback />}>
-                  <AdminLayout />
-                </Suspense>
-              }
-            >
-              <Route
-                path="/c/admin/accounts"
-                element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <AccountsPage />
-                  </Suspense>
-                }
-              />
-              <Route
-                path="/c/admin/maps"
-                element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <MapsAdminPage />
-                  </Suspense>
-                }
-              />
-              <Route
-                path="/c/admin/system"
-                element={
-                  <Suspense fallback={<LoadingFallback />}>
-                    <SystemPage />
-                  </Suspense>
-                }
-              />
-            </Route>
-
             <Route
               path="/c/maps/"
               loader={mapsPageLoader}
