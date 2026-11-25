@@ -193,6 +193,8 @@ export type AssetStorageStats = {
     objectCount: number;
     totalBytes: number;
     configured: boolean;
+    orphanCount?: number;
+    orphanBytes?: number;
   };
 };
 

@@ -35,6 +35,8 @@ export interface StorageUsageSummary {
   objectCount: number;
   totalBytes: number;
   configured: boolean;
+  orphanCount?: number;
+  orphanBytes?: number;
 }
 
 export interface CleanupOrphansResult {
@@ -67,7 +69,10 @@ export interface AssetStorageService {
     ownerUid: string,
     items: UploadUrlRequestItem[],
   ): Promise<IssuedUploadUrlItem[]>;
-  getStorageUsage(ownerUid: string): Promise<StorageUsageSummary>;
+  getStorageUsage(
+    ownerUid: string,
+    referencedPaths?: ReadonlySet<string>,
+  ): Promise<StorageUsageSummary>;
   cleanupOrphanedAssets(
     ownerUid: string,
     referencedPaths: ReadonlySet<string>,
@@ -287,17 +292,27 @@ export class SupabaseAssetStorageService implements AssetStorageService {
     return results;
   }
 
-  async getStorageUsage(ownerUid: string): Promise<StorageUsageSummary> {
+  async getStorageUsage(
+    ownerUid: string,
+    referencedPaths?: ReadonlySet<string>,
+  ): Promise<StorageUsageSummary> {
     const entries = await this.listOwnerObjects(ownerUid);
     let totalBytes = 0;
+    let orphanCount = 0;
+    let orphanBytes = 0;
     for (const entry of entries) {
       totalBytes += entry.size;
+      if (referencedPaths && !referencedPaths.has(entry.objectPath)) {
+        orphanCount += 1;
+        orphanBytes += entry.size;
+      }
     }
     return {
       bucket: this.bucket,
       objectCount: entries.length,
       totalBytes,
       configured: true,
+      ...(referencedPaths ? { orphanCount, orphanBytes } : {}),
     };
   }
 

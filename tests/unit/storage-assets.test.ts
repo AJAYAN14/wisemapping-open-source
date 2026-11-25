@@ -112,6 +112,19 @@ describe('Storage asset validation, deduplication, and XML migration', () => {
     });
     expect(signedPaths).toEqual([`${TEST_OWNER_UID}/${hashB}.png`]);
 
+    const usage = await service.getStorageUsage(
+      TEST_OWNER_UID,
+      new Set([`${TEST_OWNER_UID}/${hashA}.webp`]),
+    );
+    expect(usage).toEqual({
+      bucket: MAP_ASSETS_BUCKET,
+      objectCount: 2,
+      totalBytes: 3500,
+      configured: true,
+      orphanCount: 1,
+      orphanBytes: 2500,
+    });
+
     const cleanup = await service.cleanupOrphanedAssets(
       TEST_OWNER_UID,
       new Set([`${TEST_OWNER_UID}/${hashA}.webp`]),

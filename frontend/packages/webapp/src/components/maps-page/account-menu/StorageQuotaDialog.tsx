@@ -121,6 +121,10 @@ const StorageQuotaDialog = ({ open, onClose }: StorageQuotaDialogProps): React.R
   const storagePercent = stats
     ? Math.min(100, Math.max(0.5, (stats.storage.totalBytes / FREE_STORAGE_LIMIT_BYTES) * 100))
     : 0;
+  const orphanCount = stats?.storage.orphanCount;
+  const orphanBytes = stats?.storage.orphanBytes ?? 0;
+  const hasOrphans =
+    orphanCount !== undefined ? orphanCount > 0 : (stats?.storage.objectCount ?? 0) > 0;
 
   return (
     <Dialog
@@ -211,11 +215,26 @@ const StorageQuotaDialog = ({ open, onClose }: StorageQuotaDialogProps): React.R
                 value={storagePercent}
                 sx={{ height: 6, borderRadius: 999, mb: 0.75 }}
               />
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
                 {stats.storage.configured
                   ? `已存储 ${stats.storage.objectCount} 张去重图片（相同图片全库只占 1 份）`
                   : '后端未配置 SUPABASE_SERVICE_ROLE_KEY，暂无法统计图床'}
               </Typography>
+              {stats.storage.configured && orphanCount !== undefined && (
+                <Typography
+                  variant="caption"
+                  sx={{
+                    display: 'block',
+                    mt: 0.35,
+                    color: orphanCount > 0 ? 'warning.main' : 'success.main',
+                    fontWeight: 500,
+                  }}
+                >
+                  {orphanCount > 0
+                    ? `检测到 ${orphanCount} 张未引用图片（可释放 ${formatBytes(orphanBytes)}）`
+                    : '所有图片均正常使用中，暂无可清理垃圾'}
+                </Typography>
+              )}
             </Box>
           </>
         ) : null}
@@ -242,11 +261,17 @@ const StorageQuotaDialog = ({ open, onClose }: StorageQuotaDialogProps): React.R
           startIcon={
             cleaning ? <CircularProgress size={14} /> : <CleaningServicesRoundedIcon fontSize="small" />
           }
-          disabled={cleaning || loading || !stats?.storage.configured}
+          disabled={cleaning || loading || !stats?.storage.configured || !hasOrphans}
           onClick={() => void handleCleanup()}
           sx={{ borderRadius: '10px' }}
         >
-          {cleaning ? '清理中...' : '清理未引用图片'}
+          {cleaning
+            ? '清理中...'
+            : stats?.storage.configured && !hasOrphans
+              ? '暂无废弃图片'
+              : orphanCount && orphanCount > 0
+                ? `清理未引用图片 (${orphanCount})`
+                : '清理未引用图片'}
         </Button>
         <Button variant="contained" size="small" onClick={onClose} sx={{ borderRadius: '10px' }}>
           完成

@@ -329,15 +329,28 @@ export function createApiHandler(
       }
 
       if (path === '/assets/stats' && method === 'GET') {
-        const dbStats = await repo.getOwnerXmlStats(user);
-        let storageSummary = {
+        const [dbStats, xmls] = await Promise.all([
+          repo.getOwnerXmlStats(user),
+          repo.listAllXmlForOwner(user),
+        ]);
+        const referenced = extractReferencedAssetPaths(xmls, MAP_ASSETS_BUCKET);
+        let storageSummary: {
+          bucket: string;
+          objectCount: number;
+          totalBytes: number;
+          configured: boolean;
+          orphanCount?: number;
+          orphanBytes?: number;
+        } = {
           bucket: MAP_ASSETS_BUCKET,
           objectCount: 0,
           totalBytes: 0,
           configured: false,
+          orphanCount: 0,
+          orphanBytes: 0,
         };
         try {
-          storageSummary = await resolveAssetStorage().getStorageUsage(user.uid);
+          storageSummary = await resolveAssetStorage().getStorageUsage(user.uid, referenced);
         } catch (err) {
           if (!(err instanceof StorageConfigurationError)) {
             throw err;
