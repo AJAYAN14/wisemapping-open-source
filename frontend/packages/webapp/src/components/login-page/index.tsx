@@ -20,9 +20,6 @@ import React, { use, useEffect, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useLocation } from 'react-router';
 import AccountAccessLayout from '../layout/AccountAccessLayout';
-import FormContainer from '../layout/form-container';
-import Typography from '@mui/material/Typography';
-import Alert from '@mui/material/Alert';
 import GoogleButton from '../common/google-button';
 import AppConfig from '../../classes/app-config';
 import { ClientContext } from '../../classes/provider/client-context';
@@ -30,7 +27,15 @@ import { appLogger as log } from '../../utils/logger';
 import AuthProgress from '../layout/auth-progress';
 import { leaveTo, safeRedirectPath } from '../../utils/redirect';
 import { startOAuthFlow, takeOAuthFlow } from '../../utils/oauth-flow';
-import { SocialButtons } from './styled';
+import {
+  AppleLoginCard,
+  BrandBadge,
+  TitleText,
+  SubtitleText,
+  SocialButtons,
+  SecurityFootnote,
+  AppleAlert,
+} from './styled';
 
 const LoginPage = (): React.ReactElement => {
   const intl = useIntl();
@@ -98,19 +103,35 @@ const LoginPage = (): React.ReactElement => {
 
   return (
     <AccountAccessLayout headerType="none" compact>
-      <FormContainer>
-        <header>
-          <Typography variant="h4" component="h1">
-            <FormattedMessage id="login.title" defaultMessage="Welcome" />
-          </Typography>
+      <AppleLoginCard role="region" aria-label={intl.formatMessage({ id: 'login.page-title', defaultMessage: 'Login' })}>
+        <BrandBadge aria-hidden="true">
+          <svg width="40" height="30" viewBox="0 0 1510 1100" style={{ display: 'block' }}>
+            <g stroke="#1D1D1D" strokeWidth="60" strokeLinejoin="round" strokeLinecap="round">
+              <path
+                d="M755 40 C1038 40 1268 212 1268 425 C1268 610 1125 720 960 818 C850 883 786 918 755 1000 C724 918 660 883 550 818 C385 720 242 610 242 425 C242 212 472 40 755 40 Z"
+                fill="#FFCB00"
+              />
+              <path d="M650 300 Q755 205 860 300" fill="none" />
+              <path
+                d="M55 252 H682 C682 436 542 585 368.5 585 C195 585 55 436 55 252 Z M828 252 H1455 C1455 436 1315 585 1141.5 585 C968 585 828 436 828 252 Z"
+                fill="#B3D4FF"
+              />
+            </g>
+          </svg>
+        </BrandBadge>
 
-          <Typography sx={{ marginBottom: '16px' }}>
+        <header>
+          <TitleText variant="h4" component="h1">
+            <FormattedMessage id="login.title" defaultMessage="Welcome" />
+          </TitleText>
+
+          <SubtitleText>
             <FormattedMessage id="login.desc" defaultMessage="Log into your account" />
-          </Typography>
+          </SubtitleText>
         </header>
 
         {oauthError && (
-          <Alert severity="error" sx={{ mb: 2 }}>
+          <AppleAlert severity="error">
             {oauthError === 'oauth_failed' && (
               <FormattedMessage
                 id="login.oauth-error"
@@ -129,7 +150,7 @@ const LoginPage = (): React.ReactElement => {
                 defaultMessage="An error occurred during authentication. Please try again."
               />
             )}
-          </Alert>
+          </AppleAlert>
         )}
 
         <SocialButtons>
@@ -141,7 +162,25 @@ const LoginPage = (): React.ReactElement => {
             onClick={handleGoogleLogin}
           />
         </SocialButtons>
-      </FormContainer>
+
+        <SecurityFootnote>
+          <svg
+            width="12"
+            height="12"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            style={{ opacity: 0.8 }}
+          >
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
+          <span>个人私有专版 · Google 安全验证</span>
+        </SecurityFootnote>
+      </AppleLoginCard>
     </AccountAccessLayout>
   );
 };

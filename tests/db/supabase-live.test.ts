@@ -235,6 +235,7 @@ describe('M2 withRlsTransaction pool release safety (offline)', () => {
 
 describe.skipIf(!envStatus.hasLiveEnv)(
   'M2 live Supabase PostgreSQL schema, RLS & optimistic locking',
+  { timeout: 30_000 },
   () => {
     let pool: Pool;
     const ownerAId = crypto.randomUUID();

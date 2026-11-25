@@ -20,6 +20,7 @@ import React from 'react';
 import Box from '@mui/material/Box';
 import Header from './header';
 import { LayoutContent } from './styled';
+import { useTheme } from '@mui/material/styles';
 
 type AccountAccessLayoutProps = {
   headerType: 'only-signin' | 'none';
@@ -33,17 +34,28 @@ const AccountAccessLayout = ({
   children,
   compact = false,
 }: AccountAccessLayoutProps): React.ReactElement => {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+
   return (
     <Box
       sx={{
         minHeight: '100vh',
         display: 'flex',
         flexDirection: 'column',
+        position: 'relative',
+        backgroundColor: isDark ? '#161618' : '#F5F5F7',
+        backgroundImage: isDark
+          ? 'radial-gradient(ellipse 70% 50% at 50% 0%, rgba(255, 159, 10, 0.08) 0%, transparent 70%), linear-gradient(180deg, #1C1C1E 0%, #161618 100%)'
+          : 'radial-gradient(ellipse 70% 50% at 50% 0%, rgba(245, 158, 11, 0.08) 0%, transparent 70%), linear-gradient(180deg, #FAFAFC 0%, #EFF0F4 100%)',
+        backgroundAttachment: 'fixed',
       }}
     >
       <Header type={headerType} />
       <LayoutContent compact={compact}>
-        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>{children}</Box>
+        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          {children}
+        </Box>
       </LayoutContent>
     </Box>
   );

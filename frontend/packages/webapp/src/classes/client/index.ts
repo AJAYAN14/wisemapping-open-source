@@ -138,6 +138,8 @@ export enum AuthenticationType {
 export type AccountInfo = {
   firstname: string;
   lastname: string;
+  fullName?: string;
+  avatarUrl?: string;
   email: string;
   // Undefined when the account has no locale, or one this frontend does not know.
   locale?: Locale | undefined;

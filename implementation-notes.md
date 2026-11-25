@@ -23,6 +23,12 @@
 5. **Esbuild Serverless Bundling Externalization for `pg`**
    - **Plan**: Bundle `netlify/functions/api.ts` and `oauth.ts` into `.netlify/functions-check`.
    - **Actual**: Marked `--external:pg` and `--external:pg-native` in `package.json` `build:functions` script because `pg` optional native bindings should not be inlined into ESM bundle files, while embedding `@supabase/ssr`, `jose`, etc. seamlessly.
+6. **Frontend Bootstrap Config Remote Resolution for Local Serverless Emulation**
+   - **Plan**: Frontend connects to Netlify Function APIs in development and production.
+   - **Actual**: Upstream `vite.config.mts` did not merge `loadEnv` results into `process.env`, causing `resolveBootstrapConfig` to fall back to `config.mock.json` when `APP_CONFIG_TYPE` was missing from the terminal process environment. Updated `vite.config.mts` to merge `loadEnv` output, added `APP_CONFIG_TYPE=remote` to `frontend/packages/webapp/.env`, and rebuilt bundle with `window.BoostrapConfig={type:"remote",url:"/api/restful/app/config"}`.
+7. **Local Zero-Dependency Serverless Runner (`scripts/dev-server.ts`)**
+   - **Plan**: Run local testing via `netlify dev`.
+   - **Actual**: Installing heavy Netlify CLI dependencies hung on Windows PowerShell. Replaced with `scripts/dev-server.ts` utilizing `node:http`, bridging requests directly into `netlify/functions/api.ts` and `oauth.ts` and serving `dist/` with SPA routing and explicit `.env.local` override.
 
 ---
 
@@ -119,6 +125,27 @@
       - `base-dialog`: `CloseRoundedIcon`.
       - `history-dialog`: `HistoryRoundedIcon`, `OpenInNewRoundedIcon`, `RestoreRoundedIcon`.
     - **Visual Harmony**: The thick rounded strokes and smooth terminals of Google Material Rounded icons align natively with Apple Design's squircle geometry, giving every button, pane, and modal a friendly, modern, and unified appearance.
+
+20. **Apple Design Authentication Screen Refactor (`components/login-page/`, `layout/`)**
+    - **Frosted Glass Floating Card (`AppleLoginCard`)**: Created a floating translucent authentication card (`backdrop-filter: blur(32px) saturate(190%)`, `background: rgba(255, 255, 255, 0.75)` in light mode and `rgba(32, 32, 36, 0.72)` in dark mode) with `24px` squircle corners, delicate specular highlight edge (`inset 0 1px 1px 0 rgba(255, 255, 255, 0.95)`), and smooth entry spring physics (`appleCardEnter` 420ms cubic-bezier).
+    - **Studio Ambient Canvas (`AccountAccessLayout`)**: Transformed the stark plain-white backdrop into an Apple studio canvas with a warm amber ambient radial highlight (`radial-gradient(ellipse ... rgba(245, 158, 11, 0.08))`) echoing WiseMapping's amber brand personality in both light and dark themes.
+    - **Translucent Top Navigation Header (`StyledNav`)**: Replaced the legacy 90px sticky gradient bar with a refined 64px frosted glass navbar (`backdrop-filter: blur(20px) saturate(180%)`) and hairline border.
+    - **Brand Emblem Squircle Anchor (`BrandBadge`)**: Positioned a 64x64px squircle badge (`border-radius: 18px`) with an amber gradient (`#FFB340` -> `#F59E0B`) and inner specular highlight above the heading, housing the WiseMapping icon.
+    - **Typography Hierarchy (`TitleText`, `SubtitleText`)**: Replaced the harsh raw-yellow heading with high-contrast, optical-tracked typography (`"SF Pro Rounded"`, `font-size: 28px`, `font-weight: 700`, `letter-spacing: -0.025em`) and refined secondary subtitle (`#6E6E73` / `#A1A1A6`).
+    - **Tactile Google OAuth Button (`GoogleButton`)**: Engineered instant pointer-down tactile feedback (`:active { transform: scale(0.98) }`), smooth hover elevation, and 14px rounded-rect geometry, along with an Apple-styled inline security trust footnote and alert banners.
+21. **Real Google Profile Avatar & Full Name Integration**
+    - Extracted Google user avatar URL and full name from OAuth callback identity metadata in `netlify/functions/oauth.ts` and signed them into session JWT (`SessionJwtUser`).
+    - Extended `GET /account` in `netlify/functions/api.ts` to return `fullName` and `avatarUrl` (querying `auth.users.raw_user_meta_data` if omitted from token).
+    - Updated frontend `AccountMenu` to render user's authentic Google profile picture (`AvatarImage` with `referrerPolicy="no-referrer"`), fall back to initial circles, and display full name + email in the dropdown menu.
+22. **Frontend Mock Bypass Root Cause & Real Google OAuth Flow Fix**
+    - Clicking Google login bypassed OAuth screen because Vite embedded `config.mock.json` when `APP_CONFIG_TYPE` was absent in terminal subshell, triggering mock client bypass in `LoginPage.tsx`.
+    - Added `APP_CONFIG_TYPE=remote` and `APP_CONFIG_JSON={"type":"remote","url":"/api/restful/app/config"}` to `frontend/packages/webapp/.env`, merged `loadEnv` into `env` inside `vite.config.mts`, and rebuilt bundle with `window.BoostrapConfig={type:"remote",url:"/api/restful/app/config"}`.
+    - Verified `GET /oauth2/authorization/google` returns `302` redirecting to `fzzkxymwcambugbxfsvj.supabase.co` with `prompt=select_account`.
+23. **Apple Design 404 & Fallback Error Screen Refactor (`components/error-page/`, `MapsPageErrorFallback`)**
+    - **Frosted Glass Floating Card (`ErrorContent`, `FallbackCard`)**: Transformed the flat dark gray error page into an Apple frosted glass card (`backdrop-filter: blur(32px) saturate(190%)`, `24px` squircle corners, specular highlight border, `appleCardEnter` spring entrance animation).
+    - **Studio Ambient Canvas (`ErrorCanvas`, `FallbackBackdrop`)**: Added full-viewport studio ambient background with warm amber radial highlight (`radial-gradient(ellipse 900px 600px ... rgba(245, 158, 11, 0.08))`).
+    - **Amber Squircle Emblem (`ErrorBadge`, `FallbackBadge`)**: 64x64px squircle badge (`18px` radius) with amber gradient (`#FFB340` -> `#F59E0B`) housing Google Material Rounded icons: `ExploreOffRounded` for 404 Not Found, `LockRounded` for access required, and `WarningAmberRounded` for unexpected errors.
+    - **Tactile Squircle Action Buttons & Google Material Rounded Icons (`ApplePrimaryButton`, `AppleSecondaryButton`, `FallbackLoginButton`)**: Rounded 14px buttons with tactile pointer-down feedback (`:active { transform: scale(0.97) }`) and Google Material Rounded icons: `HomeRounded` (返回首页), `ArrowBackRounded` (返回), and `LoginRounded` (登录).
 
 ---
 

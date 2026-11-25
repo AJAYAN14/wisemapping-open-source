@@ -19,13 +19,25 @@ import React, { useEffect } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import Header from '../layout/header';
 import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
 import Stack from '@mui/material/Stack';
-import { ErrorBody, ErrorContent } from './styled';
+import {
+  ErrorCanvas,
+  ErrorBody,
+  ErrorContent,
+  ErrorBadge,
+  ApplePrimaryButton,
+  AppleSecondaryButton,
+} from './styled';
 import { isRouteErrorResponse, useRouteError, useNavigate, useLocation } from 'react-router';
 import { Link as RouterLink } from 'react-router';
 import { ErrorInfo } from '../../classes/client';
 import { logCriticalError } from '../../utils';
+import HomeRoundedIcon from '@mui/icons-material/HomeRounded';
+import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
+import LoginRoundedIcon from '@mui/icons-material/LoginRounded';
+import ExploreOffRoundedIcon from '@mui/icons-material/ExploreOffRounded';
+import LockRoundedIcon from '@mui/icons-material/LockRounded';
+import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
 
 export type ErrorPageType = {
   isSecurity: boolean;
@@ -184,17 +196,50 @@ const ErrorPage = (): React.ReactElement => {
     };
   }, [intl]);
 
+  const badgeIcon = (() => {
+    if (isNotFound) {
+      return <ExploreOffRoundedIcon sx={{ fontSize: 32, color: '#FFFFFF' }} />;
+    }
+    if (isAccessError) {
+      return <LockRoundedIcon sx={{ fontSize: 32, color: '#FFFFFF' }} />;
+    }
+    return <WarningAmberRoundedIcon sx={{ fontSize: 32, color: '#FFFFFF' }} />;
+  })();
+
   return (
-    <div>
+    <ErrorCanvas>
       <Header type="none" />
 
       <ErrorBody>
         <ErrorContent>
-          <Typography variant="h3" component="h1" gutterBottom>
+          <ErrorBadge>{badgeIcon}</ErrorBadge>
+
+          <Typography
+            variant="h4"
+            component="h1"
+            gutterBottom
+            sx={{
+              fontWeight: 700,
+              fontFamily:
+                '"SF Pro Rounded", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+              letterSpacing: '-0.02em',
+              color: 'text.primary',
+              mb: 1.5,
+            }}
+          >
             {headline}
           </Typography>
 
-          <Typography variant="body1" component="p" sx={{ mb: 4, color: 'text.secondary' }}>
+          <Typography
+            variant="body1"
+            component="p"
+            sx={{
+              mb: 3.5,
+              color: 'text.secondary',
+              fontSize: '1rem',
+              lineHeight: 1.6,
+            }}
+          >
             {detailMessage}
           </Typography>
 
@@ -205,33 +250,45 @@ const ErrorPage = (): React.ReactElement => {
           >
             {isNotFound && (
               <>
-                <Button variant="contained" color="primary" onClick={handleGoHome}>
+                <ApplePrimaryButton
+                  variant="contained"
+                  onClick={handleGoHome}
+                  startIcon={<HomeRoundedIcon />}
+                >
                   <FormattedMessage id="error.go-home" defaultMessage="Go to Home" />
-                </Button>
-                <Button variant="outlined" color="primary" onClick={handleGoBack}>
+                </ApplePrimaryButton>
+                <AppleSecondaryButton
+                  variant="outlined"
+                  onClick={handleGoBack}
+                  startIcon={<ArrowBackRoundedIcon />}
+                >
                   <FormattedMessage id="error.go-back" defaultMessage="Go Back" />
-                </Button>
+                </AppleSecondaryButton>
               </>
             )}
             {isAccessError && (
-              <Button
+              <ApplePrimaryButton
                 variant="contained"
-                color="primary"
                 component={RouterLink}
                 to={`/c/login?redirect=${encodeURIComponent(location.pathname + location.search)}`}
+                startIcon={<LoginRoundedIcon />}
               >
                 <FormattedMessage id="error.go-to-login" defaultMessage="Sign In" />
-              </Button>
+              </ApplePrimaryButton>
             )}
             {!isNotFound && !isAccessError && (
-              <Button variant="contained" color="primary" onClick={handleGoHome}>
+              <ApplePrimaryButton
+                variant="contained"
+                onClick={handleGoHome}
+                startIcon={<HomeRoundedIcon />}
+              >
                 <FormattedMessage id="error.go-home" defaultMessage="Go to Home" />
-              </Button>
+              </ApplePrimaryButton>
             )}
           </Stack>
         </ErrorContent>
       </ErrorBody>
-    </div>
+    </ErrorCanvas>
   );
 };
 

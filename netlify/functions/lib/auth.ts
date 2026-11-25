@@ -12,6 +12,7 @@ export interface SessionJwtUser {
   uid: string;
   email: string;
   name: string;
+  avatarUrl?: string;
 }
 
 export interface VerifiableOAuthUser {
@@ -70,6 +71,23 @@ export function isEmailVerified(user: VerifiableOAuthUser): boolean {
   return true;
 }
 
+export function extractUserAvatarUrl(user: VerifiableOAuthUser): string | undefined {
+  const meta = user.user_metadata ?? {};
+  const pic = meta['avatar_url'] ?? meta['picture'];
+  if (typeof pic === 'string' && pic.trim().length > 0) {
+    return pic.trim();
+  }
+  if (Array.isArray(user.identities)) {
+    for (const identity of user.identities) {
+      const idPic = identity?.identity_data?.['avatar_url'] ?? identity?.identity_data?.['picture'];
+      if (typeof idPic === 'string' && idPic.trim().length > 0) {
+        return idPic.trim();
+      }
+    }
+  }
+  return undefined;
+}
+
 export function extractUserDisplayName(user: VerifiableOAuthUser, fallbackEmail: string): string {
   const meta = user.user_metadata ?? {};
   const fullName = meta['full_name'] ?? meta['name'];
@@ -112,10 +130,15 @@ export async function signSessionJwt(user: SessionJwtUser): Promise<string> {
   const nowSec = Math.floor(Date.now() / 1000);
   const expSec = nowSec + JWT_EXPIRATION_SECONDS;
 
-  return new SignJWT({
+  const jwtPayload: Record<string, unknown> = {
     uid: user.uid,
     name: user.name.trim() || email.split('@')[0] || 'User',
-  })
+  };
+  if (user.avatarUrl) {
+    jwtPayload['avatar'] = user.avatarUrl;
+  }
+
+  return new SignJWT(jwtPayload)
     .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
     .setSubject(email)
     .setIssuedAt(nowSec)
@@ -138,12 +161,16 @@ export async function verifySessionJwt(token: string): Promise<SessionJwtUser> {
       typeof payload['name'] === 'string' && payload['name'].trim().length > 0
         ? payload['name'].trim()
         : sub.split('@')[0] || 'User';
+    const avatarUrl =
+      typeof payload['avatar'] === 'string' && payload['avatar'].trim().length > 0
+        ? payload['avatar'].trim()
+        : undefined;
 
     if (!sub || !isAllowedEmail(sub) || !UUID_REGEX.test(uid)) {
       throw new UnauthorizedError();
     }
 
-    return { uid, email: sub, name };
+    return { uid, email: sub, name, avatarUrl };
   } catch (err) {
     if (err instanceof UnauthorizedError) {
       throw err;

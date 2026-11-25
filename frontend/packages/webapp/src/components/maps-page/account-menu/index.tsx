@@ -24,6 +24,7 @@ import MenuItem from '@mui/material/MenuItem';
 import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
 import Tooltip from '@mui/material/Tooltip';
+import Box from '@mui/material/Box';
 import { styled } from '@mui/material/styles';
 import React, { use } from 'react';
 import { FormattedMessage } from 'react-intl';
@@ -45,6 +46,14 @@ const AvatarTrigger = styled(IconButton)(({ theme }) => {
       borderColor: c.hairlineStrong,
     },
   };
+});
+
+const AvatarImage = styled('img')({
+  width: '28px',
+  height: '28px',
+  borderRadius: '999px',
+  objectFit: 'cover',
+  display: 'block',
 });
 
 const AvatarCircle = styled('span')(({ theme }) => {
@@ -90,13 +99,28 @@ const AccountMenu = (): React.ReactElement => {
 
   const account = useFetchAccount();
   const email = account?.email || 'a.jian0629@gmail.com';
-  const initial = (account?.firstname || email).trim().charAt(0).toUpperCase();
+  const fullName =
+    account?.fullName ||
+    [account?.firstname, account?.lastname].filter(Boolean).join(' ') ||
+    account?.firstname;
+  const initial = (fullName || email).trim().charAt(0).toUpperCase();
+  const avatarUrl = account?.avatarUrl;
+  const [imgError, setImgError] = React.useState(false);
 
   return (
     <span>
-      <Tooltip arrow={true} title={email}>
-        <AvatarTrigger onClick={handleMenu} size="small" aria-label={email}>
-          <AvatarCircle>{initial}</AvatarCircle>
+      <Tooltip arrow={true} title={fullName ? `${fullName} (${email})` : email}>
+        <AvatarTrigger onClick={handleMenu} size="small" aria-label={fullName || email}>
+          {avatarUrl && !imgError ? (
+            <AvatarImage
+              src={avatarUrl}
+              alt={fullName || email}
+              referrerPolicy="no-referrer"
+              onError={() => setImgError(true)}
+            />
+          ) : (
+            <AvatarCircle>{initial}</AvatarCircle>
+          )}
         </AvatarTrigger>
       </Tooltip>
       <Menu
@@ -119,6 +143,7 @@ const AccountMenu = (): React.ReactElement => {
               const c = appleColors(isDarkTheme(theme));
               return {
                 mt: 1,
+                minWidth: '180px',
                 borderRadius: '14px',
                 border: `1px solid ${c.hairline}`,
                 boxShadow: c.shadowFloat,
@@ -134,10 +159,17 @@ const AccountMenu = (): React.ReactElement => {
           },
         }}
       >
-        <MenuItem disabled sx={{ opacity: '0.9 !important' }}>
-          <Typography variant="body2" sx={{ fontWeight: 700 }}>
-            {email}
-          </Typography>
+        <MenuItem disabled sx={{ opacity: '1 !important' }}>
+          <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
+            {fullName && (
+              <Typography variant="body2" sx={{ fontWeight: 700, color: 'text.primary', lineHeight: 1.3 }}>
+                {fullName}
+              </Typography>
+            )}
+            <Typography variant="caption" sx={{ color: 'text.secondary', wordBreak: 'break-all' }}>
+              {email}
+            </Typography>
+          </Box>
         </MenuItem>
         <Divider />
         <MenuItem onClick={handleLogout} sx={{ fontWeight: 600 }}>

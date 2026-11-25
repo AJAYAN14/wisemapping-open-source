@@ -26,6 +26,7 @@ import {
   RepoValidationError,
   VersionConflictError,
 } from './lib/repo';
+import { getDbPool } from './lib/db';
 import type { MindmapRepository, RepoUser } from './lib/repo';
 import {
   buildDefaultMindmapXml,
@@ -191,12 +192,28 @@ export function createApiHandler(
       if (path === '/account') {
         if (method === 'GET') {
           const { firstname, lastname } = splitDisplayName(auth.name, auth.email);
+          let avatarUrl = auth.avatarUrl;
+          if (!avatarUrl) {
+            try {
+              const pool = getDbPool();
+              const userRes = await pool.query<{ avatar: string }>(
+                `SELECT COALESCE(raw_user_meta_data->>'avatar_url', raw_user_meta_data->>'picture') as avatar FROM auth.users WHERE id = $1 LIMIT 1;`,
+                [auth.uid],
+              );
+              if (userRes.rows[0]?.avatar) {
+                avatarUrl = userRes.rows[0].avatar;
+              }
+            } catch {
+              // Ignore DB lookup error and use default
+            }
+          }
           return jsonResponse(req, 200, {
             id: 1,
             email: auth.email,
             firstname,
             lastname,
             fullName: auth.name,
+            avatarUrl: avatarUrl || undefined,
             locale: 'zh',
             authenticationType: 'GOOGLE_OAUTH2',
             allowSendEmail: false,

@@ -122,6 +122,14 @@ export const UserAvatarBadge = styled('div')(({ theme }) => {
   };
 });
 
+export const UserAvatarImage = styled('img')({
+  width: '30px',
+  height: '30px',
+  borderRadius: '999px',
+  objectFit: 'cover',
+  flexShrink: 0,
+});
+
 export const UserName = styled(Typography)(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {

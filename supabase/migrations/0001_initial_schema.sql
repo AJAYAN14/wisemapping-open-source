@@ -197,6 +197,19 @@ CREATE POLICY mindmap_history_delete_own
   USING ((SELECT auth.uid()) = owner_id);
 
 -- 5.3 public.labels (split per command to avoid 42P17 self-recursion on parent_label_id)
+-- 5.3 public.labels (with SECURITY DEFINER validator to avoid 42P17 self-recursion on parent_label_id)
+CREATE OR REPLACE FUNCTION public.is_valid_parent_label(p_parent_id BIGINT, p_owner_id UUID)
+RETURNS BOOLEAN
+LANGUAGE sql
+SECURITY DEFINER
+SET search_path = public
+STABLE
+AS $$
+  SELECT p_parent_id IS NULL OR EXISTS (
+    SELECT 1 FROM public.labels WHERE id = p_parent_id AND owner_id = p_owner_id
+  );
+$$;
+
 DROP POLICY IF EXISTS labels_select_own ON public.labels;
 CREATE POLICY labels_select_own
   ON public.labels
@@ -211,15 +224,7 @@ CREATE POLICY labels_insert_own
   TO authenticated
   WITH CHECK (
     (SELECT auth.uid()) = owner_id
-    AND (
-      parent_label_id IS NULL
-      OR EXISTS (
-        SELECT 1
-        FROM public.labels p
-        WHERE p.id = parent_label_id
-          AND p.owner_id = (SELECT auth.uid())
-      )
-    )
+    AND public.is_valid_parent_label(parent_label_id, (SELECT auth.uid()))
   );
 
 DROP POLICY IF EXISTS labels_update_own ON public.labels;
@@ -230,15 +235,7 @@ CREATE POLICY labels_update_own
   USING ((SELECT auth.uid()) = owner_id)
   WITH CHECK (
     (SELECT auth.uid()) = owner_id
-    AND (
-      parent_label_id IS NULL
-      OR EXISTS (
-        SELECT 1
-        FROM public.labels p
-        WHERE p.id = parent_label_id
-          AND p.owner_id = (SELECT auth.uid())
-      )
-    )
+    AND public.is_valid_parent_label(parent_label_id, (SELECT auth.uid()))
   );
 
 DROP POLICY IF EXISTS labels_delete_own ON public.labels;

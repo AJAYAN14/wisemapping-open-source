@@ -392,6 +392,8 @@ export default class RestClient implements Client {
           success({
             lastname: account.lastname ? account.lastname : '',
             firstname: account.firstname ? account.firstname : '',
+            fullName: account.fullName ? account.fullName : '',
+            avatarUrl: account.avatarUrl ? account.avatarUrl : undefined,
             email: account.email,
             locale: accountLocale,
             authenticationType: account.authenticationType,

@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import type { CookieMethodsServer, CookieOptions } from '@supabase/ssr';
 import {
+  extractUserAvatarUrl,
   extractUserDisplayName,
   isAllowedEmail,
   isEmailVerified,
@@ -347,10 +348,12 @@ export function createOAuthHandler(
 
         const normalizedEmail = normalizeEmail(userEmail!);
         const displayName = extractUserDisplayName(data.user, normalizedEmail);
+        const avatarUrl = extractUserAvatarUrl(data.user);
         const jwtToken = await signSessionJwt({
           uid: data.user.id,
           email: normalizedEmail,
           name: displayName,
+          avatarUrl,
         });
 
         const safeState =
@@ -428,10 +431,12 @@ export function createOAuthHandler(
 
         const normalizedEmail = normalizeEmail(userEmail!);
         const displayName = extractUserDisplayName(data.user, normalizedEmail);
+        const avatarUrl = extractUserAvatarUrl(data.user);
         const jwtToken = await signSessionJwt({
           uid: data.user.id,
           email: normalizedEmail,
           name: displayName,
+          avatarUrl,
         });
 
         return jsonResponse(

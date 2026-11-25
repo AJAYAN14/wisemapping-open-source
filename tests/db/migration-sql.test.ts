@@ -253,9 +253,12 @@ describe('M2 migration SQL contract (0001_initial_schema.sql)', () => {
     for (const cmd of ['INSERT', 'UPDATE'] as const) {
       const policy = findPolicyForCommand(labelPolicies, cmd);
       expect(policy, `labels FOR ${cmd}`).toMatch(
-        /\bWITH\s+CHECK\b[\s\S]*EXISTS\s*\(\s*SELECT\s+1\s+FROM\s+(?:public\.)?labels\b/i,
+        /\bWITH\s+CHECK\b[\s\S]*(?:EXISTS\s*\(\s*SELECT\s+1\s+FROM\s+(?:public\.)?labels\b|is_valid_parent_label\b)/i,
       );
     }
+    expect(strippedSql).toMatch(
+      /CREATE\s+OR\s+REPLACE\s+FUNCTION\s+(?:public\.)?is_valid_parent_label\b/i,
+    );
 
     const mindmapLabelPolicies = extractPolicyStatements(strippedSql, 'mindmap_labels');
     for (const cmd of ['INSERT', 'UPDATE'] as const) {

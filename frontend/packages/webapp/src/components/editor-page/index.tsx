@@ -206,11 +206,12 @@ const LoadedEditorPage = ({
   }, [mapId]);
 
   const editorName =
-    account?.firstname && account?.lastname
-      ? `${account.firstname} ${account.lastname}`
-      : account?.email ??
-        (editorMetadata.mapMetadata.lastModificationBy ||
-          editorMetadata.mapMetadata.creatorFullName);
+    account?.fullName?.trim() ||
+    [account?.firstname, account?.lastname].filter(Boolean).join(' ') ||
+    account?.firstname ||
+    account?.email ||
+    editorMetadata.mapMetadata.lastModificationBy ||
+    editorMetadata.mapMetadata.creatorFullName;
 
   const persistence: PersistenceManager = useMemo(
     () =>

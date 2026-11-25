@@ -28,6 +28,7 @@ import {
   LogoBox,
   SectionHeader,
   UserAvatarBadge,
+  UserAvatarImage,
   UserEmail,
   UserInfoBox,
   UserName,
@@ -72,10 +73,14 @@ const DrawerNav = ({
   const primaryButtons = filterButtons.filter((b) => b.filter.type !== 'label');
   const labelButtons = filterButtons.filter((b) => b.filter.type === 'label');
 
+  const [imgError, setImgError] = React.useState(false);
+  const avatarUrl = account?.avatarUrl;
+
   const displayName =
-    account?.firstname && account?.lastname
-      ? `${account.firstname} ${account.lastname}`
-      : account?.email;
+    account?.fullName?.trim() ||
+    [account?.firstname, account?.lastname].filter(Boolean).join(' ') ||
+    account?.firstname ||
+    account?.email;
   const initial = (displayName || 'W').trim().charAt(0).toUpperCase();
 
   return (
@@ -123,7 +128,16 @@ const DrawerNav = ({
 
       {account && drawerOpen && (
         <UserInfoBox>
-          <UserAvatarBadge aria-hidden="true">{initial}</UserAvatarBadge>
+          {avatarUrl && !imgError ? (
+            <UserAvatarImage
+              src={avatarUrl}
+              alt={displayName || account.email}
+              referrerPolicy="no-referrer"
+              onError={() => setImgError(true)}
+            />
+          ) : (
+            <UserAvatarBadge aria-hidden="true">{initial}</UserAvatarBadge>
+          )}
           <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
             <UserName variant="body2">{displayName}</UserName>
             <UserEmail variant="caption">{account.email}</UserEmail>

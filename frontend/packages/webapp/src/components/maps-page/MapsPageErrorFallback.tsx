@@ -19,11 +19,17 @@
 import { ReactElement, useEffect } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import Typography from '@mui/material/Typography';
-import Button from '@mui/material/Button';
 import { isRouteErrorResponse, useNavigate, useRouteError } from 'react-router';
 import ErrorPage from '../error-page';
 import type { ErrorInfo } from '../../classes/client';
-import { FallbackBackdrop, FallbackCard } from './error-fallback.styled';
+import {
+  FallbackBackdrop,
+  FallbackCard,
+  FallbackBadge,
+  FallbackLoginButton,
+} from './error-fallback.styled';
+import LockRoundedIcon from '@mui/icons-material/LockRounded';
+import LoginRoundedIcon from '@mui/icons-material/LoginRounded';
 
 const isErrorInfo = (error: unknown): error is ErrorInfo =>
   typeof error === 'object' &&
@@ -75,23 +81,35 @@ const MapsPageErrorFallback = (): ReactElement => {
   return (
     <FallbackBackdrop>
       <FallbackCard spacing={2}>
-        <Typography variant="h4" component="h1">
+        <FallbackBadge>
+          <LockRoundedIcon sx={{ fontSize: 32, color: '#FFFFFF' }} />
+        </FallbackBadge>
+        <Typography
+          variant="h4"
+          component="h1"
+          sx={{
+            fontWeight: 700,
+            fontFamily:
+              '"SF Pro Rounded", "SF Pro Display", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+            letterSpacing: '-0.02em',
+            color: 'text.primary',
+          }}
+        >
           <FormattedMessage
             id="maps.auth-required-heading"
             defaultMessage="Sign in to access your maps"
           />
         </Typography>
-        <Typography variant="body1" component="p" sx={{ color: 'text.secondary' }}>
+        <Typography variant="body1" component="p" sx={{ color: 'text.secondary', mb: 2 }}>
           {detailMessage}
         </Typography>
-        <Button
+        <FallbackLoginButton
           variant="contained"
-          color="primary"
           onClick={handleLoginClick}
-          sx={{ alignSelf: 'flex-start' }}
+          startIcon={<LoginRoundedIcon />}
         >
           <FormattedMessage id="maps.auth-required-login" defaultMessage="Go to login" />
-        </Button>
+        </FallbackLoginButton>
       </FallbackCard>
     </FallbackBackdrop>
   );

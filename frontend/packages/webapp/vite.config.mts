@@ -45,12 +45,12 @@ const wxmlLoader = () => {
 };
 
 export default defineConfig(({ mode }) => {
-  // The config reads process.env directly, so the returned values are unused. The call stays for its
-  // side effect: it copies NODE_ENV, BROWSER and BROWSER_ARGS from the .env files into process.env.
-  loadEnv(mode, process.cwd(), '');
+  // Load env files (.env, .env.local, .env.[mode])
+  const loadedEnv = loadEnv(mode, process.cwd(), '');
+  const env = { ...process.env, ...loadedEnv };
 
   const bootstrapConfig = resolveBootstrapConfig({
-    env: process.env,
+    env,
     production: mode === 'production',
     readJson: requireJson,
     warn: (message) => console.warn(`\n⚠ ${message}\n`),

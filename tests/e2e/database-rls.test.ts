@@ -109,10 +109,10 @@ describe('F5/F6 — Supabase 4-Table Schema, Plain TEXT XML, RLS & nemo Guard E2
     });
   });
 
-  describe.skipIf(!caps.canRunLiveDb)('Live Supabase PostgreSQL Schema, RLS & Isolation E2E', () => {
+  describe.skipIf(!caps.canRunLiveDb)('Live Supabase PostgreSQL Schema, RLS & Isolation E2E', { timeout: 30_000 }, () => {
     const runId = createRunId();
-    const ownerA = DEFAULT_OWNER_UUID;
-    const ownerB = SECONDARY_USER_UUID;
+    let ownerA = DEFAULT_OWNER_UUID;
+    let ownerB = SECONDARY_USER_UUID;
     let pool: Pool;
     const createdMapIds: number[] = [];
     const createdLabelIds: number[] = [];
@@ -124,13 +124,35 @@ describe('F5/F6 — Supabase 4-Table Schema, Plain TEXT XML, RLS & nemo Guard E2
         `SELECT to_regclass('auth.users') IS NOT NULL AS exists`,
       );
       if (hasAuthUsers.rows[0]?.exists) {
-        await pool.query(
-          `INSERT INTO auth.users (id, email, aud, role)
-           VALUES ($1::uuid, $2, 'authenticated', 'authenticated'),
-                  ($3::uuid, $4, 'authenticated', 'authenticated')
-           ON CONFLICT (id) DO NOTHING`,
-          [ownerA, DEFAULT_ALLOWED_EMAIL, ownerB, 'other-e2e@example.com'],
+        const existingA = await pool.query<{ id: string }>(
+          `SELECT id FROM auth.users WHERE email = $1 LIMIT 1`,
+          [DEFAULT_ALLOWED_EMAIL],
         );
+        if (existingA.rows[0]?.id) {
+          ownerA = existingA.rows[0].id;
+        } else {
+          await pool.query(
+            `INSERT INTO auth.users (id, email, aud, role)
+             VALUES ($1::uuid, $2, 'authenticated', 'authenticated')
+             ON CONFLICT (id) DO NOTHING`,
+            [ownerA, DEFAULT_ALLOWED_EMAIL],
+          );
+        }
+
+        const existingB = await pool.query<{ id: string }>(
+          `SELECT id FROM auth.users WHERE email = $1 LIMIT 1`,
+          ['other-e2e@example.com'],
+        );
+        if (existingB.rows[0]?.id) {
+          ownerB = existingB.rows[0].id;
+        } else {
+          await pool.query(
+            `INSERT INTO auth.users (id, email, aud, role)
+             VALUES ($1::uuid, $2, 'authenticated', 'authenticated')
+             ON CONFLICT (id) DO NOTHING`,
+            [ownerB, 'other-e2e@example.com'],
+          );
+        }
       }
     });
 

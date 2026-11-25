@@ -359,11 +359,12 @@ class MockClient implements Client {
     if (!token) {
       return Promise.reject({ msg: 'User not authenticated', isAuth: true, status: 401 });
     }
-    const { email, firstname, lastname } = getCurrentUserIdentity();
+    const { email, firstname, lastname, displayName } = getCurrentUserIdentity();
     const locale = (getStorage()?.getItem('locale') ?? undefined) as LocaleCode | undefined;
     return Promise.resolve({
       firstname,
       lastname,
+      fullName: displayName,
       email,
       locale: locale ? localeFromStr(locale) : undefined,
       authenticationType: AuthenticationType.GOOGLE_OAUTH2,
