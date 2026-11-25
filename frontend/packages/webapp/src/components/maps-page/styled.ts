@@ -47,23 +47,38 @@ type ExpandedProps = {
 /** On phones a toolbar button shows only its icon. */
 export const mobileAppbarButton: CSSObject = {
   padding: 0,
-  minWidth: 'unset',
+  minWidth: '38px',
+  width: '38px',
+  height: '38px',
+  borderRadius: '10px',
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
   '@media (pointer: coarse)': {
     minWidth: '44px',
     minHeight: '44px',
+    width: '44px',
+    height: '44px',
   },
   '& .message': {
     display: 'none',
   },
   '& .MuiButton-startIcon': {
     margin: 0,
-    padding: 9,
+    padding: 0,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  '& .MuiButton-endIcon': {
+    display: 'none',
   },
 };
 
 /** The drawer's translucent macOS-style vibrancy surface. */
 const drawerPaper = (theme: Theme, expanded: boolean): CSSObject => {
-  const c = appleColors(isDarkTheme(theme));
+  const isDark = isDarkTheme(theme);
+  const c = appleColors(isDark);
   return {
     ...glassMaterialMixin(c.sidebarGlass, c.sidebarSolid, 24),
     color: c.textPrimary,
@@ -78,6 +93,9 @@ const drawerPaper = (theme: Theme, expanded: boolean): CSSObject => {
       width: 'min(240px, 80dvw, 100dvw - 24px)',
       height: '100svh',
       maxHeight: '100svh',
+      backgroundColor: isDark ? '#1C1C20' : '#FFFFFF',
+      backdropFilter: 'none',
+      WebkitBackdropFilter: 'none',
     },
   };
 };

@@ -121,7 +121,6 @@ export type EditorPropsType = {
 };
 
 const ActionDispatcher = React.lazy(() => import('../maps-page/action-dispatcher'));
-const AccountMenu = React.lazy(() => import('../maps-page/account-menu'));
 
 // While the router loads another page (leaving the editor, or another map), only the skeleton is
 // shown. Deciding it here, before the editor's own hooks, keeps their order the same on every render.
@@ -318,18 +317,6 @@ const LoadedEditorPage = ({
         theme={theme}
         themeVariantStorage={createThemeVariantStorage()}
         initialSearchParams={searchParams}
-        accountConfiguration={
-          // Prevent load on non-authenticated.
-          editorOptions.mode !== 'showcase' ? (
-            <Suspense fallback={<></>}>
-              <IntlProvider locale={intlLocale.locale} messages={intlLocale.messages}>
-                <AccountMenu />
-              </IntlProvider>
-            </Suspense>
-          ) : (
-            <></>
-          )
-        }
       />
       {activeDialog && (
         <Suspense fallback={<></>}>

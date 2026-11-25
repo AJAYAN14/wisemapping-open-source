@@ -383,22 +383,25 @@ const Toolbar = ({ configurations, position }: ToolbarProps): ReactElement => {
       sx={{
         flexDirection: pos.vertical ? 'column' : 'row',
         width: pos.vertical ? EDITOR_LAYOUT.formattingToolbar.width : 'unset',
+        height: 'auto',
+        left: 'auto',
         right: pos.position?.right
           ? `max(${pos.position.right}, env(safe-area-inset-right, 0px))`
           : undefined,
-        top: pos.position?.top,
-        bottom: pos.position?.bottom,
+        top: pos.position?.top ?? 'auto',
+        bottom: pos.position?.bottom ?? 'auto',
         marginTop: pos.position?.marginTop,
         transform: pos.position?.transform,
         ...(pos.vertical
           ? {
-              maxHeight:
-                'calc(100dvh - 120px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
+              maxHeight: 'calc(100dvh - 214px - env(safe-area-inset-bottom, 0px))',
               overflowY: 'auto',
               overflowX: 'hidden',
               scrollbarWidth: 'none',
               '@media (max-height: 540px), (max-width: 599.95px)': {
                 top: 'calc(56px + env(safe-area-inset-top, 0px))',
+                maxHeight:
+                  'calc(100dvh - 120px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
               },
             }
           : isDock

@@ -284,6 +284,22 @@ describe('Toolbar', () => {
     screen.getByRole('menu');
   });
 
+  it('clears AppBar default top: 0 when anchored to bottom', () => {
+    render(
+      <Toolbar
+        configurations={[submenuConfig]}
+        position={{
+          vertical: false,
+          position: { right: '47px', bottom: 'max(8px, env(safe-area-inset-bottom, 0px))' },
+          canvasInset: 'bottom',
+        }}
+      />,
+    );
+
+    const menu = screen.getByRole('menu');
+    expect(getComputedStyle(menu).top).toBe('auto');
+  });
+
   it('Execute render if set', () => {
     render(<Toolbar configurations={[withRenderConfig]} />);
 

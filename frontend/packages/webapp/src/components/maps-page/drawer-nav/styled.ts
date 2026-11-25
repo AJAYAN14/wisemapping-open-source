@@ -144,7 +144,7 @@ export const UserInfoBox = styled(Box)(({ theme }) => {
     marginTop: 'auto',
     padding: '10px 12px',
     margin: 'auto 10px 12px 10px',
-    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.68)',
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
     borderRadius: '12px',
     border: `1px solid ${c.hairline}`,
     display: 'flex',
