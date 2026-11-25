@@ -23,6 +23,9 @@ import type { LocaleCode } from '.';
 // English is the fallback, so it is bundled; every other locale is a chunk of its own, with its
 // dayjs locale, loaded when a user needs it (together they are about 480 KB).
 import enMessages from '../../compiled-lang/en.json';
+import zhMessages from '../../compiled-lang/zh.json';
+import zhCnMessages from '../../compiled-lang/zh-CN.json';
+import 'dayjs/locale/zh-cn';
 
 export type Messages = Record<string, MessageFormatElement[]>;
 
@@ -84,8 +87,14 @@ const LOADERS: Record<Exclude<LocaleCode, 'en'>, () => Promise<Catalog>> = {
   ),
 };
 
+const CHINESE = zhMessages as unknown as Messages;
+const CHINESE_CN = zhCnMessages as unknown as Messages;
 const ENGLISH = enMessages as unknown as Messages;
-const loaded = new Map<LocaleCode, Messages>([['en', ENGLISH]]);
+const loaded = new Map<LocaleCode, Messages>([
+  ['zh', CHINESE],
+  ['zh-CN', CHINESE_CN],
+  ['en', ENGLISH],
+]);
 
 /** The messages of a locale already loaded, or undefined. */
 export const getLoadedMessages = (code: LocaleCode): Messages | undefined => loaded.get(code);
@@ -105,13 +114,12 @@ export const loadMessages = async (code: LocaleCode): Promise<Messages> => {
 };
 
 /**
- * Loads the messages of a locale, falling back to English when its chunk can not be fetched
- * (a deploy replaced it): the app is then in English instead of not starting.
+ * Loads the messages of a locale, falling back to Chinese when its chunk can not be fetched.
  */
 export const preloadMessages = (code: LocaleCode): Promise<Messages> =>
   loadMessages(code).catch((error) => {
     log.error(`Messages for locale ${code} could not be loaded`, error);
-    return ENGLISH;
+    return CHINESE;
   });
 
 export type LocaleMessages = { locale: LocaleCode; messages: Messages };

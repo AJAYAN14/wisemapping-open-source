@@ -16,12 +16,6 @@
  *   limitations under the License.
  */
 
-declare global {
-  interface Window {
-    newrelic: { noticeError: (error: string) => void };
-  }
-}
-
 import { ErrorInfo } from './classes/client';
 import { appLogger as log } from './utils/logger';
 
@@ -175,7 +169,6 @@ export const logCriticalError = (msg: string, exception: unknown): void => {
   }
 
   const errorMessage = `${msg}. Exception: ${serializedException}`;
-  window.newrelic?.noticeError(errorMessage);
 
   log.error(errorMessage);
   log.error('Exception details:', exception);

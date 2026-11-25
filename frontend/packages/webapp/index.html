@@ -1,7 +1,7 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
-    <title>WiseMapping - Free & Open-Source Mind Mapping</title>
+    <title>WiseMapping - 思维导图</title>
     <meta charset="utf-8" />
     <!-- The theme's background from the first paint, before the app loads: the mode the user
          chose (ThemeContext stores it), or the system's. Without it every full page load, as
@@ -29,7 +29,6 @@
     <!-- Preconnect to font domains for faster font loading -->
     <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preconnect" href="https://api.wisemapping.com" />
 
     <!-- Load fonts asynchronously with font-display: swap to prevent render blocking -->
     <link
@@ -48,54 +47,14 @@
         href="https://fonts.googleapis.com/css2?family=Figtree:wght@300;400;500;600;700&display=swap"
       />
     </noscript>
-    <!-- Noto Sans JP (about 150 KB of font rules) only for Japanese and Chinese: same order as
-         AppI18n (URL prefix, saved choice, browser language). -->
-    <script>
-      (function () {
-        var prefix = /^\/(ja|zh|zh-CN)\//.exec(window.location.pathname);
-        var saved = null;
-        try {
-          saved = localStorage.getItem('user.locale');
-        } catch (e) {}
-        var locale = (prefix && prefix[1]) || saved || navigator.language || '';
-        if (/^(ja|zh)/i.test(locale)) {
-          var link = document.createElement('link');
-          link.rel = 'stylesheet';
-          link.href =
-            'https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&display=swap';
-          document.head.appendChild(link);
-        }
-      })();
-    </script>
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#000000" />
     <meta
       name="description"
-      content="WiseMapping is a free, fast and simple online mind mapping editor for individuals and business. Sign up to start organizing and sharing your ideas and thoughts."
+      content="WiseMapping 个人私有版思维导图，极简、高效。"
     />
-    <meta name="robots" content="index, follow" />
-
-    <!-- Open Graph -->
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://app.wisemapping.com/" />
-    <meta property="og:title" content="WiseMapping - Free Online Mind Mapping App" />
-    <meta
-      property="og:description"
-      content="Create, share and collaborate on visual mind maps for free. Sign up and start organizing your ideas with WiseMapping."
-    />
-    <meta property="og:image" content="https://www.wisemapping.com/img/icon-wise.png" />
-    <meta property="og:site_name" content="WiseMapping" />
-
-    <!-- Twitter Card -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:site" content="@WiseMapping" />
-    <meta name="twitter:title" content="WiseMapping - Free Online Mind Mapping App" />
-    <meta
-      name="twitter:description"
-      content="Create, share and collaborate on visual mind maps for free. Sign up and start organizing your ideas with WiseMapping."
-    />
-    <meta name="twitter:image" content="https://www.wisemapping.com/img/icon-wise.png" />
+    <meta name="robots" content="noindex, nofollow" />
 
     <!-- Critical CSS for LCP element (Welcome heading) to reduce render delay -->
     <style>

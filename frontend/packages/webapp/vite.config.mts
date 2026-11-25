@@ -98,13 +98,7 @@ export default defineConfig(({ mode }) => {
       react(),
       wxmlLoader(),
       sitemapMiddleware(),
-      htmlTemplatePlugin({
-        GOOGLE_ADDS_ENABLED: process.env.GOOGLE_ADDS_ENABLED || false,
-        NEW_RELIC_SNIPPET:
-          process.env.NEW_RELIC_ENABLED && !['false', '0'].includes(process.env.NEW_RELIC_ENABLED)
-            ? readFileSync(path.resolve(import.meta.dirname, 'newrelic-snippet.html'), 'utf8')
-            : '',
-      }),
+      htmlTemplatePlugin({}),
     ],
     resolve: {
       tsconfigPaths: true,

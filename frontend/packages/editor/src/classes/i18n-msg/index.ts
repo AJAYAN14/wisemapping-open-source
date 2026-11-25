@@ -20,6 +20,7 @@ import { useEffect, useState } from 'react';
 // English is the fallback, so it is bundled; every other locale is a chunk of its own, loaded
 // when a user needs it (together they are about 245 KB).
 import en from './../../compiled-lang/en.json';
+import zh from './../../compiled-lang/zh.json';
 
 type MessagePart = {
   type: number;
@@ -45,10 +46,13 @@ const LOADERS: Record<string, () => Promise<Catalog>> = {
   ar: () => import('./../../compiled-lang/ar.json'),
 };
 
-const loaded = new Map<string, LocaleData>([['en', en as LocaleData]]);
+const loaded = new Map<string, LocaleData>([
+  ['zh', zh as LocaleData],
+  ['en', en as LocaleData],
+]);
 
-/** The locale whose messages are served: an unsupported one falls back to English. */
-const supported = (locale: string): string => (LOADERS[locale] ? locale : 'en');
+/** The locale whose messages are served: defaults to Chinese. */
+const supported = (locale: string): string => (LOADERS[locale] ? locale : 'zh');
 
 class I18nMsg {
   /** The messages of a locale already loaded, or undefined. */

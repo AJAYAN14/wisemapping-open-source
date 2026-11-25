@@ -44,68 +44,15 @@ export default abstract class AppI18n {
   private static localePrefixRegex: RegExp | undefined;
 
   public static getUserLocale(accountLocale?: Locale): Locale {
-    const path = window.location.pathname;
-
-    // Check if locale is in the URL path (e.g., /en/c/login, /es/c/registration)
-    const localeMatch = path.match(
-      /^\/(en|es|fr|de|ru|uk|zh|zh-CN|ja|pt|it|hi|ar)\/c\/(login|registration|forgot-password)/,
-    );
-    if (localeMatch && localeMatch[1]) {
-      try {
-        const localeFromUrl = localeFromStr(localeMatch[1]);
-        // Store the locale from URL in localStorage so it persists
-        writeStorage(AppI18n.LOCAL_STORAGE_KEY, localeFromUrl.code);
-        return localeFromUrl;
-      } catch {
-        // If locale from URL is invalid, fall through to default logic
-      }
-    }
-
-    // @Todo Hack: Try page must not account info. Add this to avoid 403 errors.
-    const isPublicPage = AppI18n.isPublicPage(path);
-    let result: Locale;
-    if (!isPublicPage) {
-      result = accountLocale ?? this.getDefaultLocale();
-
-      // If the local storage value is different, update ...
-      if (accountLocale && result.code !== readStorage(AppI18n.LOCAL_STORAGE_KEY)) {
-        writeStorage(AppI18n.LOCAL_STORAGE_KEY, result.code);
-      }
-    } else {
-      result = this.getDefaultLocale();
-    }
-    return result;
+    return Locales.ZH;
   }
 
   public static getBrowserLocale(): Locale {
-    let localeCode = (navigator.languages && navigator.languages[0]) || navigator.language;
-
-    // Just remove the variant ...
-    localeCode = localeCode.split('-')[0] ?? localeCode;
-
-    let result = Locales.EN;
-    try {
-      result = localeFromStr(localeCode);
-    } catch {
-      // Unsupported language code, falling back to default
-    }
-
-    return result;
+    return Locales.ZH;
   }
 
   public static getDefaultLocale(): Locale {
-    // Fetch local from local storage ...
-    let result: Locale | undefined;
-    const userLocaleCode = readStorage(AppI18n.LOCAL_STORAGE_KEY);
-    if (userLocaleCode) {
-      result = localeFromStr(userLocaleCode);
-    }
-
-    // Ok, use browser default ...
-    if (!result) {
-      result = this.getBrowserLocale();
-    }
-    return result;
+    return Locales.ZH;
   }
 
   /**

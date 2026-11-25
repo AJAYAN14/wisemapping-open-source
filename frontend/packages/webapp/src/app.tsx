@@ -108,30 +108,17 @@ const createRegistrationRoutes = () => {
   return [];
 };
 
-// Wrapper component that reads locale from URL and provides it to IntlProvider
+// Wrapper component that provides Chinese locale to IntlProvider
 const IntlProviderWrapper = ({ children }: { children: React.ReactNode }): ReactElement => {
   const location = useLocation();
   const account = useFetchAccount();
-  // Re-read locale when location changes to pick up locale from URL
   const locale = AppI18n.getUserLocale(account?.locale);
   const intlLocale = useLocaleMessages(locale.code);
-
-  // Trigger an auto-ads refresh on every SPA route change so AdSense sees
-  // a new pageview, covering pages that rely on auto-ads (e.g. /c/maps/).
-  // The push is a no-op when the AdSense script hasn't loaded yet (GDPR
-  // consent pending) — it will be processed once the script loads.
-  useEffect(() => {
-    try {
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
-    } catch {
-      // no-op
-    }
-  }, [location.pathname]);
 
   return (
     <IntlProvider
       locale={intlLocale.locale}
-      defaultLocale={Locales.EN.code}
+      defaultLocale={Locales.ZH.code}
       messages={intlLocale.messages}
       key={location.pathname} // Force re-render when pathname changes
     >

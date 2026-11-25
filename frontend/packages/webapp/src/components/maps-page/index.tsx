@@ -37,8 +37,6 @@ import { Label } from '../../classes/client';
 import ActionDispatcher from './action-dispatcher';
 import { ActionType } from './action-chooser';
 import AccountMenu from './account-menu';
-import HelpMenu from './help-menu';
-import LanguageMenu from './language-menu';
 import ThemeToggleButton from '../common/theme-toggle-button';
 import AppI18n, { Locales } from '../../classes/app-i18n';
 import { useLocaleMessages } from '../../classes/app-i18n/messages';
@@ -339,7 +337,6 @@ const MapsPage = (): ReactElement => {
 
             <RightButtonGroup>
               <ThemeToggleButton />
-              <LanguageMenu />
               <AccountMenu />
             </RightButtonGroup>
           </Toolbar>
