@@ -100,6 +100,12 @@ const LoginPage = (): React.ReactElement => {
 
   // Generic OAuth handler
   const handleOAuthLogin = (authUrl: string | undefined, providerName: string): void => {
+    if (AppConfig.isMockEnv()) {
+      client.login({ email: 'a.jian0629@gmail.com', password: '' });
+      leaveTo(safeRedirectPath(new URLSearchParams(location.search).get('redirect') ?? '/c/maps'));
+      return;
+    }
+
     if (!authUrl) {
       log.warn(`${providerName} OAuth URL is not configured.`);
       return;
@@ -378,32 +384,6 @@ const LoginPage = (): React.ReactElement => {
               </SocialButtons>
             </>
           )}
-          <TermsNotice gutter={3} variant="body2">
-            <FormattedMessage
-              id="common.terms-notice"
-              defaultMessage="By continuing, you agree to our <termsLink>Terms of Service</termsLink> and <privacyLink>Privacy Policy</privacyLink>."
-              values={{
-                termsLink: (chunks: React.ReactNode) => (
-                  <Link
-                    href="https://www.wisemapping.com/termsofuse.html"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {chunks}
-                  </Link>
-                ),
-                privacyLink: (chunks: React.ReactNode) => (
-                  <Link
-                    href="https://www.wisemapping.com/privacy"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {chunks}
-                  </Link>
-                ),
-              }}
-            />
-          </TermsNotice>
         </FormContainer>
       </AccountAccessLayout>
     </>

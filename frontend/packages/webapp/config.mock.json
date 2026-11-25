@@ -7,9 +7,10 @@
     "analyticsAccount": "",
     "recaptcha2Enabled": false,
     "recaptcha2SiteKey": "",
-    "registrationEnabled": true,
-    "googleOauth2Url": "",
-    "googleOauth2Enabled": false,
+    "registrationEnabled": false,
+    "localLoginEnabled": false,
+    "googleOauth2Url": "/oauth2/authorization/google",
+    "googleOauth2Enabled": true,
     "facebookOauth2Url": "",
     "facebookOauth2Enabled": false,
     "jwtExpirationMin": 10080

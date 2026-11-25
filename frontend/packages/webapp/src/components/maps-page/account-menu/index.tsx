@@ -21,24 +21,21 @@ import IconButton from '@mui/material/IconButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
+import Typography from '@mui/material/Typography';
+import Divider from '@mui/material/Divider';
 import Tooltip from '@mui/material/Tooltip';
-import SettingsApplicationsOutlined from '@mui/icons-material/SettingsApplicationsOutlined';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import React, { use } from 'react';
 import { FormattedMessage } from 'react-intl';
-import AccountInfoDialog from './account-info-dialog';
 import ExitToAppOutlined from '@mui/icons-material/ExitToAppOutlined';
-import AdminPanelSettingsOutlined from '@mui/icons-material/AdminPanelSettingsOutlined';
 import { useNavigate } from 'react-router';
 import { useFetchAccount } from '../../../classes/middleware';
 import { ClientContext } from '../../../classes/provider/client-context';
-import { useAdminPermissions } from '../../../classes/hooks/useAdminPermissions';
+import JwtTokenConfig from '../../../classes/jwt-token-config';
 
-type ActionType = 'account-info' | undefined;
 const AccountMenu = (): React.ReactElement => {
   const [anchorEl, setAnchorEl] = React.useState<HTMLElement>();
   const open = Boolean(anchorEl);
-  const [action, setAction] = React.useState<ActionType>(undefined);
   const client = use(ClientContext);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -51,22 +48,22 @@ const AccountMenu = (): React.ReactElement => {
     setAnchorEl(undefined);
   };
 
-  const handleLogout = (event: React.MouseEvent<HTMLElement>) => {
+  const handleLogout = async (event: React.MouseEvent<HTMLElement>) => {
     event.preventDefault();
+    handleClose();
 
-    client.logout();
+    JwtTokenConfig.removeToken();
+    await client.logout();
     queryClient.removeQueries({ queryKey: ['account'] });
-    navigate('/c/login');
+    window.location.href = '/c/login';
   };
 
   const account = useFetchAccount();
-  const { isAdmin } = useAdminPermissions();
+  const email = account?.email || 'a.jian0629@gmail.com';
+
   return (
     <span>
-      <Tooltip
-        arrow={true}
-        title={`${account?.firstname} ${account?.lastname} <${account?.email}>`}
-      >
+      <Tooltip arrow={true} title={email}>
         <IconButton onClick={handleMenu} size="large">
           <AccountCircle fontSize="large" />
         </IconButton>
@@ -86,33 +83,12 @@ const AccountMenu = (): React.ReactElement => {
           horizontal: 'right',
         }}
       >
-        <MenuItem
-          onClick={() => {
-            handleClose();
-            setAction('account-info');
-          }}
-        >
-          <ListItemIcon>
-            <SettingsApplicationsOutlined fontSize="small" />
-          </ListItemIcon>
-          <FormattedMessage id="menu.account" defaultMessage="Account" />
+        <MenuItem disabled sx={{ opacity: '0.85 !important' }}>
+          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+            {email}
+          </Typography>
         </MenuItem>
-
-        {isAdmin && (
-          <MenuItem
-            onClick={() => {
-              handleClose();
-              navigate('/c/admin');
-            }}
-          >
-            <ListItemIcon>
-              <AdminPanelSettingsOutlined fontSize="small" />
-            </ListItemIcon>
-            <FormattedMessage id="menu.admin-console" defaultMessage="Admin Console" />
-          </MenuItem>
-        )}
-
-        {/* The handler is on the item itself: Enter on a focused item clicks the item. */}
+        <Divider />
         <MenuItem onClick={handleLogout}>
           <ListItemIcon>
             <ExitToAppOutlined fontSize="small" />
@@ -120,7 +96,6 @@ const AccountMenu = (): React.ReactElement => {
           <FormattedMessage id="menu.signout" defaultMessage="Sign Out" />
         </MenuItem>
       </Menu>
-      {action == 'account-info' && <AccountInfoDialog onClose={() => setAction(undefined)} />}
     </span>
   );
 };

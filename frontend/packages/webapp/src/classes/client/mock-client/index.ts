@@ -95,6 +95,7 @@ class MockClient implements Client {
   }
 
   logout(): Promise<void> {
+    JwtTokenConfig.removeToken();
     clearAnalyticsUserId();
     return Promise.resolve();
   }
@@ -180,11 +181,11 @@ class MockClient implements Client {
     }
     const locale = (localStorage.getItem('locale') ?? undefined) as LocaleCode | undefined;
     return Promise.resolve({
-      firstname: 'Costme',
-      lastname: 'Fulanito',
-      email: 'test@example.com',
+      firstname: 'Jian',
+      lastname: 'Owner',
+      email: 'a.jian0629@gmail.com',
       locale: locale ? localeFromStr(locale) : undefined,
-      authenticationType: AuthenticationType.DATABASE,
+      authenticationType: AuthenticationType.GOOGLE_OAUTH2,
       isAdmin: true, // Mock admin user for testing
     });
   }

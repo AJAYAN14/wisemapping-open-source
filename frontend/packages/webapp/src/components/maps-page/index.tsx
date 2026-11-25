@@ -312,28 +312,6 @@ const MapsPage = (): ReactElement => {
             <Tooltip
               arrow={true}
               title={intl.formatMessage({
-                id: 'maps.copilot-tooltip',
-                defaultMessage: 'Start a mindmap with ChatGPT-powered AI Copilot',
-              })}
-            >
-              <ToolbarButton
-                color="primary"
-                size="medium"
-                variant="outlined"
-                type="button"
-                disableElevation={true}
-                startIcon={<SmartToyTwoTone />}
-                onClick={handleMindMapCopilotDialogOpen}
-              >
-                <span className="message">
-                  <FormattedMessage id="maps.copilot-button" defaultMessage="AI Copilot" />
-                </span>
-              </ToolbarButton>
-            </Tooltip>
-
-            <Tooltip
-              arrow={true}
-              title={intl.formatMessage({
                 id: 'maps.import-desc',
                 defaultMessage: 'Import from other tools',
               })}
@@ -358,39 +336,6 @@ const MapsPage = (): ReactElement => {
               mapsId={[]}
               fromEditor
             />
-            <Dialog
-              open={mindMapCopilotDialogOpen}
-              onClose={handleMindMapCopilotDialogClose}
-              aria-labelledby="mindmap-copilot-dialog-title"
-              aria-describedby="mindmap-copilot-dialog-description"
-            >
-              <DialogTitle id="mindmap-copilot-dialog-title">
-                <FormattedMessage
-                  id="maps.copilot-dialog.title"
-                  defaultMessage="ChatGPT-powered Mindmap Copilot"
-                />
-              </DialogTitle>
-              <DialogContent>
-                <DialogContentText id="mindmap-copilot-dialog-description">
-                  <FormattedMessage
-                    id="maps.copilot-dialog.description"
-                    defaultMessage="ChatGPT-powered AI Copilot is a brainstorming assistant that turns your prompts into structured mind maps. We'll open it in a new tab so you can expand ideas, generate topics, and bring the best ones back to WiseMapping."
-                  />
-                </DialogContentText>
-              </DialogContent>
-              <DialogActions sx={{ justifyContent: 'center', pb: 3 }}>
-                <Button
-                  onClick={handleMindMapCopilotDialogContinue}
-                  variant="contained"
-                  color="primary"
-                >
-                  <FormattedMessage
-                    id="maps.copilot-dialog.continue"
-                    defaultMessage="Open Copilot"
-                  />
-                </Button>
-              </DialogActions>
-            </Dialog>
 
             <RightButtonGroup>
               <ThemeToggleButton />
