@@ -29,7 +29,15 @@ const SUPPORTED_MIMES = new Set([
 ]);
 
 const UPLOAD_BATCH_SIZE = 100;
-const UPLOAD_CONCURRENCY = 4;
+const UPLOAD_CONCURRENCY = 8;
+
+export type ExternalizeImageProgress = {
+  phase: 'signing' | 'uploading' | 'done';
+  totalImages: number;
+  uploadTotal: number;
+  uploadedCount: number;
+  reusedCount: number;
+};
 
 const normalizeMime = (rawMime: string): string => {
   const lower = rawMime.trim().toLowerCase();
@@ -133,7 +141,11 @@ export const uploadBlobToMapAssets = async (
  * uploads unique blobs directly to Supabase Storage (`map-assets`), and rewrites
  * the XML attributes to short public CDN URLs before saving to PostgreSQL.
  */
-export const externalizeXmlInlineImages = async (xml: string, client: Client): Promise<string> => {
+export const externalizeXmlInlineImages = async (
+  xml: string,
+  client: Client,
+  onProgress?: (progress: ExternalizeImageProgress) => void,
+): Promise<string> => {
   if (!client.requestAssetUploadUrls || !xml.includes('data:image/')) {
     return xml;
   }
@@ -181,6 +193,14 @@ export const externalizeXmlInlineImages = async (xml: string, client: Client): P
   const resolvedByKey = new Map<string, AssetUploadUrlItem>();
 
   try {
+    onProgress?.({
+      phase: 'signing',
+      totalImages: entries.length,
+      uploadTotal: entries.length,
+      uploadedCount: 0,
+      reusedCount: 0,
+    });
+
     for (let i = 0; i < entries.length; i += UPLOAD_BATCH_SIZE) {
       const slice = entries.slice(i, i + UPLOAD_BATCH_SIZE);
       const reqItems: AssetUploadUrlRequest[] = slice.map(([, entry]) => ({
@@ -202,6 +222,18 @@ export const externalizeXmlInlineImages = async (xml: string, client: Client): P
       const item = resolvedByKey.get(key);
       return item && !item.exists && item.signedUrl;
     });
+    const reusedCount = entries.length - toUpload.length;
+    let uploadedCount = 0;
+
+    if (toUpload.length > 0) {
+      onProgress?.({
+        phase: 'uploading',
+        totalImages: entries.length,
+        uploadTotal: toUpload.length,
+        uploadedCount: 0,
+        reusedCount,
+      });
+    }
 
     let cursor = 0;
     const worker = async (): Promise<void> => {
@@ -220,6 +252,14 @@ export const externalizeXmlInlineImages = async (xml: string, client: Client): P
         bufCopy.set(entry.bytes);
         const blob = new Blob([bufCopy.buffer], { type: entry.mimeType });
         await uploadBlobToSignedUrl(item.signedUrl, blob, entry.mimeType);
+        uploadedCount += 1;
+        onProgress?.({
+          phase: 'uploading',
+          totalImages: entries.length,
+          uploadTotal: toUpload.length,
+          uploadedCount,
+          reusedCount,
+        });
       }
     };
 
@@ -227,6 +267,14 @@ export const externalizeXmlInlineImages = async (xml: string, client: Client): P
       worker(),
     );
     await Promise.all(workers);
+
+    onProgress?.({
+      phase: 'done',
+      totalImages: entries.length,
+      uploadTotal: toUpload.length,
+      uploadedCount: toUpload.length,
+      reusedCount,
+    });
   } catch (err) {
     const status = (err as { status?: number })?.status;
     // If Storage service key is not configured yet on backend, degrade gracefully rather than blocking import

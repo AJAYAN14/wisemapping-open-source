@@ -16,7 +16,7 @@
  *   limitations under the License.
  */
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Dialog from '@mui/material/Dialog';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -38,6 +38,7 @@ export interface ImportProgressDialogProps {
   stage: ImportStage;
   error?: string | null;
   progressPercent?: number; // 0-100 or undefined for indeterminate
+  detailText?: string;
   isBatch?: boolean;
   totalCount?: number;
   currentCount?: number;
@@ -70,6 +71,7 @@ export const ImportProgressDialog: React.FC<ImportProgressDialogProps> = ({
   stage,
   error,
   progressPercent,
+  detailText,
   isBatch,
   totalCount = 0,
   currentCount = 0,
@@ -82,9 +84,25 @@ export const ImportProgressDialog: React.FC<ImportProgressDialogProps> = ({
   const theme = useTheme();
   const isDark = isDarkTheme(theme);
   const colors = appleColors(isDark);
+  const [elapsedSeconds, setElapsedSeconds] = useState(0);
 
   const isError = stage === 'error';
   const isSuccess = stage === 'success';
+
+  useEffect(() => {
+    if (!open || isError || isSuccess) {
+      if (!open) {
+        setElapsedSeconds(0);
+      }
+      return undefined;
+    }
+    const startedAt = Date.now();
+    setElapsedSeconds(0);
+    const timer = window.setInterval(() => {
+      setElapsedSeconds(Math.floor((Date.now() - startedAt) / 1000));
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [open, isError, isSuccess]);
 
   const titleText = isBatch
     ? isSuccess
@@ -264,21 +282,41 @@ export const ImportProgressDialog: React.FC<ImportProgressDialogProps> = ({
         {/* Delicate Inset Progress Bar (Apple HIG §16: contained, restrained) */}
         {!isError && (
           <Box sx={{ width: '100%', px: 0.5, mb: 1.6 }}>
-            <LinearProgress
-              variant={progressPercent !== undefined ? 'determinate' : 'indeterminate'}
-              value={progressPercent}
-              sx={{
-                height: 4,
-                borderRadius: '999px',
-                backgroundColor: isDark ? 'rgba(255, 255, 255, 0.09)' : 'rgba(0, 0, 0, 0.06)',
-                '& .MuiLinearProgress-bar': {
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.2 }}>
+              <LinearProgress
+                variant={progressPercent !== undefined ? 'determinate' : 'indeterminate'}
+                value={progressPercent}
+                sx={{
+                  flex: 1,
+                  height: 5,
                   borderRadius: '999px',
-                  background: isSuccess
-                    ? 'linear-gradient(90deg, #10B981, #34D399)'
-                    : 'linear-gradient(90deg, #F59E0B, #FBBF24)',
-                },
-              }}
-            />
+                  backgroundColor: isDark ? 'rgba(255, 255, 255, 0.09)' : 'rgba(0, 0, 0, 0.06)',
+                  '& .MuiLinearProgress-bar': {
+                    borderRadius: '999px',
+                    transition: 'transform 220ms ease-out',
+                    background: isSuccess
+                      ? 'linear-gradient(90deg, #10B981, #34D399)'
+                      : 'linear-gradient(90deg, #F59E0B, #FBBF24)',
+                  },
+                }}
+              />
+              {progressPercent !== undefined && (
+                <Typography
+                  variant="caption"
+                  sx={{
+                    fontFamily: APPLE_FONT_STACK,
+                    fontSize: '11.5px',
+                    fontWeight: 600,
+                    fontVariantNumeric: 'tabular-nums',
+                    color: colors.textSecondary,
+                    minWidth: 34,
+                    textAlign: 'right',
+                  }}
+                >
+                  {Math.round(progressPercent)}%
+                </Typography>
+              )}
+            </Box>
           </Box>
         )}
 
@@ -306,20 +344,35 @@ export const ImportProgressDialog: React.FC<ImportProgressDialogProps> = ({
             {error || '导入过程中发生错误，请检查文件格式是否有效。'}
           </Box>
         ) : (
-          <Typography
-            variant="body2"
-            sx={{
-              fontFamily: APPLE_FONT_STACK,
-              fontSize: '12.5px',
-              fontWeight: 400,
-              color: isDark ? '#8E8E93' : '#86868B',
-              lineHeight: 1.5,
-              minHeight: 34,
-              px: 0.5,
-            }}
-          >
-            {descText}
-          </Typography>
+          <Box sx={{ minHeight: 38, px: 0.5 }}>
+            <Typography
+              variant="body2"
+              sx={{
+                fontFamily: APPLE_FONT_STACK,
+                fontSize: '13px',
+                fontWeight: 500,
+                color: colors.textSecondary,
+                lineHeight: 1.45,
+              }}
+            >
+              {detailText || descText}
+            </Typography>
+            {!isSuccess && elapsedSeconds >= 2 && (
+              <Typography
+                variant="caption"
+                sx={{
+                  display: 'block',
+                  mt: 0.6,
+                  fontFamily: APPLE_FONT_STACK,
+                  fontSize: '11.5px',
+                  fontVariantNumeric: 'tabular-nums',
+                  color: isDark ? '#787880' : '#86868B',
+                }}
+              >
+                已用时 {elapsedSeconds} 秒 · 图片正在并发上传，请勿关闭页面
+              </Typography>
+            )}
+          </Box>
         )}
 
         {/* Batch Success Action */}

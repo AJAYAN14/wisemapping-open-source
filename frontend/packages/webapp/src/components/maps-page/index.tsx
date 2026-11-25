@@ -106,6 +106,7 @@ const MapsPage = (): ReactElement => {
     stage: ImportStage;
     error?: string | null;
     progress?: number;
+    detailText?: string;
     isBatch?: boolean;
     totalCount?: number;
     currentCount?: number;
@@ -167,7 +168,8 @@ const MapsPage = (): ReactElement => {
         open: true,
         fileName: single.file.name,
         stage: 'reading',
-        progress: 25,
+        progress: 15,
+        detailText: '正在读取本地文件内容...',
         isBatch: false,
         error: null,
       });
@@ -177,7 +179,8 @@ const MapsPage = (): ReactElement => {
         setImportState((prev) => ({
           ...prev,
           stage: 'parsing',
-          progress: 55,
+          progress: 40,
+          detailText: '正在解析思维导图结构与图文素材...',
         }));
 
         const { default: TextImporterFactory } = await import(
@@ -189,10 +192,45 @@ const MapsPage = (): ReactElement => {
         setImportState((prev) => ({
           ...prev,
           stage: 'saving',
-          progress: 85,
+          progress: 55,
+          detailText: '正在检测并准备外置图片...',
         }));
 
-        const content = await externalizeXmlInlineImages(importedXml, client);
+        const content = await externalizeXmlInlineImages(importedXml, client, (p) => {
+          if (p.phase === 'signing') {
+            setImportState((prev) => ({
+              ...prev,
+              progress: 58,
+              detailText: `发现 ${p.totalImages} 张图片，正在向云端申请上传凭证...`,
+            }));
+          } else if (p.phase === 'uploading') {
+            const ratio = p.uploadTotal > 0 ? p.uploadedCount / p.uploadTotal : 1;
+            const progress = 62 + Math.round(ratio * 30);
+            const detailText =
+              p.reusedCount > 0
+                ? `已秒传复用 ${p.reusedCount} 张，正在上传图片 (${p.uploadedCount}/${p.uploadTotal} 张)...`
+                : `正在并发上传图片到图床 (${p.uploadedCount}/${p.uploadTotal} 张)...`;
+            setImportState((prev) => ({
+              ...prev,
+              progress,
+              detailText,
+            }));
+          } else if (p.phase === 'done') {
+            setImportState((prev) => ({
+              ...prev,
+              progress: 93,
+              detailText: '图片外置完成，正在保存导图到云端...',
+            }));
+          }
+        });
+
+        setImportState((prev) => ({
+          ...prev,
+          stage: 'saving',
+          progress: 95,
+          detailText: '正在写入导图到云端数据库...',
+        }));
+
         const contentType =
           single.extension === 'xmind' ? 'application/vnd.xmind.workbook' : 'application/xml';
         const mapId = await client.importMap({
@@ -207,11 +245,12 @@ const MapsPage = (): ReactElement => {
           ...prev,
           stage: 'success',
           progress: 100,
+          detailText: '导图已就绪，即将进入编辑界面...',
         }));
 
         setTimeout(() => {
           window.location.href = `/c/maps/${mapId}/edit`;
-        }, 500);
+        }, 450);
       } catch (err) {
         console.error('Import failed', err);
         setImportState((prev) => ({
@@ -705,6 +744,7 @@ const MapsPage = (): ReactElement => {
         stage={importState.stage}
         error={importState.error}
         progressPercent={importState.progress}
+        detailText={importState.detailText}
         isBatch={importState.isBatch}
         totalCount={importState.totalCount}
         currentCount={importState.currentCount}

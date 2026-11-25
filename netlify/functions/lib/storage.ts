@@ -234,36 +234,54 @@ export class SupabaseAssetStorageService implements AssetStorageService {
     const existingPaths = new Set(existingEntries.map((entry) => entry.objectPath));
 
     const storageBucket = this.storage.from(this.bucket);
-    const results: IssuedUploadUrlItem[] = [];
+    const results: IssuedUploadUrlItem[] = new Array(validated.length);
+    const toSignIndices: number[] = [];
 
-    for (const item of validated) {
+    for (let i = 0; i < validated.length; i += 1) {
+      const item = validated[i]!;
       const objectPath = `${ownerUid}/${item.sha256}.${item.ext}`;
       const { data: pub } = storageBucket.getPublicUrl(objectPath);
       if (existingPaths.has(objectPath)) {
-        results.push({
+        results[i] = {
           sha256: item.sha256,
           objectPath,
           publicUrl: pub.publicUrl,
           exists: true,
+        };
+      } else {
+        toSignIndices.push(i);
+      }
+    }
+
+    const SIGN_CONCURRENCY = 10;
+    let cursor = 0;
+    const worker = async (): Promise<void> => {
+      while (cursor < toSignIndices.length) {
+        const index = toSignIndices[cursor++]!;
+        const item = validated[index]!;
+        const objectPath = `${ownerUid}/${item.sha256}.${item.ext}`;
+        const { data: pub } = storageBucket.getPublicUrl(objectPath);
+        const { data: signed, error } = await storageBucket.createSignedUploadUrl(objectPath, {
+          upsert: true,
         });
-        continue;
+        if (error || !signed) {
+          throw new Error(`Failed to create signed upload URL: ${error?.message ?? 'unknown error'}`);
+        }
+        results[index] = {
+          sha256: item.sha256,
+          objectPath,
+          publicUrl: pub.publicUrl,
+          exists: false,
+          signedUrl: signed.signedUrl,
+          token: signed.token,
+        };
       }
+    };
 
-      const { data: signed, error } = await storageBucket.createSignedUploadUrl(objectPath, {
-        upsert: true,
-      });
-      if (error || !signed) {
-        throw new Error(`Failed to create signed upload URL: ${error?.message ?? 'unknown error'}`);
-      }
-
-      results.push({
-        sha256: item.sha256,
-        objectPath,
-        publicUrl: pub.publicUrl,
-        exists: false,
-        signedUrl: signed.signedUrl,
-        token: signed.token,
-      });
+    if (toSignIndices.length > 0) {
+      await Promise.all(
+        Array.from({ length: Math.min(SIGN_CONCURRENCY, toSignIndices.length) }, () => worker()),
+      );
     }
 
     return results;
