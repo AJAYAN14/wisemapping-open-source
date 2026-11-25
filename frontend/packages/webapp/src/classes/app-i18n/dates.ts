@@ -19,6 +19,7 @@
 import { useCallback } from 'react';
 import { useIntl } from 'react-intl';
 import dayjs, { type ConfigType, type Dayjs } from 'dayjs';
+import 'dayjs/locale/zh-cn';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import LocalizedFormat from 'dayjs/plugin/localizedFormat';
 
@@ -33,5 +34,6 @@ dayjs.extend(LocalizedFormat);
  */
 export const useDate = (): ((value: ConfigType) => Dayjs) => {
   const { locale } = useIntl();
-  return useCallback((value: ConfigType) => dayjs(value).locale(locale), [locale]);
+  const dayjsLocale = locale.toLowerCase().startsWith('zh') ? 'zh-cn' : locale;
+  return useCallback((value: ConfigType) => dayjs(value).locale(dayjsLocale), [dayjsLocale]);
 };

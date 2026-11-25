@@ -66,6 +66,11 @@
     - **Multi-user Share Action Removed**: Removed internal multi-user map sharing from `action-chooser/index.tsx`.
     - **Editor Error-Logger Sanitized**: Removed `window.newrelic` residue from `frontend/packages/editor/src/utils/error-logger.ts`.
     - **Codebase Audited Clean**: Confirmed 0 AdSense publisher IDs (`ca-pub-`), 0 active analytics accounts, 0 New Relic hooks, 0 fake HTML/SVG pages, and 0 commercial donation/PayPal references across runtime code.
+12. **Direct Import `useContext` Crash Fix & ErrorPage Cleanup**
+    - **Vite Dedupe & Pre-bundling**: Added `resolve.dedupe` (React, ReactDOM, Emotion, MUI, Router, Intl) and upfront `optimizeDeps.include` in `frontend/packages/webapp/vite.config.mts` so lazy/dynamic chunks never split Vite dependency hashes (`react` vs `react-dom_client`).
+    - **Pure-TS Importer Import**: Switched `handleDirectFileImport` in `maps-page/index.tsx` from dynamic `import('@wisemapping/editor')` to `import('@wisemapping/mindplot/src/components/import/TextImporterFactory')` to avoid loading the React editor barrel inside the map list page.
+    - **MockClient Local Persistence & Dayjs Chinese Normalization**: Persisted imported/created mock maps & XML in `localStorage` so imported maps render with their real nodes and title in local mock preview; normalized `zh` -> `zh-cn` in `dates.ts`.
+    - **ErrorPage Sanitization**: Removed `support@wisemapping.com`, commercial site-policy/administrator contact copy, and reCAPTCHA error tagging from `frontend/packages/webapp/src/components/error-page/index.tsx`.
 
 ---
 

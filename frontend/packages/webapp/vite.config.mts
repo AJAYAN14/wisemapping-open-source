@@ -102,6 +102,16 @@ export default defineConfig(({ mode }) => {
     ],
     resolve: {
       tsconfigPaths: true,
+      dedupe: [
+        'react',
+        'react-dom',
+        'react-intl',
+        'react-router',
+        '@emotion/react',
+        '@emotion/styled',
+        '@mui/material',
+        '@mui/icons-material',
+      ],
       alias: [
         {
           find: /^@wisemapping\/editor\/src\/(.*)/,
@@ -138,6 +148,25 @@ export default defineConfig(({ mode }) => {
     },
     define: {
       VITE_BOOTSTRAP_CONFIG: JSON.stringify(bootstrapConfig),
+    },
+    optimizeDeps: {
+      include: [
+        'react',
+        'react-dom',
+        'react-dom/client',
+        'react/jsx-runtime',
+        'react/jsx-dev-runtime',
+        '@emotion/react',
+        '@emotion/react/jsx-dev-runtime',
+        '@emotion/styled',
+        '@mui/material',
+        '@mui/icons-material',
+        'react-router',
+        'react-intl',
+        '@tanstack/react-query',
+        'emoji-picker-react',
+        'lodash',
+      ],
     },
     server: {
       port: 3000,

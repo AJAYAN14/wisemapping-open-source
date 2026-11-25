@@ -57,13 +57,59 @@ const label3: Label = {
 const cycle = <T>(list: readonly [T, ...T[]], index: number): T =>
   list[index % list.length] ?? list[0];
 
+const MOCK_MAPS_KEY = 'wisemapping.mock.maps';
+const MOCK_XML_PREFIX = 'wisemapping.mock.xml.';
+
+const loadMockMaps = (): MapInfo[] => {
+  try {
+    const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(MOCK_MAPS_KEY) : null;
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch {
+    // ignore storage errors
+  }
+  return [];
+};
+
+const saveMockMaps = (maps: MapInfo[]): void => {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(MOCK_MAPS_KEY, JSON.stringify(maps));
+    }
+  } catch {
+    // ignore storage errors
+  }
+};
+
+const loadMockXml = (id: number): string | null => {
+  try {
+    return typeof localStorage !== 'undefined'
+      ? localStorage.getItem(`${MOCK_XML_PREFIX}${id}`)
+      : null;
+  } catch {
+    return null;
+  }
+};
+
+const saveMockXml = (id: number, xml: string): void => {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(`${MOCK_XML_PREFIX}${id}`, xml);
+    }
+  } catch {
+    // ignore storage errors
+  }
+};
+
 class MockClient implements Client {
   private maps: MapInfo[] = [];
   private labels: Label[] = [];
   private permissionsByMap: Map<number, Permission[]> = new Map();
 
   constructor() {
-    this.maps = [];
+    this.maps = loadMockMaps();
     this.labels = [];
   }
   fetchMapInfo(id: number): Promise<MapInfo> {
@@ -75,9 +121,10 @@ class MockClient implements Client {
   }
 
   fetchMapMetadata(id: number, includeXml = false): Promise<MapMetadata> {
+    const map = this.maps.find((m) => m.id === id);
     const metadata: MapMetadata = {
-      title: 'my map',
-      creatorFullName: 'The Map Creator',
+      title: map?.title || 'my map',
+      creatorFullName: 'a.jian0629@gmail.com',
       id: id,
       isLocked: false,
       jsonProps: '{ "zoom": 0.8 }',
@@ -86,8 +133,11 @@ class MockClient implements Client {
 
     // Include mock XML if requested
     if (includeXml) {
-      metadata.xml = `<map name="${id}" version="tango">
-        <topic central="true" text="Mock Map ${id}" id="1" fontStyle=";;#ffffff;;;"></topic>
+      const savedXml = loadMockXml(id);
+      metadata.xml =
+        savedXml ||
+        `<map name="${id}" version="tango">
+        <topic central="true" text="${metadata.title}" id="1" fontStyle=";;#ffffff;;;"></topic>
       </map>`;
     }
 
@@ -170,7 +220,28 @@ class MockClient implements Client {
 
   importMap(model: ImportMapInfo): Promise<number> {
     log.debug('model:' + model);
-    return Promise.resolve(10);
+    if (!model.content) {
+      return Promise.resolve(10);
+    }
+    const id = Math.floor(Math.random() * 10000) + 100;
+    const now = new Date().toISOString();
+    const newMap: MapInfo = {
+      id,
+      description: model.description || '',
+      title: model.title,
+      starred: false,
+      createdBy: 'a.jian0629@gmail.com',
+      labels: [],
+      lastModificationTime: now,
+      lastModificationBy: 'a.jian0629@gmail.com',
+      creationTime: now,
+      public: false,
+      role: 'owner',
+    };
+    this.maps.push(newMap);
+    saveMockMaps(this.maps);
+    saveMockXml(id, model.content);
+    return Promise.resolve(id);
   }
 
   fetchAccountInfo(): Promise<AccountInfo> {
@@ -205,15 +276,16 @@ class MockClient implements Client {
       description: map.description || '',
       title: map.title,
       starred: false,
-      createdBy: 'current user',
+      createdBy: 'a.jian0629@gmail.com',
       labels: [],
       lastModificationTime: new Date().toISOString(),
-      lastModificationBy: 'current user',
+      lastModificationBy: 'a.jian0629@gmail.com',
       creationTime: new Date().toISOString(),
       public: false,
       role: 'owner',
     };
     this.maps.push(newMap);
+    saveMockMaps(this.maps);
     return Promise.resolve(newMap.id);
   }
 
@@ -389,6 +461,7 @@ class MockClient implements Client {
 
   deleteMap(id: number): Promise<void> {
     this.maps = this.maps.filter((m) => m.id != id);
+    saveMockMaps(this.maps);
     return Promise.resolve();
   }
 

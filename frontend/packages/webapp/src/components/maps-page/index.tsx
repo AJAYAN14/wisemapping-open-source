@@ -140,7 +140,9 @@ const MapsPage = (): ReactElement => {
     reader.onload = async (loadEvent) => {
       try {
         const fileContent = loadEvent.target?.result ?? '';
-        const { TextImporterFactory } = await import('@wisemapping/editor');
+        const { default: TextImporterFactory } = await import(
+          '@wisemapping/mindplot/src/components/import/TextImporterFactory'
+        );
         const importer = TextImporterFactory.create(extensionFile, fileContent);
         const content = await importer.import(title, '');
         const mapId = await client.importMap({ title, description: '', contentType, content });
@@ -167,7 +169,7 @@ const MapsPage = (): ReactElement => {
     () =>
       createIntl({
         locale: intlLocale.locale,
-        defaultLocale: Locales.EN.code,
+        defaultLocale: Locales.ZH.code,
         messages: intlLocale.messages,
       }),
     [intlLocale],

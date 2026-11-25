@@ -20,16 +20,12 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import Header from '../layout/header';
 import Typography from '@mui/material/Typography';
 import Button from '@mui/material/Button';
-import Box from '@mui/material/Box';
 import Stack from '@mui/material/Stack';
-import Link from '@mui/material/Link';
-import { trackPageView } from '../../utils/analytics';
 import { ErrorBody, ErrorContent } from './styled';
 import { isRouteErrorResponse, useRouteError, useNavigate, useLocation } from 'react-router';
 import { Link as RouterLink } from 'react-router';
 import { ErrorInfo } from '../../classes/client';
 import { logCriticalError } from '../../utils';
-import AppConfig from '../../classes/app-config';
 
 export type ErrorPageType = {
   isSecurity: boolean;
@@ -82,13 +78,7 @@ const ErrorPage = (): React.ReactElement => {
   } else if (routeError?.status === 404) {
     logCriticalError('Page not found error.', '404');
   } else if (error !== undefined && !isAccessError) {
-    const stack = hasMessage(error) && 'stack' in error ? String(error.stack ?? '') : '';
-    const isRecaptchaError =
-      stack.includes('gstatic.com/recaptcha') || stack.includes('recaptcha__');
-    const tag = isRecaptchaError
-      ? 'Handling ErrorPage redirect error (reCAPTCHA origin)'
-      : 'Handling ErrorPage redirect error';
-    logCriticalError(tag, safeSerialize(error));
+    logCriticalError('Handling ErrorPage redirect error', safeSerialize(error));
   }
 
   const headline = (() => {
@@ -126,27 +116,12 @@ const ErrorPage = (): React.ReactElement => {
       );
     }
     if (routeError?.status === 410) {
-      return (
-        <FormattedMessage
-          id="error.map-unavailable-message"
-          defaultMessage="This mindmap is not available for public display because it violates our site policies. If you need further assistance, contact support@wisemapping.com."
-        />
-      );
+      return '该思维导图当前不可公开查看。';
     }
     if (isAccessError) {
-      return (
-        <FormattedMessage
-          id="error.permission-denied-message"
-          defaultMessage="If you believe you should have access, please contact your administrator."
-        />
-      );
+      return '请先使用 Google 账号登录后再试。';
     }
-    return (
-      <FormattedMessage
-        id="error.generic-message"
-        defaultMessage="Please try again later or contact support if the problem continues."
-      />
-    );
+    return '请返回首页或刷新页面重试。';
   })();
 
   const detailMessage =
@@ -179,10 +154,7 @@ const ErrorPage = (): React.ReactElement => {
       id: 'error.page-title',
       defaultMessage: 'Unexpected Error | WiseMapping',
     });
-    trackPageView(window.location.pathname, 'ErrorPage');
 
-    // Log unhandled DOM manipulation errors that might escape React's error boundary
-    // (e.g., errors from third-party scripts like New Relic wrapping DOM methods)
     const unhandledErrorHandler = (event: ErrorEvent): void => {
       // Check if this is a DOM manipulation error related to insertBefore
       if (event.error?.name === 'NotFoundError' && event.error?.message?.includes('insertBefore')) {
@@ -214,7 +186,7 @@ const ErrorPage = (): React.ReactElement => {
 
   return (
     <div>
-      <Header type={AppConfig.isRegistrationEnabled() ? 'only-signup' : 'none'} />
+      <Header type="none" />
 
       <ErrorBody>
         <ErrorContent>
@@ -257,20 +229,6 @@ const ErrorPage = (): React.ReactElement => {
               </Button>
             )}
           </Stack>
-
-          <Box sx={{ mt: 4 }}>
-            <Typography variant="body2" component="p" sx={{ color: 'text.secondary' }}>
-              <FormattedMessage
-                id="error.contact-support"
-                defaultMessage="Need help? Contact us at {support}"
-                values={{
-                  support: (
-                    <Link href="mailto:support@wisemapping.com">support@wisemapping.com</Link>
-                  ),
-                }}
-              />
-            </Typography>
-          </Box>
         </ErrorContent>
       </ErrorBody>
     </div>
