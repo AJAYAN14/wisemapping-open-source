@@ -12,7 +12,8 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:unit": "vitest run tests/unit tests/contract",
-    "build:functions": "esbuild netlify/functions/api.ts netlify/functions/oauth.ts --bundle --platform=node --target=node20 --format=esm --outdir=.netlify/functions-check"
+    "build:functions": "esbuild netlify/functions/api.ts netlify/functions/oauth.ts --bundle --platform=node --target=node20 --format=esm --external:pg --external:pg-native --outdir=.netlify/functions-check",
+    "verify:m3": "npm run typecheck && npm run build:functions && npm run test:unit"
   },
   "dependencies": {
     "@netlify/functions": "^5.3.0",
