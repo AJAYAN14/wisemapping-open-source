@@ -16,7 +16,7 @@
  *   limitations under the License.
  */
 
-import { Theme } from '@mui/material/styles';
+import { CSSObject, Theme } from '@mui/material/styles';
 
 /**
  * Apple Design system tokens and mixins for the WiseMapping mindmap editor.
@@ -42,7 +42,8 @@ export const appleFontStack = [
 ].join(', ');
 
 export const applePressMixin = {
-  transition: 'transform 160ms cubic-bezier(0.2, 0, 0, 1), background-color 150ms ease, box-shadow 150ms ease',
+  transition:
+    'transform 160ms cubic-bezier(0.2, 0, 0, 1), background-color 150ms ease, box-shadow 150ms ease',
   '@media (hover: hover)': {
     '&:hover': {
       transform: 'translateY(-0.5px)',
@@ -61,18 +62,19 @@ export const applePressMixin = {
   },
 };
 
-export const getFrostedGlassBar = (theme: Theme) => {
+export const getFrostedGlassBar = (theme: Theme): CSSObject => {
   const isDark = theme.palette.mode === 'dark';
   return {
-    backgroundColor: isDark ? 'rgba(28, 28, 30, 0.78)' : 'rgba(255, 255, 255, 0.78)',
+    backgroundColor: isDark ? 'rgba(28, 28, 30, 0.68)' : 'rgba(255, 255, 255, 0.65)',
+    backgroundImage: 'none',
     backdropFilter: 'blur(20px) saturate(180%)',
     WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-    borderBottom: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)'}`,
+    borderBottom: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.10)' : 'rgba(0, 0, 0, 0.07)'}`,
     boxShadow: isDark
       ? '0 1px 3px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06)'
-      : '0 1px 3px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
+      : '0 1px 3px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.85)',
     color: theme.palette.text.primary,
-    '@media (prefers-reduced-transparency: reduce)': {
+    '@media (prefers-reduced-transparency: reduce), (prefers-contrast: more)': {
       backgroundColor: theme.palette.background.paper,
       backdropFilter: 'none',
       WebkitBackdropFilter: 'none',
@@ -80,19 +82,20 @@ export const getFrostedGlassBar = (theme: Theme) => {
   };
 };
 
-export const getFrostedGlassCard = (theme: Theme, radius = '16px') => {
+export const getFrostedGlassCard = (theme: Theme, radius = '16px'): CSSObject => {
   const isDark = theme.palette.mode === 'dark';
   return {
-    backgroundColor: isDark ? 'rgba(32, 32, 36, 0.82)' : 'rgba(255, 255, 255, 0.85)',
+    backgroundColor: isDark ? 'rgba(32, 32, 36, 0.72)' : 'rgba(255, 255, 255, 0.68)',
+    backgroundImage: 'none',
     backdropFilter: 'blur(24px) saturate(180%)',
     WebkitBackdropFilter: 'blur(24px) saturate(180%)',
     borderRadius: radius,
-    border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)'}`,
+    border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.14)' : 'rgba(0, 0, 0, 0.08)'}`,
     boxShadow: isDark
-      ? '0 12px 36px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1)'
+      ? '0 12px 36px rgba(0, 0, 0, 0.5), 0 2px 8px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.12)'
       : '0 12px 32px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
     color: theme.palette.text.primary,
-    '@media (prefers-reduced-transparency: reduce)': {
+    '@media (prefers-reduced-transparency: reduce), (prefers-contrast: more)': {
       backgroundColor: theme.palette.background.paper,
       backdropFilter: 'none',
       WebkitBackdropFilter: 'none',
@@ -100,10 +103,11 @@ export const getFrostedGlassCard = (theme: Theme, radius = '16px') => {
   };
 };
 
-export const getFrostedGlassDock = (theme: Theme) => {
+export const getFrostedGlassDock = (theme: Theme): CSSObject => {
   const isDark = theme.palette.mode === 'dark';
   return {
-    backgroundColor: isDark ? 'rgba(30, 30, 34, 0.85)' : 'rgba(255, 255, 255, 0.88)',
+    backgroundColor: isDark ? 'rgba(30, 30, 34, 0.72)' : 'rgba(255, 255, 255, 0.68)',
+    backgroundImage: 'none',
     backdropFilter: 'blur(24px) saturate(180%)',
     WebkitBackdropFilter: 'blur(24px) saturate(180%)',
     borderRadius: '9999px',
@@ -112,7 +116,7 @@ export const getFrostedGlassDock = (theme: Theme) => {
       ? '0 12px 32px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.12)'
       : '0 10px 30px rgba(0, 0, 0, 0.10), 0 2px 6px rgba(0, 0, 0, 0.04), inset 0 1px 0 rgba(255, 255, 255, 0.9)',
     color: theme.palette.text.primary,
-    '@media (prefers-reduced-transparency: reduce)': {
+    '@media (prefers-reduced-transparency: reduce), (prefers-contrast: more)': {
       backgroundColor: theme.palette.background.paper,
       backdropFilter: 'none',
       WebkitBackdropFilter: 'none',

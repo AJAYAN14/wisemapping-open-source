@@ -661,14 +661,18 @@ const AppBar = ({
       <MaterialAppBar
         role="menubar"
         position="absolute"
+        color="transparent"
         data-canvas-inset="top"
         elevation={0}
         className="material-menubar"
         sx={{
-          ...getFrostedGlassBar(muiTheme),
+          '&&': {
+            ...getFrostedGlassBar(muiTheme),
+          },
           fontFamily: appleFontStack,
           paddingTop: 'env(safe-area-inset-top, 0px)',
           '& .MuiToolbar-root': {
+            backgroundColor: 'transparent',
             minHeight: '3rem',
             paddingLeft: 'max(8px, env(safe-area-inset-left, 0px))',
             paddingRight: 'max(8px, env(safe-area-inset-right, 0px))',

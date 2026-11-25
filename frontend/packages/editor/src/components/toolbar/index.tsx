@@ -379,6 +379,7 @@ const Toolbar = ({ configurations, position }: ToolbarProps): ReactElement => {
       ref={containerRef}
       onKeyDown={handleKeyDown}
       position="absolute"
+      color="transparent"
       elevation={0}
       sx={{
         flexDirection: pos.vertical ? 'column' : 'row',
@@ -416,7 +417,9 @@ const Toolbar = ({ configurations, position }: ToolbarProps): ReactElement => {
                 },
               }
             : {}),
-        ...glassStyle,
+        '&&': {
+          ...glassStyle,
+        },
         borderRadius: isDock ? '9999px' : '16px',
         padding: isDock ? '3px 8px' : '6px 3px',
         gap: isDock ? '2px' : '3px',

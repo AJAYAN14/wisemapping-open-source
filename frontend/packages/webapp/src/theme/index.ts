@@ -176,12 +176,12 @@ const createAppTheme = (mode: PaletteMode): Theme => {
       MuiAppBar: {
         styleOverrides: {
           root: ({ theme }) => ({
-            backgroundColor: `${theme.palette.background.paper} !important`,
-            color: `${theme.palette.text.primary} !important`,
+            backgroundColor: theme.palette.background.paper,
+            color: theme.palette.text.primary,
             boxShadow: `0 1px 3px ${isLight ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.12)'}`,
             '&.MuiAppBar-colorDefault': {
-              backgroundColor: `${theme.palette.background.paper} !important`,
-              color: `${theme.palette.text.primary} !important`,
+              backgroundColor: theme.palette.background.paper,
+              color: theme.palette.text.primary,
             },
           }),
         },
