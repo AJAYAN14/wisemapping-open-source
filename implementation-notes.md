@@ -46,6 +46,11 @@
    - In Netlify Functions API handler, normalize trailing slashes on URL path matching (`/maps/1/` vs `/maps/1`) and handle case-insensitive URL paths for mind map ID parameters.
 7. **Safe Live DB Guarding via `assertNotNemoTarget`**
    - Created `migrate-helper.ts` with deep regex inspection preventing any `SUPABASE_URL` or `DATABASE_URL` containing `nemo` from being evaluated, throwing `NemoProtectionError` without logging secrets.
+8. **Single-Owner Google OAuth Exclusivity & Elimination of Commercial/Multi-Tenant Relics**
+   - **Login Screen**: Removed email/password inputs, "Forgot Password?", "Sign Up", and external commercial terms/privacy links. Only Google OAuth is rendered and enabled.
+   - **Footer & Tracking**: Replaced 3-column commercial footer with a minimal dark/light bar. Removed AdSense, Google Consent Mode, and New Relic injection scripts from `index.html`.
+   - **Maps Dashboard**: Wiped 50 hardcoded fake maps from `mock-client/index.ts`. Removed "创建人" (Creator) column. Pruned sidebar filters to strictly "所有" (All) and "收藏" (Starred). Removed floating yellow `?` help button and "AI 副驾驶" promotional dialog.
+   - **Account Menu**: Removed "账号信息" modal dialog (name/password editor) and Admin Console; kept only owner profile email (`a.jian0629@gmail.com`) and sign out.
 
 ---
 
