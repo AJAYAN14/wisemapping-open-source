@@ -23,7 +23,7 @@ import Typography from '@mui/material/Typography';
 import { FormattedMessage, defineMessage } from 'react-intl';
 import type { MessageDescriptor } from 'react-intl';
 import IconButton from '@mui/material/IconButton';
-import CloseIcon from '@mui/icons-material/Close';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import { WidgetBuilder, WidgetEventType } from '@wisemapping/mindplot';
 import { Topic } from '@wisemapping/mindplot';
 import type { Designer } from '@wisemapping/mindplot';
@@ -188,7 +188,7 @@ export const WidgetPopover = ({
                 },
               }}
             >
-              <CloseIcon fontSize="small" />
+              <CloseRoundedIcon fontSize="small" />
             </IconButton>
           </Box>
           {editorComponent}

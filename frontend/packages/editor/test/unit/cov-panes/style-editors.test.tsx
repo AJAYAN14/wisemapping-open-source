@@ -73,7 +73,7 @@ describe('RelationshipStyleEditor', () => {
     const closeModal = jest.fn();
     renderPane(<RelationshipStyleEditor closeModal={closeModal} {...relationshipModels()} />);
 
-    fireEvent.click(screen.getByTestId('CloseIcon').closest('button') as HTMLElement);
+    fireEvent.click(screen.getByTestId('CloseRoundedIcon').closest('button') as HTMLElement);
 
     expect(closeModal).toHaveBeenCalledTimes(1);
   });
@@ -226,7 +226,7 @@ describe('TopicStyleEditor', () => {
     const closeModal = jest.fn();
     renderPane(<TopicStyleEditor closeModal={closeModal} {...styleModels()} />);
 
-    fireEvent.click(screen.getByTestId('CloseIcon').closest('button') as HTMLElement);
+    fireEvent.click(screen.getByTestId('CloseRoundedIcon').closest('button') as HTMLElement);
 
     expect(closeModal).toHaveBeenCalledTimes(1);
   });

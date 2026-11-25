@@ -28,9 +28,9 @@ import Tooltip from '@mui/material/Tooltip';
 import { ClientContext } from '../../../../classes/provider/client-context';
 import Button from '@mui/material/Button';
 import CircularProgress from '@mui/material/CircularProgress';
-import HistoryIcon from '@mui/icons-material/History';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import RestoreIcon from '@mui/icons-material/Restore';
+import HistoryRoundedIcon from '@mui/icons-material/HistoryRounded';
+import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded';
+import RestoreRoundedIcon from '@mui/icons-material/RestoreRounded';
 import UserAvatar from '../user-avatar';
 import {
   HistoryActions,
@@ -151,7 +151,7 @@ const HistoryDialog = ({
         </HistoryEmpty>
       ) : !fetchError && changeHistory.length === 0 ? (
         <HistoryEmpty>
-          <HistoryIcon />
+          <HistoryRoundedIcon />
           <FormattedMessage
             id="history.no-changes"
             defaultMessage="There is no changes available"
@@ -177,7 +177,7 @@ const HistoryDialog = ({
                     size="small"
                     href={`/c/maps/${mapId}/${row.id}/view`}
                     target="history"
-                    startIcon={<OpenInNewIcon fontSize="small" />}
+                    startIcon={<OpenInNewRoundedIcon fontSize="small" />}
                   >
                     <FormattedMessage id="maps.view" defaultMessage="View" />
                   </Button>
@@ -185,7 +185,7 @@ const HistoryDialog = ({
                     size="small"
                     onClick={(e) => handleOnClick(e, row.id)}
                     disabled={revert.isPending}
-                    startIcon={<RestoreIcon fontSize="small" />}
+                    startIcon={<RestoreRoundedIcon fontSize="small" />}
                   >
                     <FormattedMessage id="maps.revert" defaultMessage="Revert" />
                   </Button>

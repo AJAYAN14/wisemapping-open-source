@@ -274,7 +274,7 @@ describe('OutlineViewDialog', () => {
     renderPane(<OutlineViewDialog open onClose={onClose} mindmap={sampleMap()} />);
 
     const dialog = screen.getByRole('dialog');
-    fireEvent.click(within(dialog).getByTestId('CloseIcon').closest('button') as HTMLElement);
+    fireEvent.click(within(dialog).getByTestId('CloseRoundedIcon').closest('button') as HTMLElement);
 
     expect(onClose).toHaveBeenCalledTimes(1);
   });

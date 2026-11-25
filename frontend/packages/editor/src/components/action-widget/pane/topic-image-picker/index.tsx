@@ -17,9 +17,9 @@
  */
 import React, { ReactElement, useEffect } from 'react';
 import Tab from '@mui/material/Tab';
-import CloseIcon from '@mui/icons-material/Close';
-import SentimentSatisfiedAltIcon from '@mui/icons-material/SentimentSatisfiedAlt';
-import ImageIcon from '@mui/icons-material/Image';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import SentimentSatisfiedAltRoundedIcon from '@mui/icons-material/SentimentSatisfiedAltRounded';
+import ImageRoundedIcon from '@mui/icons-material/ImageRounded';
 import { FormattedMessage, useIntl } from 'react-intl';
 import type { EmojiClickData } from 'emoji-picker-react';
 import EmojiPicker from '../shared/emoji-picker';
@@ -86,7 +86,7 @@ const TopicImagePicker = ({
   return (
     <StyledEditorContainer>
       <PickerCloseButton onClick={triggerClose}>
-        <CloseIcon />
+        <CloseRoundedIcon />
       </PickerCloseButton>
       {/* Tabs at the top */}
       <PickerTabsBar>
@@ -98,12 +98,12 @@ const TopicImagePicker = ({
           aria-label="icon picker tabs"
         >
           <Tab
-            icon={<ImageIcon />}
+            icon={<ImageRoundedIcon />}
             label={<FormattedMessage id="icon-picker.icons" defaultMessage="Icons Gallery" />}
             iconPosition="start"
           />
           <Tab
-            icon={<SentimentSatisfiedAltIcon />}
+            icon={<SentimentSatisfiedAltRoundedIcon />}
             label={<FormattedMessage id="icon-picker.emojis" defaultMessage="Emojis" />}
             iconPosition="start"
           />

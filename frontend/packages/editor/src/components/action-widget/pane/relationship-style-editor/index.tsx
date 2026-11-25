@@ -18,10 +18,10 @@
 
 import { ReactElement } from 'react';
 import IconButton from '@mui/material/IconButton';
-import CloseIcon from '@mui/icons-material/Close';
-import RemoveIcon from '@mui/icons-material/Remove';
-import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
-import FiberManualRecordIcon from '@mui/icons-material/FiberManualRecord';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import RemoveRoundedIcon from '@mui/icons-material/RemoveRounded';
+import MoreHorizRoundedIcon from '@mui/icons-material/MoreHorizRounded';
+import FiberManualRecordRoundedIcon from '@mui/icons-material/FiberManualRecordRounded';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { styled } from '@mui/material/styles';
 import {
@@ -88,7 +88,7 @@ const RelationshipStyleEditor = (props: RelationshipStyleEditorProps): ReactElem
   return (
     <PaneCard>
       <PaneCloseButton onClick={props.closeModal}>
-        <CloseIcon />
+        <CloseRoundedIcon />
       </PaneCloseButton>
 
       {/* Relationship Color */}
@@ -125,7 +125,7 @@ const RelationshipStyleEditor = (props: RelationshipStyleEditorProps): ReactElem
               defaultMessage: 'Solid line style',
             })}
           >
-            <RemoveIcon />
+            <RemoveRoundedIcon />
           </ActionButton>
           <ActionButton
             onClick={() => handleStrokeStyleChange(StrokeStyle.DASHED)}
@@ -139,7 +139,7 @@ const RelationshipStyleEditor = (props: RelationshipStyleEditorProps): ReactElem
               defaultMessage: 'Dashed line style',
             })}
           >
-            <MoreHorizIcon />
+            <MoreHorizRoundedIcon />
           </ActionButton>
           <ActionButton
             onClick={() => handleStrokeStyleChange(StrokeStyle.DOTTED)}
@@ -153,7 +153,7 @@ const RelationshipStyleEditor = (props: RelationshipStyleEditorProps): ReactElem
               defaultMessage: 'Dotted line style',
             })}
           >
-            <FiberManualRecordIcon />
+            <FiberManualRecordRoundedIcon />
           </ActionButton>
 
           <PaneDivider orientation="vertical" flexItem />

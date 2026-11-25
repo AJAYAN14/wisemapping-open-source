@@ -19,7 +19,7 @@ import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import IconButton from '@mui/material/IconButton';
 import { styled } from '@mui/material/styles';
-import LabelTwoTone from '@mui/icons-material/LabelTwoTone';
+import LabelRounded from '@mui/icons-material/LabelRounded';
 
 /** The add-label form, set off from the labels below it. */
 export const AddLabelBox = styled(Box)(({ theme }) => ({
@@ -31,7 +31,7 @@ export const AddLabelBox = styled(Box)(({ theme }) => ({
 }));
 
 /** The new label's colour: click for the next one. */
-export const NewLabelColor = styled(LabelTwoTone)({
+export const NewLabelColor = styled(LabelRounded)({
   fontSize: '28px',
   cursor: 'pointer',
   transition: 'transform 0.2s',

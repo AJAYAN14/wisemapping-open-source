@@ -102,6 +102,23 @@
     - **Frosted Style Panes, Popovers & Search Panel (`StyledPane.ts`, `find-in-map`, `widgetPopover`)**: Transformed style dialogs, node popovers (notes, links), and find-in-map panel into rounded 16px frosted surfaces with high-contrast typography, uppercase section headings, and squircle item highlights.
     - **Canvas Typography Hierarchy (`prism-default.json`)**: Configured `"SF Pro Rounded"`, `"SF Pro Text"`, and system-ui font stacks across central topics, main topics, and subtopics for seamless cross-platform rendering.
     - **Harness Stability**: Hardened `uniqueTitle` in `tests/e2e/support/fixtures.ts` with a monotonic sequence identifier to eliminate birthday-paradox hash collisions across test loops.
+19. **Complete Upgrade to Google Material Rounded Icons (`@mui/icons-material/*Rounded`)**
+    - **Standardized Icon Set**: Replaced 100% of outdated, outlined, sharp, and two-tone icons across all UI panes and dialogs with Google Material Design Rounded variants (`*Rounded` / `*RoundedIcon`).
+    - **Components Upgraded**:
+      - `canvas-style-editor`: `CloseRoundedIcon`, `CheckBoxOutlineBlankRoundedIcon`, `GridOnRoundedIcon`, `FiberManualRecordRoundedIcon`, `BlockRoundedIcon`.
+      - `color-picker`: `BlockRoundedIcon`.
+      - `icon-picker` & `topic-image-picker`: `SearchRoundedIcon`, `ClearRoundedIcon`, `ImageRoundedIcon`, `SentimentSatisfiedAltRoundedIcon`.
+      - `keyboard-shortcut-help`: `CloseRoundedIcon`.
+      - `relationship-style-editor`: `CloseRoundedIcon`, `RemoveRoundedIcon`, `MoreHorizRoundedIcon`, `FiberManualRecordRoundedIcon`.
+      - `topic-icon-editor`: `CloseRoundedIcon`, `SentimentSatisfiedAltRoundedIcon`, `ImageRoundedIcon`.
+      - `topic-link-editor`: `OpenInNewRoundedIcon`, `CloseRoundedIcon`.
+      - `theme-switcher` & `theme-toggle`: `DarkModeRoundedIcon`, `LightModeRoundedIcon`.
+      - `widgetPopover`: `CloseRoundedIcon`.
+      - `rich-text-note-editor`: `CloseRoundedIcon`, `FormatIndentDecreaseRoundedIcon`, `FormatIndentIncreaseRoundedIcon`.
+      - `add-label-dialog`: `AddRoundedIcon`, `LabelRounded`.
+      - `base-dialog`: `CloseRoundedIcon`.
+      - `history-dialog`: `HistoryRoundedIcon`, `OpenInNewRoundedIcon`, `RestoreRoundedIcon`.
+    - **Visual Harmony**: The thick rounded strokes and smooth terminals of Google Material Rounded icons align natively with Apple Design's squircle geometry, giving every button, pane, and modal a friendly, modern, and unified appearance.
 
 ---
 

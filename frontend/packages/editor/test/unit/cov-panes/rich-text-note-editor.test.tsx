@@ -141,7 +141,7 @@ describe('RichTextNoteEditor', () => {
     const closeModal = jest.fn();
     renderPane(<RichTextNoteEditor closeModal={closeModal} noteModel={noteModel} />);
 
-    fireEvent.click(screen.getByTestId('CloseIcon').closest('button') as HTMLElement);
+    fireEvent.click(screen.getByTestId('CloseRoundedIcon').closest('button') as HTMLElement);
 
     expect(closeModal).toHaveBeenCalledTimes(1);
     expect(noteModel.setValue).not.toHaveBeenCalled();

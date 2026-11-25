@@ -22,7 +22,8 @@ import Switch from '@mui/material/Switch';
 import Typography from '@mui/material/Typography';
 import FormControlLabel from '@mui/material/FormControlLabel';
 import { useTheme as useMuiTheme } from '@mui/material/styles';
-import { Brightness4, Brightness7 } from '@mui/icons-material';
+import DarkModeRoundedIcon from '@mui/icons-material/DarkModeRounded';
+import LightModeRoundedIcon from '@mui/icons-material/LightModeRounded';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { useIntl } from 'react-intl';
 
@@ -50,7 +51,7 @@ const ThemeSwitcher: React.FC = () => {
         mr: 0.5,
       }}
     >
-      <Brightness7
+      <LightModeRoundedIcon
         sx={{
           fontSize: '0.9rem',
           color: !isDark ? muiTheme.palette.primary.main : muiTheme.palette.text.disabled,
@@ -89,7 +90,7 @@ const ThemeSwitcher: React.FC = () => {
           },
         }}
       />
-      <Brightness4
+      <DarkModeRoundedIcon
         sx={{
           fontSize: '0.9rem',
           color: isDark ? muiTheme.palette.primary.main : muiTheme.palette.text.disabled,

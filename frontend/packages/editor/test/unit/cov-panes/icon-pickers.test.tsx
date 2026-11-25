@@ -129,7 +129,7 @@ describe('IconImageTab (image gallery)', () => {
     expect(screen.getByText('No icons found')).toBeTruthy();
     expect(iconImages()).toHaveLength(0);
 
-    fireEvent.click(screen.getByTestId('ClearIcon').closest('button') as HTMLElement);
+    fireEvent.click(screen.getByTestId('ClearRoundedIcon').closest('button') as HTMLElement);
 
     expect(screen.queryByText('No icons found')).toBeNull();
     expect((screen.getByPlaceholderText('Search icons...') as HTMLInputElement).value).toBe('');
@@ -257,7 +257,7 @@ describe('TopicIconEditor', () => {
 
     expect(pause).toHaveBeenCalledTimes(1);
     fireEvent.click(screen.getByRole('button', { name: 'pick party emoji' }));
-    fireEvent.click(screen.getByTestId('CloseIcon').closest('button') as HTMLElement);
+    fireEvent.click(screen.getByTestId('CloseRoundedIcon').closest('button') as HTMLElement);
     expect(closeModal).toHaveBeenCalledTimes(1);
 
     unmount();

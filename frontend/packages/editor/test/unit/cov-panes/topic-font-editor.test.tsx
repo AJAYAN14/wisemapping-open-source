@@ -146,7 +146,7 @@ describe('TopicFontEditor', () => {
     const closeModal = jest.fn();
     renderPane(<TopicFontEditor closeModal={closeModal} {...models()} />);
 
-    fireEvent.click(screen.getByTestId('CloseIcon').closest('button') as HTMLElement);
+    fireEvent.click(screen.getByTestId('CloseRoundedIcon').closest('button') as HTMLElement);
 
     expect(closeModal).toHaveBeenCalledTimes(1);
   });

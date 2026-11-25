@@ -141,7 +141,7 @@ const CanvasStyleEditor = (props: CanvasStyleEditorProps): ReactElement => {
   return (
     <PaneCard>
       <PaneCloseButton onClick={props.closeModal}>
-        <CloseIcon />
+        <CloseRoundedIcon />
       </PaneCloseButton>
 
       {/* Background Style - Always visible */}
@@ -162,7 +162,7 @@ const CanvasStyleEditor = (props: CanvasStyleEditorProps): ReactElement => {
               selected={style.backgroundPattern === undefined}
               onClick={handlePatternNone}
             >
-              <NotInterestedOutlined />
+              <BlockRoundedIcon />
             </ActionButton>
           </Tooltip>
           <Tooltip
@@ -174,7 +174,7 @@ const CanvasStyleEditor = (props: CanvasStyleEditorProps): ReactElement => {
               selected={style.backgroundPattern === 'solid'}
               onClick={() => handlePatternChange('solid')}
             >
-              <CheckBoxOutlineBlankIcon />
+              <CheckBoxOutlineBlankRoundedIcon />
             </ActionButton>
           </Tooltip>
           <Tooltip
@@ -184,7 +184,7 @@ const CanvasStyleEditor = (props: CanvasStyleEditorProps): ReactElement => {
               selected={style.backgroundPattern === 'grid'}
               onClick={() => handlePatternChange('grid')}
             >
-              <GridOnIcon />
+              <GridOnRoundedIcon />
             </ActionButton>
           </Tooltip>
           <Tooltip
@@ -194,7 +194,7 @@ const CanvasStyleEditor = (props: CanvasStyleEditorProps): ReactElement => {
               selected={style.backgroundPattern === 'dots'}
               onClick={() => handlePatternChange('dots')}
             >
-              <FiberManualRecordIcon sx={{ fontSize: '8px' }} />
+              <FiberManualRecordRoundedIcon sx={{ fontSize: '8px' }} />
             </ActionButton>
           </Tooltip>
         </PaneButtonRow>

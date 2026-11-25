@@ -93,7 +93,7 @@ const ColorPicker = (props: {
             role="button"
             tabIndex={0}
           >
-            <NotInterestedOutlined />
+            <BlockRoundedIcon />
           </NoneColorCircle>
         )}
         {(props.hideNoneOption ? colors : colors.slice(1)).map((color) => (

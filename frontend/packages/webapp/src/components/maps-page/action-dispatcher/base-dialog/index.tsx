@@ -28,7 +28,7 @@ import {
   StyledDialogTitle,
 } from './style';
 import GlobalError from '../../../form/global-error';
-import CloseIcon from '@mui/icons-material/Close';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import Button from '@mui/material/Button';
 import type { SxProps, Theme } from '@mui/material/styles';
 import { KeyboardContext } from '../../../../classes/provider/keyboard-context';
@@ -89,7 +89,7 @@ const BaseDialog = (props: DialogProps): React.ReactElement => {
             disabled={isLoading}
             size="small"
           >
-            <CloseIcon fontSize="small" />
+            <CloseRoundedIcon fontSize="small" />
           </StyledCloseButton>
 
           <StyledDialogContent dividers>

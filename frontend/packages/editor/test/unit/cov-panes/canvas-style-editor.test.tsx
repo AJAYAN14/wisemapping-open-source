@@ -26,10 +26,10 @@ import { renderPane } from './helpers';
 /** The pattern buttons carry no label of their own; find them by their icon. */
 const patternButton = (pattern: 'default' | 'solid' | 'grid' | 'dots'): HTMLElement => {
   const icon = {
-    default: 'NotInterestedOutlinedIcon',
-    solid: 'CheckBoxOutlineBlankIcon',
-    grid: 'GridOnIcon',
-    dots: 'FiberManualRecordIcon',
+    default: 'BlockRoundedIcon',
+    solid: 'CheckBoxOutlineBlankRoundedIcon',
+    grid: 'GridOnRoundedIcon',
+    dots: 'FiberManualRecordRoundedIcon',
   }[pattern];
   return screen.getByTestId(icon).closest('button') as HTMLElement;
 };
@@ -193,7 +193,7 @@ describe('CanvasStyleEditor', () => {
     const closeModal = jest.fn();
     renderPane(<CanvasStyleEditor closeModal={closeModal} onStyleChange={jest.fn()} />);
 
-    fireEvent.click(screen.getByTestId('CloseIcon').closest('button') as HTMLElement);
+    fireEvent.click(screen.getByTestId('CloseRoundedIcon').closest('button') as HTMLElement);
 
     expect(closeModal).toHaveBeenCalledTimes(1);
   });

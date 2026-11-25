@@ -28,7 +28,7 @@ import TableRow from '@mui/material/TableRow';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import Paper from '@mui/material/Paper';
-import CloseIcon from '@mui/icons-material/Close';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import type { Theme } from '@mui/material/styles';
 import { isMacPlatform } from '@wisemapping/mindplot';
 import ComboList from './key-cap';
@@ -113,7 +113,7 @@ const KeyboardShorcutsHelp = ({ closeModal }: KeyboardShorcutsHelpProps): ReactE
             },
           }}
         >
-          <CloseIcon />
+          <CloseRoundedIcon />
         </IconButton>
       )}
 

@@ -19,7 +19,8 @@
 import React from 'react';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
-import { Brightness4, Brightness7 } from '@mui/icons-material';
+import DarkModeRoundedIcon from '@mui/icons-material/DarkModeRounded';
+import LightModeRoundedIcon from '@mui/icons-material/LightModeRounded';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { useIntl } from 'react-intl';
 
@@ -35,7 +36,7 @@ const ThemeToggle: React.FC = () => {
   return (
     <Tooltip title={tooltipText}>
       <IconButton onClick={toggleMode} color="inherit" aria-label="toggle theme" size="small">
-        {mode === 'light' ? <Brightness4 /> : <Brightness7 />}
+        {mode === 'light' ? <DarkModeRoundedIcon /> : <LightModeRoundedIcon />}
       </IconButton>
     </Tooltip>
   );

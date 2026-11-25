@@ -20,8 +20,8 @@ import React from 'react';
 import Switch from '@mui/material/Switch';
 import Typography from '@mui/material/Typography';
 import FormControlLabel from '@mui/material/FormControlLabel';
-import Brightness4 from '@mui/icons-material/Brightness4';
-import Brightness7 from '@mui/icons-material/Brightness7';
+import DarkModeRoundedIcon from '@mui/icons-material/DarkModeRounded';
+import LightModeRoundedIcon from '@mui/icons-material/LightModeRounded';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { useIntl } from 'react-intl';
 import { ToggleRoot } from './styled';
@@ -38,7 +38,7 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ showBackground = false }) => 
 
   return (
     <ToggleRoot showBackground={showBackground}>
-      <Brightness7
+      <LightModeRoundedIcon
         sx={{
           fontSize: '0.9rem',
           color: !isDark ? 'primary.main' : 'text.disabled',
@@ -74,7 +74,7 @@ const ThemeToggle: React.FC<ThemeToggleProps> = ({ showBackground = false }) => 
           },
         }}
       />
-      <Brightness4
+      <DarkModeRoundedIcon
         sx={{
           fontSize: '0.9rem',
           color: isDark ? 'primary.main' : 'text.disabled',

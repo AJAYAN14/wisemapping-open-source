@@ -21,8 +21,8 @@ import IconButton from '@mui/material/IconButton';
 import InputAdornment from '@mui/material/InputAdornment';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import ClearIcon from '@mui/icons-material/Clear';
-import SearchIcon from '@mui/icons-material/Search';
+import ClearRoundedIcon from '@mui/icons-material/ClearRounded';
+import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import { ReactElement, useCallback, useMemo, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import iconGroups from './iconGroups.json';
@@ -113,13 +113,13 @@ const IconImageTab = ({ iconModel }: IconImageTab): ReactElement => {
           input: {
             startAdornment: (
               <InputAdornment position="start">
-                <SearchIcon fontSize="small" />
+                <SearchRoundedIcon fontSize="small" />
               </InputAdornment>
             ),
             endAdornment: searchQuery ? (
               <InputAdornment position="end">
                 <IconButton size="small" onClick={() => setSearchQuery('')}>
-                  <ClearIcon fontSize="small" />
+                  <ClearRoundedIcon fontSize="small" />
                 </IconButton>
               </InputAdornment>
             ) : undefined,

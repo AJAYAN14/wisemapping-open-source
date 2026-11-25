@@ -83,7 +83,7 @@ describe('TopicLinkEditor', () => {
     expect(screen.getByText('Address is not valid')).toBeTruthy();
     expect(urlField().getAttribute('aria-invalid')).toBe('true');
     // The "open" shortcut is disabled and points nowhere.
-    const open = screen.getByTestId('OpenInNewOutlinedIcon').closest('button') as HTMLButtonElement;
+    const open = screen.getByTestId('OpenInNewRoundedIcon').closest('button') as HTMLButtonElement;
     expect(open.disabled).toBe(true);
 
     fireEvent.click(screen.getByRole('button', { name: 'Accept' }));
@@ -111,7 +111,7 @@ describe('TopicLinkEditor', () => {
     );
 
     expect(urlField().value).toBe('https://a.com');
-    const link = screen.getByTestId('OpenInNewOutlinedIcon').closest('a') as HTMLAnchorElement;
+    const link = screen.getByTestId('OpenInNewRoundedIcon').closest('a') as HTMLAnchorElement;
     expect(link.getAttribute('href')).toBe('https://a.com');
     expect(link.getAttribute('target')).toBe('_blank');
   });
@@ -132,7 +132,7 @@ describe('TopicLinkEditor', () => {
     const closeModal = jest.fn();
     renderPane(<TopicLinkEditor closeModal={closeModal} urlModel={urlModel} />);
 
-    fireEvent.click(screen.getByTestId('CloseIcon').closest('button') as HTMLElement);
+    fireEvent.click(screen.getByTestId('CloseRoundedIcon').closest('button') as HTMLElement);
 
     expect(closeModal).toHaveBeenCalledTimes(1);
     expect(urlModel.setValue).not.toHaveBeenCalled();

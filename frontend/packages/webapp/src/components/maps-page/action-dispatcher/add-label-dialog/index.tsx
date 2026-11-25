@@ -18,7 +18,7 @@
 
 import React from 'react';
 import { useIntl } from 'react-intl';
-import AddIcon from '@mui/icons-material/Add';
+import AddRoundedIcon from '@mui/icons-material/AddRounded';
 import TextField from '@mui/material/TextField';
 import Box from '@mui/material/Box';
 
@@ -123,7 +123,7 @@ const AddLabelDialog = ({ onAdd }: AddLabelFormProps): React.ReactElement => {
                 defaultMessage: 'Add label',
               })}
             >
-              <AddIcon />
+              <AddRoundedIcon />
             </AddLabelButton>
           </span>
         </Tooltip>

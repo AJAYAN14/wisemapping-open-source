@@ -23,8 +23,8 @@ import Input from '../../input';
 import Link from '@mui/material/Link';
 import IconButton from '@mui/material/IconButton';
 import SaveAndDelete from '../save-and-delete';
-import OpenInNewOutlinedIcon from '@mui/icons-material/OpenInNewOutlined';
-import CloseIcon from '@mui/icons-material/Close';
+import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import { useIntl } from 'react-intl';
 
 /**
@@ -94,7 +94,7 @@ const TopicLinkEditor = (props: {
           },
         }}
       >
-        <CloseIcon />
+        <CloseRoundedIcon />
       </IconButton>
       <Input
         autoFocus
@@ -122,7 +122,7 @@ const TopicLinkEditor = (props: {
             endAdornment: (
               <Link href={isValidUrl ? url : ''} target="_blank">
                 <IconButton disabled={!isValidUrl}>
-                  <OpenInNewOutlinedIcon />
+                  <OpenInNewRoundedIcon />
                 </IconButton>
               </Link>
             ),

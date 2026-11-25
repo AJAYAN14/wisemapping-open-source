@@ -21,7 +21,7 @@
  */
 import { render, screen, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import UndoOutlinedIcon from '@mui/icons-material/UndoOutlined';
+import UndoRoundedIcon from '@mui/icons-material/UndoRounded';
 import UndoAndRedo from '../../../src/components/action-widget/button/undo-and-redo';
 import type Model from '../../../src/classes/model/editor';
 
@@ -58,7 +58,7 @@ const createModel = (loaded = true) => {
 
 const Undo = ({ model }: { model: Model | undefined }) => (
   <UndoAndRedo
-    configuration={{ icon: <UndoOutlinedIcon />, ariaLabel: 'Undo', onClick: jest.fn() }}
+    configuration={{ icon: <UndoRoundedIcon />, ariaLabel: 'Undo', onClick: jest.fn() }}
     disabledCondition={(event) => event.undoSteps > 0}
     model={model}
   />
@@ -139,7 +139,7 @@ describe('UndoAndRedo (BL4-58)', () => {
 
   it('uses the latest condition without subscribing again (BL5-30)', () => {
     const { model, listeners, fire } = createModel();
-    const config = { icon: <UndoOutlinedIcon />, ariaLabel: 'Undo', onClick: jest.fn() };
+    const config = { icon: <UndoRoundedIcon />, ariaLabel: 'Undo', onClick: jest.fn() };
     const { rerender } = render(
       <UndoAndRedo configuration={config} disabledCondition={() => false} model={model} />,
     );
