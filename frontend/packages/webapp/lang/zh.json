@@ -81,19 +81,19 @@
     "defaultMessage": "删除"
   },
   "action.delete-description": {
-    "defaultMessage": "已删除的思维导图无法恢复。您想继续吗？"
+    "defaultMessage": "删除后将无法恢复，确定要继续吗？"
   },
   "action.delete-title": {
     "defaultMessage": "删除"
   },
   "action.duplicate": {
-    "defaultMessage": "复制"
+    "defaultMessage": "创建副本"
   },
   "action.export": {
     "defaultMessage": "导出"
   },
   "action.history": {
-    "defaultMessage": "历史"
+    "defaultMessage": "历史版本"
   },
   "action.history-description": {
     "defaultMessage": "过去90天内引入的更改列表。"
@@ -111,7 +111,7 @@
     "defaultMessage": "添加标签"
   },
   "action.new": {
-    "defaultMessage": "新建思维导图"
+    "defaultMessage": "新建导图"
   },
   "action.open": {
     "defaultMessage": "打开"
@@ -951,7 +951,7 @@
     "defaultMessage": "不适用"
   },
   "common.open-drawer": {
-    "defaultMessage": "打开菜单"
+    "defaultMessage": "切换侧栏"
   },
   "common.others": {
     "defaultMessage": "其他"
@@ -975,16 +975,16 @@
     "defaultMessage": "继续即表示您同意我们的<termsLink>服务条款</termsLink>和<privacyLink>隐私政策</privacyLink>。"
   },
   "common.wait": {
-    "defaultMessage": "请等待。。。"
+    "defaultMessage": "请稍候…"
   },
   "create.button": {
     "defaultMessage": "创建"
   },
   "create.description": {
-    "defaultMessage": "请填写新的思维导图名称和描述"
+    "defaultMessage": "输入思维导图名称与描述"
   },
   "create.title": {
-    "defaultMessage": "创建一个新的思维导图"
+    "defaultMessage": "新建思维导图"
   },
   "deletem.count-title": {
     "defaultMessage": "{count, plural, other {将删除 # 个导图}}"
@@ -1317,13 +1317,13 @@
     "defaultMessage": "创建人"
   },
   "map.delete-selected": {
-    "defaultMessage": "删除选中项"
+    "defaultMessage": "删除选中导图"
   },
   "map.labels": {
     "defaultMessage": "标签"
   },
   "map.last-update": {
-    "defaultMessage": "最后更新"
+    "defaultMessage": "最近修改"
   },
   "map.more-actions": {
     "defaultMessage": "更多操作"
@@ -1332,7 +1332,7 @@
     "defaultMessage": "名称"
   },
   "map.tooltip-add": {
-    "defaultMessage": "将标签添加到选定项"
+    "defaultMessage": "为选中导图添加标签"
   },
   "maps.auth-required-default-message": {
     "defaultMessage": "您需要登录才能查看您的思维导图。"
@@ -1365,22 +1365,22 @@
     "defaultMessage": "使用 AI 副驾驶开启思维导图"
   },
   "maps.create-tooltip": {
-    "defaultMessage": "创建一个新的思维导图"
+    "defaultMessage": "新建思维导图"
   },
   "maps.empty-result": {
-    "defaultMessage": "没有找到与当前筛选条件匹配的思维导图。"
+    "defaultMessage": "当前没有匹配的思维导图"
   },
   "maps.import-desc": {
-    "defaultMessage": "从其它工具导入"
+    "defaultMessage": "导入本地导图文件"
   },
   "maps.load-error": {
-    "defaultMessage": "无法加载您的导图。请稍后再试。"
+    "defaultMessage": "无法加载导图列表，请稍后重试"
   },
   "maps.modified-by-desc": {
     "defaultMessage": "{on}由{by}修改"
   },
   "maps.nav-all": {
-    "defaultMessage": "所有"
+    "defaultMessage": "全部导图"
   },
   "maps.nav-onwned": {
     "defaultMessage": "我的"
@@ -1392,16 +1392,16 @@
     "defaultMessage": "与我分享"
   },
   "maps.nav-starred": {
-    "defaultMessage": "收藏"
+    "defaultMessage": "已收藏"
   },
   "maps.page-title": {
-    "defaultMessage": "我的思维导图|WiseMapping"
+    "defaultMessage": "我的思维导图 | WiseMapping"
   },
   "maps.revert": {
     "defaultMessage": "恢复"
   },
   "maps.search-action": {
-    "defaultMessage": "搜索。。。"
+    "defaultMessage": "搜索导图…"
   },
   "maps.search-label": {
     "defaultMessage": "搜索思维导图"
@@ -1419,10 +1419,10 @@
     "defaultMessage": "降序排列"
   },
   "maps.tooltip-open": {
-    "defaultMessage": "打开编辑"
+    "defaultMessage": "打开导图"
   },
   "maps.tooltip-starred": {
-    "defaultMessage": "收藏"
+    "defaultMessage": "切换星标"
   },
   "maps.view": {
     "defaultMessage": "查看"
@@ -1437,7 +1437,7 @@
     "defaultMessage": "更改密码"
   },
   "menu.signout": {
-    "defaultMessage": "注销"
+    "defaultMessage": "退出登录"
   },
   "oauth.error": {
     "defaultMessage": "OAuth 错误：{error}"
@@ -1677,7 +1677,7 @@
     "defaultMessage": "浅色"
   },
   "theme.toggle": {
-    "defaultMessage": "切换主题"
+    "defaultMessage": "切换浅色 / 深色模式"
   },
   "validation.title-required": {
     "defaultMessage": "标题是必需的"

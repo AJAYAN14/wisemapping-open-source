@@ -21,6 +21,9 @@ import { useIntl } from 'react-intl';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import TableSortLabel from '@mui/material/TableSortLabel';
+import CheckBoxOutlineBlankRoundedIcon from '@mui/icons-material/CheckBoxOutlineBlankRounded';
+import CheckBoxRoundedIcon from '@mui/icons-material/CheckBoxRounded';
+import IndeterminateCheckBoxRoundedIcon from '@mui/icons-material/IndeterminateCheckBoxRounded';
 import type { SxProps, Theme } from '@mui/material/styles';
 import { MapInfo } from '../../../classes/client';
 import { Order } from './model';
@@ -83,6 +86,9 @@ const MapsTableHeadComponent = ({
             checked={rowCount > 0 && numSelected === rowCount}
             onChange={(event) => onSelectAll(event.target.checked)}
             size="small"
+            icon={<CheckBoxOutlineBlankRoundedIcon fontSize="small" />}
+            checkedIcon={<CheckBoxRoundedIcon fontSize="small" />}
+            indeterminateIcon={<IndeterminateCheckBoxRoundedIcon fontSize="small" />}
             slotProps={{
               input: {
                 'aria-label': intl.formatMessage({

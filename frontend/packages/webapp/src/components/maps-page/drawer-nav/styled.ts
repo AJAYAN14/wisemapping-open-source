@@ -4,7 +4,8 @@
  *   Licensed under WiseMapping Public License, Version 1.0 (the "License").
  *   It is basically the Apache License, Version 2.0 (the "License") plus the
  *   "powered by wisemapping" text requirement on every single page;
- *   you may obtain a copy of the license at
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the license at
  *
  *       https://github.com/wisemapping/wisemapping-open-source/blob/main/LICENSE.md
  *
@@ -19,103 +20,150 @@ import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import ListItemButton from '@mui/material/ListItemButton';
 import Typography from '@mui/material/Typography';
-import { alpha, styled } from '@mui/material/styles';
+import { styled } from '@mui/material/styles';
+import { APPLE_FONT_STACK, appleColors, applePressMixin, isDarkTheme } from '../appleDesign';
 
-const drawerFontFamily = 'Figtree, "Noto Sans JP", Helvetica, "system-ui", Arial, sans-serif';
+export const DrawerContent = styled('div')({
+  display: 'flex',
+  flexDirection: 'column',
+  height: '100%',
+  overflowX: 'hidden',
+});
 
 export const LogoBox = styled('div')({
-  padding: '24px 16px 20px 16px',
-  marginBottom: '8px',
+  padding: '16px 16px 14px 16px',
   display: 'flex',
   alignItems: 'center',
+  minHeight: '60px',
   position: 'relative',
-  zIndex: 0,
+  overflow: 'hidden',
 });
 
 export const Logo = styled('img')({
-  height: '32px',
+  height: '30px',
   width: 'auto',
+  flexShrink: 0,
 });
 
-/** The signed-in user's name and email, above the filters. */
-export const UserInfoBox = styled(Box)({
-  padding: '16px',
-  margin: '0 8px 16px 8px',
-  backgroundColor: 'rgba(255, 255, 255, 0.05)',
-  borderRadius: '8px',
-  border: '1px solid rgba(255, 255, 255, 0.1)',
+export const SectionHeader = styled('div')(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    padding: '10px 18px 4px 18px',
+    fontSize: '11.5px',
+    fontWeight: 700,
+    letterSpacing: '0.03em',
+    textTransform: 'uppercase',
+    color: c.textTertiary,
+    fontFamily: APPLE_FONT_STACK,
+  };
 });
 
-export const UserName = styled(Typography)(({ theme }) => ({
-  color: theme.palette.text.primary,
-  fontSize: '16px',
-  fontWeight: 500,
-  fontFamily: drawerFontFamily,
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  whiteSpace: 'nowrap',
-}));
+/** The signed-in user's name and email, anchored at the bottom of the sidebar. */
+export const UserInfoBox = styled(Box)(({ theme }) => {
+  const isDark = isDarkTheme(theme);
+  const c = appleColors(isDark);
+  return {
+    marginTop: 'auto',
+    padding: '10px 12px',
+    margin: 'auto 10px 12px 10px',
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(255, 255, 255, 0.68)',
+    borderRadius: '12px',
+    border: `1px solid ${c.hairline}`,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+  };
+});
 
-export const UserEmail = styled(Typography)(({ theme }) => ({
-  color: theme.palette.text.secondary,
-  fontSize: '14px',
-  fontFamily: drawerFontFamily,
-  overflow: 'hidden',
-  textOverflow: 'ellipsis',
-  whiteSpace: 'nowrap',
-  display: 'block',
-}));
+export const UserAvatarBadge = styled('div')(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    width: '30px',
+    height: '30px',
+    borderRadius: '999px',
+    backgroundColor: c.amber,
+    color: '#FFFFFF',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '13px',
+    fontWeight: 700,
+    flexShrink: 0,
+    fontFamily: APPLE_FONT_STACK,
+  };
+});
+
+export const UserName = styled(Typography)(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    color: c.textPrimary,
+    fontSize: '14px',
+    fontWeight: 700,
+    lineHeight: 1.25,
+    fontFamily: APPLE_FONT_STACK,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  };
+});
+
+export const UserEmail = styled(Typography)(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    color: c.textSecondary,
+    fontSize: '11.5px',
+    fontWeight: 500,
+    lineHeight: 1.3,
+    fontFamily: APPLE_FONT_STACK,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    display: 'block',
+  };
+});
 
 /** A filter entry; its delete button shows on hover. */
 export const FilterItemRoot = styled(Box)({
   position: 'relative',
-  '&:hover .label-delete-button': {
+  '&:hover .label-delete-button, &:focus-within .label-delete-button': {
     opacity: '1 !important',
   },
 });
 
-// https://stackoverflow.com/questions/61486061/how-to-set-selected-and-hover-color-of-listitem-in-mui
-export const FilterListItemButton = styled(ListItemButton)(({ theme }) => ({
-  position: 'relative',
-  '&.Mui-selected': {
-    backgroundColor: alpha(theme.palette.common.white, 0.2),
-    color: theme.palette.primary.contrastText,
-    '& .MuiListItemIcon-root': {
-      color: theme.palette.primary.contrastText,
-    },
-    ...theme.applyStyles('dark', {
-      backgroundColor: theme.palette.grey[800],
-      color: theme.palette.text.primary,
+export const FilterListItemButton = styled(ListItemButton)(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    position: 'relative',
+    color: c.textPrimary,
+    ...applePressMixin,
+    '&.Mui-selected': {
+      backgroundColor: c.amberSoft,
+      color: c.amberText,
       '& .MuiListItemIcon-root': {
-        color: theme.palette.text.primary,
+        color: c.amber,
       },
-    }),
-  },
-  '&.Mui-selected:hover': {
-    backgroundColor: alpha(theme.palette.common.white, 0.25),
-    color: theme.palette.primary.contrastText,
-    '& .MuiListItemIcon-root': {
-      color: theme.palette.primary.contrastText,
+      '&:hover': {
+        backgroundColor: c.amberSoftHover,
+      },
     },
-    ...theme.applyStyles('dark', {
-      backgroundColor: theme.palette.grey[700],
-      color: theme.palette.text.primary,
-      '& .MuiListItemIcon-root': {
-        color: theme.palette.text.primary,
-      },
-    }),
-  },
-  '&:hover ~ .MuiListItemSecondaryAction-root .label-delete-button': {
-    opacity: '1 !important',
-  },
-}));
+    '&:hover ~ .MuiListItemSecondaryAction-root .label-delete-button': {
+      opacity: '1 !important',
+    },
+  };
+});
 
 /** Deletes a label filter; hidden until its entry is hovered. */
-export const DeleteLabelButton = styled(IconButton)({
-  opacity: 0,
-  transition: 'opacity 0.2s ease',
-  padding: '4px',
-  '&:hover': {
-    opacity: 1,
-  },
+export const DeleteLabelButton = styled(IconButton)(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    opacity: 0,
+    transition: 'opacity 0.16s ease, color 0.14s ease, background-color 0.14s ease',
+    padding: '4px',
+    color: c.textTertiary,
+    '&:hover': {
+      opacity: 1,
+      color: '#EF4444',
+      backgroundColor: c.hoverFill,
+    },
+  };
 });

@@ -16,6 +16,7 @@
  *   limitations under the License.
  */
 
+import Button from '@mui/material/Button';
 import Checkbox from '@mui/material/Checkbox';
 import InputBase from '@mui/material/InputBase';
 import Link from '@mui/material/Link';
@@ -27,20 +28,11 @@ import TablePagination from '@mui/material/TablePagination';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import StarRateRoundedIcon from '@mui/icons-material/StarRateRounded';
-import { alpha, styled } from '@mui/material/styles';
+import { styled } from '@mui/material/styles';
+import { APPLE_FONT_STACK, appleColors, applePressMixin, isDarkTheme } from '../appleDesign';
 import { BodyCell, CompactCardHeader, MapCardRoot } from './shared.styled';
 
 export { BodyCell, CompactCardHeader, MapCardRoot };
-
-/*
- * The map list (table on wide screens, cards on narrow ones) and its loading placeholders.
- * "Narrow" is `theme.breakpoints.down('sm')` throughout: the list picks its view with the same
- * query (see `narrowScreen` in index.tsx).
- */
-
-/** The border of the list's frame and of the pagination: a grey that reads on both modes. */
-const FRAME_BORDER = 'rgba(128, 128, 128, 0.2)';
-const PAGINATION_BORDER = 'rgba(128, 128, 128, 0.15)';
 
 // ---------------------------------------------------------------- The list and its toolbar
 
@@ -49,15 +41,19 @@ export const ListRoot = styled('div')({
 });
 
 export const ListPaper = styled(Paper)(({ theme }) => ({
-  marginTop: '30px',
-  marginBottom: theme.spacing(2),
+  maxWidth: '1080px',
+  margin: '8px auto 24px auto',
+  paddingLeft: '28px',
+  paddingRight: '28px',
   backgroundColor: 'transparent',
-  marginLeft: theme.spacing(12),
-  marginRight: theme.spacing(12),
+  [theme.breakpoints.down('md')]: {
+    paddingLeft: '20px',
+    paddingRight: '20px',
+  },
   [theme.breakpoints.down('sm')]: {
     marginTop: 0,
-    marginLeft: 0,
-    marginRight: 0,
+    paddingLeft: '4px',
+    paddingRight: '4px',
   },
 }));
 
@@ -65,27 +61,32 @@ export const ListToolbar = styled(Toolbar)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
+  flexWrap: 'wrap',
+  gap: '12px',
   padding: 0,
-  paddingTop: '30px',
-  paddingBottom: '30px',
+  paddingTop: '14px',
+  paddingBottom: '18px',
+  minHeight: '56px',
   boxShadow: 'none',
   backgroundColor: 'transparent',
   [theme.breakpoints.down('sm')]: {
-    paddingTop: theme.spacing(2),
-    paddingBottom: theme.spacing(2),
-    paddingLeft: theme.spacing(1),
-    paddingRight: theme.spacing(1),
+    paddingTop: theme.spacing(1.5),
+    paddingBottom: theme.spacing(1.5),
+    paddingLeft: theme.spacing(1.5),
+    paddingRight: theme.spacing(1.5),
   },
 }));
 
-/** The bulk actions: on narrow screens the buttons show their icon only. */
+/** Workspace title / contextual bulk actions on the left of the toolbar. */
 export const ToolbarActions = styled('div')(({ theme }) => ({
-  flex: '1 1 0',
+  display: 'flex',
+  alignItems: 'center',
+  gap: '10px',
   minWidth: 0,
   '& .MuiButton-root': {
     [theme.breakpoints.down('sm')]: {
       minWidth: 'auto',
-      padding: theme.spacing(0.75, 1),
+      padding: theme.spacing(0.75, 1.25),
       '& .MuiButton-startIcon': {
         margin: 0,
       },
@@ -98,56 +99,171 @@ export const ToolbarActions = styled('div')(({ theme }) => ({
   },
 }));
 
-export const SearchContainer = styled('div')(({ theme }) => ({
-  flex: '1 1 0',
+export const WorkspaceHeading = styled('div')({
   display: 'flex',
-  justifyContent: 'center',
+  alignItems: 'center',
+  gap: '10px',
+  minWidth: 0,
+});
+
+export const WorkspaceTitle = styled('h1')(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    margin: 0,
+    fontSize: 'clamp(1.25rem, 2vw, 1.55rem)',
+    fontWeight: 800,
+    lineHeight: 1.15,
+    letterSpacing: '-0.025em',
+    color: c.textPrimary,
+    fontFamily: APPLE_FONT_STACK,
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  };
+});
+
+export const CountPill = styled('span')(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: '2px 9px',
+    borderRadius: '999px',
+    fontSize: '0.76rem',
+    fontWeight: 700,
+    fontVariantNumeric: 'tabular-nums',
+    backgroundColor: c.hoverFill,
+    color: c.textSecondary,
+    border: `1px solid ${c.hairline}`,
+    fontFamily: APPLE_FONT_STACK,
+  };
+});
+
+export const BulkActionButton = styled(Button)(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    borderRadius: '12px',
+    fontSize: '0.84rem',
+    fontWeight: 700,
+    fontFamily: APPLE_FONT_STACK,
+    padding: '6px 14px',
+    backgroundColor: c.surface,
+    color: c.textPrimary,
+    border: `1px solid ${c.hairlineStrong}`,
+    boxShadow: c.shadowSubtle,
+    ...applePressMixin,
+    '&:hover': {
+      backgroundColor: c.hoverFill,
+    },
+  };
+});
+
+export const ToolbarRightCluster = styled('div')(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '10px',
+  marginLeft: 'auto',
+  [theme.breakpoints.down('sm')]: {
+    display: 'none',
+  },
+}));
+
+export const SearchContainer = styled('div')(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
   minWidth: 0,
   [theme.breakpoints.down('sm')]: {
     display: 'none',
   },
 }));
 
-export const SearchBox = styled('div')(({ theme }) => ({
-  borderRadius: 9,
-  backgroundColor: alpha(theme.palette.common.white, 0.15),
-  '&:hover': {
-    backgroundColor: alpha(theme.palette.common.white, 0.25),
-  },
-  margin: '10px 0px',
-  width: 'auto',
-}));
-
-export const SearchIconWrapper = styled('div')({
-  padding: '6px 0 0 5px',
-  height: '100%',
-  position: 'absolute',
-  pointerEvents: 'none',
-  alignItems: 'center',
-  justifyContent: 'center',
+export const SearchBox = styled('div')(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    position: 'relative',
+    display: 'flex',
+    alignItems: 'center',
+    borderRadius: '12px',
+    backgroundColor: c.surface,
+    border: `1px solid ${c.hairline}`,
+    boxShadow: c.shadowSubtle,
+    transition: 'border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease',
+    '&:hover': {
+      borderColor: c.hairlineStrong,
+    },
+    '&:focus-within': {
+      borderColor: c.amber,
+      boxShadow: `0 0 0 3px ${c.amberRing}`,
+    },
+  };
 });
 
-export const SearchInput = styled(InputBase)(({ theme }) => ({
-  color: 'inherit',
-  '& .MuiInputBase-input': {
-    border: `1px solid ${theme.palette.primary.main}`,
-    borderRadius: theme.shape.borderRadius,
-    paddingLeft: `calc(1em + ${theme.spacing(4)})`,
-    transition: theme.transitions.create('width'),
-    width: '100%',
-    [theme.breakpoints.up('sm')]: {
-      width: '24ch',
+export const SearchIconWrapper = styled('div')(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    paddingLeft: '11px',
+    height: '100%',
+    position: 'absolute',
+    pointerEvents: 'none',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: c.textTertiary,
+    '& svg': {
+      fontSize: '18px',
+    },
+  };
+});
+
+export const SearchInput = styled(InputBase)(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    color: c.textPrimary,
+    fontFamily: APPLE_FONT_STACK,
+    fontSize: '0.86rem',
+    fontWeight: 600,
+    '& .MuiInputBase-input': {
+      padding: '7px 38px 7px 34px',
+      border: 'none',
+      width: '21ch',
+      transition: 'width 200ms cubic-bezier(0.2, 0.8, 0.2, 1)',
+      '&::placeholder': {
+        color: c.textTertiary,
+        opacity: 1,
+        fontWeight: 500,
+      },
       '&:focus': {
-        width: '39ch',
+        width: '28ch',
+      },
+      '@media (prefers-reduced-motion: reduce)': {
+        transition: 'none',
       },
     },
-  },
-}));
+  };
+});
+
+export const SearchShortcutHint = styled('kbd')(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    position: 'absolute',
+    right: '8px',
+    pointerEvents: 'none',
+    padding: '2px 6px',
+    borderRadius: '6px',
+    fontSize: '10.5px',
+    fontWeight: 700,
+    fontFamily: APPLE_FONT_STACK,
+    backgroundColor: c.hoverFill,
+    color: c.textTertiary,
+    border: `1px solid ${c.hairline}`,
+    lineHeight: 1.2,
+  };
+});
 
 export const ToolbarEnd = styled('div')({
-  flex: '1 1 0',
-  minWidth: 0,
   display: 'flex',
+  alignItems: 'center',
   justifyContent: 'flex-end',
 });
 
@@ -167,77 +283,107 @@ export const PaginationMobile = styled('div')(({ theme }) => ({
 }));
 
 /** Typed as TablePagination: styled() would drop its `component` prop (rendered as a div here). */
-export const ListPagination = styled(TablePagination)(({ theme }) => ({
-  width: 'auto',
-  display: 'inline-flex',
-  backgroundColor: 'transparent',
-  border: `1px solid ${PAGINATION_BORDER}`,
-  borderRadius: '8px',
-  padding: 0,
-  margin: 0,
-  '& .MuiTablePagination-toolbar': {
-    minHeight: '40px',
-    paddingLeft: '22px',
-    paddingRight: theme.spacing(1.5),
-    minWidth: 'auto',
-    backgroundColor: 'transparent',
-  },
-  '& .MuiTablePagination-spacer': {
-    display: 'none',
-  },
-  '& .MuiTablePagination-selectLabel': {
+export const ListPagination = styled(TablePagination)(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    width: 'auto',
+    display: 'inline-flex',
+    backgroundColor: c.surface,
+    border: `1px solid ${c.hairline}`,
+    borderRadius: '12px',
+    padding: 0,
     margin: 0,
-  },
-  '& .MuiTablePagination-displayedRows': {
-    margin: 0,
-  },
-  [theme.breakpoints.down('sm')]: {
-    width: '50%',
-    overflow: 'hidden',
-    marginRight: 0,
-  },
-})) as typeof TablePagination;
+    boxShadow: c.shadowSubtle,
+    fontFamily: APPLE_FONT_STACK,
+    '& .MuiTablePagination-toolbar': {
+      minHeight: '36px',
+      paddingLeft: '14px',
+      paddingRight: '6px',
+      minWidth: 'auto',
+      backgroundColor: 'transparent',
+    },
+    '& .MuiTablePagination-spacer': {
+      display: 'none',
+    },
+    '& .MuiTablePagination-selectLabel': {
+      margin: 0,
+    },
+    '& .MuiTablePagination-displayedRows': {
+      margin: 0,
+      fontSize: '0.8rem',
+      fontWeight: 700,
+      fontVariantNumeric: 'tabular-nums',
+      color: c.textSecondary,
+    },
+    [theme.breakpoints.down('sm')]: {
+      width: 'auto',
+      overflow: 'hidden',
+      marginRight: 0,
+    },
+  };
+}) as typeof TablePagination;
 
-export const ListTableContainer = styled(TableContainer)(({ theme }) => ({
-  backgroundColor: theme.palette.background.default,
-  border: `1px solid ${FRAME_BORDER}`,
-  borderRadius: '12px',
-  overflow: 'hidden',
-  [theme.breakpoints.down('sm')]: {
-    border: 'none',
-    borderRadius: 0,
-  },
-}));
+export const ListTableContainer = styled(TableContainer)(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    backgroundColor: c.surface,
+    border: `1px solid ${c.hairline}`,
+    borderRadius: '18px',
+    boxShadow: c.shadowSubtle,
+    overflow: 'hidden',
+    [theme.breakpoints.down('sm')]: {
+      backgroundColor: 'transparent',
+      border: 'none',
+      borderRadius: 0,
+      boxShadow: 'none',
+    },
+  };
+});
 
 // ---------------------------------------------------------------- The table (wide screens)
 
-export const ListTable = styled(Table)(({ theme }) => ({
-  minWidth: 750,
-  backgroundColor: theme.palette.background.default,
-  '& tbody tr': {
-    background: 'transparent',
-    borderBottom: `1px solid ${theme.palette.divider}`,
-    '&:hover': {
-      backgroundColor: alpha(theme.palette.action.hover, 0.04),
-      ...theme.applyStyles('dark', {
-        backgroundColor: alpha(theme.palette.action.hover, 0.08),
-      }),
+export const ListTable = styled(Table)(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    minWidth: 680,
+    backgroundColor: c.surface,
+    '& tbody tr': {
+      background: 'transparent',
+      transition: 'background-color 120ms ease',
+      cursor: 'pointer',
+      '&:last-of-type td': {
+        borderBottom: 'none',
+      },
+      '&:hover': {
+        backgroundColor: c.hoverFill,
+      },
+      '&.Mui-selected': {
+        backgroundColor: c.amberSoft,
+        '&:hover': {
+          backgroundColor: c.amberSoftHover,
+        },
+      },
     },
-  },
-}));
+  };
+});
 
-export const HeaderCell = styled(TableCell)(({ theme }) => ({
-  background: theme.palette.background.default,
-  fontWeight: 'bold',
-  color: theme.palette.text.secondary,
-  borderBottom: `1px solid ${theme.palette.divider}`,
-  borderTop: 0,
-  borderLeft: 0,
-  borderRight: 0,
-  fontSize: '0.96rem',
-  fontFamily: theme.typography.fontFamily,
-  padding: theme.spacing(1, 1.5),
-}));
+export const HeaderCell = styled(TableCell)(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    backgroundColor: c.surface,
+    fontWeight: 700,
+    color: c.textSecondary,
+    borderBottom: `1px solid ${c.hairline}`,
+    borderTop: 0,
+    borderLeft: 0,
+    borderRight: 0,
+    fontSize: '0.78rem',
+    letterSpacing: '0.02em',
+    textTransform: 'uppercase',
+    fontFamily: APPLE_FONT_STACK,
+    padding: '11px 14px',
+  };
+});
 
 export const LabelsBodyCell = styled(BodyCell)({
   maxWidth: '300px',
@@ -260,26 +406,70 @@ export const VisuallyHidden = styled('span')({
   width: 1,
 });
 
-/** The row and "select all" checkboxes: greyed, not in the brand colour. */
-export const SelectCheckbox = styled(Checkbox)(({ theme }) => ({
-  color: theme.palette.action.disabled,
-  '&.Mui-checked, &.MuiCheckbox-indeterminate': {
-    color: theme.palette.action.active,
-    ...theme.applyStyles('dark', {
-      color: alpha(theme.palette.common.white, 0.7),
-    }),
-  },
-}));
+/** The row and "select all" checkboxes. */
+export const SelectCheckbox = styled(Checkbox)(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    color: c.hairlineStrong,
+    ...applePressMixin,
+    '&.Mui-checked, &.MuiCheckbox-indeterminate': {
+      color: c.amber,
+    },
+  };
+});
 
-export const TitleLink = styled(Link)(({ theme }) => ({
-  fontSize: '0.96rem',
-  fontFamily: theme.typography.fontFamily,
-}));
+export const MapRowTitleWrap = styled('div')({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '12px',
+  minWidth: 0,
+});
 
-export const CellText = styled(Typography)(({ theme }) => ({
-  fontSize: '0.96rem',
-  fontFamily: theme.typography.fontFamily,
-}));
+export const MapGlyphBadge = styled('span')(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    width: '32px',
+    height: '32px',
+    borderRadius: '10px',
+    backgroundColor: c.amberSoft,
+    color: c.amberText,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+    '& svg': {
+      fontSize: '18px',
+    },
+  };
+});
+
+export const TitleLink = styled(Link)(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    fontSize: '0.96rem',
+    fontWeight: 700,
+    letterSpacing: '-0.01em',
+    fontFamily: APPLE_FONT_STACK,
+    color: c.textPrimary,
+    textDecoration: 'none',
+    transition: 'color 120ms ease',
+    '&:hover': {
+      color: c.amberText,
+      textDecoration: 'none',
+    },
+  };
+});
+
+export const CellText = styled(Typography)(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    fontSize: '0.84rem',
+    fontWeight: 600,
+    fontVariantNumeric: 'tabular-nums',
+    color: c.textSecondary,
+    fontFamily: APPLE_FONT_STACK,
+  };
+});
 
 /**
  * The star of a map. `&&`: the theme's IconButton gives its icons `color: inherit` through a
@@ -287,21 +477,42 @@ export const CellText = styled(Typography)(({ theme }) => ({
  */
 export const StarIcon = styled(StarRateRoundedIcon, {
   shouldForwardProp: (prop) => prop !== 'starred',
-})<{ starred: boolean }>(({ starred }) => ({
-  '&&': {
-    color: starred ? 'yellow' : 'gray',
-  },
-}));
+})<{ starred: boolean }>(({ theme, starred }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    '&&': {
+      color: starred ? c.amber : c.textTertiary,
+      transition: 'transform 140ms cubic-bezier(0.2, 0.8, 0.2, 1), color 140ms ease',
+    },
+  };
+});
+
+export const ActionIconButton = styled('span')(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    display: 'inline-flex',
+    '& .MuiIconButton-root': {
+      borderRadius: '10px',
+      color: c.textTertiary,
+      ...applePressMixin,
+      '&:hover': {
+        backgroundColor: c.hoverFill,
+        color: c.textPrimary,
+      },
+    },
+  };
+});
 
 // ---------------------------------------------------------------- The cards (narrow screens)
 
-export const CardTitle = styled(Typography)(({ theme }) => ({
-  maxWidth: '70vw',
-  fontSize: '0.875rem',
-  fontFamily: theme.typography.fontFamily,
-  color: theme.palette.text.secondary,
-}));
-
-// ---------------------------------------------------------------- Loading placeholders
-
-/** A placeholder block, a shade over the background in either mode. */
+export const CardTitle = styled(Typography)(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    maxWidth: '70vw',
+    fontSize: '0.96rem',
+    fontWeight: 700,
+    letterSpacing: '-0.01em',
+    fontFamily: APPLE_FONT_STACK,
+    color: c.textPrimary,
+  };
+});

@@ -21,7 +21,7 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
 import ListItemText from '@mui/material/ListItemText';
 import Tooltip from '@mui/material/Tooltip';
-import ClearIcon from '@mui/icons-material/Clear';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import type { Filter, LabelFilter } from '../index';
 import { DeleteLabelButton, FilterItemRoot, FilterListItemButton } from './styled';
 
@@ -82,13 +82,7 @@ const StyleListItem = (props: ListItemProps): ReactElement => {
               size="small"
               className="label-delete-button"
             >
-              <ClearIcon
-                sx={{
-                  fontSize: '1rem',
-                  color: 'rgba(255, 255, 255, 0.95)',
-                  filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3))',
-                }}
-              />
+              <CloseRoundedIcon sx={{ fontSize: '1rem', color: 'inherit' }} />
             </DeleteLabelButton>
           </ListItemSecondaryAction>
         )}

@@ -22,11 +22,11 @@ import IconButton from '@mui/material/IconButton';
 import Link from '@mui/material/Link';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
-import MoreVertIcon from '@mui/icons-material/MoreVert';
+import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
 import { MapInfo } from '../../../classes/client';
 import { useDate } from '../../../classes/app-i18n/dates';
 import type { MapItemHandlers } from './MapRow';
-import { CardTitle, CompactCardHeader, MapCardRoot, StarIcon } from './styled';
+import { ActionIconButton, CardTitle, CompactCardHeader, MapCardRoot, StarIcon } from './styled';
 
 interface MapCardProps extends MapItemHandlers {
   map: MapInfo;
@@ -51,7 +51,7 @@ const MapCardComponent = ({ map, onStar, onOpenMenu }: MapCardProps): React.Reac
   };
 
   return (
-    <MapCardRoot>
+    <MapCardRoot elevation={0}>
       <Link href={`/c/maps/${map.id}/edit`} underline="none" onClick={(e) => e.stopPropagation()}>
         <CompactCardHeader
           avatar={
@@ -59,9 +59,11 @@ const MapCardComponent = ({ map, onStar, onOpenMenu }: MapCardProps): React.Reac
               arrow={true}
               title={intl.formatMessage({ id: 'maps.tooltip-starred', defaultMessage: 'Starred' })}
             >
-              <IconButton size="small" onClick={handleStar}>
-                <StarIcon color="action" starred={map.starred} />
-              </IconButton>
+              <ActionIconButton>
+                <IconButton size="small" onClick={handleStar}>
+                  <StarIcon color="action" starred={map.starred} />
+                </IconButton>
+              </ActionIconButton>
             </Tooltip>
           }
           action={
@@ -69,24 +71,33 @@ const MapCardComponent = ({ map, onStar, onOpenMenu }: MapCardProps): React.Reac
               arrow={true}
               title={intl.formatMessage({ id: 'map.more-actions', defaultMessage: 'More Actions' })}
             >
-              <IconButton
-                aria-label={intl.formatMessage({
-                  id: 'common.settings',
-                  defaultMessage: 'Settings',
-                })}
-                onClick={handleOpenMenu}
-              >
-                <MoreVertIcon color="action" />
-              </IconButton>
+              <ActionIconButton>
+                <IconButton
+                  aria-label={intl.formatMessage({
+                    id: 'common.settings',
+                    defaultMessage: 'Settings',
+                  })}
+                  onClick={handleOpenMenu}
+                >
+                  <MoreVertRoundedIcon color="action" />
+                </IconButton>
+              </ActionIconButton>
             </Tooltip>
           }
           // Not a Typography itself, so the header wraps it in its title Typography.
           title={<CardTitle noWrap>{map.title}</CardTitle>}
           subheader={
-            <Typography variant="subtitle2" sx={{ fontSize: '0.75rem' }}>
+            <Typography
+              variant="subtitle2"
+              sx={{ fontSize: '0.76rem', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}
+            >
               {intl.formatMessage({ id: 'map.last-update', defaultMessage: 'Last Update' })}
               <span>: </span>
-              <Tooltip arrow={true} title={date(map.lastModificationTime).format('lll')} placement="bottom-start">
+              <Tooltip
+                arrow={true}
+                title={date(map.lastModificationTime).format('lll')}
+                placement="bottom-start"
+              >
                 <span>{date(map.lastModificationTime).fromNow()}</span>
               </Tooltip>
             </Typography>

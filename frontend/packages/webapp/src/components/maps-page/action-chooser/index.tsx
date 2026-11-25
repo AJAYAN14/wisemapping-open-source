@@ -17,19 +17,21 @@
  */
 
 import React from 'react';
-import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
-import FileCopyOutlinedIcon from '@mui/icons-material/FileCopyOutlined';
-import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
-import CloudDownloadOutlinedIcon from '@mui/icons-material/CloudDownloadOutlined';
-import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
-import LabelOutlined from '@mui/icons-material/LabelOutlined';
-import HistoryOutlined from '@mui/icons-material/HistoryOutlined';
+import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded';
+import FileCopyRoundedIcon from '@mui/icons-material/FileCopyRounded';
+import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
+import CloudDownloadRoundedIcon from '@mui/icons-material/CloudDownloadRounded';
+import EditRoundedIcon from '@mui/icons-material/EditRounded';
+import LabelRoundedIcon from '@mui/icons-material/LabelRounded';
+import HistoryRoundedIcon from '@mui/icons-material/HistoryRounded';
 
 import { FormattedMessage } from 'react-intl';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Divider from '@mui/material/Divider';
+import { APPLE_FONT_STACK, appleColors, isDarkTheme } from '../appleDesign';
+
 export type ActionType =
   | 'open'
   | 'delete'
@@ -66,11 +68,37 @@ const ActionChooser = (props: ActionProps): React.ReactElement => {
       keepMounted
       open={Boolean(anchor)}
       onClose={handleOnClose(undefined)}
-      elevation={1}
+      elevation={0}
+      slotProps={{
+        paper: {
+          sx: (theme) => {
+            const c = appleColors(isDarkTheme(theme));
+            return {
+              borderRadius: '14px',
+              border: `1px solid ${c.hairline}`,
+              boxShadow: c.shadowFloat,
+              backgroundColor: c.headerGlass,
+              backdropFilter: 'blur(20px) saturate(180%)',
+              WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+              fontFamily: APPLE_FONT_STACK,
+              '& .MuiMenuItem-root': {
+                fontWeight: 600,
+                fontSize: '0.88rem',
+                borderRadius: '8px',
+                margin: '2px 6px',
+              },
+              '@media (prefers-reduced-transparency: reduce)': {
+                backgroundColor: c.surface,
+                backdropFilter: 'none',
+              },
+            };
+          },
+        },
+      }}
     >
-      <MenuItem onClick={handleOnClose('open')} sx={{ width: '220px' }}>
+      <MenuItem onClick={handleOnClose('open')} sx={{ width: '216px' }}>
         <ListItemIcon>
-          <DescriptionOutlinedIcon />
+          <DescriptionRoundedIcon fontSize="small" />
         </ListItemIcon>
         <FormattedMessage id="action.open" defaultMessage="Open" />
       </MenuItem>
@@ -79,28 +107,28 @@ const ActionChooser = (props: ActionProps): React.ReactElement => {
 
       <MenuItem onClick={handleOnClose('duplicate')}>
         <ListItemIcon>
-          <FileCopyOutlinedIcon />
+          <FileCopyRoundedIcon fontSize="small" />
         </ListItemIcon>
         <FormattedMessage id="action.duplicate" defaultMessage="Duplicate" />
       </MenuItem>
 
       <MenuItem onClick={handleOnClose('rename')}>
         <ListItemIcon>
-          <EditOutlinedIcon />
+          <EditRoundedIcon fontSize="small" />
         </ListItemIcon>
         <FormattedMessage id="action.rename" defaultMessage="Rename" />
       </MenuItem>
 
       <MenuItem onClick={handleOnClose('label')}>
         <ListItemIcon>
-          <LabelOutlined />
+          <LabelRoundedIcon fontSize="small" />
         </ListItemIcon>
         <FormattedMessage id="action.label" defaultMessage="Add Label" />
       </MenuItem>
 
-      <MenuItem onClick={handleOnClose('delete')}>
-        <ListItemIcon>
-          <DeleteOutlinedIcon />
+      <MenuItem onClick={handleOnClose('delete')} sx={{ color: 'error.main' }}>
+        <ListItemIcon sx={{ color: 'inherit' }}>
+          <DeleteRoundedIcon fontSize="small" />
         </ListItemIcon>
         <FormattedMessage id="action.delete" defaultMessage="Delete" />
       </MenuItem>
@@ -108,14 +136,14 @@ const ActionChooser = (props: ActionProps): React.ReactElement => {
 
       <MenuItem onClick={handleOnClose('export')}>
         <ListItemIcon>
-          <CloudDownloadOutlinedIcon />
+          <CloudDownloadRoundedIcon fontSize="small" />
         </ListItemIcon>
         <FormattedMessage id="action.export" defaultMessage="Export" />
       </MenuItem>
 
       <MenuItem onClick={handleOnClose('history')}>
         <ListItemIcon>
-          <HistoryOutlined />
+          <HistoryRoundedIcon fontSize="small" />
         </ListItemIcon>
         <FormattedMessage id="action.history" defaultMessage="History" />
       </MenuItem>

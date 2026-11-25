@@ -169,8 +169,8 @@ export const MapsList = ({ filter }: MapsListProps): React.ReactElement => {
       ))}
     </div>
   ) : message ? (
-    <Card>
-      <CardContent>{message}</CardContent>
+    <Card elevation={0} sx={{ borderRadius: '18px', margin: '10px 14px', border: '1px solid rgba(128,128,128,0.16)' }}>
+      <CardContent sx={{ textAlign: 'center', py: 4, fontWeight: 600 }}>{message}</CardContent>
     </Card>
   ) : (
     pagedMaps.map((map) => (
@@ -193,7 +193,7 @@ export const MapsList = ({ filter }: MapsListProps): React.ReactElement => {
           <MapsListSkeleton rowsPerPage={rowsPerPage} />
         ) : message ? (
           <TableRow>
-            <TableCell colSpan={6} sx={{ textAlign: 'center' }}>
+            <TableCell colSpan={6} sx={{ textAlign: 'center', py: 6, fontWeight: 600, color: 'text.secondary' }}>
               {message}
             </TableCell>
           </TableRow>
@@ -221,6 +221,8 @@ export const MapsList = ({ filter }: MapsListProps): React.ReactElement => {
       )}
       <ListPaper elevation={0}>
         <MapsListToolbar
+          filter={filter}
+          totalCount={filteredMaps.length}
           selectedCount={selected.length}
           onDeleteSelected={() => openBulkDialog('delete')}
           onLabelSelected={() => openBulkDialog('label')}

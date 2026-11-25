@@ -16,24 +16,33 @@
  *   limitations under the License.
  */
 
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
-import DeleteOutlined from '@mui/icons-material/DeleteOutlined';
-import LabelTwoTone from '@mui/icons-material/LabelTwoTone';
-import SearchIcon from '@mui/icons-material/Search';
+import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
+import LabelRoundedIcon from '@mui/icons-material/LabelRounded';
+import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
+import type { Filter } from '..';
+import { isLabelFilter } from './model';
 import {
+  BulkActionButton,
+  CountPill,
   ListToolbar,
   SearchBox,
   SearchContainer,
   SearchIconWrapper,
   SearchInput,
+  SearchShortcutHint,
   ToolbarActions,
   ToolbarEnd,
+  ToolbarRightCluster,
+  WorkspaceHeading,
+  WorkspaceTitle,
 } from './styled';
 
 interface MapsListToolbarProps {
+  filter?: Filter;
+  totalCount?: number;
   selectedCount: number;
   onDeleteSelected: () => void;
   onLabelSelected: () => void;
@@ -42,8 +51,10 @@ interface MapsListToolbarProps {
   end?: React.ReactNode;
 }
 
-/** Above the list: the actions on the selected maps, the search box and the pagination. */
+/** Above the list: workspace heading / bulk actions, Spotlight search, and pagination. */
 export const MapsListToolbar = ({
+  filter,
+  totalCount,
   selectedCount,
   onDeleteSelected,
   onLabelSelected,
@@ -51,84 +62,125 @@ export const MapsListToolbar = ({
   end,
 }: MapsListToolbarProps): React.ReactElement => {
   const intl = useIntl();
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const [searchValue, setSearchValue] = useState('');
+  const [searchFocused, setSearchFocused] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent): void => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const headingText = (() => {
+    if (!filter || filter.type === 'all') {
+      return intl.formatMessage({ id: 'maps.nav-all', defaultMessage: 'All' });
+    }
+    if (filter.type === 'starred') {
+      return intl.formatMessage({ id: 'maps.nav-starred', defaultMessage: 'Starred' });
+    }
+    if (filter && isLabelFilter(filter)) {
+      return filter.label.title;
+    }
+    return intl.formatMessage({ id: 'maps.nav-all', defaultMessage: 'All' });
+  })();
 
   return (
     <ListToolbar variant="dense">
       <ToolbarActions>
-        {selectedCount > 0 && (
-          <Tooltip
-            arrow={true}
-            title={intl.formatMessage({
-              id: 'map.delete-selected',
-              defaultMessage: 'Delete selected',
-            })}
-          >
-            <Button
-              color="primary"
-              size="medium"
-              variant="outlined"
-              type="button"
-              disableElevation={true}
-              onClick={onDeleteSelected}
-              startIcon={<DeleteOutlined />}
+        {selectedCount > 0 ? (
+          <>
+            <Tooltip
+              arrow={true}
+              title={intl.formatMessage({
+                id: 'map.delete-selected',
+                defaultMessage: 'Delete selected',
+              })}
             >
-              <span className="button-text">
-                <FormattedMessage id="action.delete" defaultMessage="Delete" />
-              </span>
-            </Button>
-          </Tooltip>
-        )}
+              <BulkActionButton
+                size="medium"
+                variant="text"
+                type="button"
+                disableElevation={true}
+                onClick={onDeleteSelected}
+                startIcon={<DeleteRoundedIcon sx={{ color: '#EF4444' }} />}
+              >
+                <span className="button-text">
+                  <FormattedMessage id="action.delete" defaultMessage="Delete" />
+                </span>
+              </BulkActionButton>
+            </Tooltip>
 
-        {selectedCount > 0 && (
-          <Tooltip
-            arrow={true}
-            title={intl.formatMessage({
-              id: 'map.tooltip-add',
-              defaultMessage: 'Add label to selected',
-            })}
-          >
-            <Button
-              color="primary"
-              size="medium"
-              variant="outlined"
-              type="button"
-              sx={{ marginLeft: '10px' }}
-              disableElevation={true}
-              startIcon={<LabelTwoTone />}
-              onClick={onLabelSelected}
+            <Tooltip
+              arrow={true}
+              title={intl.formatMessage({
+                id: 'map.tooltip-add',
+                defaultMessage: 'Add label to selected',
+              })}
             >
-              <span className="button-text">
-                <FormattedMessage id="action.label" defaultMessage="Add Label" />
-              </span>
-            </Button>
-          </Tooltip>
+              <BulkActionButton
+                size="medium"
+                variant="text"
+                type="button"
+                disableElevation={true}
+                startIcon={<LabelRoundedIcon />}
+                onClick={onLabelSelected}
+              >
+                <span className="button-text">
+                  <FormattedMessage id="action.label" defaultMessage="Add Label" />
+                </span>
+              </BulkActionButton>
+            </Tooltip>
+          </>
+        ) : (
+          <WorkspaceHeading>
+            <WorkspaceTitle>{headingText}</WorkspaceTitle>
+            {typeof totalCount === 'number' && <CountPill>{totalCount}</CountPill>}
+          </WorkspaceHeading>
         )}
       </ToolbarActions>
 
-      <SearchContainer>
-        <SearchBox>
-          <SearchIconWrapper>
-            <SearchIcon />
-          </SearchIconWrapper>
-          <SearchInput
-            placeholder={intl.formatMessage({
-              id: 'maps.search-action',
-              defaultMessage: 'Search ...',
-            })}
-            slotProps={{
-              input: {
-                'aria-label': intl.formatMessage({
-                  id: 'maps.search-label',
-                  defaultMessage: 'Search maps',
-                }),
-              },
-            }}
-            onChange={(event) => onSearchChange(event.target.value)}
-          />
-        </SearchBox>
-      </SearchContainer>
+      <ToolbarRightCluster>
+        <SearchContainer>
+          <SearchBox>
+            <SearchIconWrapper>
+              <SearchRoundedIcon />
+            </SearchIconWrapper>
+            <SearchInput
+              inputRef={searchInputRef}
+              value={searchValue}
+              placeholder={intl.formatMessage({
+                id: 'maps.search-action',
+                defaultMessage: 'Search ...',
+              })}
+              slotProps={{
+                input: {
+                  'aria-label': intl.formatMessage({
+                    id: 'maps.search-label',
+                    defaultMessage: 'Search maps',
+                  }),
+                },
+              }}
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => setSearchFocused(false)}
+              onChange={(event) => {
+                setSearchValue(event.target.value);
+                onSearchChange(event.target.value);
+              }}
+            />
+            {!searchFocused && searchValue.length === 0 && (
+              <SearchShortcutHint aria-hidden="true">⌘K</SearchShortcutHint>
+            )}
+          </SearchBox>
+        </SearchContainer>
 
-      <ToolbarEnd>{end}</ToolbarEnd>
+        {end && <ToolbarEnd>{end}</ToolbarEnd>}
+      </ToolbarRightCluster>
     </ListToolbar>
   );
 };

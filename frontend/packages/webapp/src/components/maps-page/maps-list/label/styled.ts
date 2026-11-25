@@ -17,34 +17,45 @@
  */
 
 import IconButton from '@mui/material/IconButton';
-import { styled } from '@mui/material/styles';
-import ClearIcon from '@mui/icons-material/Clear';
-import LabelTwoTone from '@mui/icons-material/LabelTwoTone';
+import { alpha, styled } from '@mui/material/styles';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import LabelRoundedIcon from '@mui/icons-material/LabelRounded';
+import { APPLE_FONT_STACK, appleColors, applePressMixin, isDarkTheme } from '../../appleDesign';
 
-export const LabelContainer = styled('div')`
-  display: inline-flex;
-  flex-direction: row;
-  margin: 2px;
-  padding: 4px;
-  align-items: center;
-  font-size: 0.96rem;
-  font-family: 'Figtree', 'Noto Sans JP', 'Helvetica', 'system-ui', 'Arial', 'sans-serif';
+export const LabelContainer = styled('div', {
+  shouldForwardProp: (prop) => prop !== 'color',
+})<{ color?: string }>(({ theme, color }) => {
+  const c = appleColors(isDarkTheme(theme));
+  const pillTint = color ? alpha(color, isDarkTheme(theme) ? 0.18 : 0.12) : c.hoverFill;
+  return {
+    display: 'inline-flex',
+    flexDirection: 'row',
+    margin: '2px 3px',
+    padding: '3px 9px',
+    borderRadius: '999px',
+    backgroundColor: pillTint,
+    border: `1px solid ${color ? alpha(color, 0.25) : c.hairline}`,
+    alignItems: 'center',
+    fontSize: '0.78rem',
+    fontWeight: 700,
+    fontFamily: APPLE_FONT_STACK,
+    color: c.textPrimary,
+    '& .delete-button': {
+      opacity: 0,
+      transition: 'opacity 0.16s ease',
+    },
+    '&:hover .delete-button, &:focus-within .delete-button': {
+      opacity: 1,
+    },
+  };
+});
 
-  .delete-button {
-    opacity: 0;
-    transition: opacity 0.2s ease;
-  }
-
-  &:hover .delete-button {
-    opacity: 1;
-  }
-`;
-
-export const LabelText = styled('span')`
-  margin-left: 4px;
-  margin-right: 0px;
-  font-family: 'Figtree', 'Noto Sans JP', 'Helvetica', 'system-ui', 'Arial', 'sans-serif';
-`;
+export const LabelText = styled('span')({
+  marginLeft: '5px',
+  marginRight: '2px',
+  fontWeight: 700,
+  fontFamily: APPLE_FONT_STACK,
+});
 
 type LabelIconProps = {
   /** The big label icon, rather than the small one of the maps list. */
@@ -52,28 +63,33 @@ type LabelIconProps = {
 };
 
 const iconSize = ({ big }: LabelIconProps) =>
-  big ? { height: '0.9em', width: '0.9em' } : { height: '0.6em', width: '0.6em' };
+  big ? { height: '1em', width: '1em' } : { height: '0.9em', width: '0.9em' };
 
 const notBig = (prop: PropertyKey): boolean => prop !== 'big';
 
 /** The label's tag, in the label's colour. */
-export const LabelIcon = styled(LabelTwoTone, { shouldForwardProp: notBig })<LabelIconProps>(
+export const LabelIcon = styled(LabelRoundedIcon, { shouldForwardProp: notBig })<LabelIconProps>(
   iconSize,
 );
 
 /** Removes the label; shown when the label is hovered. */
-export const DeleteLabelButton = styled(IconButton)({
-  padding: '0px',
-  marginLeft: '2px',
-  '&:hover': {
-    opacity: 0.8,
-  },
+export const DeleteLabelButton = styled(IconButton)(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    padding: '1px',
+    marginLeft: '2px',
+    color: c.textSecondary,
+    ...applePressMixin,
+    '&:hover': {
+      color: '#EF4444',
+      backgroundColor: 'transparent',
+    },
+  };
 }) as typeof IconButton;
 
-export const DeleteLabelIcon = styled(ClearIcon, { shouldForwardProp: notBig })<LabelIconProps>(
-  (props) => ({
-    ...iconSize(props),
-    color: 'rgba(255, 255, 255, 0.95)',
-    filter: 'drop-shadow(0 1px 2px rgba(0, 0, 0, 0.3))',
-  }),
-);
+export const DeleteLabelIcon = styled(CloseRoundedIcon, {
+  shouldForwardProp: notBig,
+})<LabelIconProps>((props) => ({
+  ...iconSize(props),
+  color: 'inherit',
+}));

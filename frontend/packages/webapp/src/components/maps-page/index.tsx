@@ -20,13 +20,16 @@ import Toolbar from '@mui/material/Toolbar';
 import {
   DesktopDrawer,
   DesktopDrawerToggle,
+  DRAWER_WIDTH_COLLAPSED,
+  DRAWER_WIDTH_EXPANDED,
   MobileDrawer,
   MobileDrawerToggle,
   PageAppBar,
   PageContent,
   PageRoot,
+  PrimaryToolbarButton,
   RightButtonGroup,
-  ToolbarButton,
+  SecondaryToolbarButton,
   ToolbarSpacer,
 } from './styled';
 import { MapsList } from './maps-list';
@@ -41,21 +44,22 @@ import AppI18n, { Locales } from '../../classes/app-i18n';
 import { useLocaleMessages } from '../../classes/app-i18n/messages';
 import { useFetchAccount } from '../../classes/middleware';
 
-import MenuIcon from '@mui/icons-material/Menu';
-import ArrowRight from '@mui/icons-material/NavigateNext';
-import ArrowLeft from '@mui/icons-material/NavigateBefore';
+import MenuRoundedIcon from '@mui/icons-material/MenuRounded';
+import NavigateNextRoundedIcon from '@mui/icons-material/NavigateNextRounded';
+import NavigateBeforeRoundedIcon from '@mui/icons-material/NavigateBeforeRounded';
 
-import AddCircleTwoTone from '@mui/icons-material/AddCircleTwoTone';
-import CloudUploadTwoTone from '@mui/icons-material/CloudUploadTwoTone';
-import LabelTwoTone from '@mui/icons-material/LabelTwoTone';
-import ScatterPlotTwoTone from '@mui/icons-material/ScatterPlotTwoTone';
-import StarTwoTone from '@mui/icons-material/StarTwoTone';
+import AddCircleRoundedIcon from '@mui/icons-material/AddCircleRounded';
+import CloudUploadRoundedIcon from '@mui/icons-material/CloudUploadRounded';
+import LabelRoundedIcon from '@mui/icons-material/LabelRounded';
+import GridViewRoundedIcon from '@mui/icons-material/GridViewRounded';
+import StarRateRoundedIcon from '@mui/icons-material/StarRateRounded';
 import Tooltip from '@mui/material/Tooltip';
 
 import LabelDeleteConfirm from './maps-list/label-delete-confirm';
 import DrawerNav, { ToolbarButtonInfo } from './drawer-nav';
 import { ClientContext } from '../../classes/provider/client-context';
 import { readStorage, writeStorage, removeStorage } from '../../utils/storage';
+import { useSpringValue } from './useSpringValue';
 
 export type Filter = GenericFilter | LabelFilter;
 
@@ -80,10 +84,11 @@ const MapsPage = (): ReactElement => {
   );
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  // Get theme-appropriate icon color - match text color
-  const getIconColor = () => {
-    return undefined; // Use default which matches text color
-  };
+  // Interruptible critically-damped spring driving sidebar + header layout together.
+  const springDrawerWidth = useSpringValue(
+    desktopDrawerOpen ? DRAWER_WIDTH_EXPANDED : DRAWER_WIDTH_COLLAPSED,
+    { response: 0.32, dampingRatio: 1.0 },
+  );
 
   const handleMobileDrawerToggle = () => {
     setMobileDrawerOpen(!mobileDrawerOpen);
@@ -181,9 +186,9 @@ const MapsPage = (): ReactElement => {
     },
   });
 
-  const handleMenuClick = (filter: Filter) => {
+  const handleMenuClick = (nextFilter: Filter) => {
     queryClient.invalidateQueries({ queryKey: ['maps'] });
-    setFilter(filter);
+    setFilter(nextFilter);
     if (mobileDrawerOpen) {
       setMobileDrawerOpen(false);
     }
@@ -203,19 +208,12 @@ const MapsPage = (): ReactElement => {
     {
       filter: { type: 'all' },
       label: intl.formatMessage({ id: 'maps.nav-all', defaultMessage: 'All' }),
-      icon: (
-        <ScatterPlotTwoTone
-          htmlColor={getIconColor()}
-          color={getIconColor() ? undefined : 'secondary'}
-        />
-      ),
+      icon: <GridViewRoundedIcon />,
     },
     {
       filter: { type: 'starred' },
       label: intl.formatMessage({ id: 'maps.nav-starred', defaultMessage: 'Starred' }),
-      icon: (
-        <StarTwoTone htmlColor={getIconColor()} color={getIconColor() ? undefined : 'secondary'} />
-      ),
+      icon: <StarRateRoundedIcon />,
     },
   ];
 
@@ -223,7 +221,7 @@ const MapsPage = (): ReactElement => {
     filterButtons.push({
       filter: { type: 'label', label: l },
       label: l.title,
-      icon: <LabelTwoTone sx={{ color: l.color ? l.color : 'inherit' }} />,
+      icon: <LabelRoundedIcon sx={{ color: l.color ? l.color : 'inherit' }} />,
     }),
   );
 
@@ -246,7 +244,9 @@ const MapsPage = (): ReactElement => {
       defaultLocale={Locales.ZH.code}
       messages={intlLocale.messages}
     >
-      <PageRoot>
+      <PageRoot
+        style={{ '--drawer-width': `${springDrawerWidth.toFixed(1)}px` } as React.CSSProperties}
+      >
         <PageAppBar position="fixed" expanded={desktopDrawerOpen} variant="outlined" elevation={0}>
           <Toolbar role="banner">
             <MobileDrawerToggle
@@ -258,7 +258,7 @@ const MapsPage = (): ReactElement => {
               onClick={handleMobileDrawerToggle}
               id="open-main-drawer"
             >
-              <MenuIcon />
+              <MenuRoundedIcon />
             </MobileDrawerToggle>
             <DesktopDrawerToggle
               aria-label={intl.formatMessage({
@@ -269,8 +269,8 @@ const MapsPage = (): ReactElement => {
               onClick={handleDesktopDrawerToggle}
               id="open-desktop-drawer"
             >
-              {!desktopDrawerOpen && <ArrowRight />}
-              {desktopDrawerOpen && <ArrowLeft />}
+              {!desktopDrawerOpen && <NavigateNextRoundedIcon />}
+              {desktopDrawerOpen && <NavigateBeforeRoundedIcon />}
             </DesktopDrawerToggle>
             <Tooltip
               arrow={true}
@@ -279,20 +279,20 @@ const MapsPage = (): ReactElement => {
                 defaultMessage: 'Create a new mindmap',
               })}
             >
-              <ToolbarButton
+              <PrimaryToolbarButton
                 color="primary"
                 data-testid="create"
                 size="medium"
                 variant="contained"
                 type="button"
                 disableElevation={true}
-                startIcon={<AddCircleTwoTone />}
+                startIcon={<AddCircleRoundedIcon />}
                 onClick={() => setActiveDialog('create')}
               >
                 <span className="message">
                   <FormattedMessage id="action.new" defaultMessage="New map" />
                 </span>
-              </ToolbarButton>
+              </PrimaryToolbarButton>
             </Tooltip>
 
             <Tooltip
@@ -302,19 +302,18 @@ const MapsPage = (): ReactElement => {
                 defaultMessage: 'Import from other tools',
               })}
             >
-              <ToolbarButton
-                color="primary"
+              <SecondaryToolbarButton
                 size="medium"
-                variant="outlined"
+                variant="text"
                 type="button"
                 disableElevation={true}
-                startIcon={<CloudUploadTwoTone />}
+                startIcon={<CloudUploadRoundedIcon />}
                 onClick={handleImportButtonClick}
               >
                 <span className="message">
                   <FormattedMessage id="action.import" defaultMessage="Import" />
                 </span>
-              </ToolbarButton>
+              </SecondaryToolbarButton>
             </Tooltip>
             <input
               type="file"
@@ -359,7 +358,6 @@ const MapsPage = (): ReactElement => {
             <MapsList filter={filter} />
           </section>
         </PageContent>
-
       </PageRoot>
       {label && labelToDelete !== undefined && (
         <LabelDeleteConfirm

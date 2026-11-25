@@ -19,10 +19,44 @@
 import React from 'react';
 import Button from '@mui/material/Button';
 import Tooltip from '@mui/material/Tooltip';
-import Brightness4 from '@mui/icons-material/Brightness4';
-import Brightness7 from '@mui/icons-material/Brightness7';
+import DarkModeRoundedIcon from '@mui/icons-material/DarkModeRounded';
+import LightModeRoundedIcon from '@mui/icons-material/LightModeRounded';
+import { styled } from '@mui/material/styles';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { useIntl } from 'react-intl';
+import {
+  APPLE_FONT_STACK,
+  appleColors,
+  applePressMixin,
+  isDarkTheme,
+} from '../../maps-page/appleDesign';
+
+const PillToggleButton = styled(Button)(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    borderRadius: '12px',
+    fontSize: '0.84rem',
+    fontWeight: 700,
+    fontFamily: APPLE_FONT_STACK,
+    padding: '6px 13px',
+    minWidth: 'unset',
+    backgroundColor: c.hoverFill,
+    color: c.textPrimary,
+    border: `1px solid ${c.hairline}`,
+    ...applePressMixin,
+    '&:hover': {
+      backgroundColor: c.activeFill,
+      borderColor: c.hairlineStrong,
+    },
+    '& .MuiButton-startIcon': {
+      color: c.amber,
+      marginRight: '6px',
+    },
+    '& .MuiButton-startIcon svg': {
+      fontSize: '18px',
+    },
+  };
+});
 
 const ThemeToggleButton: React.FC = () => {
   const { mode, toggleMode } = useTheme();
@@ -38,17 +72,16 @@ const ThemeToggleButton: React.FC = () => {
         defaultMessage: 'Toggle Theme',
       })}
     >
-      <Button
+      <PillToggleButton
         size="small"
-        variant="outlined"
+        variant="text"
         disableElevation={true}
-        color="primary"
         onClick={toggleMode}
         startIcon={
           !isDark ? (
-            <Brightness7 sx={{ color: 'inherit' }} />
+            <LightModeRoundedIcon sx={{ color: 'inherit' }} />
           ) : (
-            <Brightness4 sx={{ color: 'inherit' }} />
+            <DarkModeRoundedIcon sx={{ color: 'inherit' }} />
           )
         }
       >
@@ -57,7 +90,7 @@ const ThemeToggleButton: React.FC = () => {
             ? intl.formatMessage({ id: 'theme.dark', defaultMessage: 'Dark' })
             : intl.formatMessage({ id: 'theme.light', defaultMessage: 'Light' })}
         </span>
-      </Button>
+      </PillToggleButton>
     </Tooltip>
   );
 };

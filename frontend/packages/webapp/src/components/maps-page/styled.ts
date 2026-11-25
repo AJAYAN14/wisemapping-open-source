@@ -4,7 +4,8 @@
  *   Licensed under WiseMapping Public License, Version 1.0 (the "License").
  *   It is basically the Apache License, Version 2.0 (the "License") plus the
  *   "powered by wisemapping" text requirement on every single page;
- *   you may obtain a copy of the license at
+ *   you may not use this file except in compliance with the License.
+ *   You may obtain a copy of the license at
  *
  *       https://github.com/wisemapping/wisemapping-open-source/blob/main/LICENSE.md
  *
@@ -21,9 +22,20 @@ import Button from '@mui/material/Button';
 import Drawer from '@mui/material/Drawer';
 import IconButton from '@mui/material/IconButton';
 import { CSSObject, styled, Theme } from '@mui/material/styles';
+import {
+  APPLE_FONT_STACK,
+  appleColors,
+  applePressMixin,
+  glassMaterialMixin,
+  isDarkTheme,
+} from './appleDesign';
 
-/** The drawer is 240px wide when expanded, and shows only its icons when collapsed. */
-const drawerWidthOf = (expanded: boolean): number => (expanded ? 240 : 66);
+/** Expanded and collapsed desktop drawer widths in px. */
+export const DRAWER_WIDTH_EXPANDED = 240;
+export const DRAWER_WIDTH_COLLAPSED = 68;
+
+export const drawerWidthOf = (expanded: boolean): number =>
+  expanded ? DRAWER_WIDTH_EXPANDED : DRAWER_WIDTH_COLLAPSED;
 
 const notExpanded = (prop: PropertyKey): boolean => prop !== 'expanded';
 
@@ -31,35 +43,6 @@ type ExpandedProps = {
   /** Whether the desktop drawer is expanded, showing its labels. */
   expanded: boolean;
 };
-
-const openedMixin = (theme: Theme, drawerWidth: number): CSSObject => ({
-  width: drawerWidth,
-  transition: theme.transitions.create('width', {
-    easing: theme.transitions.easing.sharp,
-    duration: theme.transitions.duration.enteringScreen,
-  }),
-  overflowX: 'hidden',
-  borderTopRightRadius: '12px',
-  borderBottomRightRadius: '12px',
-  borderTopLeftRadius: '0px',
-  borderBottomLeftRadius: '0px',
-});
-
-const closedMixin = (theme: Theme): CSSObject => ({
-  transition: theme.transitions.create('width', {
-    easing: theme.transitions.easing.sharp,
-    duration: theme.transitions.duration.leavingScreen,
-  }),
-  overflowX: 'hidden',
-  width: `calc(${theme.spacing(7)} + 1px)`,
-  borderTopRightRadius: '12px',
-  borderBottomRightRadius: '12px',
-  borderTopLeftRadius: '0px',
-  borderBottomLeftRadius: '0px',
-  [theme.breakpoints.up('sm')]: {
-    width: `calc(${theme.spacing(8)} + 1px)`,
-  },
-});
 
 /** On phones a toolbar button shows only its icon. */
 export const mobileAppbarButton: CSSObject = {
@@ -70,82 +53,97 @@ export const mobileAppbarButton: CSSObject = {
   },
   '& .MuiButton-startIcon': {
     margin: 0,
-    padding: 10,
+    padding: 9,
   },
 };
 
-/** The drawer's paper: the primary colour in light mode. */
-const drawerPaper = (theme: Theme, expanded: boolean): CSSObject => ({
-  background: theme.palette.primary.main,
-  ...theme.applyStyles('dark', { background: theme.palette.grey[900] }),
-  width: drawerWidthOf(expanded),
-  [theme.breakpoints.down('sm')]: {
-    width: 240,
-  },
-});
+/** The drawer's translucent macOS-style vibrancy surface. */
+const drawerPaper = (theme: Theme, expanded: boolean): CSSObject => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    ...glassMaterialMixin(c.sidebarGlass, c.sidebarSolid, 24),
+    color: c.textPrimary,
+    borderRight: `1px solid ${c.hairline}`,
+    borderTopRightRadius: 0,
+    borderBottomRightRadius: 0,
+    boxShadow: 'none',
+    width: `var(--drawer-width, ${drawerWidthOf(expanded)}px)`,
+    [theme.breakpoints.down('sm')]: {
+      width: DRAWER_WIDTH_EXPANDED,
+    },
+  };
+};
 
 const desktopDrawer = (theme: Theme, expanded: boolean): CSSObject => {
-  const drawerWidth = drawerWidthOf(expanded);
+  const c = appleColors(isDarkTheme(theme));
+  const fallbackWidth = `${drawerWidthOf(expanded)}px`;
   return {
-    width: drawerWidth,
+    width: `var(--drawer-width, ${fallbackWidth})`,
     flexShrink: 0,
     [theme.breakpoints.down('sm')]: {
       display: 'none',
     },
     whiteSpace: 'nowrap',
     boxSizing: 'border-box',
+    overflowX: 'hidden',
     '& .MuiDrawer-paper': {
-      borderTopRightRadius: '12px',
-      borderBottomRightRadius: '12px',
-      borderTopLeftRadius: '0px',
-      borderBottomLeftRadius: '0px',
+      overflowX: 'hidden',
+      boxSizing: 'border-box',
     },
-    ...(expanded && {
-      ...openedMixin(theme, drawerWidth),
-      '& .MuiDrawer-paper': openedMixin(theme, drawerWidth),
-    }),
-    ...(!expanded && {
-      ...closedMixin(theme),
-      '& .MuiDrawer-paper': closedMixin(theme),
-    }),
     '& .MuiListItemText-root': {
       display: 'block',
-      marginLeft: '5px',
+      marginLeft: '4px',
+      opacity: expanded ? 1 : 0,
+      transition: 'opacity 140ms ease',
       '& .MuiTypography-root': {
-        fontSize: '16px',
-        fontWeight: 400,
-        fontFamily: 'Figtree, "Noto Sans JP", Helvetica, "system-ui", Arial, sans-serif',
+        fontSize: '14.5px',
+        fontWeight: 600,
+        letterSpacing: '-0.005em',
+        fontFamily: APPLE_FONT_STACK,
       },
       ...(!expanded && {
         color: 'transparent',
+        pointerEvents: 'none',
         '& span': { color: 'transparent' },
       }),
     },
     '& .MuiListItemIcon-root': {
       minWidth: '24px',
-      marginRight: '3px',
+      marginRight: expanded ? '8px' : '0px',
+      justifyContent: 'center',
+      color: c.textSecondary,
       '& .MuiSvgIcon-root': {
-        fontSize: '20px',
+        fontSize: '19px',
       },
     },
     '& .MuiListItem-root': {
-      paddingTop: '6px',
-      paddingBottom: '6px',
-      minHeight: '44px',
+      paddingTop: '2px',
+      paddingBottom: '2px',
+      minHeight: '38px',
     },
     '& .MuiListItemButton-root': {
-      paddingTop: '6px',
-      paddingBottom: '6px',
-      minHeight: '44px',
-      borderRadius: '8px',
-      margin: '2px 8px',
+      paddingTop: '8px',
+      paddingBottom: '8px',
+      paddingLeft: expanded ? '12px' : '14px',
+      paddingRight: expanded ? '12px' : '14px',
+      minHeight: '40px',
+      borderRadius: '12px',
+      margin: '2px 10px',
+      ...applePressMixin,
       '&:hover': {
-        backgroundColor: 'rgba(255, 255, 255, 0.08)',
+        backgroundColor: c.hoverFill,
       },
       '&.Mui-selected': {
-        backgroundColor: 'rgba(255, 168, 0, 0.15)',
+        backgroundColor: c.amberSoft,
+        color: c.amberText,
+        '& .MuiListItemText-root .MuiTypography-root': {
+          fontWeight: 700,
+        },
+        '& .MuiListItemIcon-root': {
+          color: c.amber,
+        },
         '&:hover': {
-          backgroundColor: 'rgba(255, 168, 0, 0.2)',
+          backgroundColor: c.amberSoftHover,
         },
       },
     },
@@ -156,72 +154,165 @@ const desktopDrawer = (theme: Theme, expanded: boolean): CSSObject => {
   };
 };
 
-export const PageRoot = styled('div')({
-  display: 'flex',
+export const PageRoot = styled('div')(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    display: 'flex',
+    minHeight: '100vh',
+    backgroundColor: c.canvas,
+    color: c.textPrimary,
+    fontFamily: APPLE_FONT_STACK,
+  };
 });
 
-/** The top bar, to the right of the desktop drawer; across the whole page on phones. */
+/** Translucent floating top bar aligned with the sidebar via --drawer-width. */
 export const PageAppBar = styled(AppBar, { shouldForwardProp: notExpanded })<ExpandedProps>(({
   theme,
   expanded,
 }) => {
-  const drawerWidth = drawerWidthOf(expanded);
+  const c = appleColors(isDarkTheme(theme));
+  const fallbackWidth = drawerWidthOf(expanded);
   return {
-    background: theme.palette.background.paper,
-    color: theme.palette.text.primary,
+    '&&': {
+      ...glassMaterialMixin(c.headerGlass, c.headerSolid, 20),
+      color: c.textPrimary,
+      boxShadow: 'none',
+      border: 'none',
+      borderBottom: `1px solid ${c.hairline}`,
+    },
     zIndex: theme.zIndex.drawer + 1,
-    marginLeft: drawerWidth,
-    width: `calc(100% - ${drawerWidth}px)`,
+    marginLeft: `var(--drawer-width, ${fallbackWidth}px)`,
+    width: `calc(100% - var(--drawer-width, ${fallbackWidth}px))`,
+    '& .MuiToolbar-root': {
+      backgroundColor: 'transparent',
+      minHeight: '60px',
+      paddingLeft: '20px',
+      paddingRight: '20px',
+      gap: '8px',
+    },
     [theme.breakpoints.down('sm')]: {
+      marginLeft: 0,
       width: '100%',
+      '& .MuiToolbar-root': {
+        paddingLeft: '12px',
+        paddingRight: '12px',
+      },
     },
   };
 });
 
 /** Opens the drawer on phones. */
-export const MobileDrawerToggle = styled(IconButton)(({ theme }) => ({
-  marginRight: theme.spacing(2),
-  [theme.breakpoints.up('sm')]: {
-    display: 'none',
-  },
-  zIndex: 1300,
-  position: 'relative',
-}));
+export const MobileDrawerToggle = styled(IconButton)(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    marginRight: theme.spacing(0.5),
+    borderRadius: '10px',
+    color: c.textSecondary,
+    ...applePressMixin,
+    '&:hover': {
+      backgroundColor: c.hoverFill,
+      color: c.textPrimary,
+    },
+    [theme.breakpoints.up('sm')]: {
+      display: 'none',
+    },
+    zIndex: 1300,
+    position: 'relative',
+  };
+});
 
 /** Expands or collapses the drawer from tablets up. */
-export const DesktopDrawerToggle = styled(IconButton)(({ theme }) => ({
-  padding: 0,
-  marginRight: theme.spacing(2),
-  [theme.breakpoints.up('xs')]: {
-    display: 'none',
-  },
-  [theme.breakpoints.up('sm')]: {
-    display: 'inherit',
-  },
-  zIndex: 1300,
-  position: 'relative',
-}));
+export const DesktopDrawerToggle = styled(IconButton)(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    width: '34px',
+    height: '34px',
+    padding: 0,
+    marginRight: '6px',
+    borderRadius: '10px',
+    color: c.textSecondary,
+    ...applePressMixin,
+    '&:hover': {
+      backgroundColor: c.hoverFill,
+      color: c.textPrimary,
+    },
+    [theme.breakpoints.up('xs')]: {
+      display: 'none',
+    },
+    [theme.breakpoints.up('sm')]: {
+      display: 'inline-flex',
+    },
+    zIndex: 1300,
+    position: 'relative',
+  };
+});
 
-/** New map, AI Copilot and Import: icon-only on phones. */
-export const ToolbarButton = styled(Button)(({ theme }) => ({
-  marginRight: 10,
-  minWidth: '130px',
-  [theme.breakpoints.down('sm')]: mobileAppbarButton,
-}));
+/** Primary CTA ("New map") — warm amber pill with bold rounded presence. */
+export const PrimaryToolbarButton = styled(Button)(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    borderRadius: '12px',
+    fontSize: '0.875rem',
+    fontWeight: 700,
+    letterSpacing: '-0.01em',
+    padding: '7px 15px',
+    fontFamily: APPLE_FONT_STACK,
+    backgroundColor: c.amber,
+    color: '#FFFFFF',
+    border: `1px solid ${isDarkTheme(theme) ? 'rgba(255, 255, 255, 0.14)' : 'rgba(255, 255, 255, 0.35)'}`,
+    boxShadow: '0 2px 6px rgba(245, 158, 11, 0.28)',
+    ...applePressMixin,
+    '&:hover': {
+      backgroundColor: c.amberHover,
+      boxShadow: '0 4px 12px rgba(245, 158, 11, 0.32)',
+    },
+    '& .MuiButton-startIcon svg': {
+      fontSize: '19px',
+    },
+    [theme.breakpoints.down('sm')]: mobileAppbarButton,
+  };
+});
 
-/** The theme, language and account menus, at the right of the toolbar. */
+/** Secondary CTA ("Import") — subtle neutral glass button replacing the harsh orange border. */
+export const SecondaryToolbarButton = styled(Button)(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    borderRadius: '12px',
+    fontSize: '0.875rem',
+    fontWeight: 700,
+    letterSpacing: '-0.01em',
+    padding: '7px 14px',
+    fontFamily: APPLE_FONT_STACK,
+    backgroundColor: c.hoverFill,
+    color: c.textPrimary,
+    border: `1px solid ${c.hairline}`,
+    ...applePressMixin,
+    '&:hover': {
+      backgroundColor: c.activeFill,
+      borderColor: c.hairlineStrong,
+    },
+    '& .MuiButton-startIcon': {
+      color: c.textSecondary,
+    },
+    '& .MuiButton-startIcon svg': {
+      fontSize: '19px',
+    },
+    [theme.breakpoints.down('sm')]: mobileAppbarButton,
+  };
+});
+
+/** Legacy export kept for compatibility if referenced elsewhere. */
+export const ToolbarButton = PrimaryToolbarButton;
+
+/** The theme and account menus, at the right of the toolbar. */
 export const RightButtonGroup = styled('div')(({ theme }) => ({
-  marginRight: 10,
-  flexGrow: 10,
-  textAlign: 'right',
-  minWidth: '280px',
+  marginLeft: 'auto',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'flex-end',
   gap: '8px',
   [theme.breakpoints.down('sm')]: {
-    minWidth: 'unset',
-    marginRight: 0,
+    gap: '4px',
   },
 }));
 
@@ -233,11 +324,11 @@ export const MobileDrawer = styled(Drawer, { shouldForwardProp: notExpanded })<E
       [theme.breakpoints.down('sm')]: {
         display: 'block',
         '& .MuiDrawer-paper': {
-          borderTopRightRadius: '12px',
-          borderBottomRightRadius: '12px',
-          borderTopLeftRadius: '0px',
-          borderBottomLeftRadius: '0px',
-          width: '240px',
+          width: DRAWER_WIDTH_EXPANDED,
+        },
+        '& .MuiListItemButton-root': {
+          borderRadius: '10px',
+          margin: '2px 10px',
         },
       },
     },
@@ -256,14 +347,15 @@ export const DesktopDrawer = styled(Drawer, { shouldForwardProp: notExpanded })<
 
 export const PageContent = styled('main')({
   flexGrow: 1,
-  padding: '24px 0px',
+  minWidth: 0,
+  padding: '20px 0px 40px 0px',
 });
 
-/** Keeps the content below the fixed app bar. */
+/** Keeps the content below the fixed translucent app bar. */
 export const ToolbarSpacer = styled('div')({
   display: 'flex',
   justifyContent: 'flex-end',
-  minHeight: '44px',
+  minHeight: '60px',
 });
 
 /** The help button, floating at the bottom right from tablets up. */
@@ -279,5 +371,3 @@ export const HelpButtonBox = styled(Box)(({ theme }) => ({
     display: 'block',
   },
 }));
-
-/** The page shown when the maps can not be loaded, over a translucent veil. */

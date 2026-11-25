@@ -188,7 +188,7 @@
   "action.delete-description": [
     {
       "type": 0,
-      "value": "已删除的思维导图无法恢复。您想继续吗？"
+      "value": "删除后将无法恢复，确定要继续吗？"
     }
   ],
   "action.delete-title": [
@@ -200,7 +200,7 @@
   "action.duplicate": [
     {
       "type": 0,
-      "value": "复制"
+      "value": "创建副本"
     }
   ],
   "action.export": [
@@ -212,7 +212,7 @@
   "action.history": [
     {
       "type": 0,
-      "value": "历史"
+      "value": "历史版本"
     }
   ],
   "action.history-description": [
@@ -248,7 +248,7 @@
   "action.new": [
     {
       "type": 0,
-      "value": "新建思维导图"
+      "value": "新建导图"
     }
   ],
   "action.open": [
@@ -2107,7 +2107,7 @@
   "common.open-drawer": [
     {
       "type": 0,
-      "value": "打开菜单"
+      "value": "切换侧栏"
     }
   ],
   "common.others": [
@@ -2183,7 +2183,7 @@
   "common.wait": [
     {
       "type": 0,
-      "value": "请等待。。。"
+      "value": "请稍候…"
     }
   ],
   "create.button": [
@@ -2195,13 +2195,13 @@
   "create.description": [
     {
       "type": 0,
-      "value": "请填写新的思维导图名称和描述"
+      "value": "输入思维导图名称与描述"
     }
   ],
   "create.title": [
     {
       "type": 0,
-      "value": "创建一个新的思维导图"
+      "value": "新建思维导图"
     }
   ],
   "deletem.count-title": [
@@ -2934,7 +2934,7 @@
   "map.delete-selected": [
     {
       "type": 0,
-      "value": "删除选中项"
+      "value": "删除选中导图"
     }
   ],
   "map.labels": [
@@ -2946,7 +2946,7 @@
   "map.last-update": [
     {
       "type": 0,
-      "value": "最后更新"
+      "value": "最近修改"
     }
   ],
   "map.more-actions": [
@@ -2964,7 +2964,7 @@
   "map.tooltip-add": [
     {
       "type": 0,
-      "value": "将标签添加到选定项"
+      "value": "为选中导图添加标签"
     }
   ],
   "maps.auth-required-default-message": [
@@ -3030,25 +3030,25 @@
   "maps.create-tooltip": [
     {
       "type": 0,
-      "value": "创建一个新的思维导图"
+      "value": "新建思维导图"
     }
   ],
   "maps.empty-result": [
     {
       "type": 0,
-      "value": "没有找到与当前筛选条件匹配的思维导图。"
+      "value": "当前没有匹配的思维导图"
     }
   ],
   "maps.import-desc": [
     {
       "type": 0,
-      "value": "从其它工具导入"
+      "value": "导入本地导图文件"
     }
   ],
   "maps.load-error": [
     {
       "type": 0,
-      "value": "无法加载您的导图。请稍后再试。"
+      "value": "无法加载导图列表，请稍后重试"
     }
   ],
   "maps.modified-by-desc": [
@@ -3072,7 +3072,7 @@
   "maps.nav-all": [
     {
       "type": 0,
-      "value": "所有"
+      "value": "全部导图"
     }
   ],
   "maps.nav-onwned": [
@@ -3096,13 +3096,13 @@
   "maps.nav-starred": [
     {
       "type": 0,
-      "value": "收藏"
+      "value": "已收藏"
     }
   ],
   "maps.page-title": [
     {
       "type": 0,
-      "value": "我的思维导图|WiseMapping"
+      "value": "我的思维导图 | WiseMapping"
     }
   ],
   "maps.revert": [
@@ -3114,7 +3114,7 @@
   "maps.search-action": [
     {
       "type": 0,
-      "value": "搜索。。。"
+      "value": "搜索导图…"
     }
   ],
   "maps.search-label": [
@@ -3154,13 +3154,13 @@
   "maps.tooltip-open": [
     {
       "type": 0,
-      "value": "打开编辑"
+      "value": "打开导图"
     }
   ],
   "maps.tooltip-starred": [
     {
       "type": 0,
-      "value": "收藏"
+      "value": "切换星标"
     }
   ],
   "maps.view": [
@@ -3190,7 +3190,7 @@
   "menu.signout": [
     {
       "type": 0,
-      "value": "注销"
+      "value": "退出登录"
     }
   ],
   "oauth.error": [
@@ -3742,7 +3742,7 @@
   "theme.toggle": [
     {
       "type": 0,
-      "value": "切换主题"
+      "value": "切换浅色 / 深色模式"
     }
   ],
   "validation.title-required": [

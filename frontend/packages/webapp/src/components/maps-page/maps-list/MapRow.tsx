@@ -21,11 +21,24 @@ import { useIntl } from 'react-intl';
 import IconButton from '@mui/material/IconButton';
 import TableRow from '@mui/material/TableRow';
 import Tooltip from '@mui/material/Tooltip';
-import MoreHorizIcon from '@mui/icons-material/MoreHoriz';
+import CheckBoxOutlineBlankRoundedIcon from '@mui/icons-material/CheckBoxOutlineBlankRounded';
+import CheckBoxRoundedIcon from '@mui/icons-material/CheckBoxRounded';
+import HubRoundedIcon from '@mui/icons-material/HubRounded';
+import MoreHorizRoundedIcon from '@mui/icons-material/MoreHorizRounded';
 import { Label, MapInfo } from '../../../classes/client';
 import { useDate } from '../../../classes/app-i18n/dates';
 import { LabelsCell } from './labels-cell';
-import { BodyCell, CellText, LabelsBodyCell, SelectCheckbox, StarIcon, TitleLink } from './styled';
+import {
+  ActionIconButton,
+  BodyCell,
+  CellText,
+  LabelsBodyCell,
+  MapGlyphBadge,
+  MapRowTitleWrap,
+  SelectCheckbox,
+  StarIcon,
+  TitleLink,
+} from './styled';
 
 /**
  * What a row or a card hands back to the list. The handlers take the map's id rather than
@@ -77,6 +90,8 @@ const MapRowComponent = ({
         <SelectCheckbox
           checked={selected}
           size="small"
+          icon={<CheckBoxOutlineBlankRoundedIcon fontSize="small" />}
+          checkedIcon={<CheckBoxRoundedIcon fontSize="small" />}
           slotProps={{
             input: {
               // Named after the map explicitly: the "Open for edition" tooltip names the title
@@ -90,24 +105,28 @@ const MapRowComponent = ({
         />
       </BodyCell>
       <BodyCell>
-        <Tooltip
-          arrow={true}
-          title={intl.formatMessage({
-            id: 'maps.tooltip-open',
-            defaultMessage: 'Open for edition',
-          })}
-          placement="bottom-start"
-        >
-          <TitleLink
-            id={`map-title-${map.id}`}
-            href={`/c/maps/${map.id}/edit`}
-            color="textPrimary"
-            underline="always"
-            onClick={(e) => e.stopPropagation()}
+        <MapRowTitleWrap>
+          <MapGlyphBadge aria-hidden="true">
+            <HubRoundedIcon />
+          </MapGlyphBadge>
+          <Tooltip
+            arrow={true}
+            title={intl.formatMessage({
+              id: 'maps.tooltip-open',
+              defaultMessage: 'Open for edition',
+            })}
+            placement="bottom-start"
           >
-            {map.title}
-          </TitleLink>
-        </Tooltip>
+            <TitleLink
+              id={`map-title-${map.id}`}
+              href={`/c/maps/${map.id}/edit`}
+              underline="none"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {map.title}
+            </TitleLink>
+          </Tooltip>
+        </MapRowTitleWrap>
       </BodyCell>
       <LabelsBodyCell>
         <LabelsCell
@@ -116,7 +135,11 @@ const MapRowComponent = ({
         />
       </LabelsBodyCell>
       <BodyCell>
-        <Tooltip arrow={true} title={date(map.lastModificationTime).format('lll')} placement="bottom-start">
+        <Tooltip
+          arrow={true}
+          title={date(map.lastModificationTime).format('lll')}
+          placement="bottom-start"
+        >
           <CellText variant="body2">{date(map.lastModificationTime).fromNow()}</CellText>
         </Tooltip>
       </BodyCell>
@@ -125,9 +148,11 @@ const MapRowComponent = ({
           arrow={true}
           title={intl.formatMessage({ id: 'maps.tooltip-starred', defaultMessage: 'Starred' })}
         >
-          <IconButton size="small" onClick={handleStar}>
-            <StarIcon color="action" starred={map.starred} />
-          </IconButton>
+          <ActionIconButton>
+            <IconButton size="small" onClick={handleStar}>
+              <StarIcon color="action" starred={map.starred} />
+            </IconButton>
+          </ActionIconButton>
         </Tooltip>
       </BodyCell>
       <BodyCell>
@@ -135,13 +160,15 @@ const MapRowComponent = ({
           arrow={true}
           title={intl.formatMessage({ id: 'map.more-actions', defaultMessage: 'More Actions' })}
         >
-          <IconButton
-            aria-label={intl.formatMessage({ id: 'common.others', defaultMessage: 'Others' })}
-            size="small"
-            onClick={handleOpenMenu}
-          >
-            <MoreHorizIcon color="action" />
-          </IconButton>
+          <ActionIconButton>
+            <IconButton
+              aria-label={intl.formatMessage({ id: 'common.others', defaultMessage: 'Others' })}
+              size="small"
+              onClick={handleOpenMenu}
+            >
+              <MoreHorizRoundedIcon color="action" />
+            </IconButton>
+          </ActionIconButton>
         </Tooltip>
       </BodyCell>
     </TableRow>

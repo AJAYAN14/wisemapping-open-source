@@ -24,13 +24,45 @@ import MenuItem from '@mui/material/MenuItem';
 import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
 import Tooltip from '@mui/material/Tooltip';
-import AccountCircle from '@mui/icons-material/AccountCircle';
+import { styled } from '@mui/material/styles';
 import React, { use } from 'react';
 import { FormattedMessage } from 'react-intl';
-import ExitToAppOutlined from '@mui/icons-material/ExitToAppOutlined';
+import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import { useFetchAccount } from '../../../classes/middleware';
 import { ClientContext } from '../../../classes/provider/client-context';
 import JwtTokenConfig from '../../../classes/jwt-token-config';
+import { appleColors, applePressMixin, isDarkTheme } from '../appleDesign';
+
+const AvatarTrigger = styled(IconButton)(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    padding: '3px',
+    borderRadius: '999px',
+    border: `1px solid ${c.hairline}`,
+    ...applePressMixin,
+    '&:hover': {
+      backgroundColor: c.hoverFill,
+      borderColor: c.hairlineStrong,
+    },
+  };
+});
+
+const AvatarCircle = styled('span')(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    width: '28px',
+    height: '28px',
+    borderRadius: '999px',
+    backgroundColor: c.amberSoft,
+    color: c.amberText,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '13px',
+    fontWeight: 700,
+    lineHeight: 1,
+  };
+});
 
 const AccountMenu = (): React.ReactElement => {
   const [anchorEl, setAnchorEl] = React.useState<HTMLElement>();
@@ -58,13 +90,14 @@ const AccountMenu = (): React.ReactElement => {
 
   const account = useFetchAccount();
   const email = account?.email || 'a.jian0629@gmail.com';
+  const initial = (account?.firstname || email).trim().charAt(0).toUpperCase();
 
   return (
     <span>
       <Tooltip arrow={true} title={email}>
-        <IconButton onClick={handleMenu} size="large">
-          <AccountCircle fontSize="large" />
-        </IconButton>
+        <AvatarTrigger onClick={handleMenu} size="small" aria-label={email}>
+          <AvatarCircle>{initial}</AvatarCircle>
+        </AvatarTrigger>
       </Tooltip>
       <Menu
         id="appbar-profile"
@@ -80,16 +113,36 @@ const AccountMenu = (): React.ReactElement => {
           vertical: 'top',
           horizontal: 'right',
         }}
+        slotProps={{
+          paper: {
+            sx: (theme) => {
+              const c = appleColors(isDarkTheme(theme));
+              return {
+                mt: 1,
+                borderRadius: '14px',
+                border: `1px solid ${c.hairline}`,
+                boxShadow: c.shadowFloat,
+                backgroundColor: c.headerGlass,
+                backdropFilter: 'blur(20px) saturate(180%)',
+                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                '@media (prefers-reduced-transparency: reduce)': {
+                  backgroundColor: c.surface,
+                  backdropFilter: 'none',
+                },
+              };
+            },
+          },
+        }}
       >
-        <MenuItem disabled sx={{ opacity: '0.85 !important' }}>
-          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+        <MenuItem disabled sx={{ opacity: '0.9 !important' }}>
+          <Typography variant="body2" sx={{ fontWeight: 700 }}>
             {email}
           </Typography>
         </MenuItem>
         <Divider />
-        <MenuItem onClick={handleLogout}>
+        <MenuItem onClick={handleLogout} sx={{ fontWeight: 600 }}>
           <ListItemIcon>
-            <ExitToAppOutlined fontSize="small" />
+            <LogoutRoundedIcon fontSize="small" />
           </ListItemIcon>
           <FormattedMessage id="menu.signout" defaultMessage="Sign Out" />
         </MenuItem>

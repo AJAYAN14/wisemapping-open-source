@@ -210,7 +210,7 @@ export const MapsPageLoading = (): React.ReactElement => (
           </LoadingSearchToolbar>
 
           <LoadingTableContainer>
-            <Table sx={{ backgroundColor: 'background.default' }}>
+            <Table sx={{ backgroundColor: 'transparent' }}>
               <TableBody>
                 <MapsListSkeleton rowsPerPage={10} />
               </TableBody>

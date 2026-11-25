@@ -20,19 +20,37 @@ import Card from '@mui/material/Card';
 import CardHeader from '@mui/material/CardHeader';
 import TableCell from '@mui/material/TableCell';
 import { styled } from '@mui/material/styles';
+import { APPLE_FONT_STACK, appleColors, applePressMixin, isDarkTheme } from '../appleDesign';
 
 // What the map list and its loading placeholder share: kept apart from styled.ts so that the
 // placeholder, which every page's loading screen shows, does not bring the list's styles along.
 
-export const BodyCell = styled(TableCell)(({ theme }) => ({
-  fontSize: '0.96rem',
-  fontFamily: theme.typography.fontFamily,
+export const BodyCell = styled(TableCell)(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    fontSize: '0.94rem',
+    fontFamily: APPLE_FONT_STACK,
+    padding: '12px 14px',
+    borderBottom: `1px solid ${c.hairline}`,
+  };
+});
+
+export const CompactCardHeader = styled(CardHeader)(({ theme }) => ({
   padding: theme.spacing(1, 1.5),
 }));
-export const CompactCardHeader = styled(CardHeader)(({ theme }) => ({
-  padding: theme.spacing(0.5),
-}));
-export const MapCardRoot = styled(Card)({
-  maxWidth: '94vw',
-  margin: '3vw',
+
+export const MapCardRoot = styled(Card)(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    maxWidth: '94vw',
+    margin: '10px 14px',
+    borderRadius: '18px',
+    backgroundColor: c.surface,
+    border: `1px solid ${c.hairline}`,
+    boxShadow: c.shadowSubtle,
+    ...applePressMixin,
+    '&:active': {
+      transform: 'scale(0.985)',
+    },
+  };
 });

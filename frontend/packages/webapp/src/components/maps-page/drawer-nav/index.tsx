@@ -23,7 +23,16 @@ import logoIconBlack from '../../../../images/logo-and-text-black.svg';
 import logoIconWhite from '../../../../images/logo-and-text-white.svg';
 import { useTheme } from '../../../contexts/ThemeContext';
 import StyleListItem from './filter-list-item';
-import { Logo, LogoBox, UserEmail, UserInfoBox, UserName } from './styled';
+import {
+  DrawerContent,
+  Logo,
+  LogoBox,
+  SectionHeader,
+  UserAvatarBadge,
+  UserEmail,
+  UserInfoBox,
+  UserName,
+} from './styled';
 import type { AccountInfo } from '../../../classes/client';
 import type { Filter, GenericFilter, LabelFilter } from '../index';
 import { useIntl } from 'react-intl';
@@ -49,7 +58,7 @@ export interface DrawerNavProps {
 
 /**
  * Contents shared by the maps page mobile and desktop drawers: product logo,
- * the signed-in user's details and the filter navigation list.
+ * grouped filter navigation list, and the signed-in user's details.
  */
 const DrawerNav = ({
   account,
@@ -61,8 +70,18 @@ const DrawerNav = ({
 }: DrawerNavProps): ReactElement => {
   const intl = useIntl();
   const { mode } = useTheme();
+
+  const primaryButtons = filterButtons.filter((b) => b.filter.type !== 'label');
+  const labelButtons = filterButtons.filter((b) => b.filter.type === 'label');
+
+  const displayName =
+    account?.firstname && account?.lastname
+      ? `${account.firstname} ${account.lastname}`
+      : account?.email;
+  const initial = (displayName || 'W').trim().charAt(0).toUpperCase();
+
   return (
-    <>
+    <DrawerContent>
       <LogoBox key="logo">
         <Logo
           src={mode === 'dark' ? logoIconWhite : logoIconBlack}
@@ -70,36 +89,44 @@ const DrawerNav = ({
         />
       </LogoBox>
 
-      {/* User Info Box */}
+      <List component="nav" sx={{ paddingTop: 0 }}>
+        {drawerOpen && <SectionHeader>分类</SectionHeader>}
+        {primaryButtons.map((buttonInfo) => (
+          <StyleListItem
+            icon={buttonInfo.icon}
+            label={buttonInfo.label}
+            filter={buttonInfo.filter}
+            active={activeFilter}
+            onClick={onFilterClick}
+            onDelete={onLabelDelete}
+            key={`${buttonInfo.filter.type}:${buttonInfo.label}`}
+          />
+        ))}
+
+        {labelButtons.length > 0 && drawerOpen && <SectionHeader sx={{ mt: 1 }}>标签</SectionHeader>}
+        {labelButtons.map((buttonInfo) => (
+          <StyleListItem
+            icon={buttonInfo.icon}
+            label={buttonInfo.label}
+            filter={buttonInfo.filter}
+            active={activeFilter}
+            onClick={onFilterClick}
+            onDelete={onLabelDelete}
+            key={`${buttonInfo.filter.type}:${buttonInfo.label}`}
+          />
+        ))}
+      </List>
+
       {account && drawerOpen && (
         <UserInfoBox>
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <UserName variant="body2">
-              {account.firstname && account.lastname
-                ? `${account.firstname} ${account.lastname}`
-                : account.email}
-            </UserName>
+          <UserAvatarBadge aria-hidden="true">{initial}</UserAvatarBadge>
+          <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+            <UserName variant="body2">{displayName}</UserName>
             <UserEmail variant="caption">{account.email}</UserEmail>
           </Box>
         </UserInfoBox>
       )}
-
-      <List component="nav">
-        {filterButtons.map((buttonInfo) => {
-          return (
-            <StyleListItem
-              icon={buttonInfo.icon}
-              label={buttonInfo.label}
-              filter={buttonInfo.filter}
-              active={activeFilter}
-              onClick={onFilterClick}
-              onDelete={onLabelDelete}
-              key={`${buttonInfo.filter.type}:${buttonInfo.label}`}
-            />
-          );
-        })}
-      </List>
-    </>
+    </DrawerContent>
   );
 };
 
