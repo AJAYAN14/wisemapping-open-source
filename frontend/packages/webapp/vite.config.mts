@@ -55,6 +55,18 @@ export default defineConfig(({ mode }) => {
     readJson: requireJson,
     warn: (message) => console.warn(`\n⚠ ${message}\n`),
   });
+  const pkgJson = requireJson('./package.json') as { version?: string };
+  const appVersion = pkgJson.version ?? '6.0.2';
+  const buildTimeParts = new Intl.DateTimeFormat('zh-CN', {
+    timeZone: 'Asia/Shanghai',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).formatToParts(new Date());
+  const partMap = Object.fromEntries(buildTimeParts.map((p) => [p.type, p.value]));
+  const buildTime = `${partMap.month}-${partMap.day} ${partMap.hour}:${partMap.minute}`;
 
   return {
     plugins: [
@@ -114,6 +126,8 @@ export default defineConfig(({ mode }) => {
     },
     define: {
       VITE_BOOTSTRAP_CONFIG: JSON.stringify(bootstrapConfig),
+      VITE_APP_VERSION: JSON.stringify(appVersion),
+      VITE_BUILD_TIME: JSON.stringify(buildTime),
     },
     optimizeDeps: {
       include: [

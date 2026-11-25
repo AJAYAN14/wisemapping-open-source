@@ -36,6 +36,30 @@ import JwtTokenConfig from '../../../classes/jwt-token-config';
 import { appleColors, applePressMixin, isDarkTheme } from '../appleDesign';
 import StorageQuotaDialog from './StorageQuotaDialog';
 
+declare const VITE_APP_VERSION: string | undefined;
+declare const VITE_BUILD_TIME: string | undefined;
+
+const APP_VERSION = typeof VITE_APP_VERSION !== 'undefined' ? VITE_APP_VERSION : '6.0.2';
+const BUILD_TIME = typeof VITE_BUILD_TIME !== 'undefined' ? VITE_BUILD_TIME : '';
+
+const VersionBadge = styled('span')(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    fontSize: '11px',
+    fontWeight: 600,
+    fontVariantNumeric: 'tabular-nums',
+    letterSpacing: '0.01em',
+    color: c.inkSecondary,
+    backgroundColor: c.hoverFill,
+    border: `1px solid ${c.hairline}`,
+    borderRadius: '999px',
+    padding: '2px 7px',
+    lineHeight: 1.4,
+    userSelect: 'none',
+    cursor: 'pointer',
+  };
+});
+
 const AvatarTrigger = styled(IconButton)(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
@@ -110,9 +134,19 @@ const AccountMenu = (): React.ReactElement => {
   const avatarUrl = account?.avatarUrl;
   const [imgError, setImgError] = React.useState(false);
 
+  const avatarTooltip = [
+    fullName ? `${fullName} (${email})` : email,
+    `版本 v${APP_VERSION}${BUILD_TIME ? ` (${BUILD_TIME})` : ''}`,
+  ].join(' · ');
+
   return (
-    <span>
-      <Tooltip arrow={true} title={fullName ? `${fullName} (${email})` : email}>
+    <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75 }}>
+      <Tooltip arrow={true} title={avatarTooltip}>
+        <VersionBadge onClick={handleMenu} aria-label={`当前版本 v${APP_VERSION}`}>
+          v{APP_VERSION}
+        </VersionBadge>
+      </Tooltip>
+      <Tooltip arrow={true} title={avatarTooltip}>
         <AvatarTrigger onClick={handleMenu} size="small" aria-label={fullName || email}>
           {avatarUrl && !imgError ? (
             <AvatarImage
@@ -195,9 +229,16 @@ const AccountMenu = (): React.ReactElement => {
           </ListItemIcon>
           <FormattedMessage id="menu.signout" defaultMessage="Sign Out" />
         </MenuItem>
+        <Divider />
+        <MenuItem disabled sx={{ opacity: '0.85 !important', py: 0.75 }}>
+          <Typography variant="caption" color="text.secondary" sx={{ fontVariantNumeric: 'tabular-nums' }}>
+            版本 v{APP_VERSION}
+            {BUILD_TIME ? ` · ${BUILD_TIME}` : ''}
+          </Typography>
+        </MenuItem>
       </Menu>
       <StorageQuotaDialog open={storageOpen} onClose={() => setStorageOpen(false)} />
-    </span>
+    </Box>
   );
 };
 

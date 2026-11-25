@@ -18,6 +18,15 @@
 
 export const SUPPORTED_EXTENSIONS = ['wxml', 'mm', 'mmx', 'xmind', 'mmap', 'opml'];
 
+const extractExtension = (fileName: string): string | undefined => {
+  const trimmed = fileName.trim();
+  const dotIdx = trimmed.lastIndexOf('.');
+  if (dotIdx <= 0 || dotIdx === trimmed.length - 1) {
+    return undefined;
+  }
+  return trimmed.slice(dotIdx + 1).toLowerCase();
+};
+
 export interface ScannedMapFile {
   file: File;
   title: string;
@@ -27,7 +36,7 @@ export interface ScannedMapFile {
 }
 
 export const isSupportedMindmapFile = (fileName: string): boolean => {
-  const ext = fileName.split('.').pop()?.toLowerCase();
+  const ext = extractExtension(fileName);
   return Boolean(ext && SUPPORTED_EXTENSIONS.includes(ext));
 };
 
@@ -40,13 +49,13 @@ export const scanFileList = (files: FileList | File[]): ScannedMapFile[] => {
   for (let i = 0; i < files.length; i++) {
     const file = files[i];
     if (!file) continue;
-    const ext = file.name.split('.').pop()?.toLowerCase();
+    const ext = extractExtension(file.name);
     if (!ext || !SUPPORTED_EXTENSIONS.includes(ext)) continue;
 
     const relativePath = file.webkitRelativePath || file.name;
     const lastSlash = relativePath.lastIndexOf('/');
     const folderPath = lastSlash !== -1 ? relativePath.substring(0, lastSlash + 1) : '';
-    const title = file.name.replace(/\.[^/.]+$/, '');
+    const title = file.name.trim().replace(/\.[^/.]+$/, '');
 
     results.push({
       file,
@@ -71,9 +80,9 @@ export const scanDataTransferItems = async (
     return new Promise((resolve) => {
       entry.file(
         (file: File) => {
-          const ext = file.name.split('.').pop()?.toLowerCase();
+          const ext = extractExtension(file.name);
           if (ext && SUPPORTED_EXTENSIONS.includes(ext)) {
-            const title = file.name.replace(/\.[^/.]+$/, '');
+            const title = file.name.trim().replace(/\.[^/.]+$/, '');
             const folderPath = parentPath
               ? parentPath.endsWith('/')
                 ? parentPath
@@ -139,11 +148,11 @@ export const scanDataTransferItems = async (
     } else {
       const file = item.getAsFile();
       if (file) {
-        const ext = file.name.split('.').pop()?.toLowerCase();
+        const ext = extractExtension(file.name);
         if (ext && SUPPORTED_EXTENSIONS.includes(ext)) {
           scanned.push({
             file,
-            title: file.name.replace(/\.[^/.]+$/, ''),
+            title: file.name.trim().replace(/\.[^/.]+$/, ''),
             extension: ext,
             folderPath: '',
             relativePath: file.name,

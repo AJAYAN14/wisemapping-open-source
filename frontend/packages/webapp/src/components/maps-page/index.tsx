@@ -314,19 +314,13 @@ const MapsPage = (): ReactElement => {
     }));
   };
 
-  const handleFileInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFilesSelected = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
+    // Snapshot the live FileList before clearing input.value, otherwise Chromium empties files in place.
+    const snapshot = Array.from(files);
     event.target.value = '';
-    const scanned = scanFileList(files);
-    executeBatchImport(scanned);
-  };
-
-  const handleFolderInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files = event.target.files;
-    if (!files || files.length === 0) return;
-    event.target.value = '';
-    const scanned = scanFileList(files);
+    const scanned = scanFileList(snapshot);
     executeBatchImport(scanned);
   };
 
@@ -360,13 +354,15 @@ const MapsPage = (): ReactElement => {
     dragCounter.current = 0;
     setIsDraggingOver(false);
 
+    const fallbackFiles = e.dataTransfer.files ? Array.from(e.dataTransfer.files) : [];
+    let scanned: ScannedMapFile[] = [];
     if (e.dataTransfer.items && e.dataTransfer.items.length > 0) {
-      const scanned = await scanDataTransferItems(e.dataTransfer.items);
-      executeBatchImport(scanned);
-    } else if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const scanned = scanFileList(e.dataTransfer.files);
-      executeBatchImport(scanned);
+      scanned = await scanDataTransferItems(e.dataTransfer.items);
     }
+    if (scanned.length === 0 && fallbackFiles.length > 0) {
+      scanned = scanFileList(fallbackFiles);
+    }
+    executeBatchImport(scanned);
   };
   const account = useFetchAccount();
   // Reload based on user preference ...
@@ -644,7 +640,7 @@ const MapsPage = (): ReactElement => {
               accept=".wxml,.mm,.mmx,.xmind,.mmap,.opml"
               multiple
               style={{ display: 'none' }}
-              onChange={handleFileInputChange}
+              onChange={handleFilesSelected}
             />
             <input
               type="file"
@@ -652,7 +648,7 @@ const MapsPage = (): ReactElement => {
               {...({ webkitdirectory: '', directory: '' } as any)}
               multiple
               style={{ display: 'none' }}
-              onChange={handleFolderInputChange}
+              onChange={handleFilesSelected}
             />
             <ActionDispatcher
               action={activeDialog}
