@@ -14,12 +14,15 @@
 2. **Local Node `v20.14.0` Root Dependency Pins vs Frontend Node 24**
    - **Plan**: Root workspace compatible with local Node `v20.14.0`, frontend built on Netlify with Node 24.
    - **Actual**: Latest `vitest@4/5` (pulling `vite@7/8`), `@netlify/functions@6`, and `@supabase/supabase-js@2.110+` enforce `engines.node >= 20.19` or `>= 22`. Root `package.json` explicitly pins `@netlify/functions@^5.3.0`, `@supabase/supabase-js@~2.108.0`, `@supabase/ssr@0.12.0`, `vitest@^3.2.7` with `"overrides": { "vite": "^6.4.6" }`, and `typescript@^5.9.3` so `npm install`, `tsc --noEmit`, and `vitest` run cleanly on `v20.14.0` as well as Node 24.
-   - **Frontend Build Note**: `frontend/` (`vite@8.3.2`, `typescript@6.0.3`, `"engines": { "node": ">=24.0.0" }`) is NOT installed or built locally on `v20.14.0`; `netlify.toml` (M3) configures `NODE_VERSION = "24"` for production builds.
+   - **Frontend Build Note**: `frontend/` (`vite@8.3.2`, `typescript@6.0.3`, `"engines": { "node": ">=24.0.0" }`) is NOT installed or built locally on `v20.14.0`; `netlify.toml` configures `NODE_VERSION = "24"` for production builds.
 3. **i18n Compilation in `frontend/packages/webapp` Without Node 24 Local Install**
    - **Plan**: Add `editor.conflict.*` messages and compile `src/compiled-lang/*.json`.
    - **Actual**: Because `frontend/node_modules` is not installed locally under Node `v20.14.0`, updated all 13 `frontend/packages/webapp/lang/*.json` files and all 13 `frontend/packages/webapp/src/compiled-lang/*.json` AST files directly with sorted keys and verified exact format consistency (`[{ "type": 0, "value": "..." }]`) and Simplified Chinese character checks matching `en-messages.test.ts` and `locale-messages.test.ts`.
 4. **Legacy `doc/` Removal**
    - **Actual**: Removed `doc/` via `git rm -r` alongside `wise-api/`, `distribution/`, `.github/workflows/*.yml`, `test-file.txt`, `qodana.yaml`, `scripts/manage-git-hooks.sh`, `.vscode/settings.json`, `.cursorrules`, and `CLAUDE.md` to avoid collision with the new `docs/` folder. All removed legacy files remain intact on `backup-java-original`.
+5. **Esbuild Serverless Bundling Externalization for `pg`**
+   - **Plan**: Bundle `netlify/functions/api.ts` and `oauth.ts` into `.netlify/functions-check`.
+   - **Actual**: Marked `--external:pg` and `--external:pg-native` in `package.json` `build:functions` script because `pg` optional native bindings should not be inlined into ESM bundle files, while embedding `@supabase/ssr`, `jose`, etc. seamlessly.
 
 ---
 
@@ -39,9 +42,13 @@
    - Removed accidental `"wisemapping-personal": "file:"` self-dependency from root `package.json` and regenerated `package-lock.json`.
    - Updated `RestPersistenceManager._sendSave` `case 409:` to settle queued `PendingSave.events` (`onError`) alongside the in-flight save without duplicating `triggerError`, and added unit tests in `rest-client.test.ts` (`x-mindmap-version` fallback) and `rest-persistence-manager.test.ts`.
    - Added `!frontend/packages/webapp/.env` in root `.gitignore` so upstream `frontend/packages/webapp/.env` stays tracked 1:1 with `fb15a53` while root/other `.env*` files remain ignored.
+6. **Trailing Slashes & Netlify Functions Routing**
+   - In Netlify Functions API handler, normalize trailing slashes on URL path matching (`/maps/1/` vs `/maps/1`) and handle case-insensitive URL paths for mind map ID parameters.
+7. **Safe Live DB Guarding via `assertNotNemoTarget`**
+   - Created `migrate-helper.ts` with deep regex inspection preventing any `SUPABASE_URL` or `DATABASE_URL` containing `nemo` from being evaluated, throwing `NemoProtectionError` without logging secrets.
 
 ---
 
 ## Questions for Review
 
-- *(None pending for M1; `frontend/` unit tests and `vite build` should be verified in a Node 24 environment / Netlify build preview once M3 `netlify.toml` is added.)*
+- Live verification against the real Supabase project: Whenever you are ready to connect to your live WiseMapping Supabase instance, create `.env.local` with the database connection string and API keys; all 25 live DB / RLS integration tests will execute automatically and verify schema, transactions, and row-level policies end-to-end.
