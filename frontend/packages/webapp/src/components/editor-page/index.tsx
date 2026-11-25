@@ -34,7 +34,6 @@ import { useFetchAccount } from '../../classes/middleware';
 import { useTheme as useMuiTheme } from '@mui/material/styles';
 import MapInfoImpl from '../../classes/editor-map-info';
 import AppConfig from '../../classes/app-config';
-import exampleMap from '../../classes/client/mock-client/example-map.wxml';
 import JwtTokenConfig from '../../classes/jwt-token-config';
 import { useLoaderData, useNavigation, useSearchParams } from 'react-router';
 import { EditorMetadata, PageModeType } from './loader';
@@ -47,12 +46,28 @@ import type { EditorConfiguration } from '@wisemapping/editor';
 import { createThemeVariantStorage } from '../../services/createThemeVariantStorage';
 import type { ActionType } from '../maps-page/action-chooser';
 
+const escapeXmlAttr = (value: string): string =>
+  value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+
+const buildFallbackMapXml = (mapId: number, title?: string): string => {
+  const safeTitle = escapeXmlAttr((title || '新建导图').trim() || '新建导图');
+  return `<map name="${mapId}" version="tango"><topic central="true" text="${safeTitle}" id="1" fontStyle=";;#ffffff;;;"></topic></map>`;
+};
+
 const buildPersistenceManagerForEditor = (
+  mapId: number,
   mode: EditorRenderMode,
   setSessionExpired: (value: boolean) => void,
   onConflict: () => void,
   hid?: number,
   initialVersion?: number,
+  fallbackTitle?: string,
+  editorName?: string,
 ): PersistenceManager => {
   let result: PersistenceManager;
   if (AppConfig.isRestClient()) {
@@ -89,7 +104,10 @@ const buildPersistenceManagerForEditor = (
       }
     });
   } else {
-    result = new MockPersistenceManager(exampleMap);
+    result = new MockPersistenceManager(buildFallbackMapXml(mapId, fallbackTitle), {
+      ...(hid !== undefined ? { hid } : {}),
+      ...(editorName ? { editorName } : {}),
+    });
   }
   return result;
 };
@@ -187,20 +205,33 @@ const LoadedEditorPage = ({
     };
   }, [mapId]);
 
+  const editorName =
+    account?.firstname && account?.lastname
+      ? `${account.firstname} ${account.lastname}`
+      : account?.email ??
+        (editorMetadata.mapMetadata.lastModificationBy ||
+          editorMetadata.mapMetadata.creatorFullName);
+
   const persistence: PersistenceManager = useMemo(
     () =>
       buildPersistenceManagerForEditor(
+        mapId,
         editorMetadata.editorMode,
         setSessionExpired,
         handleVersionConflict,
         hid,
         editorMetadata.mapMetadata.version,
+        editorMetadata.mapMetadata.title,
+        editorName,
       ),
     [
+      mapId,
       editorMetadata.editorMode,
       handleVersionConflict,
       hid,
       editorMetadata.mapMetadata.version,
+      editorMetadata.mapMetadata.title,
+      editorName,
     ],
   );
 

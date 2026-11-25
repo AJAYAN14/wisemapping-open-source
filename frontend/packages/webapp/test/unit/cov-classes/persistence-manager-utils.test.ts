@@ -24,8 +24,13 @@ import { defined } from '../defined';
 const MAP_XML =
   '<map name="12" version="tango"><topic central="true" text="Server topic" id="1"/></map>';
 
+beforeEach(() => {
+  localStorage.clear();
+});
+
 afterEach(() => {
   JwtTokenConfig.removeToken();
+  localStorage.clear();
 });
 
 afterAll(() => {
@@ -72,5 +77,20 @@ describe('fetchMindmap', () => {
     expect(fetchSpy).not.toHaveBeenCalled();
     expect(mindmap.getId()).toBe('7');
     expect(defined(mindmap.getBranches()[0]).getText()).toBe('This is the map 7');
+  });
+
+  it('reads stored mock XML from localStorage when available', async () => {
+    await initAppConfig({ clientType: 'mock' });
+    localStorage.setItem(
+      'wisemapping.mock.xml.7',
+      '<map name="7" version="tango"><topic central="true" text="Stored topic" id="1"/></map>',
+    );
+    const fetchSpy = jest.spyOn(globalThis, 'fetch');
+
+    const mindmap = await fetchMindmap(7);
+
+    expect(fetchSpy).not.toHaveBeenCalled();
+    expect(mindmap.getId()).toBe('7');
+    expect(defined(mindmap.getBranches()[0]).getText()).toBe('Stored topic');
   });
 });

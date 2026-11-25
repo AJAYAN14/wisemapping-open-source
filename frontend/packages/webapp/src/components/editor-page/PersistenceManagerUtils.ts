@@ -32,15 +32,36 @@ export const fetchMindmap = async (mapId: number): Promise<Mindmap> => {
     );
     mindmap = await persistence.load(String(mapId));
   } else {
+    let savedXml: string | null = null;
+    try {
+      if (typeof localStorage !== 'undefined') {
+        savedXml =
+          localStorage.getItem(`wisemapping.mock.xml.${mapId}`) ??
+          localStorage.getItem(`mock-map-${mapId}-xml`);
+      }
+    } catch {
+      savedXml = null;
+    }
+
     const parser = new DOMParser();
-    const xmlDoc = parser.parseFromString(
-      `
+    let xmlDoc: Document | undefined;
+    if (savedXml && savedXml.includes('<map') && savedXml.includes('<topic')) {
+      const parsed = parser.parseFromString(savedXml, 'text/xml');
+      if (!parsed.getElementsByTagName('parsererror').item(0)) {
+        xmlDoc = parsed;
+      }
+    }
+
+    if (!xmlDoc) {
+      xmlDoc = parser.parseFromString(
+        `
 				<map name="${mapId}" version="tango">
 					<topic central="true" text="This is the map ${mapId}" id="1" fontStyle=";;#ffffff;;;"></topic>
 				</map>
 				`,
-      'text/xml',
-    );
+        'text/xml',
+      );
+    }
 
     const serializer = XMLSerializerFactory.getSerializer('tango');
     mindmap = await Promise.resolve(serializer.loadFromDom(xmlDoc, String(mapId)));

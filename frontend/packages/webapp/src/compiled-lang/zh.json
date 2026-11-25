@@ -218,7 +218,7 @@
   "action.history-description": [
     {
       "type": 0,
-      "value": "过去90天内引入的更改列表。"
+      "value": "已保存的历史版本列表。"
     }
   ],
   "action.history-title": [

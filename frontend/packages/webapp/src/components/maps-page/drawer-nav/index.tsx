@@ -19,13 +19,12 @@ import React, { ReactElement } from 'react';
 import Box from '@mui/material/Box';
 import List from '@mui/material/List';
 
-import logoIconBlack from '../../../../images/logo-and-text-black.svg';
-import logoIconWhite from '../../../../images/logo-and-text-white.svg';
-import { useTheme } from '../../../contexts/ThemeContext';
+import logoIcon from '../../../../images/logo-icon.svg';
 import StyleListItem from './filter-list-item';
 import {
   DrawerContent,
-  Logo,
+  LogoIcon,
+  LogoText,
   LogoBox,
   SectionHeader,
   UserAvatarBadge,
@@ -69,7 +68,6 @@ const DrawerNav = ({
   onLabelDelete,
 }: DrawerNavProps): ReactElement => {
   const intl = useIntl();
-  const { mode } = useTheme();
 
   const primaryButtons = filterButtons.filter((b) => b.filter.type !== 'label');
   const labelButtons = filterButtons.filter((b) => b.filter.type === 'label');
@@ -83,10 +81,16 @@ const DrawerNav = ({
   return (
     <DrawerContent>
       <LogoBox key="logo">
-        <Logo
-          src={mode === 'dark' ? logoIconWhite : logoIconBlack}
+        <LogoIcon
+          src={logoIcon}
           alt={intl.formatMessage({ id: 'common.logo', defaultMessage: 'WiseMapping logo' })}
         />
+        {drawerOpen && (
+          <LogoText>
+            <span className="logo-wise">wise</span>
+            <span className="logo-mapping">mapping</span>
+          </LogoText>
+        )}
       </LogoBox>
 
       <List component="nav" sx={{ paddingTop: 0 }}>

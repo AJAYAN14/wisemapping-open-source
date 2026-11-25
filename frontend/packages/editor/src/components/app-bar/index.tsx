@@ -55,6 +55,8 @@ import NodePropertyValueModelBuilder from '../../classes/model/node-property-bui
 import TextField from '@mui/material/TextField';
 import { $notify } from '@wisemapping/mindplot';
 import { useTheme } from '../../contexts/ThemeContext';
+import { useTheme as useMuiTheme } from '@mui/material/styles';
+import { getFrostedGlassBar, appleFontStack, applePressMixin } from '../../theme/appleDesign';
 import debounce from 'lodash/debounce';
 
 interface AppBarProps {
@@ -135,6 +137,7 @@ const AppBar = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const intl = useIntl();
   const { mode, toggleMode } = useTheme();
+  const muiTheme = useMuiTheme();
 
   const handleStarredOnClick = () => {
     const newStatus = !isStarred;
@@ -246,20 +249,30 @@ const AppBar = ({
       sx={{
         cursor: canRename ? 'pointer' : 'default',
         '& .MuiOutlinedInput-root': {
-          fontSize: '1rem',
-          height: '32px',
+          fontSize: '0.95rem',
+          fontWeight: 600,
+          fontFamily: appleFontStack,
+          height: '34px',
+          borderRadius: '10px',
+          backgroundColor: 'transparent',
+          transition: 'background-color 150ms ease, border-color 150ms ease',
           '& .MuiOutlinedInput-notchedOutline': {
             borderColor: 'transparent',
+            transition: 'border-color 150ms ease',
+          },
+          '&:hover': {
+            backgroundColor: (theme) =>
+              theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
           },
           '&:hover .MuiOutlinedInput-notchedOutline': {
-            borderColor: canRename ? (theme) => theme.palette.primary.main : 'transparent',
+            borderColor: canRename ? (theme) => theme.palette.divider : 'transparent',
           },
           '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
             borderColor: 'transparent',
           },
         },
         '& .MuiOutlinedInput-input': {
-          padding: '6px 8px',
+          padding: '6px 12px',
           cursor: canRename ? 'pointer' : 'default',
         },
       }}
@@ -350,16 +363,24 @@ const AppBar = ({
               data-testid="app-bar-title"
               sx={{
                 '& .MuiOutlinedInput-root': {
-                  fontSize: '1rem',
-                  height: '32px',
-                  outline: (theme) => `2px solid ${theme.palette.primary.main}`,
-                  borderRadius: '4px',
+                  fontSize: '0.95rem',
+                  fontWeight: 600,
+                  fontFamily: appleFontStack,
+                  height: '34px',
+                  borderRadius: '10px',
+                  border: (theme) => `1px solid ${theme.palette.primary.main}`,
+                  boxShadow: (theme) =>
+                    `0 0 0 3px ${
+                      theme.palette.mode === 'dark'
+                        ? 'rgba(2, 132, 199, 0.35)'
+                        : 'rgba(2, 132, 199, 0.18)'
+                    }`,
                   '& fieldset': {
                     border: 'none',
                   },
                 },
                 '& .MuiOutlinedInput-input': {
-                  padding: '6px 8px',
+                  padding: '6px 12px',
                 },
               }}
               disabled={isSaving}
@@ -502,11 +523,21 @@ const AppBar = ({
         role="menubar"
         position="absolute"
         data-canvas-inset="top"
-        color="default"
+        elevation={0}
         className="material-menubar"
         sx={{
+          ...getFrostedGlassBar(muiTheme),
+          fontFamily: appleFontStack,
+          '& .MuiToolbar-root': {
+            minHeight: '48px',
+            px: { xs: 1, sm: 2 },
+            gap: 0.5,
+          },
           '& .MuiButtonBase-root': {
-            marginX: '1rem',
+            marginX: '3px',
+            padding: '6px',
+            borderRadius: '10px',
+            ...applePressMixin,
           },
         }}
       >

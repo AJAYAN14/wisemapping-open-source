@@ -34,15 +34,44 @@ export const LogoBox = styled('div')({
   padding: '16px 16px 14px 16px',
   display: 'flex',
   alignItems: 'center',
+  gap: '10px',
   minHeight: '60px',
   position: 'relative',
   overflow: 'hidden',
+  userSelect: 'none',
 });
 
-export const Logo = styled('img')({
-  height: '30px',
+export const LogoIcon = styled('img')({
+  height: '28px',
   width: 'auto',
   flexShrink: 0,
+  display: 'block',
+});
+
+export const LogoText = styled('div')(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    lineHeight: 1.05,
+    fontFamily: APPLE_FONT_STACK,
+    fontWeight: 800,
+    fontSize: '15px',
+    letterSpacing: '-0.02em',
+    color: c.textPrimary,
+    whiteSpace: 'nowrap',
+    '& .logo-wise': {
+      fontSize: '14px',
+      fontWeight: 800,
+      letterSpacing: '-0.01em',
+    },
+    '& .logo-mapping': {
+      fontSize: '15px',
+      fontWeight: 800,
+      letterSpacing: '-0.02em',
+    },
+  };
 });
 
 export const SectionHeader = styled('div')(({ theme }) => {

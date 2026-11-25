@@ -27,6 +27,12 @@ import ToolbarPosition from '../../classes/model/toolbar-position';
 import ActionConfig from '../../classes/action/action-config';
 import { useTheme } from '@mui/material/styles';
 import { EDITOR_LAYOUT, EDITOR_Z_INDEX } from '../../theme/layout';
+import {
+  getFrostedGlassCard,
+  getFrostedGlassDock,
+  applePressMixin,
+  appleFontStack,
+} from '../../theme/appleDesign';
 
 /**
  * Common button
@@ -65,7 +71,29 @@ export const ToolbarButtonOption = (props: {
           aria-haspopup={isDisclosure ? 'menu' : undefined}
           aria-label={ariaLabel}
           data-testid={props.configuration['data-testid']}
-          sx={{ overflow: 'visible', position: 'relative' }}
+          sx={{
+            overflow: 'visible',
+            position: 'relative',
+            borderRadius: '10px',
+            p: 0.75,
+            ...applePressMixin,
+            '&.Mui-disabled': {
+              opacity: 0.35,
+            },
+            ...(selected && {
+              backgroundColor: (theme) =>
+                theme.palette.mode === 'dark'
+                  ? 'rgba(2, 132, 199, 0.28)'
+                  : 'rgba(2, 132, 199, 0.14)',
+              color: 'primary.main',
+              '&:hover': {
+                backgroundColor: (theme) =>
+                  theme.palette.mode === 'dark'
+                    ? 'rgba(2, 132, 199, 0.38)'
+                    : 'rgba(2, 132, 199, 0.22)',
+              },
+            }),
+          }}
         >
           {typeof props.configuration.icon === 'function'
             ? props.configuration.icon()
@@ -240,6 +268,9 @@ export const ToolbarMenuItem = ({
         flexItem
         sx={{
           borderLeftWidth: 1,
+          opacity: 0.6,
+          my: !vertical ? 0.75 : 'auto',
+          mx: !vertical ? 'auto' : 0.75,
         }}
       />
     );
@@ -336,11 +367,15 @@ const Toolbar = ({ configurations, position }: ToolbarProps): ReactElement => {
     buttons[target]?.focus();
   };
 
+  const isDock = !pos.vertical || pos.canvasInset === 'bottom';
+  const glassStyle = isDock ? getFrostedGlassDock(theme) : getFrostedGlassCard(theme, '16px');
+
   return (
     <AppBar
       ref={containerRef}
       onKeyDown={handleKeyDown}
       position="absolute"
+      elevation={0}
       sx={{
         flexDirection: pos.vertical ? 'column' : 'row',
         width: pos.vertical ? EDITOR_LAYOUT.formattingToolbar.width : 'unset',
@@ -348,12 +383,13 @@ const Toolbar = ({ configurations, position }: ToolbarProps): ReactElement => {
         top: pos.position?.top,
         marginTop: pos.position?.marginTop,
         transform: pos.position?.transform,
-        backgroundColor: theme.palette.background.default,
-        color: theme.palette.text.primary,
-        boxShadow: `0 2px 8px ${theme.palette.mode === 'light' ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.15)'}`,
-        borderRadius: '8px',
+        ...glassStyle,
+        borderRadius: isDock ? '9999px' : '16px',
+        padding: isDock ? '3px 8px' : '6px 3px',
+        gap: isDock ? '2px' : '3px',
         alignItems: 'center',
-        justifyContent: pos.vertical ? 'center' : 'center',
+        justifyContent: 'center',
+        fontFamily: appleFontStack,
         zIndex: pos.zIndex ?? EDITOR_Z_INDEX.formattingToolbar,
       }}
       role="menu"

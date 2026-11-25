@@ -86,8 +86,33 @@ export const ZoomDisplay = ({ model }: ZoomDisplayProps): ReactElement => {
   const percent = useSyncExternalStore(subscribe, () => readPercent(model));
 
   return (
-    <Box sx={{ p: 0.5 }}>
-      <Typography variant="overline" color="gray" data-testid="zoom-percent">
+    <Box
+      sx={{
+        px: 1,
+        py: 0.25,
+        minWidth: 46,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        borderRadius: '6px',
+        backgroundColor: (theme) =>
+          theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+      }}
+    >
+      <Typography
+        variant="caption"
+        data-testid="zoom-percent"
+        sx={{
+          fontFamily:
+            '-apple-system, BlinkMacSystemFont, "SF Pro Rounded", "SF Pro Text", system-ui, sans-serif',
+          fontFeatureSettings: '"tnum" 1, "cv05" 1',
+          fontSize: '0.75rem',
+          fontWeight: 700,
+          lineHeight: 1.2,
+          color: 'text.secondary',
+          userSelect: 'none',
+        }}
+      >
         {percent}%
       </Typography>
     </Box>

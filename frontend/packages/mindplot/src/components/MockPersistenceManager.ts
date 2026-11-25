@@ -16,55 +16,210 @@
  *   limitations under the License.
  */
 import { $assert } from './util/assert';
+import { $msg } from './Messages';
 import { AjaxUtils } from './util/AjaxUtils';
 import PersistenceManager, { type SaveEvents, type SaveOptions } from './PersistenceManager';
 
+export type MockPersistenceOptions = {
+  hid?: number;
+  editorName?: string;
+};
+
+type MockHistoryEntry = {
+  id: number;
+  xml: string;
+  lastModificationBy: string;
+  lastModificationTime: string;
+};
+
+type StoredMapSummary = {
+  id: number | string;
+  lastModificationBy?: string | undefined;
+  lastModificationTime?: string | undefined;
+  [key: string]: unknown;
+};
+
+const MOCK_MAPS_KEY = 'wisemapping.mock.maps';
+const MOCK_SEQ_KEY = 'wisemapping.mock.seq';
+const MOCK_XML_PREFIX = 'wisemapping.mock.xml.';
+const MOCK_PROPS_PREFIX = 'wisemapping.mock.props.';
+const MOCK_HISTORY_PREFIX = 'wisemapping.mock.history.';
+const LEGACY_XML_KEY = (mapId: string): string => `mock-map-${mapId}-xml`;
+
+const getStorage = (): Storage | undefined => {
+  try {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      return window.localStorage;
+    }
+  } catch {
+    // Ignore storage access errors
+  }
+  return undefined;
+};
+
+const readJsonArray = <T>(storage: Storage, key: string): T[] => {
+  try {
+    const raw = storage.getItem(key);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed as T[];
+      }
+    }
+  } catch {
+    // Ignore malformed JSON in storage
+  }
+  return [];
+};
+
+const nextMockSeq = (storage: Storage, minFloor = 0): number => {
+  const raw = storage.getItem(MOCK_SEQ_KEY);
+  const parsed = raw ? Number.parseInt(raw, 10) : 0;
+  const current = Number.isSafeInteger(parsed) && parsed > 0 ? parsed : 0;
+  const next = Math.max(current, minFloor) + 1;
+  storage.setItem(MOCK_SEQ_KEY, String(next));
+  return next;
+};
+
 class MockPersistenceManager extends PersistenceManager {
   private exampleMap: string;
+  private hid: number | undefined;
+  private editorName: string | undefined;
 
-  constructor(exampleMapAsXml: string) {
+  constructor(exampleMapAsXml: string, options?: MockPersistenceOptions) {
     super();
     $assert(exampleMapAsXml, 'The test map must be set');
     this.exampleMap = exampleMapAsXml;
+    this.hid = options?.hid;
+    this.editorName = options?.editorName;
+  }
+
+  private updateMapModification(storage: Storage, mapId: string, now: string): string | undefined {
+    const maps = readJsonArray<StoredMapSummary>(storage, MOCK_MAPS_KEY);
+    const index = maps.findIndex((m) => String(m.id) === String(mapId));
+    const current = index !== -1 ? maps[index] : undefined;
+    if (!current) {
+      return undefined;
+    }
+    const modifier = this.editorName || current.lastModificationBy;
+    maps[index] = {
+      ...current,
+      lastModificationTime: now,
+      ...(modifier !== undefined ? { lastModificationBy: modifier } : {}),
+    };
+    storage.setItem(MOCK_MAPS_KEY, JSON.stringify(maps));
+    return modifier;
   }
 
   saveMapXml(
     mapId: string,
     mapXml: Document,
-    _pref?: string,
-    _saveHistory?: boolean,
+    pref?: string,
+    saveHistory?: boolean,
     events?: SaveEvents,
     _options?: SaveOptions,
   ): void {
+    if (this.hid !== undefined) {
+      events?.onSuccess();
+      return;
+    }
+
+    const storage = getStorage();
+    if (!storage) {
+      events?.onSuccess();
+      return;
+    }
+
     try {
-      if (typeof window !== 'undefined' && window.localStorage) {
-        const xmlStr = new XMLSerializer().serializeToString(mapXml);
-        window.localStorage.setItem(`wisemapping.mock.xml.${mapId}`, xmlStr);
-        window.localStorage.setItem(`mock-map-${mapId}-xml`, xmlStr);
+      const xmlStr = new XMLSerializer().serializeToString(mapXml);
+      const now = new Date().toISOString();
+
+      storage.setItem(`${MOCK_XML_PREFIX}${mapId}`, xmlStr);
+      storage.removeItem(LEGACY_XML_KEY(mapId));
+
+      if (pref !== undefined) {
+        storage.setItem(`${MOCK_PROPS_PREFIX}${mapId}`, pref);
       }
+
+      const mapModifier = this.updateMapModification(storage, mapId, now);
+
+      if (saveHistory === true) {
+        const historyKey = `${MOCK_HISTORY_PREFIX}${mapId}`;
+        const history = readJsonArray<MockHistoryEntry>(storage, historyKey);
+        const maxExistingId = history.reduce(
+          (max, entry) => (Number.isInteger(entry.id) && entry.id > max ? entry.id : max),
+          0,
+        );
+        const snapshotId = nextMockSeq(storage, maxExistingId);
+        const entry: MockHistoryEntry = {
+          id: snapshotId,
+          xml: xmlStr,
+          lastModificationBy: this.editorName || mapModifier || 'Local User',
+          lastModificationTime: now,
+        };
+        storage.setItem(historyKey, JSON.stringify([entry, ...history]));
+      }
+      events?.onSuccess();
     } catch (e) {
       console.warn('Failed to save mock map to localStorage:', e);
+      events?.onError({
+        severity: 'SEVERE',
+        errorType: 'unexpected',
+        message: $msg('SAVE_COULD_NOT_BE_COMPLETED'),
+      });
     }
-    events?.onSuccess();
   }
 
-  discardChanges(mapId?: string) {
+  discardChanges(mapId?: string): void {
+    if (this.hid !== undefined || !mapId) {
+      return;
+    }
+    const storage = getStorage();
+    if (!storage) {
+      return;
+    }
+
     try {
-      if (typeof window !== 'undefined' && window.localStorage && mapId) {
-        window.localStorage.removeItem(`wisemapping.mock.xml.${mapId}`);
-        window.localStorage.removeItem(`mock-map-${mapId}-xml`);
+      storage.removeItem(LEGACY_XML_KEY(mapId));
+      const history = readJsonArray<MockHistoryEntry>(storage, `${MOCK_HISTORY_PREFIX}${mapId}`);
+      const latest = history[0];
+      if (!latest?.xml) {
+        return;
       }
+      storage.setItem(`${MOCK_XML_PREFIX}${mapId}`, latest.xml);
+      this.updateMapModification(storage, mapId, new Date().toISOString());
     } catch (e) {
       console.warn(e);
     }
   }
 
   loadMapDom(mapId: string): Promise<Document> {
+    const storage = getStorage();
+
+    if (this.hid !== undefined) {
+      if (!storage) {
+        return Promise.reject(
+          new Error(`History entry ${this.hid} could not be found for map ${mapId}`),
+        );
+      }
+      const history = readJsonArray<MockHistoryEntry>(storage, `${MOCK_HISTORY_PREFIX}${mapId}`);
+      const entry = history.find((item) => Number(item.id) === this.hid);
+      if (!entry?.xml) {
+        return Promise.reject(
+          new Error(`History entry ${this.hid} could not be found for map ${mapId}`),
+        );
+      }
+      try {
+        return Promise.resolve(AjaxUtils.parseXML(entry.xml));
+      } catch (e) {
+        return Promise.reject(e);
+      }
+    }
+
     try {
-      if (typeof window !== 'undefined' && window.localStorage) {
+      if (storage) {
         const saved =
-          window.localStorage.getItem(`wisemapping.mock.xml.${mapId}`) ||
-          window.localStorage.getItem(`mock-map-${mapId}-xml`);
+          storage.getItem(`${MOCK_XML_PREFIX}${mapId}`) || storage.getItem(LEGACY_XML_KEY(mapId));
         if (saved && saved.includes('<map') && saved.includes('<topic')) {
           return Promise.resolve(AjaxUtils.parseXML(saved));
         }

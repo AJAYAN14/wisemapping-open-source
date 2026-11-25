@@ -27,6 +27,7 @@ import { useDate } from '../../../../classes/app-i18n/dates';
 import Tooltip from '@mui/material/Tooltip';
 import { ClientContext } from '../../../../classes/provider/client-context';
 import Button from '@mui/material/Button';
+import CircularProgress from '@mui/material/CircularProgress';
 import HistoryIcon from '@mui/icons-material/History';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import RestoreIcon from '@mui/icons-material/Restore';
@@ -50,6 +51,19 @@ type HistoryDialogProps = SimpleDialogProps & {
   beforeRevert?: (() => Promise<void>) | undefined;
 };
 
+const normalizeError = (err: ErrorInfo | null | undefined): ErrorInfo | undefined => {
+  if (!err) {
+    return undefined;
+  }
+  if (err.msg) {
+    return err;
+  }
+  if (err instanceof Error && err.message) {
+    return { msg: err.message };
+  }
+  return { msg: String(err) };
+};
+
 const HistoryDialog = ({
   mapId,
   onClose,
@@ -58,7 +72,11 @@ const HistoryDialog = ({
   const intl = useIntl();
   const date = useDate();
   const client = use(ClientContext);
-  const { data } = useQuery<unknown, ErrorInfo, ChangeHistory[]>({
+  const {
+    data,
+    isPending,
+    error: fetchError,
+  } = useQuery<unknown, ErrorInfo, ChangeHistory[]>({
     queryKey: [`history-${mapId}`],
     queryFn: () => client.fetchHistory(mapId),
     gcTime: 0, // Force reload...
@@ -89,20 +107,27 @@ const HistoryDialog = ({
     }
   };
 
+  const dialogError = normalizeError(revert.error) ?? normalizeError(fetchError);
+
   return (
     <BaseDialog
       onClose={handleOnClose}
-      error={revert.error ?? undefined}
+      error={dialogError}
       title={intl.formatMessage({
         id: 'action.history-title',
         defaultMessage: 'Version history',
       })}
       description={intl.formatMessage({
         id: 'action.history-description',
-        defaultMessage: 'List of changes introduced in the last 90 days.',
+        defaultMessage: 'List of saved versions.',
       })}
     >
-      {changeHistory.length === 0 ? (
+      {isPending ? (
+        <HistoryEmpty role="status" aria-busy="true">
+          <CircularProgress size={28} />
+          <FormattedMessage id="common.loading" defaultMessage="Loading..." />
+        </HistoryEmpty>
+      ) : !fetchError && changeHistory.length === 0 ? (
         <HistoryEmpty>
           <HistoryIcon />
           <FormattedMessage
@@ -111,40 +136,42 @@ const HistoryDialog = ({
           />
         </HistoryEmpty>
       ) : (
-        <HistoryList>
-          {changeHistory.map((row) => (
-            <HistoryRow key={row.id}>
-              <UserAvatar name={row.lastModificationBy} />
-              <HistoryText>
-                <HistoryAuthor>{row.lastModificationBy}</HistoryAuthor>
-                <Tooltip
-                  title={date(row.lastModificationTime).format('lll')}
-                  placement="bottom-start"
-                >
-                  <HistoryTime>{date(row.lastModificationTime).fromNow()}</HistoryTime>
-                </Tooltip>
-              </HistoryText>
-              <HistoryActions>
-                <Button
-                  size="small"
-                  href={`/c/maps/${mapId}/${row.id}/view`}
-                  target="history"
-                  startIcon={<OpenInNewIcon fontSize="small" />}
-                >
-                  <FormattedMessage id="maps.view" defaultMessage="View" />
-                </Button>
-                <Button
-                  size="small"
-                  onClick={(e) => handleOnClick(e, row.id)}
-                  disabled={revert.isPending}
-                  startIcon={<RestoreIcon fontSize="small" />}
-                >
-                  <FormattedMessage id="maps.revert" defaultMessage="Revert" />
-                </Button>
-              </HistoryActions>
-            </HistoryRow>
-          ))}
-        </HistoryList>
+        !fetchError && (
+          <HistoryList>
+            {changeHistory.map((row) => (
+              <HistoryRow key={row.id}>
+                <UserAvatar name={row.lastModificationBy} />
+                <HistoryText>
+                  <HistoryAuthor>{row.lastModificationBy}</HistoryAuthor>
+                  <Tooltip
+                    title={date(row.lastModificationTime).format('lll')}
+                    placement="bottom-start"
+                  >
+                    <HistoryTime>{date(row.lastModificationTime).fromNow()}</HistoryTime>
+                  </Tooltip>
+                </HistoryText>
+                <HistoryActions>
+                  <Button
+                    size="small"
+                    href={`/c/maps/${mapId}/${row.id}/view`}
+                    target="history"
+                    startIcon={<OpenInNewIcon fontSize="small" />}
+                  >
+                    <FormattedMessage id="maps.view" defaultMessage="View" />
+                  </Button>
+                  <Button
+                    size="small"
+                    onClick={(e) => handleOnClick(e, row.id)}
+                    disabled={revert.isPending}
+                    startIcon={<RestoreIcon fontSize="small" />}
+                  >
+                    <FormattedMessage id="maps.revert" defaultMessage="Revert" />
+                  </Button>
+                </HistoryActions>
+              </HistoryRow>
+            ))}
+          </HistoryList>
+        )
       )}
     </BaseDialog>
   );

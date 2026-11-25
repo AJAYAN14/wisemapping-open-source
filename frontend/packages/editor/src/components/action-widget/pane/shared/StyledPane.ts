@@ -26,27 +26,44 @@ import { styled } from '@mui/material/styles';
  * The parts the style panes (canvas, topic, font, relationship) are made of: a card with a close
  * button, sections with a small title, and centred rows of controls.
  */
-export const PaneCard = styled(Box)(({ theme }) => ({
-  paddingTop: theme.spacing(1.5),
-  paddingLeft: theme.spacing(1.5),
-  paddingRight: theme.spacing(1.5),
-  paddingBottom: theme.spacing(1),
-  minWidth: '280px',
-  maxWidth: '320px',
-  backgroundColor: theme.palette.background.paper,
-  borderRadius: '8px',
-  border: '1px solid',
-  borderColor: theme.palette.divider,
-  position: 'relative',
-}));
+export const PaneCard = styled(Box)(({ theme }) => {
+  const isDark = theme.palette.mode === 'dark';
+  return {
+    paddingTop: theme.spacing(1.75),
+    paddingLeft: theme.spacing(2),
+    paddingRight: theme.spacing(2),
+    paddingBottom: theme.spacing(1.5),
+    minWidth: '290px',
+    maxWidth: '330px',
+    backgroundColor: isDark ? 'rgba(32, 32, 36, 0.88)' : 'rgba(255, 255, 255, 0.88)',
+    backdropFilter: 'blur(20px) saturate(180%)',
+    WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+    borderRadius: '16px',
+    border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)'}`,
+    boxShadow: isDark
+      ? '0 12px 36px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.25)'
+      : '0 12px 32px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04)',
+    position: 'relative',
+    '@media (prefers-reduced-transparency: reduce)': {
+      backgroundColor: theme.palette.background.paper,
+      backdropFilter: 'none',
+      WebkitBackdropFilter: 'none',
+    },
+  };
+});
 
 export const PaneCloseButton = styled(IconButton)({
   position: 'absolute',
-  top: 4,
-  right: 4,
+  top: 8,
+  right: 8,
   zIndex: 1,
-  width: 24,
-  height: 24,
+  width: 26,
+  height: 26,
+  borderRadius: '8px',
+  transition: 'transform 120ms ease, background-color 150ms ease',
+  '&:active': {
+    transform: 'scale(0.92)',
+  },
   '& .MuiSvgIcon-root': {
     fontSize: '16px',
   },
@@ -57,8 +74,14 @@ export const PaneSection = styled(Box)(({ theme }) => ({
 }));
 
 export const PaneSectionTitle = styled(Typography)(({ theme }) => ({
-  fontSize: '0.75rem',
+  fontSize: '0.72rem',
+  fontWeight: 700,
+  letterSpacing: '0.04em',
+  textTransform: 'uppercase',
+  color: theme.palette.text.secondary,
   marginBottom: theme.spacing(1),
+  fontFamily:
+    '-apple-system, BlinkMacSystemFont, "SF Pro Rounded", "SF Pro Text", system-ui, sans-serif',
 }));
 
 /** Controls centred across the whole width of the pane. */

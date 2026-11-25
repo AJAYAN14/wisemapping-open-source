@@ -91,9 +91,18 @@ describe('DrawerNav', () => {
     expect(screen.getByText('Research')).toBeDefined();
   });
 
-  test('renders the logo', () => {
-    renderNav();
+  test('renders the logo icon, and shows name text only when drawer is open', () => {
+    renderNav({ drawerOpen: true });
     expect(screen.getByAltText('WiseMapping logo')).toBeDefined();
+    expect(screen.getByText('wise')).toBeDefined();
+    expect(screen.getByText('mapping')).toBeDefined();
+  });
+
+  test('hides logo name text when drawer is collapsed', () => {
+    renderNav({ drawerOpen: false });
+    expect(screen.getByAltText('WiseMapping logo')).toBeDefined();
+    expect(screen.queryByText('wise')).toBeNull();
+    expect(screen.queryByText('mapping')).toBeNull();
   });
 
   test('shows the account name and email when the drawer is open', () => {

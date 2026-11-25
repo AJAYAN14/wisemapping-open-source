@@ -35,14 +35,47 @@ import JwtTokenConfig from '../../jwt-token-config';
 import { appLogger as log } from '../../../utils/logger';
 
 const MOCK_MAPS_KEY = 'wisemapping.mock.maps';
+const MOCK_LABELS_KEY = 'wisemapping.mock.labels';
+const MOCK_SEQ_KEY = 'wisemapping.mock.seq';
 const MOCK_XML_PREFIX = 'wisemapping.mock.xml.';
+const MOCK_PROPS_PREFIX = 'wisemapping.mock.props.';
+const MOCK_HISTORY_PREFIX = 'wisemapping.mock.history.';
+const MOCK_ACCOUNT_KEY = 'wisemapping.mock.account';
+const LEGACY_XML_KEY = (id: number): string => `mock-map-${id}-xml`;
+const DEFAULT_MOCK_EMAIL = 'owner@wisemapping.local';
 
-const loadMockMaps = (): MapInfo[] => {
+type MockHistoryEntry = {
+  id: number;
+  xml: string;
+  lastModificationBy: string;
+  lastModificationTime: string;
+};
+
+type StoredMockAccount = {
+  firstname?: string;
+  lastname?: string;
+};
+
+const getStorage = (): Storage | undefined => {
   try {
-    const raw = typeof localStorage !== 'undefined' ? localStorage.getItem(MOCK_MAPS_KEY) : null;
+    if (typeof localStorage !== 'undefined') {
+      return localStorage;
+    }
+  } catch {
+    // ignore storage errors
+  }
+  return undefined;
+};
+
+const readJsonArray = <T>(key: string): T[] => {
+  try {
+    const storage = getStorage();
+    const raw = storage?.getItem(key);
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed;
+      if (Array.isArray(parsed)) {
+        return parsed as T[];
+      }
     }
   } catch {
     // ignore storage errors
@@ -50,21 +83,55 @@ const loadMockMaps = (): MapInfo[] => {
   return [];
 };
 
-const saveMockMaps = (maps: MapInfo[]): void => {
+const writeJson = (key: string, value: unknown): void => {
   try {
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(MOCK_MAPS_KEY, JSON.stringify(maps));
-    }
+    getStorage()?.setItem(key, JSON.stringify(value));
   } catch {
     // ignore storage errors
   }
 };
 
+const nextMockSeq = (minFloor = 0): number => {
+  const storage = getStorage();
+  const raw = storage?.getItem(MOCK_SEQ_KEY);
+  const parsed = raw ? Number.parseInt(raw, 10) : 0;
+  const current = Number.isSafeInteger(parsed) && parsed > 0 ? parsed : 0;
+  const next = Math.max(current, minFloor) + 1;
+  try {
+    storage?.setItem(MOCK_SEQ_KEY, String(next));
+  } catch {
+    // ignore storage errors
+  }
+  return next;
+};
+
+const escapeXmlAttr = (value: string): string =>
+  value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+
+const buildDefaultMapXml = (id: number, title: string): string =>
+  `<map name="${id}" version="tango"><topic central="true" text="${escapeXmlAttr(title)}" id="1" fontStyle=";;#ffffff;;;"></topic></map>`;
+
+const loadMockMaps = (): MapInfo[] => readJsonArray<MapInfo>(MOCK_MAPS_KEY);
+
+const saveMockMaps = (maps: MapInfo[]): void => {
+  writeJson(MOCK_MAPS_KEY, maps);
+};
+
+const loadMockLabels = (): Label[] => readJsonArray<Label>(MOCK_LABELS_KEY);
+
+const saveMockLabels = (labels: Label[]): void => {
+  writeJson(MOCK_LABELS_KEY, labels);
+};
+
 const loadMockXml = (id: number): string | null => {
   try {
-    return typeof localStorage !== 'undefined'
-      ? localStorage.getItem(`${MOCK_XML_PREFIX}${id}`)
-      : null;
+    const storage = getStorage();
+    return storage?.getItem(`${MOCK_XML_PREFIX}${id}`) ?? storage?.getItem(LEGACY_XML_KEY(id)) ?? null;
   } catch {
     return null;
   }
@@ -72,25 +139,74 @@ const loadMockXml = (id: number): string | null => {
 
 const saveMockXml = (id: number, xml: string): void => {
   try {
-    if (typeof localStorage !== 'undefined') {
-      localStorage.setItem(`${MOCK_XML_PREFIX}${id}`, xml);
-    }
+    const storage = getStorage();
+    storage?.setItem(`${MOCK_XML_PREFIX}${id}`, xml);
+    storage?.removeItem(LEGACY_XML_KEY(id));
   } catch {
     // ignore storage errors
   }
 };
 
+const loadMockProps = (id: number): string | null => {
+  try {
+    return getStorage()?.getItem(`${MOCK_PROPS_PREFIX}${id}`) ?? null;
+  } catch {
+    return null;
+  }
+};
+
+const saveMockProps = (id: number, props: string): void => {
+  try {
+    getStorage()?.setItem(`${MOCK_PROPS_PREFIX}${id}`, props);
+  } catch {
+    // ignore storage errors
+  }
+};
+
+const loadMockHistory = (id: number): MockHistoryEntry[] =>
+  readJsonArray<MockHistoryEntry>(`${MOCK_HISTORY_PREFIX}${id}`);
+
+const saveMockHistory = (id: number, history: MockHistoryEntry[]): void => {
+  writeJson(`${MOCK_HISTORY_PREFIX}${id}`, history);
+};
+
+const getStoredAccount = (): StoredMockAccount => {
+  try {
+    const raw = getStorage()?.getItem(MOCK_ACCOUNT_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object') {
+        return parsed as StoredMockAccount;
+      }
+    }
+  } catch {
+    // ignore storage errors
+  }
+  return {};
+};
+
+const getCurrentUserIdentity = (): {
+  email: string;
+  firstname: string;
+  lastname: string;
+  displayName: string;
+} => {
+  const token = JwtTokenConfig.retreiveToken();
+  const subject = token ? JwtTokenConfig.getSubject(token) : undefined;
+  const email = subject ?? (token && token.includes('@') ? token : DEFAULT_MOCK_EMAIL);
+  const stored = getStoredAccount();
+  const localPart = email.split('@')[0] || 'Owner';
+  const firstname = stored.firstname ?? localPart;
+  const lastname = stored.lastname ?? '';
+  const displayName = firstname && lastname ? `${firstname} ${lastname}` : email;
+  return { email, firstname, lastname, displayName };
+};
+
 class MockClient implements Client {
-  private maps: MapInfo[] = [];
-  private labels: Label[] = [];
   private permissionsByMap: Map<number, Permission[]> = new Map();
 
-  constructor() {
-    this.maps = loadMockMaps();
-    this.labels = [];
-  }
   fetchMapInfo(id: number): Promise<MapInfo> {
-    const map = this.maps.find((m) => m.id === id);
+    const map = loadMockMaps().find((m) => m.id === id);
     if (!map) {
       return Promise.reject(new Error(`Map could not be found ${id}`));
     }
@@ -98,24 +214,31 @@ class MockClient implements Client {
   }
 
   fetchMapMetadata(id: number, includeXml = false): Promise<MapMetadata> {
-    const map = this.maps.find((m) => m.id === id);
+    const map = loadMockMaps().find((m) => m.id === id);
+    if (!map) {
+      return Promise.reject({ msg: `Map could not be found ${id}`, status: 404 });
+    }
+
+    const savedProps = loadMockProps(id);
     const metadata: MapMetadata = {
-      title: map?.title || 'my map',
-      creatorFullName: 'a.jian0629@gmail.com',
-      id: id,
+      id: map.id,
+      title: map.title,
+      creatorFullName: map.createdBy,
       isLocked: false,
-      jsonProps: '{ "zoom": 0.8 }',
-      role: 'owner',
+      jsonProps: savedProps ?? '{ "zoom": 0.8 }',
+      role: map.role,
+      description: map.description,
+      createdBy: map.createdBy,
+      creationTime: map.creationTime,
+      lastModificationBy: map.lastModificationBy,
+      lastModificationTime: map.lastModificationTime,
+      starred: map.starred,
+      public: map.public,
     };
 
-    // Include mock XML if requested
     if (includeXml) {
       const savedXml = loadMockXml(id);
-      metadata.xml =
-        savedXml ||
-        `<map name="${id}" version="tango">
-        <topic central="true" text="${metadata.title}" id="1" fontStyle=";;#ffffff;;;"></topic>
-      </map>`;
+      metadata.xml = savedXml ?? buildDefaultMapXml(id, map.title);
     }
 
     return Promise.resolve(metadata);
@@ -137,7 +260,7 @@ class MockClient implements Client {
 
   deleteMapPermission(id: number, email: string): Promise<void> {
     let perm = this.permissionsByMap.get(id) || [];
-    perm = perm.filter((p) => p.email != email);
+    perm = perm.filter((p) => p.email !== email);
     this.permissionsByMap.set(id, perm);
     return Promise.resolve();
   }
@@ -152,21 +275,12 @@ class MockClient implements Client {
   fetchMapPermissions(id: number): Promise<Permission[]> {
     let perm = this.permissionsByMap.get(id);
     if (!perm) {
+      const { displayName, email } = getCurrentUserIdentity();
       perm = [
         {
-          name: 'Cosme Editor',
-          email: 'pepe@example.com',
-          role: 'editor',
-        },
-        {
-          name: 'Cosme Owner',
-          email: 'pepe2@example.com',
+          name: displayName,
+          email,
           role: 'owner',
-        },
-        {
-          name: 'Cosme Viewer',
-          email: 'pepe3@example.com',
-          role: 'viewer',
         },
       ];
       this.permissionsByMap.set(id, perm);
@@ -180,6 +294,7 @@ class MockClient implements Client {
 
   updateAccountInfo(firstname: string, lastname: string): Promise<void> {
     log.debug('firstname:' + firstname, lastname);
+    writeJson(MOCK_ACCOUNT_KEY, { firstname, lastname });
     return Promise.resolve();
   }
 
@@ -189,35 +304,48 @@ class MockClient implements Client {
   }
 
   updateAccountLanguage(locale: LocaleCode): Promise<void> {
-    localStorage.setItem('locale', locale);
+    try {
+      getStorage()?.setItem('locale', locale);
+    } catch {
+      // ignore storage errors
+    }
     return Promise.resolve();
   }
 
   importMap(model: ImportMapInfo): Promise<number> {
-    log.debug('model:' + model);
-    if (!model.content) {
-      return Promise.resolve(10);
-    }
-    const id = Math.floor(Math.random() * 10000) + 100;
+    log.debug('model:' + model.title);
+    const maps = loadMockMaps();
+    const maxMapId = maps.reduce((max, m) => (m.id > max ? m.id : max), 0);
+    const id = nextMockSeq(maxMapId);
     const now = new Date().toISOString();
+    const { email } = getCurrentUserIdentity();
     const newMap: MapInfo = {
       id,
       description: model.description || '',
       title: model.title,
       starred: false,
-      createdBy: 'a.jian0629@gmail.com',
+      createdBy: email,
       labels: [],
       lastModificationTime: now,
-      lastModificationBy: 'a.jian0629@gmail.com',
+      lastModificationBy: email,
       creationTime: now,
       public: false,
       role: 'owner',
     };
-    this.maps.push(newMap);
-    saveMockMaps(this.maps);
-    if (typeof model.content === 'string') {
-      saveMockXml(id, model.content);
+    maps.push(newMap);
+    saveMockMaps(maps);
+
+    let xmlContent: string | undefined;
+    if (typeof model.content === 'string' && model.content.trim()) {
+      xmlContent = model.content;
+    } else if (model.content instanceof ArrayBuffer) {
+      const decoded = new TextDecoder().decode(model.content);
+      if (decoded.trim()) {
+        xmlContent = decoded;
+      }
     }
+    saveMockXml(id, xmlContent ?? buildDefaultMapXml(id, model.title));
+
     return Promise.resolve(id);
   }
 
@@ -227,223 +355,295 @@ class MockClient implements Client {
     if (!token) {
       return Promise.reject({ msg: 'User not authenticated', isAuth: true, status: 401 });
     }
-    const locale = (localStorage.getItem('locale') ?? undefined) as LocaleCode | undefined;
+    const { email, firstname, lastname } = getCurrentUserIdentity();
+    const locale = (getStorage()?.getItem('locale') ?? undefined) as LocaleCode | undefined;
     return Promise.resolve({
-      firstname: 'Jian',
-      lastname: 'Owner',
-      email: 'a.jian0629@gmail.com',
+      firstname,
+      lastname,
+      email,
       locale: locale ? localeFromStr(locale) : undefined,
       authenticationType: AuthenticationType.GOOGLE_OAUTH2,
-      isAdmin: true, // Mock admin user for testing
+      isAdmin: false,
     });
   }
 
   deleteMaps(ids: number[]): Promise<void> {
-    ids.forEach((id) => this.deleteMap(id));
+    const idSet = new Set(ids);
+    const maps = loadMockMaps().filter((m) => !idSet.has(m.id));
+    saveMockMaps(maps);
+    ids.forEach((id) => {
+      this.cleanupMapStorage(id);
+    });
     return Promise.resolve();
   }
+
   revertHistory(id: number, cid: number): Promise<void> {
-    log.debug('model:' + id + cid);
+    const maps = loadMockMaps();
+    const mapIndex = maps.findIndex((m) => m.id === id);
+    const currentMap = mapIndex !== -1 ? maps[mapIndex] : undefined;
+    if (!currentMap) {
+      return Promise.reject({ msg: `Map could not be found ${id}`, status: 404 });
+    }
+
+    const history = loadMockHistory(id);
+    const target = history.find((entry) => entry.id === cid);
+    if (!target) {
+      return Promise.reject({ msg: 'History entry could not be found.', status: 400 });
+    }
+
+    const now = new Date().toISOString();
+    const { email } = getCurrentUserIdentity();
+    saveMockXml(id, target.xml);
+
+    maps[mapIndex] = {
+      ...currentMap,
+      lastModificationTime: now,
+      lastModificationBy: email,
+    };
+    saveMockMaps(maps);
+
+    const maxHistId = history.reduce((max, entry) => (entry.id > max ? entry.id : max), 0);
+    const newHistId = nextMockSeq(maxHistId);
+    const revertSnapshot: MockHistoryEntry = {
+      id: newHistId,
+      xml: target.xml,
+      lastModificationBy: email,
+      lastModificationTime: now,
+    };
+    saveMockHistory(id, [revertSnapshot, ...history]);
     return Promise.resolve();
   }
 
   createMap(map: BasicMapInfo): Promise<number> {
+    const maps = loadMockMaps();
+    const maxMapId = maps.reduce((max, m) => (m.id > max ? m.id : max), 0);
+    const id = nextMockSeq(maxMapId);
+    const now = new Date().toISOString();
+    const { email } = getCurrentUserIdentity();
     const newMap: MapInfo = {
-      id: Math.floor(Math.random() * 10000) + 100,
+      id,
       description: map.description || '',
       title: map.title,
       starred: false,
-      createdBy: 'a.jian0629@gmail.com',
+      createdBy: email,
       labels: [],
-      lastModificationTime: new Date().toISOString(),
-      lastModificationBy: 'a.jian0629@gmail.com',
-      creationTime: new Date().toISOString(),
+      lastModificationTime: now,
+      lastModificationBy: email,
+      creationTime: now,
       public: false,
       role: 'owner',
     };
-    this.maps.push(newMap);
-    saveMockMaps(this.maps);
-    return Promise.resolve(newMap.id);
+    maps.push(newMap);
+    saveMockMaps(maps);
+    saveMockXml(id, buildDefaultMapXml(id, map.title));
+    return Promise.resolve(id);
   }
 
   fetchLabels(): Promise<Label[]> {
     log.debug('Fetching  labels from server');
-    return Promise.resolve(this.labels);
+    return Promise.resolve(loadMockLabels());
   }
 
   updateMapToPublic(id: number, isPublic: boolean): Promise<void> {
-    const mapInfo = this.maps.find((m) => m.id == id);
+    const maps = loadMockMaps();
+    const mapInfo = maps.find((m) => m.id === id);
     if (mapInfo) {
       mapInfo.public = isPublic;
+      saveMockMaps(maps);
     }
     return Promise.resolve();
   }
 
   updateStarred(id: number, starred: boolean): Promise<void> {
-    const mapInfo = this.maps.find((m) => m.id == id);
+    const maps = loadMockMaps();
+    const mapInfo = maps.find((m) => m.id === id);
     if (!mapInfo) {
-      log.debug(`Could not find the map iwth id ${id}`);
-      return Promise.reject();
+      log.debug(`Could not find the map with id ${id}`);
+      return Promise.reject({ msg: `Map could not be found ${id}`, status: 404 });
     }
     mapInfo.starred = starred;
+    saveMockMaps(maps);
     return Promise.resolve();
   }
 
   renameMap(id: number, basicInfo: Partial<BasicMapInfo>): Promise<void> {
+    const maps = loadMockMaps();
+    const target = maps.find((m) => m.id === id);
+    if (!target) {
+      return Promise.reject({ msg: `Map could not be found ${id}`, status: 404 });
+    }
+
     const exists =
       basicInfo.title !== undefined &&
-      this.maps.find((m) => m.title == basicInfo.title) != undefined;
+      maps.some((m) => m.id !== id && m.title === basicInfo.title);
     if (!exists) {
-      this.maps = this.maps.map((m) => {
-        const result = m;
-        if (m.id == id) {
-          if (basicInfo.description !== undefined) {
-            result.description = basicInfo.description;
-          }
-          if (basicInfo.title !== undefined) {
-            result.title = basicInfo.title;
-          }
+      const now = new Date().toISOString();
+      const { email } = getCurrentUserIdentity();
+      const updated = maps.map((m) => {
+        if (m.id === id) {
+          return {
+            ...m,
+            ...(basicInfo.description !== undefined ? { description: basicInfo.description } : {}),
+            ...(basicInfo.title !== undefined ? { title: basicInfo.title } : {}),
+            lastModificationTime: now,
+            lastModificationBy: email,
+          };
         }
-        return result;
+        return m;
       });
+      saveMockMaps(updated);
       return Promise.resolve();
-    } else {
-      const fieldErrors: Map<string, string> = new Map<string, string>();
-      fieldErrors.set('name', 'name already exists ');
-
-      return Promise.reject({
-        msg: 'Map already exists ...' + basicInfo.title,
-        fields: fieldErrors,
-      });
     }
+
+    return Promise.reject({
+      msg: 'Map already exists ...' + basicInfo.title,
+      fields: {
+        name: 'name already exists ',
+        title: 'name already exists ',
+      },
+    });
   }
 
   fetchHistory(id: number): Promise<ChangeHistory[]> {
     log.debug(`Fetching history for ${id}`);
-    const result = [
-      {
-        id: 1,
-        lastModificationBy: 'Paulo',
-        lastModificationTime: '2008-06-02T00:00:00Z',
-      },
-      {
-        id: 2,
-        lastModificationBy: 'Paulo',
-        lastModificationTime: '2008-06-02T00:00:00Z',
-      },
-      {
-        id: 3,
-        lastModificationBy: 'Paulo',
-        lastModificationTime: '2008-06-02T00:00:00Z',
-      },
-      {
-        id: 4,
-        lastModificationBy: 'Paulo',
-        lastModificationTime: '2008-06-02T00:00:00Z',
-      },
-      {
-        id: 5,
-        lastModificationBy: 'Paulo',
-        lastModificationTime: '2008-06-02T00:00:00Z',
-      },
-      {
-        id: 6,
-        lastModificationBy: 'Paulo',
-        lastModificationTime: '2008-06-02T00:00:00Z',
-      },
-      {
-        id: 7,
-        lastModificationBy: 'Paulo',
-        lastModificationTime: '2008-06-02T00:00:00Z',
-      },
-    ];
-    return Promise.resolve(result);
+    const maps = loadMockMaps();
+    if (!maps.some((m) => m.id === id)) {
+      return Promise.reject({ msg: `Map could not be found ${id}`, status: 404 });
+    }
+
+    const history = loadMockHistory(id).map((entry) => ({
+      id: entry.id,
+      lastModificationBy: entry.lastModificationBy,
+      lastModificationTime: entry.lastModificationTime,
+    }));
+    return Promise.resolve(history);
   }
 
-  duplicateMap(_id: number, basicInfo: BasicMapInfo): Promise<number> {
-    const exists = this.maps.find((m) => m.title == basicInfo.title) != undefined;
-    if (!exists) {
-      const newMap: MapInfo = {
-        id: Math.random() * 1000,
-        description: basicInfo.description || '',
-        title: basicInfo.title,
-        starred: false,
-        createdBy: 'current user',
-        labels: [],
-        lastModificationTime: '2008-06-02T00:00:00Z',
-        lastModificationBy: 'Berna',
-        creationTime: '2008-06-02T00:00:00Z',
-        public: false,
-        role: 'owner',
-      };
-      this.maps.push(newMap);
-      return Promise.resolve(newMap.id);
-    } else {
-      const fieldErrors: Map<string, string> = new Map<string, string>();
-      fieldErrors.set('name', 'name already exists ');
+  duplicateMap(id: number, basicInfo: BasicMapInfo): Promise<number> {
+    const maps = loadMockMaps();
+    const source = maps.find((m) => m.id === id);
+    if (!source) {
+      return Promise.reject({ msg: `Map could not be found ${id}`, status: 404 });
+    }
 
+    const exists = maps.some((m) => m.title === basicInfo.title);
+    if (exists) {
       return Promise.reject({
         msg: 'Maps name must be unique:' + basicInfo.title,
-        fields: fieldErrors,
+        fields: {
+          name: 'name already exists ',
+          title: 'name already exists ',
+        },
       });
     }
+
+    const maxMapId = maps.reduce((max, m) => (m.id > max ? m.id : max), 0);
+    const newId = nextMockSeq(maxMapId);
+    const now = new Date().toISOString();
+    const { email } = getCurrentUserIdentity();
+
+    const newMap: MapInfo = {
+      id: newId,
+      description: basicInfo.description || '',
+      title: basicInfo.title,
+      starred: false,
+      createdBy: email,
+      labels: [],
+      lastModificationTime: now,
+      lastModificationBy: email,
+      creationTime: now,
+      public: false,
+      role: 'owner',
+    };
+    maps.push(newMap);
+    saveMockMaps(maps);
+
+    const sourceXml = loadMockXml(id) ?? buildDefaultMapXml(newId, basicInfo.title);
+    saveMockXml(newId, sourceXml);
+
+    const sourceProps = loadMockProps(id);
+    if (sourceProps !== null) {
+      saveMockProps(newId, sourceProps);
+    }
+
+    return Promise.resolve(newId);
   }
 
   createLabel(title: string, color: string): Promise<number> {
-    const newId =
-      Math.max.apply(
-        Number,
-        this.labels.map((l) => l.id),
-      ) + 1;
-    this.labels.push({
+    const labels = loadMockLabels();
+    const maxId = labels.reduce((max, l) => (l.id > max ? l.id : max), 0);
+    const newId = nextMockSeq(maxId);
+    labels.push({
       id: newId,
       title,
       color,
     });
+    saveMockLabels(labels);
     return Promise.resolve(newId);
   }
 
   deleteLabel(id: number): Promise<void> {
-    this.labels = this.labels.filter((l) => l.id != id);
-    this.maps = this.maps.map((m) => {
-      return {
-        ...m,
-        labels: m.labels.filter((l) => l.id != id),
-      };
-    });
+    const labels = loadMockLabels().filter((l) => l.id !== id);
+    saveMockLabels(labels);
+    const maps = loadMockMaps().map((m) => ({
+      ...m,
+      labels: m.labels.filter((l) => l.id !== id),
+    }));
+    saveMockMaps(maps);
     return Promise.resolve();
   }
 
   addLabelToMap(labelId: number, mapId: number): Promise<void> {
-    const labelToAdd = this.labels.find((l) => l.id === labelId);
+    const labels = loadMockLabels();
+    const labelToAdd = labels.find((l) => l.id === labelId);
     if (!labelToAdd) {
       return Promise.reject({ msg: `unable to find label with id ${labelId}` });
     }
-    const map = this.maps.find((m) => m.id === mapId);
+    const maps = loadMockMaps();
+    const map = maps.find((m) => m.id === mapId);
     if (!map) {
       return Promise.reject({ msg: `unable to find map with id ${mapId}` });
     }
-    map.labels.push(labelToAdd);
+    if (!map.labels.some((l) => l.id === labelId)) {
+      map.labels.push(labelToAdd);
+      saveMockMaps(maps);
+    }
     return Promise.resolve();
   }
 
   deleteLabelFromMap(labelId: number, mapId: number): Promise<void> {
-    const map = this.maps.find((m) => m.id === mapId);
+    const maps = loadMockMaps();
+    const map = maps.find((m) => m.id === mapId);
     if (!map) {
       return Promise.reject({ msg: `unable to find map with id ${mapId}` });
     }
     map.labels = map.labels.filter((l) => l.id !== labelId);
+    saveMockMaps(maps);
     return Promise.resolve();
   }
 
   deleteMap(id: number): Promise<void> {
-    this.maps = this.maps.filter((m) => m.id != id);
-    saveMockMaps(this.maps);
+    const maps = loadMockMaps().filter((m) => m.id !== id);
+    saveMockMaps(maps);
+    this.cleanupMapStorage(id);
     return Promise.resolve();
   }
 
+  private cleanupMapStorage(id: number): void {
+    this.permissionsByMap.delete(id);
+    try {
+      const storage = getStorage();
+      storage?.removeItem(`${MOCK_XML_PREFIX}${id}`);
+      storage?.removeItem(LEGACY_XML_KEY(id));
+      storage?.removeItem(`${MOCK_PROPS_PREFIX}${id}`);
+      storage?.removeItem(`${MOCK_HISTORY_PREFIX}${id}`);
+    } catch {
+      // ignore storage errors
+    }
+  }
+
   registerNewUser(user: NewUser): Promise<void> {
-    if (user.email == 'error@example.com') {
+    if (user.email === 'error@example.com') {
       return Promise.reject({ msg: 'Unexpected error' });
     }
     return Promise.resolve();
@@ -451,7 +651,7 @@ class MockClient implements Client {
 
   fetchAllMaps(): Promise<MapInfo[]> {
     log.debug('Fetching  maps from server');
-    return Promise.resolve(this.maps);
+    return Promise.resolve(loadMockMaps());
   }
 
   resetPassword(_email: string): Promise<ForgotPasswordResult> {
@@ -474,14 +674,14 @@ class MockClient implements Client {
 
   processGoogleCallback(): Promise<Oauth2CallbackResult> {
     return Promise.resolve({
-      email: 'test@email.com',
+      email: getCurrentUserIdentity().email,
       oauthSync: true,
     });
   }
 
   processFacebookCallback(): Promise<Oauth2CallbackResult> {
     return Promise.resolve({
-      email: 'test@email.com',
+      email: getCurrentUserIdentity().email,
       oauthSync: true,
     });
   }

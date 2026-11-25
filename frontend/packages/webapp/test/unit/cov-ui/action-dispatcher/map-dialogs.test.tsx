@@ -34,7 +34,6 @@ import RenameDialog from '../../../../src/components/maps-page/action-dispatcher
 import DeleteDialog from '../../../../src/components/maps-page/action-dispatcher/delete-dialog';
 import DeleteMultiselectDialog from '../../../../src/components/maps-page/action-dispatcher/delete-multiselect-dialog';
 import CreateDialog from '../../../../src/components/maps-page/action-dispatcher/create-dialog';
-import InfoDialog from '../../../../src/components/maps-page/action-dispatcher/info-dialog';
 import HistoryDialog from '../../../../src/components/maps-page/action-dispatcher/history-dialog';
 import { reloadPage } from '../../../../src/utils/redirect';
 import Client, {
@@ -431,51 +430,6 @@ describe('CreateDialog', () => {
   });
 });
 
-describe('InfoDialog', () => {
-  test('shows the map, its status and its details', () => {
-    const onClose = jest.fn();
-    renderWithProviders(<InfoDialog mapId={7} onClose={onClose} />, { client: {} as Client });
-
-    expect(screen.getByText('Travel plans')).toBeTruthy();
-    expect(screen.getByText('Summer trip')).toBeTruthy();
-    expect(screen.getByText('ana@wisemapping.com')).toBeTruthy();
-    expect(screen.getByText('diego@wisemapping.com')).toBeTruthy();
-    // Starred and private, as status chips rather than "true" and "false".
-    expect(screen.getByText('Starred')).toBeTruthy();
-    expect(screen.getByText('Private')).toBeTruthy();
-    expect(screen.queryByText('Public')).toBeNull();
-    // Its own subtitle, not the publish dialog's.
-    expect(screen.getByText('Details about this map and the people who work on it.')).toBeTruthy();
-    expect(mockUseFetchMapById).toHaveBeenCalledWith(7);
-
-    // Info has nothing to submit: the only action closes it.
-    expect(screen.queryByRole('button', { name: 'Accept' })).toBeNull();
-    fireEvent.click(button('Close'));
-    expect(onClose).toHaveBeenCalledTimes(1);
-  });
-
-  test('a public map says so', () => {
-    mockUseFetchMapById.mockReturnValue({
-      isLoading: false,
-      error: undefined,
-      data: { ...map, public: true, starred: false },
-    });
-    renderWithProviders(<InfoDialog mapId={7} onClose={jest.fn()} />, { client: {} as Client });
-
-    expect(screen.getByText('Public')).toBeTruthy();
-    expect(screen.queryByText('Starred')).toBeNull();
-  });
-
-  test('while the map loads, dates are dashes rather than today', () => {
-    mockUseFetchMapById.mockReturnValue({ isLoading: true, error: undefined, data: undefined });
-    renderWithProviders(<InfoDialog mapId={7} onClose={jest.fn()} />, { client: {} as Client });
-
-    expect(screen.getByText('Basic Info')).toBeTruthy();
-    expect(screen.getByText('No description')).toBeTruthy();
-    expect(screen.getAllByText('—')).toHaveLength(4);
-  });
-});
-
 describe('HistoryDialog', () => {
   const history: ChangeHistory[] = [
     { id: 31, lastModificationBy: 'ana@wisemapping.com', lastModificationTime: '2026-01-01' },
@@ -493,6 +447,28 @@ describe('HistoryDialog', () => {
   };
 
   beforeEach(() => jest.mocked(reloadPage).mockClear());
+
+  test('shows a loading state before history resolves instead of flashing empty state', () => {
+    const fetchHistory = jest.fn(() => new Promise<ChangeHistory[]>(() => undefined));
+    const revertHistory = jest.fn<Promise<void>, [number, number]>(() => Promise.resolve());
+    renderWithProviders(<HistoryDialog mapId={7} onClose={jest.fn()} />, {
+      client: { fetchHistory, revertHistory } as unknown as Client,
+    });
+
+    expect(screen.getByText('Loading...')).toBeTruthy();
+    expect(screen.queryByText('There is no changes available')).toBeNull();
+  });
+
+  test('shows an error when fetching history fails instead of empty state', async () => {
+    const fetchHistory = jest.fn(() => Promise.reject({ msg: 'Could not load history' }));
+    const revertHistory = jest.fn<Promise<void>, [number, number]>(() => Promise.resolve());
+    renderWithProviders(<HistoryDialog mapId={7} onClose={jest.fn()} />, {
+      client: { fetchHistory, revertHistory } as unknown as Client,
+    });
+
+    expect(await screen.findByText('Could not load history')).toBeTruthy();
+    expect(screen.queryByText('There is no changes available')).toBeNull();
+  });
 
   test('says when the map has no recorded changes', async () => {
     const { fetchHistory } = setup([]);

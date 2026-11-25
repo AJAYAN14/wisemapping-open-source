@@ -96,7 +96,7 @@
     "defaultMessage": "历史版本"
   },
   "action.history-description": {
-    "defaultMessage": "过去90天内引入的更改列表。"
+    "defaultMessage": "已保存的历史版本列表。"
   },
   "action.history-title": {
     "defaultMessage": "历史版本"

@@ -19,11 +19,16 @@
 import React from 'react';
 import { act, screen } from '@testing-library/react';
 
+const mockPersistenceConstructor = jest.fn();
+
 // The editor bundle pulls in the whole canvas: the page only needs a hook that keeps state across
 // renders (as the real useEditor does) and something to render.
 jest.mock('@wisemapping/editor', () => {
   const ReactInMock = jest.requireActual<typeof React>('react');
   class StubPersistence {
+    constructor(...args: unknown[]) {
+      mockPersistenceConstructor(...args);
+    }
     addErrorHandler(): void {
       // Not exercised.
     }
@@ -59,10 +64,8 @@ jest.mock('react-router', () => ({
   }),
   useSearchParams: () => [new URLSearchParams()],
 }));
-jest.mock('../../../src/components/seo', () => ({ SEOHead: () => null }));
-jest.mock('../../../src/components/seo/PublicMapSEO', () => () => null);
 jest.mock('../../../src/components/common-page/session-expired-dialog', () => () => null);
-jest.mock('../../../src/utils/analytics', () => ({ trackPageView: jest.fn() }));
+jest.mock('../../../src/components/editor-page/version-conflict-dialog', () => () => null);
 jest.mock('../../../src/classes/app-config', () => ({
   __esModule: true,
   default: { isRestClient: () => false },
@@ -89,8 +92,22 @@ const renderPage = (): (() => void) => {
 };
 
 describe('EditorPage', () => {
+  beforeEach(() => {
+    mockPersistenceConstructor.mockClear();
+  });
+
   afterEach(() => {
     mockNavigation.state = 'idle';
+  });
+
+  test('passes hid and clean fallback XML to MockPersistenceManager', () => {
+    renderWithProviders(<EditorPage mapId={42} hid={99} pageMode="view-private" />, { client });
+
+    expect(mockPersistenceConstructor).toHaveBeenCalledWith(
+      expect.stringContaining('text="My map"'),
+      expect.objectContaining({ hid: 99, editorName: 'Jane Doe' }),
+    );
+    expect(mockPersistenceConstructor.mock.calls[0]?.[0]).not.toContain('Welcome To WiseMapping');
   });
 
   test('shows the loading skeleton when the router starts loading another page', () => {

@@ -1,5 +1,24 @@
+/* Apple design polish for the editor menubar and toolbars */
+
+.material-menubar {
+  transition: background-color 200ms ease, border-color 200ms ease;
+}
+
+.material-menubar .MuiButtonBase-root {
+  border-radius: 10px;
+  transition: transform 160ms cubic-bezier(0.2, 0, 0, 1), background-color 150ms ease, color 150ms ease;
+}
+
+.material-menubar .MuiButtonBase-root:hover {
+  background-color: var(--mui-palette-action-hover, rgba(0, 0, 0, 0.05));
+}
+
+.material-menubar .MuiButtonBase-root:active {
+  transform: scale(0.92) !important;
+}
+
 .material-menubar .MuiButtonBase-root:last-child {
-  margin-right: 0.5rem;
+  margin-right: 0.75rem;
   margin-left: 0.5rem;
 }
 
@@ -11,5 +30,13 @@
 }
 
 button[aria-pressed='true'] {
-  background-color: var(--mui-palette-action-selected, rgba(0, 0, 0, 0.04));
+  background-color: var(--mui-palette-primary-main, #0284c7) !important;
+  color: #ffffff !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .material-menubar .MuiButtonBase-root {
+    transition: none !important;
+    transform: none !important;
+  }
 }

@@ -98,7 +98,20 @@ describe('LocalStorageManager', () => {
   });
 });
 
+const MAP_XML_V1 = '<map version="tango"><topic central="true" text="Version 1" id="1"/></map>';
+const MAP_XML_V2 = '<map version="tango"><topic central="true" text="Version 2" id="1"/></map>';
+
+const buildDocFrom = (xml: string): Document => new DOMParser().parseFromString(xml, 'text/xml');
+
 describe('MockPersistenceManager', () => {
+  beforeEach(() => {
+    localStorage.clear();
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
   it('settles the save (B-SETTLE)', () => {
     const manager: PersistenceManager = new MockPersistenceManager(MAP_XML);
     const events = buildEvents();
@@ -111,6 +124,83 @@ describe('MockPersistenceManager', () => {
   it('accepts a save without events', () => {
     const manager: PersistenceManager = new MockPersistenceManager(MAP_XML);
     expect(() => manager.saveMapXml('1', buildDoc(), '{}', false)).not.toThrow();
+  });
+
+  it('persists current XML and props without creating history on minor saves', () => {
+    localStorage.setItem(
+      'wisemapping.mock.maps',
+      JSON.stringify([{ id: 1, title: 'Demo', lastModificationTime: '2020-01-01T00:00:00Z' }]),
+    );
+    localStorage.setItem('mock-map-1-xml', 'legacy');
+
+    const manager = new MockPersistenceManager(MAP_XML, { editorName: 'Owner' });
+    const events = buildEvents();
+
+    manager.saveMapXml('1', buildDocFrom(MAP_XML_V1), '{"zoom":1.2}', false, events);
+
+    expect(events.onSuccess).toHaveBeenCalledTimes(1);
+    expect(localStorage.getItem('wisemapping.mock.xml.1')).toContain('Version 1');
+    expect(localStorage.getItem('mock-map-1-xml')).toBeNull();
+    expect(localStorage.getItem('wisemapping.mock.props.1')).toBe('{"zoom":1.2}');
+    expect(localStorage.getItem('wisemapping.mock.history.1')).toBeNull();
+
+    const maps = JSON.parse(localStorage.getItem('wisemapping.mock.maps') || '[]');
+    expect(maps[0].lastModificationBy).toBe('Owner');
+    expect(maps[0].lastModificationTime).not.toBe('2020-01-01T00:00:00Z');
+  });
+
+  it('appends monotonically ordered snapshots only when saveHistory is true', () => {
+    const manager = new MockPersistenceManager(MAP_XML, { editorName: 'Alice' });
+
+    manager.saveMapXml('1', buildDocFrom(MAP_XML_V1), '{}', true);
+    manager.saveMapXml('1', buildDocFrom(MAP_XML_V2), '{}', true);
+
+    const history = JSON.parse(localStorage.getItem('wisemapping.mock.history.1') || '[]');
+    expect(history).toHaveLength(2);
+    expect(history[0].id).toBeGreaterThan(history[1].id);
+    expect(history[0].xml).toContain('Version 2');
+    expect(history[1].xml).toContain('Version 1');
+    expect(history[0].lastModificationBy).toBe('Alice');
+  });
+
+  it('loads a specific history snapshot by hid and rejects missing ones', async () => {
+    const writer = new MockPersistenceManager(MAP_XML, { editorName: 'Alice' });
+    writer.saveMapXml('1', buildDocFrom(MAP_XML_V1), '{}', true);
+    writer.saveMapXml('1', buildDocFrom(MAP_XML_V2), '{}', true);
+
+    const history = JSON.parse(localStorage.getItem('wisemapping.mock.history.1') || '[]');
+    const olderId = history[1].id;
+
+    const reader = new MockPersistenceManager(MAP_XML, { hid: olderId });
+    const doc = await reader.loadMapDom('1');
+    expect(new XMLSerializer().serializeToString(doc)).toContain('Version 1');
+
+    // A history-view manager must not mutate current XML or history.
+    const events = buildEvents();
+    reader.saveMapXml('1', buildDocFrom(MAP_XML), '{}', true, events);
+    expect(events.onSuccess).toHaveBeenCalledTimes(1);
+    expect(localStorage.getItem('wisemapping.mock.xml.1')).toContain('Version 2');
+    expect(JSON.parse(localStorage.getItem('wisemapping.mock.history.1') || '[]')).toHaveLength(2);
+
+    const missingReader = new MockPersistenceManager(MAP_XML, { hid: 999999 });
+    await expect(missingReader.loadMapDom('1')).rejects.toThrow('History entry 999999');
+  });
+
+  it('discardChanges restores the latest snapshot without deleting maps that have no history', () => {
+    const manager = new MockPersistenceManager(MAP_XML, { editorName: 'Alice' });
+
+    // No history yet: current XML is preserved.
+    manager.saveMapXml('1', buildDocFrom(MAP_XML_V1), '{}', false);
+    manager.discardChanges('1');
+    expect(localStorage.getItem('wisemapping.mock.xml.1')).toContain('Version 1');
+
+    // With a saved snapshot: minor edits are discarded back to the latest snapshot.
+    manager.saveMapXml('1', buildDocFrom(MAP_XML_V1), '{}', true);
+    manager.saveMapXml('1', buildDocFrom(MAP_XML_V2), '{}', false);
+    expect(localStorage.getItem('wisemapping.mock.xml.1')).toContain('Version 2');
+
+    manager.discardChanges('1');
+    expect(localStorage.getItem('wisemapping.mock.xml.1')).toContain('Version 1');
   });
 });
 

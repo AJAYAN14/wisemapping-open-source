@@ -63,9 +63,11 @@ export function createRunId(): string {
   return `e2e-${Date.now().toString(36)}-${crypto.randomUUID().slice(0, 6)}`;
 }
 
+let titleSeq = 0;
 export function uniqueTitle(prefix = 'Map', runId?: string): string {
   const suffix = runId ?? crypto.randomUUID().slice(0, 8);
-  const combined = `${prefix}-${suffix}-${crypto.randomBytes(2).toString('hex')}`;
+  const seq = (++titleSeq).toString(36);
+  const combined = `${prefix}-${suffix}-${seq}-${crypto.randomBytes(4).toString('hex')}`;
   return combined.slice(0, 80);
 }
 

@@ -20,14 +20,28 @@ import Box from '@mui/material/Box';
 import Paper from '@mui/material/Paper';
 import Typography from '@mui/material/Typography';
 
-export const PanelContainer = styled(Paper)(({ theme }) => ({
-  width: '320px',
-  maxWidth: '85vw',
-  padding: theme.spacing(1.5),
-  borderRadius: '8px',
-  backgroundColor: theme.palette.background.paper,
-  color: theme.palette.text.primary,
-}));
+export const PanelContainer = styled(Paper)(({ theme }) => {
+  const isDark = theme.palette.mode === 'dark';
+  return {
+    width: '330px',
+    maxWidth: '88vw',
+    padding: theme.spacing(1.75),
+    borderRadius: '16px',
+    backgroundColor: isDark ? 'rgba(32, 32, 36, 0.90)' : 'rgba(255, 255, 255, 0.90)',
+    backdropFilter: 'blur(24px) saturate(180%)',
+    WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+    border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)'}`,
+    boxShadow: isDark
+      ? '0 16px 40px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.3)'
+      : '0 16px 36px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.04)',
+    color: theme.palette.text.primary,
+    '@media (prefers-reduced-transparency: reduce)': {
+      backgroundColor: theme.palette.background.paper,
+      backdropFilter: 'none',
+      WebkitBackdropFilter: 'none',
+    },
+  };
+});
 
 export const HeaderRow = styled(Box)({
   display: 'flex',

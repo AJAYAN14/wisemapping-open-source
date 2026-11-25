@@ -96,7 +96,7 @@
     "defaultMessage": "History"
   },
   "action.history-description": {
-    "defaultMessage": "List of changes introduced in the last 90 days."
+    "defaultMessage": "List of saved versions."
   },
   "action.history-title": {
     "defaultMessage": "Version history"
