@@ -18,6 +18,8 @@
 
 import type { Folder } from '../../classes/client';
 
+export const MAP_IDS_DRAG_MIME = 'application/x-wisemapping-map-ids';
+
 export interface FolderTreeNode {
   folder: Folder;
   children: FolderTreeNode[];
@@ -91,4 +93,26 @@ export function getFolderPathString(folders: Folder[], folderId: number | null):
   }
   const chain = getFolderBreadcrumbs(folders, folderId);
   return chain.length > 0 ? `${chain.map((f) => f.name).join('/')}/` : '';
+}
+
+/** Returns the set containing folderId and all its descendant folder IDs. */
+export function getDescendantFolderIds(folders: Folder[], folderId: number): Set<number> {
+  const byParent = new Map<number | null, number[]>();
+  for (const f of folders) {
+    const list = byParent.get(f.parentId ?? null) ?? [];
+    list.push(f.id);
+    byParent.set(f.parentId ?? null, list);
+  }
+  const result = new Set<number>([folderId]);
+  const queue = [folderId];
+  while (queue.length > 0) {
+    const cur = queue.shift()!;
+    for (const childId of byParent.get(cur) ?? []) {
+      if (!result.has(childId)) {
+        result.add(childId);
+        queue.push(childId);
+      }
+    }
+  }
+  return result;
 }

@@ -16,11 +16,13 @@
  *   limitations under the License.
  */
 import React, { ErrorInfo, ReactElement, use, useEffect, useMemo } from 'react';
+import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
+import Snackbar from '@mui/material/Snackbar';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import {
@@ -42,7 +44,7 @@ import { MapsList } from './maps-list';
 import { ImportProgressDialog, ImportStage } from './import-progress';
 import { createIntl, FormattedMessage, IntlProvider } from 'react-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Folder, Label } from '../../classes/client';
+import { Folder, Label, MapInfo } from '../../classes/client';
 import ActionDispatcher from './action-dispatcher';
 import { ActionType } from './action-chooser';
 import AccountMenu from './account-menu';
@@ -63,6 +65,7 @@ import InsertDriveFileRoundedIcon from '@mui/icons-material/InsertDriveFileRound
 import KeyboardArrowDownRoundedIcon from '@mui/icons-material/KeyboardArrowDownRounded';
 import LabelRoundedIcon from '@mui/icons-material/LabelRounded';
 import GridViewRoundedIcon from '@mui/icons-material/GridViewRounded';
+import InboxRoundedIcon from '@mui/icons-material/InboxRounded';
 import StarRateRoundedIcon from '@mui/icons-material/StarRateRounded';
 import Tooltip from '@mui/material/Tooltip';
 
@@ -70,9 +73,10 @@ import LabelDeleteConfirm from './maps-list/label-delete-confirm';
 import {
   FolderCreateDialog,
   FolderDeleteDialog,
+  FolderMoveDialog,
   FolderRenameDialog,
 } from './folder-dialogs';
-import { getFolderPathString } from './folderTree';
+import { MAP_IDS_DRAG_MIME, getFolderPathString } from './folderTree';
 import DrawerNav, { ToolbarButtonInfo } from './drawer-nav';
 import { useSpringValue } from './useSpringValue';
 import { ClientContext } from '../../classes/provider/client-context';
@@ -82,7 +86,7 @@ import { readStorage, writeStorage, removeStorage } from '../../utils/storage';
 export type Filter = GenericFilter | LabelFilter | FolderFilter;
 
 export interface GenericFilter {
-  type: 'public' | 'all' | 'starred' | 'shared' | 'label' | 'owned';
+  type: 'public' | 'all' | 'starred' | 'uncategorized' | 'shared' | 'label' | 'owned';
 }
 
 export interface LabelFilter {
@@ -98,8 +102,15 @@ export interface FolderFilter {
 type FolderDialogState =
   | { mode: 'create'; parentId: number | null }
   | { mode: 'rename'; folder: Folder }
+  | { mode: 'move'; folder: Folder }
   | { mode: 'delete'; folder: Folder }
   | undefined;
+
+type ToastState = {
+  open: boolean;
+  message: string;
+  severity: 'success' | 'error';
+};
 
 const MapsPage = (): ReactElement => {
   const [filter, setFilter] = React.useState<Filter>({ type: 'all' });
@@ -108,6 +119,11 @@ const MapsPage = (): ReactElement => {
   const [activeDialog, setActiveDialog] = React.useState<ActionType | undefined>(undefined);
   const [labelToDelete, setLabelToDelete] = React.useState<number>();
   const [folderDialog, setFolderDialog] = React.useState<FolderDialogState>(undefined);
+  const [toast, setToast] = React.useState<ToastState>({
+    open: false,
+    message: '',
+    severity: 'success',
+  });
   const [mobileDrawerOpen, setMobileDrawerOpen] = React.useState(false);
   const [desktopDrawerOpen, setDesktopDrawerOpen] = React.useState(
     () => readStorage('desktopDrawerOpen') === 'true',
@@ -531,7 +547,15 @@ const MapsPage = (): ReactElement => {
     executeBatchImport(scanned);
   };
 
+  const isExternalFileDrag = (e: React.DragEvent): boolean => {
+    const types = Array.from(e.dataTransfer?.types ?? []);
+    return types.includes('Files') && !types.includes(MAP_IDS_DRAG_MIME);
+  };
+
   const handleDragEnter = (e: React.DragEvent) => {
+    if (!isExternalFileDrag(e)) {
+      return;
+    }
     e.preventDefault();
     e.stopPropagation();
     dragCounter.current++;
@@ -541,6 +565,9 @@ const MapsPage = (): ReactElement => {
   };
 
   const handleDragLeave = (e: React.DragEvent) => {
+    if (!isDraggingOver) {
+      return;
+    }
     e.preventDefault();
     e.stopPropagation();
     dragCounter.current--;
@@ -551,11 +578,19 @@ const MapsPage = (): ReactElement => {
   };
 
   const handleDragOver = (e: React.DragEvent) => {
+    if (!isExternalFileDrag(e)) {
+      return;
+    }
     e.preventDefault();
     e.stopPropagation();
   };
 
   const handleDrop = async (e: React.DragEvent) => {
+    if (!isExternalFileDrag(e)) {
+      dragCounter.current = 0;
+      setIsDraggingOver(false);
+      return;
+    }
     e.preventDefault();
     e.stopPropagation();
     dragCounter.current = 0;
@@ -628,6 +663,57 @@ const MapsPage = (): ReactElement => {
   const folders: Folder[] = foldersData ?? [];
   const activeFolderId = filter.type === 'folder' ? filter.folderId : null;
 
+  const { data: mapsData } = useQuery<unknown, ErrorInfo, MapInfo[]>({
+    queryKey: ['maps'],
+    queryFn: () => client.fetchAllMaps(),
+  });
+  const { folderCounts, uncategorizedCount } = useMemo(() => {
+    const counts = new Map<number, number>();
+    let uncat = 0;
+    for (const m of mapsData ?? []) {
+      const fid = m.folderId ?? null;
+      if (fid === null) {
+        uncat += 1;
+      } else {
+        counts.set(fid, (counts.get(fid) ?? 0) + 1);
+      }
+    }
+    return { folderCounts: counts, uncategorizedCount: uncat };
+  }, [mapsData]);
+
+  const moveMapsDropMutation = useMutation<
+    void,
+    unknown,
+    { mapIds: number[]; folderId: number | null }
+  >({
+    mutationFn: ({ mapIds, folderId }) => {
+      if (!client.moveMapsToFolder) {
+        return Promise.reject(new Error('不支持移动文件夹'));
+      }
+      return client.moveMapsToFolder(mapIds, folderId);
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['maps'] });
+      queryClient.invalidateQueries({ queryKey: ['folders'] });
+      const targetName =
+        variables.folderId === null
+          ? '根目录（未分类）'
+          : (folders.find((f) => f.id === variables.folderId)?.name ?? '文件夹');
+      setToast({
+        open: true,
+        severity: 'success',
+        message: `已将 ${variables.mapIds.length} 份导图移动到“${targetName}”`,
+      });
+    },
+    onError: (err) => {
+      const msg =
+        err && typeof err === 'object' && 'msg' in err && typeof err.msg === 'string' && err.msg
+          ? err.msg
+          : '移动导图失败，请稍后重试。';
+      setToast({ open: true, severity: 'error', message: msg });
+    },
+  });
+
   const { data } = useQuery<unknown, ErrorInfo, Label[]>({
     queryKey: ['labels'],
     queryFn: () => client.fetchLabels(),
@@ -645,6 +731,13 @@ const MapsPage = (): ReactElement => {
       label: intl.formatMessage({ id: 'maps.nav-starred', defaultMessage: 'Starred' }),
       icon: <StarRateRoundedIcon />,
     },
+    {
+      filter: { type: 'uncategorized' },
+      label: intl.formatMessage({ id: 'maps.nav-uncategorized', defaultMessage: '未分类' }),
+      icon: <InboxRoundedIcon />,
+      count: uncategorizedCount,
+      acceptDropToRoot: true,
+    },
   ];
 
   labels.forEach((l) =>
@@ -661,12 +754,15 @@ const MapsPage = (): ReactElement => {
       drawerOpen={desktopDrawerOpen || mobileDrawerOpen}
       filterButtons={filterButtons}
       folders={folders}
+      folderCounts={folderCounts}
       activeFilter={filter}
       onFilterClick={handleMenuClick}
       onLabelDelete={setLabelToDelete}
       onCreateFolder={(parentId) => setFolderDialog({ mode: 'create', parentId })}
       onRenameFolder={(folder) => setFolderDialog({ mode: 'rename', folder })}
+      onMoveFolder={(folder) => setFolderDialog({ mode: 'move', folder })}
       onDeleteFolder={(folder) => setFolderDialog({ mode: 'delete', folder })}
+      onDropMapsToFolder={(mapIds, folderId) => moveMapsDropMutation.mutate({ mapIds, folderId })}
     />
   );
 
@@ -930,6 +1026,20 @@ const MapsPage = (): ReactElement => {
           onClose={() => setFolderDialog(undefined)}
         />
       )}
+      {folderDialog?.mode === 'move' && (
+        <FolderMoveDialog
+          folder={folderDialog.folder}
+          folders={folders}
+          onClose={() => setFolderDialog(undefined)}
+          onMoved={(moved) => {
+            setToast({
+              open: true,
+              severity: 'success',
+              message: `已调整文件夹“${moved.name}”的位置`,
+            });
+          }}
+        />
+      )}
       {folderDialog?.mode === 'delete' && (
         <FolderDeleteDialog
           folder={folderDialog.folder}
@@ -941,6 +1051,21 @@ const MapsPage = (): ReactElement => {
           }}
         />
       )}
+      <Snackbar
+        open={toast.open}
+        autoHideDuration={3200}
+        onClose={() => setToast((prev) => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert
+          severity={toast.severity}
+          variant="filled"
+          onClose={() => setToast((prev) => ({ ...prev, open: false }))}
+          sx={{ borderRadius: '12px', fontWeight: 600 }}
+        >
+          {toast.message}
+        </Alert>
+      </Snackbar>
       {label && labelToDelete !== undefined && (
         <LabelDeleteConfirm
           onClose={() => setLabelToDelete(undefined)}

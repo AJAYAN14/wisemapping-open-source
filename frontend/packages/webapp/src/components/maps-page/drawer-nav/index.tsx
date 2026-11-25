@@ -27,6 +27,7 @@ import Typography from '@mui/material/Typography';
 import IconButton from '@mui/material/IconButton';
 import CreateNewFolderRoundedIcon from '@mui/icons-material/CreateNewFolderRounded';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
+import DriveFileMoveRoundedIcon from '@mui/icons-material/DriveFileMoveRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import FolderOpenRoundedIcon from '@mui/icons-material/FolderOpenRounded';
 import FolderRoundedIcon from '@mui/icons-material/FolderRounded';
@@ -54,7 +55,12 @@ import {
 } from './styled';
 import type { AccountInfo, Folder } from '../../../classes/client';
 import type { Filter, FolderFilter, GenericFilter, LabelFilter } from '../index';
-import { FolderTreeNode, buildFolderTree, getFolderBreadcrumbs } from '../folderTree';
+import {
+  FolderTreeNode,
+  MAP_IDS_DRAG_MIME,
+  buildFolderTree,
+  getFolderBreadcrumbs,
+} from '../folderTree';
 import { APPLE_FONT_STACK, appleColors, isDarkTheme } from '../appleDesign';
 import { useIntl } from 'react-intl';
 
@@ -62,6 +68,8 @@ export interface ToolbarButtonInfo {
   filter: GenericFilter | LabelFilter;
   label: string;
   icon: React.ReactElement;
+  count?: number | undefined;
+  acceptDropToRoot?: boolean | undefined;
 }
 
 export interface DrawerNavProps {
@@ -73,13 +81,17 @@ export interface DrawerNavProps {
   filterButtons: ToolbarButtonInfo[];
   /** Folders owned by the user. */
   folders?: Folder[];
+  /** Direct map count per folder ID. */
+  folderCounts?: Map<number, number> | undefined;
   /** Currently applied filter. */
   activeFilter: Filter;
   onFilterClick: (filter: Filter) => void;
   onLabelDelete: (id: number) => void;
   onCreateFolder?: (parentId: number | null) => void;
   onRenameFolder?: (folder: Folder) => void;
+  onMoveFolder?: (folder: Folder) => void;
   onDeleteFolder?: (folder: Folder) => void;
+  onDropMapsToFolder?: (mapIds: number[], folderId: number | null) => void;
 }
 
 /**
@@ -91,12 +103,15 @@ const DrawerNav = ({
   drawerOpen,
   filterButtons,
   folders = [],
+  folderCounts,
   activeFilter,
   onFilterClick,
   onLabelDelete,
   onCreateFolder,
   onRenameFolder,
+  onMoveFolder,
   onDeleteFolder,
+  onDropMapsToFolder,
 }: DrawerNavProps): ReactElement => {
   const intl = useIntl();
 
@@ -105,6 +120,7 @@ const DrawerNav = ({
   const folderTree = useMemo(() => buildFolderTree(folders), [folders]);
 
   const [expandedFolderIds, setExpandedFolderIds] = useState<Set<number>>(() => new Set());
+  const [dragTargetFolderId, setDragTargetFolderId] = useState<number | null>(null);
   const [folderMenuState, setFolderMenuState] = useState<{
     anchor: HTMLElement;
     folder: Folder;
@@ -144,6 +160,8 @@ const DrawerNav = ({
       activeFilter.type === 'folder' && (activeFilter as FolderFilter).folderId === folder.id;
     const isExpanded = expandedFolderIds.has(folder.id);
     const hasChildren = children.length > 0;
+    const isDragTarget = dragTargetFolderId === folder.id;
+    const count = folderCounts?.get(folder.id);
 
     if (!drawerOpen && depth > 0) {
       return null;
@@ -158,15 +176,64 @@ const DrawerNav = ({
               e.stopPropagation();
               onFilterClick({ type: 'folder', folderId: folder.id });
             }}
-            sx={
-              drawerOpen
-                ? {
-                    pl: `${10 + depth * 14}px`,
-                    pr: '34px',
-                    minHeight: '36px',
-                  }
-                : undefined
-            }
+            onDragOver={(e: React.DragEvent<HTMLDivElement>) => {
+              if (!onDropMapsToFolder || !e.dataTransfer.types.includes(MAP_IDS_DRAG_MIME)) {
+                return;
+              }
+              e.preventDefault();
+              e.stopPropagation();
+              e.dataTransfer.dropEffect = 'move';
+              if (dragTargetFolderId !== folder.id) {
+                setDragTargetFolderId(folder.id);
+              }
+              if (hasChildren && !isExpanded) {
+                setExpandedFolderIds((prev) => new Set(prev).add(folder.id));
+              }
+            }}
+            onDragLeave={() => {
+              if (dragTargetFolderId === folder.id) {
+                setDragTargetFolderId(null);
+              }
+            }}
+            onDrop={(e: React.DragEvent<HTMLDivElement>) => {
+              setDragTargetFolderId(null);
+              if (!onDropMapsToFolder || !e.dataTransfer.types.includes(MAP_IDS_DRAG_MIME)) {
+                return;
+              }
+              e.preventDefault();
+              e.stopPropagation();
+              try {
+                const raw = e.dataTransfer.getData(MAP_IDS_DRAG_MIME);
+                const ids = JSON.parse(raw);
+                if (Array.isArray(ids) && ids.length > 0) {
+                  onDropMapsToFolder(
+                    ids.filter((id): id is number => typeof id === 'number'),
+                    folder.id,
+                  );
+                }
+              } catch {
+                // ignore malformed drag payload
+              }
+            }}
+            sx={(theme) => {
+              const c = appleColors(isDarkTheme(theme));
+              return {
+                ...(drawerOpen
+                  ? {
+                      pl: `${10 + depth * 14}px`,
+                      pr: '16px',
+                      minHeight: '36px',
+                    }
+                  : {}),
+                ...(isDragTarget
+                  ? {
+                      backgroundColor: c.amberSoft,
+                      outline: `2px dashed ${c.amber}`,
+                      outlineOffset: '-2px',
+                    }
+                  : {}),
+              };
+            }}
           >
             {drawerOpen && (
               hasChildren ? (
@@ -210,8 +277,34 @@ const DrawerNav = ({
                 }}
               />
             )}
+            {drawerOpen && typeof count === 'number' && count > 0 && (
+              <Box
+                component="span"
+                className="folder-count-badge"
+                sx={(theme) => {
+                  const c = appleColors(isDarkTheme(theme));
+                  return {
+                    fontSize: '0.72rem',
+                    fontWeight: 700,
+                    fontVariantNumeric: 'tabular-nums',
+                    fontFamily: APPLE_FONT_STACK,
+                    color: isSelected ? c.amberText : c.textTertiary,
+                    px: '6px',
+                    py: '1px',
+                    borderRadius: '999px',
+                    backgroundColor: isSelected ? 'transparent' : c.hoverFill,
+                    transition: 'opacity 140ms ease',
+                    '.MuiBox-root:hover > & , .MuiBox-root:hover &': {
+                      opacity: 0,
+                    },
+                  };
+                }}
+              >
+                {count}
+              </Box>
+            )}
           </FilterListItemButton>
-          {drawerOpen && (onCreateFolder || onRenameFolder || onDeleteFolder) && (
+          {drawerOpen && (onCreateFolder || onRenameFolder || onMoveFolder || onDeleteFolder) && (
             <FolderMoreButton
               size="small"
               className="folder-more-button"
@@ -269,6 +362,12 @@ const DrawerNav = ({
             label={buttonInfo.label}
             filter={buttonInfo.filter}
             active={activeFilter}
+            count={buttonInfo.count}
+            onDropMaps={
+              buttonInfo.acceptDropToRoot && onDropMapsToFolder
+                ? (ids) => onDropMapsToFolder(ids, null)
+                : undefined
+            }
             onClick={onFilterClick}
             onDelete={onLabelDelete}
             key={`${buttonInfo.filter.type}:${buttonInfo.label}`}
@@ -402,6 +501,27 @@ const DrawerNav = ({
               primary={intl.formatMessage({
                 id: 'folder.rename',
                 defaultMessage: '重命名文件夹',
+              })}
+            />
+          </MenuItem>
+        )}
+        {onMoveFolder && (
+          <MenuItem
+            onClick={() => {
+              const folder = folderMenuState?.folder;
+              setFolderMenuState(null);
+              if (folder) {
+                onMoveFolder(folder);
+              }
+            }}
+          >
+            <ListItemIcon>
+              <DriveFileMoveRoundedIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText
+              primary={intl.formatMessage({
+                id: 'folder.move',
+                defaultMessage: '移动到...',
               })}
             />
           </MenuItem>

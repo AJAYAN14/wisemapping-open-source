@@ -100,6 +100,9 @@ export const MapsListToolbar = ({
     if (filter.type === 'starred') {
       return intl.formatMessage({ id: 'maps.nav-starred', defaultMessage: 'Starred' });
     }
+    if (filter.type === 'uncategorized') {
+      return intl.formatMessage({ id: 'maps.nav-uncategorized', defaultMessage: '未分类' });
+    }
     if (filter && isLabelFilter(filter)) {
       return filter.label.title;
     }

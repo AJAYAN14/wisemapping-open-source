@@ -49,11 +49,12 @@ export type ActionType =
 interface ActionProps {
   onClose: (action: ActionType) => void;
   anchor?: HTMLElement | undefined;
+  anchorPosition?: { top: number; left: number } | undefined;
   mapId: number;
 }
 
 const ActionChooser = (props: ActionProps): React.ReactElement => {
-  const { anchor, onClose } = props;
+  const { anchor, anchorPosition, onClose } = props;
 
   const handleOnClose = (
     action: ActionType,
@@ -66,9 +67,11 @@ const ActionChooser = (props: ActionProps): React.ReactElement => {
 
   return (
     <Menu
-      anchorEl={anchor}
+      anchorEl={anchor ?? null}
+      anchorReference={anchorPosition ? 'anchorPosition' : 'anchorEl'}
+      {...(anchorPosition ? { anchorPosition } : {})}
       keepMounted
-      open={Boolean(anchor)}
+      open={Boolean(anchor) || Boolean(anchorPosition)}
       onClose={handleOnClose(undefined)}
       elevation={0}
       slotProps={{

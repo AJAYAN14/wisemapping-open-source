@@ -1106,11 +1106,17 @@
   "folder.empty": {
     "defaultMessage": "暂无文件夹"
   },
+  "folder.move": {
+    "defaultMessage": "移动到..."
+  },
   "folder.move-button": {
     "defaultMessage": "移动到此处"
   },
   "folder.move-description": {
     "defaultMessage": "选择目标文件夹，或先在下方新建文件夹。"
+  },
+  "folder.move-folder-title": {
+    "defaultMessage": "调整文件夹位置"
   },
   "folder.move-title": {
     "defaultMessage": "移动到文件夹"
@@ -1459,6 +1465,9 @@
   },
   "maps.nav-starred": {
     "defaultMessage": "已收藏"
+  },
+  "maps.nav-uncategorized": {
+    "defaultMessage": "未分类"
   },
   "maps.page-title": {
     "defaultMessage": "我的思维导图 | WiseMapping"

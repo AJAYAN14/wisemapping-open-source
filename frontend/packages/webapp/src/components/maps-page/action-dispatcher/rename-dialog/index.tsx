@@ -156,6 +156,7 @@ const RenameDialog = ({ mapId, onClose }: SimpleDialogProps): React.ReactElement
             onChange={handleOnChange}
             error={shownError}
             fullWidth={true}
+            autoFocus={true}
             maxLength={MAP_TITLE_MAX_LENGTH}
           />
 

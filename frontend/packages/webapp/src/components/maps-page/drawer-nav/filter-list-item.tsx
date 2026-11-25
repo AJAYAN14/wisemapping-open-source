@@ -15,14 +15,17 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-import React, { ReactElement } from 'react';
+import React, { ReactElement, useState } from 'react';
 import { useIntl } from 'react-intl';
+import Box from '@mui/material/Box';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
 import ListItemText from '@mui/material/ListItemText';
 import Tooltip from '@mui/material/Tooltip';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import type { Filter, LabelFilter } from '../index';
+import { MAP_IDS_DRAG_MIME } from '../folderTree';
+import { APPLE_FONT_STACK, appleColors, isDarkTheme } from '../appleDesign';
 import { DeleteLabelButton, FilterItemRoot, FilterListItemButton } from './styled';
 
 export interface ListItemProps {
@@ -30,6 +33,8 @@ export interface ListItemProps {
   label: string;
   filter: Filter;
   active?: Filter;
+  count?: number | undefined;
+  onDropMaps?: ((mapIds: number[]) => void) | undefined;
   onClick: (filter: Filter) => void;
   onDelete?: (id: number) => void;
 }
@@ -40,8 +45,12 @@ const StyleListItem = (props: ListItemProps): ReactElement => {
   const label = props.label;
   const filter = props.filter;
   const activeFilter = props.active;
+  const count = props.count;
+  const onDropMaps = props.onDropMaps;
   const onClick = props.onClick;
   const onDeleteLabel = props.onDelete;
+  const [isDragTarget, setIsDragTarget] = useState(false);
+
   const isSelected =
     activeFilter &&
     activeFilter.type == filter.type &&
@@ -63,16 +72,85 @@ const StyleListItem = (props: ListItemProps): ReactElement => {
     onDeleteLabel((filter as LabelFilter).label.id);
   };
 
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    if (!onDropMaps || !e.dataTransfer.types.includes(MAP_IDS_DRAG_MIME)) {
+      return;
+    }
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = 'move';
+    if (!isDragTarget) {
+      setIsDragTarget(true);
+    }
+  };
+
+  const handleDragLeave = () => {
+    if (isDragTarget) {
+      setIsDragTarget(false);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    setIsDragTarget(false);
+    if (!onDropMaps || !e.dataTransfer.types.includes(MAP_IDS_DRAG_MIME)) {
+      return;
+    }
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      const raw = e.dataTransfer.getData(MAP_IDS_DRAG_MIME);
+      const ids = JSON.parse(raw);
+      if (Array.isArray(ids) && ids.length > 0) {
+        onDropMaps(ids.filter((id): id is number => typeof id === 'number'));
+      }
+    } catch {
+      // ignore malformed drag payload
+    }
+  };
+
   return (
     <FilterItemRoot>
       <FilterListItemButton
         selected={isSelected}
         onClick={(e: React.MouseEvent<HTMLDivElement, MouseEvent>) => handleOnClick(e, filter)}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        sx={(theme) => {
+          if (!isDragTarget) return {};
+          const c = appleColors(isDarkTheme(theme));
+          return {
+            backgroundColor: c.amberSoft,
+            outline: `2px dashed ${c.amber}`,
+            outlineOffset: '-2px',
+          };
+        }}
       >
         <Tooltip title={label} disableInteractive>
           <ListItemIcon>{icon}</ListItemIcon>
         </Tooltip>
         <ListItemText primary={label} />
+        {typeof count === 'number' && count > 0 && (
+          <Box
+            component="span"
+            sx={(theme) => {
+              const c = appleColors(isDarkTheme(theme));
+              return {
+                fontSize: '0.72rem',
+                fontWeight: 700,
+                fontVariantNumeric: 'tabular-nums',
+                fontFamily: APPLE_FONT_STACK,
+                color: isSelected ? c.amberText : c.textTertiary,
+                px: '6px',
+                py: '1px',
+                borderRadius: '999px',
+                backgroundColor: isSelected ? 'transparent' : c.hoverFill,
+              };
+            }}
+          >
+            {count}
+          </Box>
+        )}
         {filter.type == 'label' && (
           <ListItemSecondaryAction>
             <DeleteLabelButton

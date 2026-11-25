@@ -19,11 +19,15 @@
 import { useCallback, useMemo, useState } from 'react';
 import { MapInfo } from '../../../classes/client';
 import type { Filter } from '..';
-import { Order, getComparator, isLabelFilter, mapsFilter, stableSort } from './model';
+import { Order, getComparator, isFolderFilter, isLabelFilter, mapsFilter, stableSort } from './model';
 
 /** What identifies the sidebar entry: choosing the same entry again hands over a new object. */
 const entryKey = (filter: Filter): string =>
-  isLabelFilter(filter) ? `label:${filter.label.id}` : filter.type;
+  isLabelFilter(filter)
+    ? `label:${filter.label.id}`
+    : isFolderFilter(filter)
+      ? `folder:${filter.folderId}`
+      : filter.type;
 
 /**
  * The state of the map list: what the sidebar and the search narrow it to, how it is sorted and
@@ -64,7 +68,7 @@ export const useMapsListState = (filter: Filter, maps: MapInfo[]): MapsListState
   const [orderBy, setOrderBy] = useState<keyof MapInfo>('lastModificationTime');
   const [search, setSearch] = useState('');
   const [requestedPage, setRequestedPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [rowsPerPage, setRowsPerPage] = useState(20);
   const [selected, setSelected] = useState<number[]>([]);
 
   // Adjusted while rendering, not in an effect: the list never shows a frame of the old entry's

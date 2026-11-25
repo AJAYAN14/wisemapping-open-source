@@ -2479,6 +2479,12 @@
       "value": "暂无文件夹"
     }
   ],
+  "folder.move": [
+    {
+      "type": 0,
+      "value": "移动到..."
+    }
+  ],
   "folder.move-button": [
     {
       "type": 0,
@@ -2489,6 +2495,12 @@
     {
       "type": 0,
       "value": "选择目标文件夹，或先在下方新建文件夹。"
+    }
+  ],
+  "folder.move-folder-title": [
+    {
+      "type": 0,
+      "value": "调整文件夹位置"
     }
   ],
   "folder.move-title": [
@@ -3229,6 +3241,12 @@
     {
       "type": 0,
       "value": "已收藏"
+    }
+  ],
+  "maps.nav-uncategorized": [
+    {
+      "type": 0,
+      "value": "未分类"
     }
   ],
   "maps.page-title": [

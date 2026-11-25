@@ -34,6 +34,7 @@ type InputProps = {
   minLength?: number;
   maxLength?: number;
   rows?: number;
+  autoFocus?: boolean | undefined;
 };
 
 /**
@@ -56,6 +57,7 @@ const Input = React.memo(function Input({
   disabled = false,
   minLength,
   maxLength = 254,
+  autoFocus = false,
 }: InputProps): React.ReactElement {
   const fieldError = error?.fields?.[name];
   return (
@@ -73,6 +75,7 @@ const Input = React.memo(function Input({
       margin="dense"
       disabled={disabled}
       autoComplete={autoComplete}
+      autoFocus={autoFocus}
       slotProps={{
         htmlInput: { minLength: minLength, maxLength: maxLength },
       }}

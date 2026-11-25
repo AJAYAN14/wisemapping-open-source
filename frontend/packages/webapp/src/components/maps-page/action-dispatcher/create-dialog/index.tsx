@@ -114,6 +114,7 @@ const CreateDialog = ({ onClose, folderId }: CreateProps): React.ReactElement =>
             onChange={handleOnChange}
             error={error}
             fullWidth={true}
+            autoFocus={true}
             maxLength={MAP_TITLE_MAX_LENGTH}
           />
 

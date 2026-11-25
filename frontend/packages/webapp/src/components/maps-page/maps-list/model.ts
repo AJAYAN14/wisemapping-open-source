@@ -26,12 +26,17 @@ import type { Filter, FolderFilter, LabelFilter } from '..';
 
 export type Order = 'asc' | 'desc';
 
-/** Sorts by `orderBy`: descending puts the greater value first. Equal or incomparable is 0. */
+/** Sorts by `orderBy`: descending puts the greater value first. Uses natural numeric collation for strings. */
 const descendingComparator = <T>(a: T, b: T, orderBy: keyof T): number => {
-  if (b[orderBy] < a[orderBy]) {
+  const aVal = a[orderBy];
+  const bVal = b[orderBy];
+  if (typeof aVal === 'string' && typeof bVal === 'string') {
+    return bVal.localeCompare(aVal, 'zh-Hans-CN', { numeric: true, sensitivity: 'base' });
+  }
+  if (bVal < aVal) {
     return -1;
   }
-  if (b[orderBy] > a[orderBy]) {
+  if (bVal > aVal) {
     return 1;
   }
   return 0;
@@ -78,6 +83,9 @@ export const mapsFilter =
         break;
       case 'folder':
         result = (mapInfo.folderId ?? null) === (filter as FolderFilter).folderId;
+        break;
+      case 'uncategorized':
+        result = (mapInfo.folderId ?? null) === null;
         break;
       case 'public':
         result = mapInfo.public;

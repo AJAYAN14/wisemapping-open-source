@@ -29,6 +29,7 @@ import type { Theme } from '@mui/material/styles';
 import { ErrorInfo, Folder, MapInfo } from '../../../classes/client';
 import { ClientContext } from '../../../classes/provider/client-context';
 import { Filter } from '..';
+import { MAP_IDS_DRAG_MIME } from '../folderTree';
 import ActionChooser, { ActionType } from '../action-chooser';
 import ActionDispatcher from '../action-dispatcher';
 import { CardSkeleton, MapsListSkeleton } from './MapsListSkeleton';
@@ -59,7 +60,11 @@ const NO_MAPS: MapInfo[] = [];
 /** Below `sm` the list shows cards; the styles of both views switch at the same breakpoint. */
 const narrowScreen = (theme: Theme): string => theme.breakpoints.down('sm');
 
-type RowMenu = { anchor: HTMLElement; mapId: number };
+type RowMenu = {
+  anchor?: HTMLElement | undefined;
+  anchorPosition?: { top: number; left: number } | undefined;
+  mapId: number;
+};
 type ActiveDialog = { actionType: ActionType; mapsId: number[] };
 
 interface MapsListProps {
@@ -122,6 +127,22 @@ export const MapsList = ({
     (mapId: number, anchor: HTMLElement) => setRowMenu({ mapId, anchor }),
     [],
   );
+  const handleContextMenu = useCallback(
+    (mapId: number, event: React.MouseEvent<HTMLTableRowElement>) => {
+      event.preventDefault();
+      event.stopPropagation();
+      setRowMenu({ mapId, anchorPosition: { top: event.clientY, left: event.clientX } });
+    },
+    [],
+  );
+  const handleDragStart = useCallback(
+    (mapId: number, event: React.DragEvent<HTMLTableRowElement>) => {
+      const dragIds = selected.includes(mapId) && selected.length > 0 ? selected : [mapId];
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData(MAP_IDS_DRAG_MIME, JSON.stringify(dragIds));
+    },
+    [selected],
+  );
 
   const handleMenuClose = (action: ActionType): void => {
     if (action && rowMenu) {
@@ -153,10 +174,11 @@ export const MapsList = ({
       ? emptyMessage
       : undefined;
 
-  const pagination = filteredMaps.length > rowsPerPage && (
+  const pagination = (filteredMaps.length > rowsPerPage || filteredMaps.length > 10) && (
     <ListPagination
       count={filteredMaps.length}
-      rowsPerPageOptions={[]}
+      rowsPerPageOptions={filteredMaps.length > 10 ? [10, 20, 50] : []}
+      labelRowsPerPage="每页"
       rowsPerPage={rowsPerPage}
       page={page}
       onPageChange={(_event, newPage) => changePage(newPage)}
@@ -213,6 +235,8 @@ export const MapsList = ({
               onStar={handleStar}
               onOpenMenu={handleOpenMenu}
               onRemoveLabel={handleRemoveLabel}
+              onContextMenu={handleContextMenu}
+              onDragStart={handleDragStart}
             />
           ))
         )}
@@ -223,7 +247,12 @@ export const MapsList = ({
   return (
     <ListRoot>
       {rowMenu && (
-        <ActionChooser anchor={rowMenu.anchor} onClose={handleMenuClose} mapId={rowMenu.mapId} />
+        <ActionChooser
+          anchor={rowMenu.anchor}
+          anchorPosition={rowMenu.anchorPosition}
+          onClose={handleMenuClose}
+          mapId={rowMenu.mapId}
+        />
       )}
       <ListPaper elevation={0}>
         <MapsListToolbar

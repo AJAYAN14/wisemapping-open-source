@@ -59,6 +59,8 @@ interface MapRowProps extends MapItemHandlers {
   selected: boolean;
   onToggleSelected: (mapId: number) => void;
   onRemoveLabel: (mapId: number, labelId: number) => void;
+  onContextMenu?: (mapId: number, event: React.MouseEvent<HTMLTableRowElement>) => void;
+  onDragStart?: (mapId: number, event: React.DragEvent<HTMLTableRowElement>) => void;
 }
 
 /** A map in the table: clicking the row (anywhere but its controls) selects it. */
@@ -69,6 +71,8 @@ const MapRowComponent = ({
   onStar,
   onOpenMenu,
   onRemoveLabel,
+  onContextMenu,
+  onDragStart,
 }: MapRowProps): React.ReactElement => {
   const intl = useIntl();
   const date = useDate();
@@ -87,7 +91,16 @@ const MapRowComponent = ({
   };
 
   return (
-    <TableRow hover onClick={() => onToggleSelected(map.id)} tabIndex={-1} selected={selected}>
+    <TableRow
+      hover
+      draggable={Boolean(onDragStart)}
+      onDragStart={onDragStart ? (e) => onDragStart(map.id, e) : undefined}
+      onContextMenu={onContextMenu ? (e) => onContextMenu(map.id, e) : undefined}
+      onClick={() => onToggleSelected(map.id)}
+      tabIndex={-1}
+      selected={selected}
+      sx={{ cursor: onDragStart ? 'grab' : undefined }}
+    >
       <BodyCell padding="checkbox">
         <SelectCheckbox
           checked={selected}
