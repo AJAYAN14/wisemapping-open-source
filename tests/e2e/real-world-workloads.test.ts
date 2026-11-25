@@ -50,13 +50,14 @@ describe('Tier 4 — Real-World Multi-Device Application Workloads (T4-01..T4-08
       expect(cfg.registrationEnabled).toBe(false);
       expect(cfg.googleOauth2Enabled).toBe(true);
 
-      // Verify frontend guards protect recovery & registration routes
+      // Verify frontend only exposes Google OAuth / maps / edit routes without legacy recovery/registration routes
       const appTsx = fs.readFileSync(
         path.join(ROOT, 'frontend/packages/webapp/src/app.tsx'),
         'utf8',
       );
-      expect(appTsx).toContain('/c/forgot-password');
-      expect(appTsx).toContain('/:locale/c/registration');
+      expect(appTsx).toContain('/c/login');
+      expect(appTsx).not.toContain('/c/forgot-password');
+      expect(appTsx).not.toContain('/:locale/c/registration');
 
       let jwt: string;
       if (caps.mode !== 'http') {

@@ -28,7 +28,6 @@ import AccountCircle from '@mui/icons-material/AccountCircle';
 import React, { use } from 'react';
 import { FormattedMessage } from 'react-intl';
 import ExitToAppOutlined from '@mui/icons-material/ExitToAppOutlined';
-import { useNavigate } from 'react-router';
 import { useFetchAccount } from '../../../classes/middleware';
 import { ClientContext } from '../../../classes/provider/client-context';
 import JwtTokenConfig from '../../../classes/jwt-token-config';
@@ -37,7 +36,6 @@ const AccountMenu = (): React.ReactElement => {
   const [anchorEl, setAnchorEl] = React.useState<HTMLElement>();
   const open = Boolean(anchorEl);
   const client = use(ClientContext);
-  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {

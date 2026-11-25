@@ -27,19 +27,13 @@ import {
   useLocation,
   Outlet,
 } from 'react-router';
-import ForgotPasswordSuccessPage from './components/forgot-password-success-page';
-import ResetPasswordPage from './components/reset-password-page';
-import RegistationPage from './components/registration-page';
 import LoginPage from './components/login-page';
-import { ForgotPasswordPage } from './components/forgot-password-page';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { createAppTheme } from './theme';
 import AppI18n, { Locales } from './classes/app-i18n';
 import { useLocaleMessages } from './classes/app-i18n/messages';
 import CssBaseline from '@mui/material/CssBaseline';
 import { ThemeProvider as MuiThemeProvider, StyledEngineProvider } from '@mui/material/styles';
-import RegistrationSuccessPage from './components/registration-success-page';
-import ActivationPage from './components/activation-page';
 import { ThemeProvider } from '@emotion/react';
 import { AppThemeProvider, useTheme } from './contexts/ThemeContext';
 import OAuthCallbackPage from './components/oauth-callback';
@@ -87,22 +81,6 @@ const PageEditorWrapper = ({ mode }: { mode: PageModeType }) => {
   );
 };
 
-// Create registration routes conditionally based on configuration
-const createRegistrationRoutes = () => {
-  if (AppConfig.isRegistrationEnabled()) {
-    return [
-      <Route key="registration" path="/c/registration" element={<RegistationPage />} />,
-      <Route
-        key="registration-success"
-        path="/c/registration-success"
-        element={<RegistrationSuccessPage />}
-      />,
-      <Route key="activation" path="/c/activation" element={<ActivationPage />} />,
-    ];
-  }
-  return [];
-};
-
 // Wrapper component that provides Chinese locale to IntlProvider
 const IntlProviderWrapper = ({ children }: { children: React.ReactNode }): ReactElement => {
   const location = useLocation();
@@ -143,47 +121,8 @@ const buildRouter = () =>
         >
           <Route path="/" element={<Redirect to="/c/login" />} />
           <Route path="/c/login" element={<LoginPage />} />
-          {/* Localized routes for login, registration, and forgot-password */}
-          <Route path="/:locale/c/login" element={<LoginPage />} />
-          {createRegistrationRoutes()}
-          {/* OAuth sign-in comes back here whether or not registration is open. */}
           <Route path="/c/oauth-callback" element={<OAuthCallbackPage />} />
           <Route path="/c/registration-google" element={<OAuthCallbackPage />} />
-          <Route path="/c/registration-facebook" element={<OAuthCallbackPage />} />
-          <Route
-            path="/:locale/c/registration"
-            element={
-              AppConfig.isRegistrationEnabled() ? <RegistationPage /> : <Redirect to="/c/login" />
-            }
-          />
-          <Route
-            path="/c/forgot-password"
-            element={
-              AppConfig.isLocalLoginEnabled() ? <ForgotPasswordPage /> : <Redirect to="/c/login" />
-            }
-          />
-          <Route
-            path="/:locale/c/forgot-password"
-            element={
-              AppConfig.isLocalLoginEnabled() ? <ForgotPasswordPage /> : <Redirect to="/c/login" />
-            }
-          />
-          <Route
-            path="/c/forgot-password-success"
-            element={
-              AppConfig.isLocalLoginEnabled() ? (
-                <ForgotPasswordSuccessPage />
-              ) : (
-                <Redirect to="/c/login" />
-              )
-            }
-          />
-          <Route
-            path="/c/reset-password"
-            element={
-              AppConfig.isLocalLoginEnabled() ? <ResetPasswordPage /> : <Redirect to="/c/login" />
-            }
-          />
 
           <Route element={<CommonPage />}>
             <Route
@@ -208,49 +147,9 @@ const buildRouter = () =>
               }
             />
             <Route
-              path="/c/maps/:id/print"
-              element={<PageEditorWrapper mode="view-private" />}
-              loader={mapLoader('view-private', true)}
-              errorElement={
-                <IntlProviderWrapper>
-                  <ErrorPage />
-                </IntlProviderWrapper>
-              }
-            />
-            <Route
               path="/c/maps/:id/:hid/view"
               element={<PageEditorWrapper mode="view-private" />}
               loader={mapLoader('view-private', true)}
-              errorElement={
-                <IntlProviderWrapper>
-                  <ErrorPage />
-                </IntlProviderWrapper>
-              }
-            />
-            <Route
-              path="/c/maps/:id/public"
-              loader={mapLoader('view-public', true)}
-              element={<PageEditorWrapper mode="view-public" />}
-              errorElement={
-                <IntlProviderWrapper>
-                  <ErrorPage />
-                </IntlProviderWrapper>
-              }
-            />
-            <Route
-              path="/c/maps/:id/embed"
-              loader={mapLoader('view-public', true)}
-              element={<PageEditorWrapper mode="view-public" />}
-              errorElement={
-                <IntlProviderWrapper>
-                  <ErrorPage />
-                </IntlProviderWrapper>
-              }
-            />
-            <Route
-              path="/c/maps/:id/try"
-              loader={mapLoader('try', true)}
-              element={<PageEditorWrapper mode="try" />}
               errorElement={
                 <IntlProviderWrapper>
                   <ErrorPage />

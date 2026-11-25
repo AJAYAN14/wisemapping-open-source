@@ -28,7 +28,6 @@ import type {
   PersistenceErrorCallback,
 } from '@wisemapping/mindplot';
 import Capability from '../../action/capability';
-import { trackEditorInteraction } from '../../../utils/analytics';
 import debounce from 'lodash/debounce';
 
 class Editor {
@@ -127,12 +126,10 @@ class Editor {
       const featureEdition = (value: FeatureEditEvent): void => {
         switch (value.event) {
           case 'note': {
-            trackEditorInteraction('note_editor_open');
             widgetBuilder.fireEvent('note', value.topic);
             break;
           }
           case 'link': {
-            trackEditorInteraction('link_editor_open');
             widgetBuilder.fireEvent('link', value.topic);
             break;
           }

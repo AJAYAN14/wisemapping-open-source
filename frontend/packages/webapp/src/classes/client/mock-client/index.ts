@@ -32,30 +32,7 @@ import Client, {
 } from '..';
 import { LocaleCode, localeFromStr } from '../../app-i18n';
 import JwtTokenConfig from '../../jwt-token-config';
-import { setAnalyticsUserEmail, clearAnalyticsUserId } from '../../../utils/analytics';
 import { appLogger as log } from '../../../utils/logger';
-
-const label1: Label = {
-  id: 1,
-  title: 'label 1',
-  color: 'black',
-};
-
-const label2: Label = {
-  id: 2,
-  title: 'label 2',
-  color: 'green',
-};
-
-const label3: Label = {
-  id: 3,
-  title: 'label 3',
-  color: 'red',
-};
-
-// The item at `index` of a non-empty list, wrapping around at its end.
-const cycle = <T>(list: readonly [T, ...T[]], index: number): T =>
-  list[index % list.length] ?? list[0];
 
 const MOCK_MAPS_KEY = 'wisemapping.mock.maps';
 const MOCK_XML_PREFIX = 'wisemapping.mock.xml.';
@@ -146,13 +123,11 @@ class MockClient implements Client {
 
   logout(): Promise<void> {
     JwtTokenConfig.removeToken();
-    clearAnalyticsUserId();
     return Promise.resolve();
   }
 
   login(auth: JwtAuth): Promise<void> {
     JwtTokenConfig.storeToken(auth.email);
-    setAnalyticsUserEmail(auth.email);
     return Promise.resolve();
   }
 
@@ -240,7 +215,9 @@ class MockClient implements Client {
     };
     this.maps.push(newMap);
     saveMockMaps(this.maps);
-    saveMockXml(id, model.content);
+    if (typeof model.content === 'string') {
+      saveMockXml(id, model.content);
+    }
     return Promise.resolve(id);
   }
 
@@ -515,64 +492,6 @@ class MockClient implements Client {
     _provider?: string,
   ): Promise<Oauth2CallbackResult> {
     return this.processGoogleCallback();
-  }
-
-  // Admin methods (mock implementations)
-  getAdminUsers(): Promise<Record<string, unknown>[]> {
-    return Promise.resolve([
-      {
-        id: 1,
-        email: 'admin@example.com',
-        firstname: 'Admin',
-        lastname: 'User',
-        fullName: 'Admin User',
-        locale: 'en',
-        creationDate: '2023-01-01T00:00:00Z',
-        isActive: true,
-        isSuspended: false,
-        allowSendEmail: true,
-        authenticationType: 'DATABASE',
-      },
-      {
-        id: 2,
-        email: 'user@example.com',
-        firstname: 'Regular',
-        lastname: 'User',
-        fullName: 'Regular User',
-        locale: 'en',
-        creationDate: '2023-01-02T00:00:00Z',
-        isActive: true,
-        isSuspended: false,
-        allowSendEmail: false,
-        authenticationType: 'GOOGLE_OAUTH2',
-      },
-    ]);
-  }
-
-  updateAdminUser(
-    userId: number,
-    userData: Record<string, unknown>,
-  ): Promise<Record<string, unknown>> {
-    return Promise.resolve({
-      id: userId,
-      ...userData,
-      fullName: `${userData['firstname'] as string} ${userData['lastname'] as string}`,
-    });
-  }
-
-  createAdminUser(userData: Record<string, unknown>): Promise<Record<string, unknown>> {
-    return Promise.resolve({
-      id: Math.floor(Math.random() * 1000),
-      ...userData,
-      fullName: `${userData['firstname'] as string} ${userData['lastname'] as string}`,
-      isActive: true,
-      isSuspended: false,
-      authenticationType: 'DATABASE',
-    });
-  }
-
-  deleteAdminUser(_userId: number): Promise<void> {
-    return Promise.resolve();
   }
 }
 

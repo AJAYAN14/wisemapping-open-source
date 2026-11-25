@@ -44,7 +44,6 @@ import { fetchMindmap } from '../../../editor-page/PersistenceManagerUtils';
 
 import Checkbox from '@mui/material/Checkbox';
 import { useFetchMapMetadata } from '../../../../classes/middleware';
-import { trackExport } from '../../../../utils/analytics';
 
 type ExportFormat = 'svg' | 'jpg' | 'png' | 'pdf' | 'txt' | 'mm' | 'mmx' | 'wxml' | 'md';
 
@@ -208,9 +207,6 @@ const ExportDialog = ({
   const handleOnSubmit = (): void => {
     exporter(exportFormat)
       .then((url: string) => {
-        // Track specific export format in Google Analytics
-        trackExport(exportFormat, exportGroup);
-
         // Create hidden anchor to force download ...
         const anchor: HTMLAnchorElement = document.createElement('a');
         anchor.style.display = 'display: none';

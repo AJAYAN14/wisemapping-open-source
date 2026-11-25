@@ -95,7 +95,7 @@ describe('M1 repository restructuring, backup, frontend R1 & R4 integration', ()
     expect(matches).toEqual([]);
   });
 
-  it('configures R1 production bootstrap URL and non-Google auth route guards', () => {
+  it('configures R1 production bootstrap URL and Google-only auth routes', () => {
     const prodConfig = JSON.parse(readText('frontend/packages/webapp/config.prod.json')) as {
       type: string;
       url: string;
@@ -103,13 +103,11 @@ describe('M1 repository restructuring, backup, frontend R1 & R4 integration', ()
     expect(prodConfig).toEqual({ type: 'remote', url: '/api/restful/app/config' });
 
     const appTsx = readText('frontend/packages/webapp/src/app.tsx');
-    expect(appTsx).toContain('path="/:locale/c/registration"');
-    expect(appTsx).toContain('AppConfig.isRegistrationEnabled()');
-    expect(appTsx).toContain('path="/c/forgot-password"');
-    expect(appTsx).toContain('path="/:locale/c/forgot-password"');
-    expect(appTsx).toContain('path="/c/forgot-password-success"');
-    expect(appTsx).toContain('path="/c/reset-password"');
-    expect(appTsx).toContain('AppConfig.isLocalLoginEnabled()');
+    expect(appTsx).toContain('path="/c/login"');
+    expect(appTsx).toContain('path="/c/oauth-callback"');
+    expect(appTsx).not.toContain('path="/:locale/c/registration"');
+    expect(appTsx).not.toContain('path="/c/forgot-password"');
+    expect(appTsx).not.toContain('path="/c/reset-password"');
     expect(appTsx).toContain('<Redirect to="/c/login" />');
   });
 
@@ -148,7 +146,7 @@ describe('M1 repository restructuring, backup, frontend R1 & R4 integration', ()
     expect(editorPage).toContain('VersionConflictDialog');
     expect(editorPage).toContain("error.errorType === 'conflict'");
 
-    const webappLocales = ['ar', 'de', 'en', 'es', 'fr', 'hi', 'it', 'ja', 'pt', 'ru', 'uk', 'zh', 'zh-CN'];
+    const webappLocales = ['zh', 'zh-CN'];
     for (const locale of webappLocales) {
       const langJson = JSON.parse(readText(`frontend/packages/webapp/lang/${locale}.json`)) as Record<
         string,
@@ -189,30 +187,16 @@ describe('M1 repository restructuring, backup, frontend R1 & R4 integration', ()
     expect(pkg.devDependencies?.[pkg.name]).toBeUndefined();
   });
 
-  it('satisfies informal form-of-address rules for de and es messages', () => {
-    const formalRegexes: Record<string, RegExp> = {
-      de: /\b(Sie|Ihnen|Ihr|Ihre|Ihren|Ihrem|Ihrer|Ihres)\b/,
-      es: /\b(usted|ustedes|Ingrese|Introduzca|Seleccione|Haga|Inténtelo|Regístrese|Contáctenos|Contacte|Espere|Use|Utilice|Elija|Escriba|Revise|Vuelva|Proporcione|Complete|Le|le enviaremos|le hemos)\b/,
-    };
-    for (const locale of ['de', 'es']) {
-      const re = formalRegexes[locale]!;
-      const raw = JSON.parse(readText(`frontend/packages/webapp/lang/${locale}.json`)) as Record<
-        string,
-        { defaultMessage: string }
-      >;
+  it('keeps Chinese-only compiled locale bundles in webapp', () => {
+    for (const locale of ['zh', 'zh-CN']) {
       const compiled = JSON.parse(
         readText(`frontend/packages/webapp/src/compiled-lang/${locale}.json`),
       ) as Record<string, Array<{ type: number; value: string }>>;
-
-      for (const [id, entry] of Object.entries(raw)) {
-        expect(re.test(entry.defaultMessage), `${locale}.json ${id}`).toBe(false);
-      }
       for (const key of ['editor.conflict.title', 'editor.conflict.description', 'editor.conflict.refresh']) {
-        expect(re.test(compiled[key]?.[0]?.value ?? ''), `compiled-lang/${locale}.json ${key}`).toBe(
-          false,
-        );
+        expect(compiled[key]?.[0]?.value?.trim().length).toBeGreaterThan(0);
       }
     }
+    expect(fs.existsSync(path.join(FRONTEND, 'packages/webapp/src/compiled-lang/en.json'))).toBe(false);
   });
 
   it('tracks frontend/packages/webapp/.env in git while ignoring root .env files', () => {

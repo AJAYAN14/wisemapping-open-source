@@ -25,17 +25,11 @@ import { QueryClient } from '@tanstack/react-query';
 import DuplicateDialog from './duplicate-dialog';
 import CreateDialog from './create-dialog';
 import HistoryDialog from './history-dialog';
-import PublishDialog from './publish-dialog';
-import InfoDialog from './info-dialog';
 import DeleteMultiselectDialog from './delete-multiselect-dialog';
-import ShareDialog from './share-dialog';
 import LabelDialog from './label-dialog';
-import { trackMindmapListAction } from '../../../utils/analytics';
 import type { Designer } from '@wisemapping/editor';
 
-// They use the editor's exporters and importers: loaded with the editor (1.3 MB) when opened,
-// not with the map list.
-const ImportDialog = React.lazy(() => import('./import-dialog'));
+// Uses the editor's exporters: loaded lazily on demand.
 const ExportDialog = React.lazy(() => import('./export-dialog'));
 
 export type BasicMapInfo = {
@@ -60,39 +54,23 @@ const ActionDispatcher = ({
   action,
   onClose,
   fromEditor = false,
-  pageMode,
   designer,
   beforeRevert,
 }: ActionDialogProps): React.ReactElement => {
   useEffect(() => {
     if (action) {
-      trackMindmapListAction(action, 'map_metadata');
-
-      // Handle immediate actions
       switch (action) {
         case 'open':
           window.location.href = `/c/maps/${mapsId}/edit`;
           onClose(true);
           break;
         case 'back':
-          if (pageMode === 'try') {
-            window.history.back();
-          } else {
-            window.location.href = '/c/maps';
-          }
-          onClose(true);
-          break;
-        case 'print':
-          window.open(`/c/maps/${mapsId}/print`, 'print');
-          onClose(true);
-          break;
-        case 'theme':
-          // Theme is handled within the editor, just close the dialog
+          window.location.href = '/c/maps';
           onClose(true);
           break;
       }
     }
-  }, [action, mapsId, onClose, pageMode]);
+  }, [action, mapsId, onClose]);
 
   const handleOnClose = (success?: boolean): void => {
     onClose(success);
@@ -118,9 +96,6 @@ const ActionDispatcher = ({
       {action === 'history' && singleMap && (
         <HistoryDialog onClose={handleOnClose} mapId={mapId} beforeRevert={beforeRevert} />
       )}
-      {action === 'import' && <ImportDialog onClose={handleOnClose} />}
-      {action === 'publish' && singleMap && <PublishDialog onClose={handleOnClose} mapId={mapId} />}
-      {action === 'info' && singleMap && <InfoDialog onClose={handleOnClose} mapId={mapId} />}
       {action === 'export' && singleMap && (
         <ExportDialog
           onClose={handleOnClose}
@@ -129,7 +104,6 @@ const ActionDispatcher = ({
           designer={designer}
         />
       )}
-      {action === 'share' && singleMap && <ShareDialog onClose={handleOnClose} mapId={mapId} />}
       {action === 'label' && <LabelDialog onClose={handleOnClose} mapsId={mapsId} />}
     </Suspense>
   );

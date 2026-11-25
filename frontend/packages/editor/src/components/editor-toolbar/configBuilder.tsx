@@ -23,8 +23,6 @@ import LinkOutlinedIcon from '@mui/icons-material/LinkOutlined';
 import SentimentSatisfiedAltIcon from '@mui/icons-material/SentimentSatisfiedAlt';
 import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
 import TextureIcon from '@mui/icons-material/Texture';
-import ShareOutlinedIcon from '@mui/icons-material/ShareOutlined';
-import { $notify } from '@wisemapping/mindplot';
 
 import ActionConfig from '../../classes/action/action-config';
 import NodePropertyValueModelBuilder from '../../classes/model/node-property-builder';
@@ -38,7 +36,6 @@ import RelationshipStyleIcon from '../icons/RelationshipStyleIcon';
 import TopicIconEditor from '../action-widget/pane/topic-icon-editor';
 import Editor from '../../classes/model/editor';
 import { IntlShape } from 'react-intl';
-import { trackRelationshipAction, trackEditorPanelAction } from '../../utils/analytics';
 import CanvasStyleEditor, { CanvasStyle } from '../action-widget/pane/canvas-style-editor';
 import { formatTooltip } from '../visualization-toolbar/utils';
 import type { SelectionSnapshot } from '../../hooks/useSelection';
@@ -53,16 +50,10 @@ export function buildEditorPanelConfig(
   model: Editor,
   intl: IntlShape,
   selection: SelectionSnapshot,
-  getDeepLink?: (nodeId: number) => string,
 ): ActionConfig[] {
   const modelBuilder = new NodePropertyValueModelBuilder(model.getDesigner());
   const noTopicSelected = selection.topicCount === 0;
   const noRelationshipSelected = selection.relationshipCount === 0;
-
-  const singleSelectedTopicId = (): number | undefined => {
-    const [selected, ...others] = model.getDesignerModel()!.filterSelectedTopics();
-    return selected && others.length === 0 ? selected.getId() : undefined;
-  };
 
   const styleConfiguration: ActionConfig = {
     icon: <BrushIcon />,
@@ -73,7 +64,6 @@ export function buildEditorPanelConfig(
     options: [
       {
         render: (closeModal) => {
-          trackEditorPanelAction('open_topic_style_editor');
           return (
             <TopicStyleEditor
               closeModal={closeModal}
@@ -100,7 +90,6 @@ export function buildEditorPanelConfig(
     options: [
       {
         render: (closeModal) => {
-          trackEditorPanelAction('open_relationship_style_editor');
           return (
             <RelationshipStyleEditor
               closeModal={closeModal}
@@ -128,7 +117,6 @@ export function buildEditorPanelConfig(
     options: [
       {
         render: (closeModal) => {
-          trackEditorPanelAction('open_font_style_editor');
           return (
             <TopicFontEditor
               closeModal={closeModal}
@@ -157,7 +145,6 @@ export function buildEditorPanelConfig(
       defaultMessage: 'Add Relationship',
     }),
     onClick: (e) => {
-      trackRelationshipAction('show_relationship_pivot');
       model.getDesigner().showRelPivot(e.nativeEvent);
     },
     disabled: () => noTopicSelected,
@@ -175,64 +162,11 @@ export function buildEditorPanelConfig(
     options: [
       {
         render: (closeModal) => {
-          trackEditorPanelAction('open_link_editor');
           return <TopicLinkEditor closeModal={closeModal} urlModel={modelBuilder.getLinkModel()} />;
         },
       },
     ],
     disabled: () => noTopicSelected,
-  };
-
-  /**
-   * copies a shareable URL that deep-links straight to the selected node
-   */
-  const copyNodeLinkConfiguration: ActionConfig = {
-    icon: <ShareOutlinedIcon />,
-    tooltip: intl.formatMessage({
-      id: 'editor-panel.tooltip-copy-node-link',
-      defaultMessage: 'Copy Link to Node',
-    }),
-    ariaLabel: intl.formatMessage({
-      id: 'editor-panel.tooltip-copy-node-link',
-      defaultMessage: 'Copy Link to Node',
-    }),
-    'data-testid': 'copy-node-link-button',
-    visible: Boolean(getDeepLink),
-    onClick: () => {
-      // The topic id comes from the designer's own selection, never from the
-      // rendered SVG.
-      const nodeId = singleSelectedTopicId();
-      if (nodeId === undefined || !getDeepLink) {
-        return;
-      }
-      trackEditorPanelAction('copy_node_deep_link');
-
-      const notifyFailure = (error: unknown) => {
-        console.error('Could not copy the node link to the clipboard:', error);
-        $notify(
-          intl.formatMessage({
-            id: 'editor-panel.deeplink-copy-failed',
-            defaultMessage: 'Could not copy the link to the clipboard',
-          }),
-        );
-      };
-
-      // navigator.clipboard is undefined outside a secure context.
-      if (!navigator.clipboard) {
-        notifyFailure(new Error('Clipboard API is not available'));
-        return;
-      }
-
-      navigator.clipboard.writeText(getDeepLink(nodeId)).then(() => {
-        $notify(
-          intl.formatMessage({
-            id: 'editor-panel.deeplink-copied',
-            defaultMessage: 'Link to node copied to clipboard',
-          }),
-        );
-      }, notifyFailure);
-    },
-    disabled: () => !getDeepLink || singleSelectedTopicId() === undefined,
   };
 
   /**
@@ -247,7 +181,6 @@ export function buildEditorPanelConfig(
     options: [
       {
         render: (closeModal) => {
-          trackEditorPanelAction('open_canvas_style_editor');
           return (
             <CanvasStyleEditor
               closeModal={closeModal}
@@ -280,7 +213,6 @@ export function buildEditorPanelConfig(
           defaultMessage: 'Note',
         }),
         render: (closeModal) => {
-          trackEditorPanelAction('open_note_editor');
           return (
             <RichTextNoteEditor closeModal={closeModal} noteModel={modelBuilder.getNoteModel()} />
           );
@@ -302,7 +234,6 @@ export function buildEditorPanelConfig(
     options: [
       {
         render: (closeModal) => {
-          trackEditorPanelAction('open_icon_editor');
           return (
             <TopicIconEditor closeModal={closeModal} iconModel={modelBuilder.getTopicIconModel()} />
           );
@@ -328,7 +259,6 @@ export function buildEditorPanelConfig(
           defaultMessage: 'Add Topic Image',
         }),
         render: (closeModal) => {
-          trackEditorPanelAction('open_topic_image_editor');
           return (
             <TopicImagePicker
               triggerClose={closeModal}
@@ -351,7 +281,6 @@ export function buildEditorPanelConfig(
     editLinkUrlConfiguration,
     addRelationConfiguration,
     relationshipStyleConfiguration,
-    copyNodeLinkConfiguration,
     editCanvasStyleConfiguration,
   ];
 }

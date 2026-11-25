@@ -20,101 +20,30 @@ import { useEffect, useState } from 'react';
 import type { MessageFormatElement } from 'react-intl';
 import { appLogger as log } from '../../utils/logger';
 import type { LocaleCode } from '.';
-// English is the fallback, so it is bundled; every other locale is a chunk of its own, with its
-// dayjs locale, loaded when a user needs it (together they are about 480 KB).
-import enMessages from '../../compiled-lang/en.json';
 import zhMessages from '../../compiled-lang/zh.json';
 import zhCnMessages from '../../compiled-lang/zh-CN.json';
 import 'dayjs/locale/zh-cn';
 
 export type Messages = Record<string, MessageFormatElement[]>;
 
-type Catalog = { default: unknown };
-
-// A locale's messages and its dayjs locale, which registers itself for the dates (see ./dates).
-const withDates =
-  (catalog: () => Promise<Catalog>, dates: () => Promise<unknown>) => async (): Promise<Catalog> =>
-    (await Promise.all([catalog(), dates()]))[0];
-
-const LOADERS: Record<Exclude<LocaleCode, 'en'>, () => Promise<Catalog>> = {
-  es: withDates(
-    () => import('../../compiled-lang/es.json'),
-    () => import('dayjs/locale/es'),
-  ),
-  de: withDates(
-    () => import('../../compiled-lang/de.json'),
-    () => import('dayjs/locale/de'),
-  ),
-  fr: withDates(
-    () => import('../../compiled-lang/fr.json'),
-    () => import('dayjs/locale/fr'),
-  ),
-  ru: withDates(
-    () => import('../../compiled-lang/ru.json'),
-    () => import('dayjs/locale/ru'),
-  ),
-  uk: withDates(
-    () => import('../../compiled-lang/uk.json'),
-    () => import('dayjs/locale/uk'),
-  ),
-  zh: withDates(
-    () => import('../../compiled-lang/zh.json'),
-    () => import('dayjs/locale/zh'),
-  ),
-  'zh-CN': withDates(
-    () => import('../../compiled-lang/zh-CN.json'),
-    () => import('dayjs/locale/zh-cn'),
-  ),
-  ja: withDates(
-    () => import('../../compiled-lang/ja.json'),
-    () => import('dayjs/locale/ja'),
-  ),
-  pt: withDates(
-    () => import('../../compiled-lang/pt.json'),
-    () => import('dayjs/locale/pt'),
-  ),
-  it: withDates(
-    () => import('../../compiled-lang/it.json'),
-    () => import('dayjs/locale/it'),
-  ),
-  hi: withDates(
-    () => import('../../compiled-lang/hi.json'),
-    () => import('dayjs/locale/hi'),
-  ),
-  ar: withDates(
-    () => import('../../compiled-lang/ar.json'),
-    () => import('dayjs/locale/ar'),
-  ),
-};
-
 const CHINESE = zhMessages as unknown as Messages;
 const CHINESE_CN = zhCnMessages as unknown as Messages;
-const ENGLISH = enMessages as unknown as Messages;
 const loaded = new Map<LocaleCode, Messages>([
   ['zh', CHINESE],
   ['zh-CN', CHINESE_CN],
-  ['en', ENGLISH],
 ]);
 
 /** The messages of a locale already loaded, or undefined. */
 export const getLoadedMessages = (code: LocaleCode): Messages | undefined => loaded.get(code);
 
 /**
- * Loads the messages of a locale. The root route loader calls it with the user's locale, so
- * that the first paint is in that language.
+ * Loads the messages of a locale.
  */
-export const loadMessages = async (code: LocaleCode): Promise<Messages> => {
-  const ready = loaded.get(code);
-  if (ready) {
-    return ready;
-  }
-  const messages = (await LOADERS[code as Exclude<LocaleCode, 'en'>]()).default as Messages;
-  loaded.set(code, messages);
-  return messages;
-};
+export const loadMessages = async (code: LocaleCode): Promise<Messages> =>
+  loaded.get(code) ?? CHINESE;
 
 /**
- * Loads the messages of a locale, falling back to Chinese when its chunk can not be fetched.
+ * Loads the messages of a locale, falling back to Chinese.
  */
 export const preloadMessages = (code: LocaleCode): Promise<Messages> =>
   loadMessages(code).catch((error) => {
@@ -125,16 +54,14 @@ export const preloadMessages = (code: LocaleCode): Promise<Messages> =>
 export type LocaleMessages = { locale: LocaleCode; messages: Messages };
 
 /**
- * The locale and messages to give IntlProvider. Until the locale's messages are loaded it serves
- * English, as English: react-intl would report every message as missing for another locale.
+ * The locale and messages to give IntlProvider.
  */
 export const useLocaleMessages = (code: LocaleCode): LocaleMessages => {
   const [shown, setShown] = useState<LocaleMessages>(() => {
     const messages = loaded.get(code);
-    return messages ? { locale: code, messages } : { locale: 'en', messages: ENGLISH };
+    return messages ? { locale: code, messages } : { locale: 'zh', messages: CHINESE };
   });
 
-  // A locale already loaded is shown in the same render.
   const ready = loaded.get(code);
   if (ready && shown.messages !== ready) {
     setShown({ locale: code, messages: ready });

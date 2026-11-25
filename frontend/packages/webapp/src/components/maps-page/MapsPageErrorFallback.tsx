@@ -23,7 +23,6 @@ import Button from '@mui/material/Button';
 import { isRouteErrorResponse, useNavigate, useRouteError } from 'react-router';
 import ErrorPage from '../error-page';
 import type { ErrorInfo } from '../../classes/client';
-import { trackPageView } from '../../utils/analytics';
 import { FallbackBackdrop, FallbackCard } from './error-fallback.styled';
 
 const isErrorInfo = (error: unknown): error is ErrorInfo =>
@@ -54,7 +53,6 @@ const MapsPageErrorFallback = (): ReactElement => {
         id: 'maps.auth-required-title',
         defaultMessage: 'Sign In Required | WiseMapping',
       });
-      trackPageView(window.location.pathname, 'MapsPageAuthRequired');
     }
   }, [intl, isAuthError]);
 

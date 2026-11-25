@@ -18,7 +18,6 @@
 
 import Client from '../client';
 import RestClient from '../client/rest-client';
-import AdminClient, { AdminClientInterface } from '../client/admin-client';
 import { appLogger as log } from '../../utils/logger';
 
 type ConfigContainer = {
@@ -30,19 +29,9 @@ type ConfigContainer = {
 type Config = {
   uiBaseUrl: string;
   apiBaseUrl: string;
-  analyticsAccount?: string;
-  recaptcha2Enabled: boolean;
-  registrationEnabled: boolean;
-  recaptcha2SiteKey?: string;
   clientType: 'mock' | 'rest';
   googleOauth2Url: string;
   googleOauth2Enabled: boolean;
-  facebookOauth2Url: string;
-  facebookOauth2Enabled: boolean;
-  oidcOauth2Url?: string;
-  oidcOauth2Enabled?: boolean;
-  oidcOauth2Label?: string;
-  localLoginEnabled?: boolean;
   jwtExpirationMin: number;
 };
 
@@ -53,14 +42,9 @@ class AppConfig {
 
   private static _client: Client | undefined;
 
-  private static _adminClient: AdminClientInterface | undefined;
-
-  // The mock clients, loaded by initialize() only when the configuration asks for them: they are
-  // for development, and production does not download them.
   private static _mocks:
     | {
         MockClient: new () => Client;
-        MockAdminClient: new () => AdminClientInterface;
       }
     | undefined;
 
@@ -73,13 +57,9 @@ class AppConfig {
       this._initializationPromise = this.loadConfig()
         .then(async (config) => {
           if (AppConfig.usesMockClient(config)) {
-            const [mockClient, mockAdminClient] = await Promise.all([
-              import('../client/mock-client'),
-              import('../client/mock-admin-client'),
-            ]);
+            const mockClient = await import('../client/mock-client');
             this._mocks = {
               MockClient: mockClient.default,
-              MockAdminClient: mockAdminClient.default,
             };
           }
           this._config = config;
@@ -175,69 +155,14 @@ class AppConfig {
     return config.clientType === 'rest' || !config.clientType;
   }
 
-  static isRecaptcha2Enabled(): boolean {
-    const config = this.fetchOrGetConfig();
-    return config.recaptcha2Enabled;
-  }
-
-  static getRecaptcha2SiteKey(): string | undefined {
-    const config = this.fetchOrGetConfig();
-    return config.recaptcha2SiteKey;
-  }
-
-  static getGoogleAnalyticsAccount(): string | undefined {
-    const config = this.fetchOrGetConfig();
-    return config.analyticsAccount;
-  }
-
-  // Sign-up goes with local login: without it, accounts are created on their first OpenID
-  // Connect login instead.
-  static isRegistrationEnabled(): boolean {
-    const config = this.fetchOrGetConfig();
-    return config.registrationEnabled && this.isLocalLoginEnabled();
-  }
-
   static getGoogleOauth2Url(): string | undefined {
     const config = this.fetchOrGetConfig();
     return config.googleOauth2Url;
   }
 
-  static getFacebookOauth2Url(): string | undefined {
-    const config = this.fetchOrGetConfig();
-    return config.facebookOauth2Url;
-  }
-
   static isGoogleOauth2Enabled(): boolean {
     const config = this.fetchOrGetConfig();
     return config.googleOauth2Enabled || false;
-  }
-
-  static isFacebookOauth2Enabled(): boolean {
-    const config = this.fetchOrGetConfig();
-    return config.facebookOauth2Enabled || false;
-  }
-
-  static getOidcOauth2Url(): string | undefined {
-    const config = this.fetchOrGetConfig();
-    return config.oidcOauth2Url;
-  }
-
-  static isOidcOauth2Enabled(): boolean {
-    const config = this.fetchOrGetConfig();
-    return config.oidcOauth2Enabled || false;
-  }
-
-  // Name of the instance's own identity provider, shown on its sign-in button.
-  static getOidcOauth2Label(): string {
-    const config = this.fetchOrGetConfig();
-    return config.oidcOauth2Label || 'Single Sign-On';
-  }
-
-  // Email/password login. The backend turns it off once OpenID Connect is configured; older
-  // backends do not send the flag, and keep it on.
-  static isLocalLoginEnabled(): boolean {
-    const config = this.fetchOrGetConfig();
-    return config.localLoginEnabled ?? true;
   }
 
   static getClient(): Client {
@@ -264,40 +189,6 @@ class AppConfig {
     }
 
     this._client = result;
-    return result;
-  }
-
-  static getAdminClient(): AdminClientInterface {
-    if (this._adminClient) {
-      return this._adminClient;
-    }
-
-    // If we're in mock mode, always use MockAdminClient for admin functionality
-    if (this.isMockEnv()) {
-      log.info('Mock environment detected, using MockAdminClient');
-      this._adminClient = new (this.mocks().MockAdminClient)();
-      return this._adminClient;
-    }
-
-    let result: AdminClientInterface | undefined;
-    try {
-      if (this.isRestClient()) {
-        const apiBaseUrl = this.getApiBaseUrl();
-        if (!apiBaseUrl) {
-          throw new Error('API base URL is not configured');
-        }
-        result = new AdminClient(apiBaseUrl);
-      }
-    } catch (e) {
-      log.error('Admin client could not be initialized.', e);
-    }
-
-    if (!result) {
-      log.warn('Service using mock admin client');
-      result = new (this.mocks().MockAdminClient)();
-    }
-
-    this._adminClient = result;
     return result;
   }
 

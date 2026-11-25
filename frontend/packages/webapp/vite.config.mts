@@ -18,10 +18,8 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-import { buildStaticUrls, generateSitemapXml } from './src/components/sitemap/utils';
 import { resolveBootstrapConfig } from './src/utils/bootstrap-config-source';
 import { createRequire } from 'module';
-import { readFileSync } from 'fs';
 
 const requireJson = createRequire(import.meta.url);
 
@@ -46,41 +44,6 @@ const wxmlLoader = () => {
   };
 };
 
-const sitemapMiddleware = () => ({
-  name: 'sitemap-dev-middleware',
-  configureServer(server) {
-    server.middlewares.use('/sitemap.xml', (req, res, next) => {
-      if (req.method && req.method !== 'GET') {
-        return next();
-      }
-
-      try {
-        const forwardedProto = req.headers['x-forwarded-proto'];
-        const forwardedValue = Array.isArray(forwardedProto) ? forwardedProto[0] : forwardedProto;
-        const protocol =
-          forwardedValue ||
-          ((req.socket as { encrypted?: boolean } | undefined)?.encrypted ? 'https' : 'http');
-        const host = req.headers.host;
-
-        if (!host) {
-          return next();
-        }
-
-        const baseUrl = `${protocol}://${host}`;
-        const urls = buildStaticUrls({ baseUrl });
-        const xml = generateSitemapXml(urls);
-
-        res.statusCode = 200;
-        res.setHeader('Content-Type', 'application/xml');
-        res.end(xml);
-      } catch (error) {
-        console.error('Failed to generate sitemap.xml in dev server', error);
-        next(error);
-      }
-    });
-  },
-});
-
 export default defineConfig(({ mode }) => {
   // The config reads process.env directly, so the returned values are unused. The call stays for its
   // side effect: it copies NODE_ENV, BROWSER and BROWSER_ARGS from the .env files into process.env.
@@ -97,7 +60,6 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       wxmlLoader(),
-      sitemapMiddleware(),
       htmlTemplatePlugin({}),
     ],
     resolve: {
@@ -130,6 +92,10 @@ export default defineConfig(({ mode }) => {
         },
         {
           find: /^@wisemapping\/mindplot\/src\/(.*)/,
+          replacement: path.resolve(import.meta.dirname, '../mindplot/src/$1'),
+        },
+        {
+          find: /^@wisemapping\/mindplot\/(.+)/,
           replacement: path.resolve(import.meta.dirname, '../mindplot/src/$1'),
         },
         {

@@ -41,7 +41,6 @@ import {
   PaneSection,
   PaneSectionTitle,
 } from '../shared/StyledPane';
-import { trackRelationshipAction } from '../../../../utils/analytics';
 
 const ActionButton = styled(IconButton)<{ selected?: boolean }>(({ selected, theme }) => ({
   padding: '8px',
@@ -66,7 +65,6 @@ const RelationshipStyleEditor = (props: RelationshipStyleEditorProps): ReactElem
   const intl = useIntl();
 
   const handleStrokeStyleChange = (style: StrokeStyle) => {
-    trackRelationshipAction('stroke_style_change', style.toLowerCase());
     const setValue = props.strokeStyleModel.setValue;
     if (setValue) {
       setValue(style);
@@ -74,7 +72,6 @@ const RelationshipStyleEditor = (props: RelationshipStyleEditorProps): ReactElem
   };
 
   const handleStartArrowToggle = () => {
-    trackRelationshipAction('arrow_toggle', 'start_arrow');
     const setValue = props.startArrowModel.setValue;
     if (setValue) {
       setValue(!props.startArrowModel.getValue());
@@ -82,7 +79,6 @@ const RelationshipStyleEditor = (props: RelationshipStyleEditorProps): ReactElem
   };
 
   const handleEndArrowToggle = () => {
-    trackRelationshipAction('arrow_toggle', 'end_arrow');
     const setValue = props.endArrowModel.setValue;
     if (setValue) {
       setValue(!props.endArrowModel.getValue());

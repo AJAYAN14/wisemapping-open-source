@@ -32,7 +32,6 @@ import NodeProperty from '../../../../classes/model/node-property';
 import { SwitchValueDirection } from '../../../../classes/model/value-stepper';
 import ColorPicker from '../color-picker';
 import Editor from '../../../../classes/model/editor';
-import { trackFontFormatAction } from '../../../../utils/analytics';
 import {
   PaneCenteredRow,
   PaneCloseButton,
@@ -110,7 +109,6 @@ const TopicFontEditor = (props: TopicFontEditorProps): ReactElement => {
   };
 
   const handleFontSizeIncrease = () => {
-    trackFontFormatAction('font_size_change', 'increase');
     const switchValue = props.fontSizeModel.switchValue;
     if (switchValue) {
       switchValue(SwitchValueDirection.up);
@@ -118,7 +116,6 @@ const TopicFontEditor = (props: TopicFontEditorProps): ReactElement => {
   };
 
   const handleFontSizeDecrease = () => {
-    trackFontFormatAction('font_size_change', 'decrease');
     const switchValue = props.fontSizeModel.switchValue;
     if (switchValue) {
       switchValue(SwitchValueDirection.down);
@@ -126,7 +123,6 @@ const TopicFontEditor = (props: TopicFontEditorProps): ReactElement => {
   };
 
   const handleBoldToggle = () => {
-    trackFontFormatAction('font_weight_toggle');
     const switchValue = props.fontWeightModel.switchValue;
     if (switchValue) {
       switchValue();
@@ -134,7 +130,6 @@ const TopicFontEditor = (props: TopicFontEditorProps): ReactElement => {
   };
 
   const handleItalicToggle = () => {
-    trackFontFormatAction('font_style_toggle');
     const switchValue = props.fontStyleModel.switchValue;
     if (switchValue) {
       switchValue();

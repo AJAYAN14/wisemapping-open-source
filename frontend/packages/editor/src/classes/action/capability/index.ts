@@ -69,7 +69,6 @@ const HIDDEN_WHEN_LOCKED: ReadonlySet<ActionType> = new Set<ActionType>([
   'save',
   'keyboard-shortcuts',
   'edition-toolbar',
-  'publish',
   'redo-changes',
   'undo-changes',
 ]);
@@ -97,84 +96,6 @@ const ActionConfigByRenderMode: Record<ActionType, CapabilitySupport> = {
   save: {
     desktop: {
       hidden: ['showcase', 'viewonly-public', 'viewonly-private', 'edition-viewer'],
-    },
-  },
-  print: {
-    desktop: {
-      hidden: ['showcase', 'desktop'],
-    },
-    mobile: {
-      hidden: [
-        'viewonly-public',
-        'viewonly-private',
-        'showcase',
-        'edition-viewer',
-        'edition-editor',
-        'edition-owner',
-        'desktop',
-      ],
-    },
-  },
-  publish: {
-    desktop: {
-      hidden: [
-        'showcase',
-        'viewonly-public',
-        'viewonly-private',
-        'edition-viewer',
-        'edition-editor',
-        'desktop',
-      ],
-    },
-    mobile: {
-      hidden: [
-        'viewonly-public',
-        'viewonly-private',
-        'showcase',
-        'edition-viewer',
-        'edition-editor',
-        'edition-owner',
-        'desktop',
-      ],
-    },
-  },
-  share: {
-    desktop: {
-      hidden: [
-        'showcase',
-        'viewonly-public',
-        'viewonly-private',
-        'edition-viewer',
-        'edition-editor',
-        'desktop',
-      ],
-    },
-    mobile: {
-      hidden: [
-        'viewonly-public',
-        'viewonly-private',
-        'showcase',
-        'edition-viewer',
-        'edition-editor',
-        'edition-owner',
-        'desktop',
-      ],
-    },
-  },
-  info: {
-    desktop: {
-      hidden: ['showcase', 'desktop'],
-    },
-    mobile: {
-      hidden: [
-        'viewonly-public',
-        'viewonly-private',
-        'showcase',
-        'edition-viewer',
-        'edition-editor',
-        'edition-owner',
-        'desktop',
-      ],
     },
   },
   account: {
@@ -232,18 +153,6 @@ const ActionConfigByRenderMode: Record<ActionType, CapabilitySupport> = {
         'edition-viewer',
         'edition-editor',
         'edition-owner',
-      ],
-    },
-  },
-  'sign-up': {
-    desktop: {
-      hidden: [
-        'viewonly-public',
-        'viewonly-private',
-        'edition-viewer',
-        'edition-editor',
-        'edition-owner',
-        'desktop',
       ],
     },
   },
@@ -312,11 +221,6 @@ const ActionConfigByRenderMode: Record<ActionType, CapabilitySupport> = {
         'edition-editor',
         'edition-owner',
       ],
-    },
-  },
-  layout: {
-    desktop: {
-      hidden: ['showcase', 'viewonly-public', 'viewonly-private', 'edition-viewer', 'desktop'],
     },
   },
 };

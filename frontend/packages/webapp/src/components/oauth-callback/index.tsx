@@ -21,9 +21,8 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import FormContainer from '../layout/form-container';
 import AccountAccessLayout from '../layout/AccountAccessLayout';
 import AuthProgress from '../layout/auth-progress';
-import { Link as RouterLink, useLocation } from 'react-router';
+import { Link as RouterLink } from 'react-router';
 import Typography from '@mui/material/Typography';
-import { trackPageView, setAnalyticsUserEmail } from '../../utils/analytics';
 import { Oauth2CallbackResult, ErrorInfo } from '../../classes/client';
 import { useNavigate } from 'react-router';
 import GlobalError from '../form/global-error';
@@ -32,14 +31,12 @@ import { ClientContext } from '../../classes/provider/client-context';
 import { logCriticalError } from '../../utils';
 import { useTheme } from '../../contexts/ThemeContext';
 import JwtTokenConfig from '../../classes/jwt-token-config';
-import AppConfig from '../../classes/app-config';
 import { leaveTo, safeRedirectPath } from '../../utils/redirect';
 import { forgetOAuthFlow, peekOAuthFlow } from '../../utils/oauth-flow';
 
-type OAuthProvider = 'google' | 'facebook' | 'oidc';
+type OAuthProvider = 'google';
 
-const isOAuthProvider = (value: string | null): value is OAuthProvider =>
-  value === 'google' || value === 'facebook' || value === 'oidc';
+const isOAuthProvider = (value: string | null): value is OAuthProvider => value === 'google';
 
 type OAuthCallbackParams =
   | {
@@ -137,7 +134,6 @@ const scrubCallbackParams = (): void => {
 const OAuthCallbackPage = (): React.ReactElement => {
   const intl = useIntl();
   const client = use(ClientContext);
-  const location = useLocation();
   const navigate = useNavigate();
   const { initializeThemeFromSystem } = useTheme();
 
@@ -193,22 +189,12 @@ const OAuthCallbackPage = (): React.ReactElement => {
   }, [accepted, arrival]);
   const callbackResult = exchangedResult ?? tokenResult;
 
-  // Route through login page so Google Ads vignette fires from a page with ads already loaded.
   const navigateAfterOAuth = (): void => {
     leaveTo(`/c/login?redirect=${encodeURIComponent(redirectTarget)}`);
   };
 
-  // Determine OAuth provider: named by the backend, else based on route path (legacy endpoints)
-  const provider: OAuthProvider =
-    (arrival.kind === 'params' && arrival.params.kind === 'token'
-      ? arrival.params.provider
-      : undefined) ?? (location.pathname.includes('facebook') ? 'facebook' : 'google');
-  const providerName =
-    provider === 'oidc'
-      ? AppConfig.getOidcOauth2Label()
-      : provider === 'facebook'
-        ? 'Facebook'
-        : 'Google';
+  const provider: OAuthProvider = 'google';
+  const providerName = 'Google';
 
   useEffect(() => {
     document.title = intl.formatMessage({
@@ -217,31 +203,18 @@ const OAuthCallbackPage = (): React.ReactElement => {
     });
   }, [intl]);
 
-  // Once per visit: a language change retitles the page but is not a new page view.
-  useEffect(() => {
-    trackPageView(window.location.pathname, 'Registration:Success');
-  }, []);
-
   const processCallback = (params: OAuthCallbackParams): void => {
     if (params.kind === 'token') {
-      // This is a Spring Boot OAuth2 callback - process directly
       JwtTokenConfig.storeToken(params.jwtToken);
-      setAnalyticsUserEmail(params.email);
 
       if (params.oauthSync) {
-        // Initialize theme from system preference if not already set
         initializeThemeFromSystem();
         navigateAfterOAuth();
       }
-      // Otherwise the token is the result to confirm (see tokenResult).
       return;
     }
 
-    // Legacy OAuth callback handling (old custom OAuth endpoints)
-    const callbackPromise =
-      provider === 'facebook'
-        ? client.processFacebookCallback(params.code)
-        : client.processGoogleCallback(params.code);
+    const callbackPromise = client.processGoogleCallback(params.code);
 
     callbackPromise
       .then((result) => {

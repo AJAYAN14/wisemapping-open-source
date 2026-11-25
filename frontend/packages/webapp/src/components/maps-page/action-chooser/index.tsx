@@ -21,10 +21,7 @@ import DescriptionOutlinedIcon from '@mui/icons-material/DescriptionOutlined';
 import FileCopyOutlinedIcon from '@mui/icons-material/FileCopyOutlined';
 import DeleteOutlinedIcon from '@mui/icons-material/DeleteOutlined';
 import CloudDownloadOutlinedIcon from '@mui/icons-material/CloudDownloadOutlined';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import EditOutlinedIcon from '@mui/icons-material/EditOutlined';
-import PublicOutlinedIcon from '@mui/icons-material/PublicOutlined';
-import PrintOutlinedIcon from '@mui/icons-material/PrintOutlined';
 import LabelOutlined from '@mui/icons-material/LabelOutlined';
 import HistoryOutlined from '@mui/icons-material/HistoryOutlined';
 
@@ -33,24 +30,15 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Divider from '@mui/material/Divider';
-import { useFetchMapById } from '../../../classes/middleware';
-import { trackMindmapListAction } from '../../../utils/analytics';
 export type ActionType =
   | 'open'
-  | 'share'
-  | 'import'
   | 'delete'
-  | 'info'
   | 'create'
   | 'duplicate'
   | 'export'
   | 'label'
   | 'rename'
-  | 'print'
-  | 'info'
-  | 'publish'
   | 'history'
-  | 'theme'
   | 'back'
   | undefined;
 
@@ -61,22 +49,17 @@ interface ActionProps {
 }
 
 const ActionChooser = (props: ActionProps): React.ReactElement => {
-  const { anchor, onClose, mapId } = props;
+  const { anchor, onClose } = props;
 
   const handleOnClose = (
     action: ActionType,
   ): ((event: React.MouseEvent<HTMLLIElement>) => void) => {
     return (event): void => {
       event.stopPropagation();
-      if (action) {
-        trackMindmapListAction(action);
-      }
       onClose(action);
     };
   };
 
-  const { data: mapData } = useFetchMapById(mapId);
-  const role = mapData?.role;
   return (
     <Menu
       anchorEl={anchor}
@@ -101,14 +84,12 @@ const ActionChooser = (props: ActionProps): React.ReactElement => {
         <FormattedMessage id="action.duplicate" defaultMessage="Duplicate" />
       </MenuItem>
 
-      {role == 'owner' && (
-        <MenuItem onClick={handleOnClose('rename')}>
-          <ListItemIcon>
-            <EditOutlinedIcon />
-          </ListItemIcon>
-          <FormattedMessage id="action.rename" defaultMessage="Rename" />
-        </MenuItem>
-      )}
+      <MenuItem onClick={handleOnClose('rename')}>
+        <ListItemIcon>
+          <EditOutlinedIcon />
+        </ListItemIcon>
+        <FormattedMessage id="action.rename" defaultMessage="Rename" />
+      </MenuItem>
 
       <MenuItem onClick={handleOnClose('label')}>
         <ListItemIcon>
@@ -132,38 +113,12 @@ const ActionChooser = (props: ActionProps): React.ReactElement => {
         <FormattedMessage id="action.export" defaultMessage="Export" />
       </MenuItem>
 
-      <MenuItem onClick={handleOnClose('print')}>
+      <MenuItem onClick={handleOnClose('history')}>
         <ListItemIcon>
-          <PrintOutlinedIcon />
+          <HistoryOutlined />
         </ListItemIcon>
-        <FormattedMessage id="action.print" defaultMessage="Print" />
+        <FormattedMessage id="action.history" defaultMessage="History" />
       </MenuItem>
-
-      {role == 'owner' && (
-        <MenuItem onClick={handleOnClose('publish')}>
-          <ListItemIcon>
-            <PublicOutlinedIcon />
-          </ListItemIcon>
-          <FormattedMessage id="action.publish" defaultMessage="Publish" />
-        </MenuItem>
-      )}
-      <Divider />
-
-      <MenuItem onClick={handleOnClose('info')}>
-        <ListItemIcon>
-          <InfoOutlinedIcon />
-        </ListItemIcon>
-        <FormattedMessage id="action.info" defaultMessage="Info" />
-      </MenuItem>
-
-      {role != 'viewer' && (
-        <MenuItem onClick={handleOnClose('history')}>
-          <ListItemIcon>
-            <HistoryOutlined />
-          </ListItemIcon>
-          <FormattedMessage id="action.history" defaultMessage="History" />
-        </MenuItem>
-      )}
     </Menu>
   );
 };

@@ -59,9 +59,6 @@ class LayoutManager extends EventDispispatcher<LayoutManagerEvents> {
 
   private _layoutType: LayoutType;
 
-  // The central topic: the root created with the manager. Floating topics are roots too.
-  private _rootNodeId: number;
-
   private _events: ChangeEvent[];
 
   // The pending change of each node in _events: a layout that is not flushed leaves its changes
@@ -81,7 +78,6 @@ class LayoutManager extends EventDispispatcher<LayoutManagerEvents> {
     this._treeSet = new RootedTreeSet();
     this._mindmapLayout = new OriginalLayout(this._treeSet);
     this._layoutType = 'mindmap';
-    this._rootNodeId = rootNodeId;
 
     const rootNode = this._getCurrentLayout().createNode(
       rootNodeId,

@@ -36,7 +36,6 @@ import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import TocOutlinedIcon from '@mui/icons-material/TocOutlined';
 import SearchOutlinedIcon from '@mui/icons-material/SearchOutlined';
-import { trackEditorInteraction } from '../../utils/analytics';
 import { handleExpandByLevel, buildExpandByLevelConfig } from './expand-by-level-icon';
 import { formatTooltip } from './utils';
 import { EDITOR_LAYOUT, EDITOR_Z_INDEX } from '../../theme/layout';
@@ -88,7 +87,6 @@ export function buildVisualizationToolbarConfig(
       tooltip: formatTooltip(zoomToFitLabel, '0'),
       ariaLabel: zoomToFitLabel,
       onClick: () => {
-        trackEditorInteraction('zoom_to_fit');
         model.getDesigner().zoomToFit();
       },
       disabled: () => !model?.isMapLoadded(),
@@ -98,7 +96,6 @@ export function buildVisualizationToolbarConfig(
       tooltip: formatTooltip(zoomOutLabel, '-'),
       ariaLabel: zoomOutLabel,
       onClick: () => {
-        trackEditorInteraction('zoom_out');
         model.getDesigner().zoomOut();
       },
       disabled: () => !model?.isMapLoadded(),
@@ -121,7 +118,6 @@ export function buildVisualizationToolbarConfig(
         defaultMessage: 'Zoom In',
       }),
       onClick: () => {
-        trackEditorInteraction('zoom_in');
         model.getDesigner().zoomIn();
       },
       disabled: () => !model?.isMapLoadded(),
@@ -142,7 +138,6 @@ export function buildVisualizationToolbarConfig(
         defaultMessage: 'Find in Map',
       }),
       'data-testid': 'find-in-map-button',
-      onClick: () => trackEditorInteraction('find_in_map'),
       ...(findInMap && { open: findInMap.open, onOpenChange: findInMap.setOpen }),
       options: [
         {
@@ -168,7 +163,6 @@ export function buildVisualizationToolbarConfig(
         id: 'visualization-toolbar.tooltip-outline-view',
         defaultMessage: 'Outline View',
       }),
-      onClick: () => trackEditorInteraction('outline_view'),
       options: [
         {
           render: (closeModal) => (
@@ -209,21 +203,17 @@ export function buildVisualizationToolbarConfig(
           }),
       onClick: () => {
         if (nodesCollapsed) {
-          trackEditorInteraction('expand_all_nodes');
           model.getDesigner().expandAllNodes();
           const maxDepth = model.getDesigner().getMindmap().getMaxDepth();
           setExpandLevel(maxDepth);
         } else {
-          trackEditorInteraction('collapse_all_nodes');
           model.getDesigner().collapseAllNodes();
           setExpandLevel(0); // Reset to collapsed
         }
       },
       disabled: () => !model?.isMapLoadded(),
     },
-    buildExpandByLevelConfig(model, intl, currentExpandLevel, setExpandLevel, () =>
-      trackEditorInteraction('expand_by_level'),
-    ),
+    buildExpandByLevelConfig(model, intl, currentExpandLevel, setExpandLevel),
     // Separator between expand controls and keyboard shortcuts
     undefined as ActionConfig | undefined,
     {
@@ -233,7 +223,6 @@ export function buildVisualizationToolbarConfig(
         defaultMessage: 'Keyboard Shortcuts',
       }),
       visible: !capability.isHidden('keyboard-shortcuts'),
-      onClick: () => trackEditorInteraction('keyboard_shortcuts'),
       options: [
         {
           render: (closeModal) => <KeyboardShorcutsHelp closeModal={closeModal} />,
@@ -262,7 +251,6 @@ export function buildVisualizationToolbarConfig(
               defaultMessage: 'Toggle theme',
             }),
             onClick: () => {
-              trackEditorInteraction('theme_toggle');
               toggleTheme();
             },
           } as ActionConfig,
@@ -304,7 +292,6 @@ const VisualizationToolbar = ({ model, capability }: VisualizationToolbarProps):
       switch (event.key.toLowerCase()) {
         case 'f':
           event.preventDefault();
-          trackEditorInteraction('find_in_map_keyboard');
           setFindInMapOpen(true);
           break;
         case 'e':
@@ -315,16 +302,13 @@ const VisualizationToolbar = ({ model, capability }: VisualizationToolbarProps):
               model.getDesigner().expandAllNodes();
               const maxDepth = model.getDesigner().getMindmap().getMaxDepth();
               setExpandLevel(maxDepth);
-              trackEditorInteraction('expand_all_keyboard');
             } else {
               model.getDesigner().collapseAllNodes();
               setExpandLevel(0);
-              trackEditorInteraction('collapse_all_keyboard');
             }
           } else {
             // Expand by level
             handleExpandByLevel(model, expandLevel, setExpandLevel);
-            trackEditorInteraction('expand_by_level_keyboard');
           }
           break;
       }

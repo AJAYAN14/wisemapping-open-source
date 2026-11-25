@@ -26,20 +26,17 @@ import { useLocaleData } from '../classes/i18n-msg';
 import { Theme, ThemeProvider, StyledEngineProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { Notifier } from './warning-dialog/styled';
-import WarningDialog from './warning-dialog';
 import AppBar from './app-bar';
 import { ToolbarActionType } from './toolbar/ToolbarActionType';
 import EditorToolbar from './editor-toolbar';
 import VisualizationToolbar from './visualization-toolbar';
 import { EditorConfiguration } from '../hooks/useEditor';
-import CreatorInfoPane from './creator-info-pane';
 import { WidgetPopover } from './widgetPopover';
 import DefaultWidgetBuilder from '../classes/default-widget-manager';
 import { EditorThemeProvider, useTheme } from '../contexts/ThemeContext';
 import { createEditorTheme } from '../theme';
 import { ThemeVariantStorage } from '../types/ThemeVariantStorage';
 import EditorLoadingSkeleton from './editor-loading-skeleton';
-import { useDeepLinkFocus } from '../hooks/useDeepLinkFocus';
 import { useCanvasViewportInsets } from '../hooks/useCanvasViewportInsets';
 
 const EMBED_READY_ATTRIBUTE = 'data-wisemapping-embed-loaded';
@@ -51,18 +48,7 @@ type EditorProps = {
   config: EditorConfiguration;
   accountConfiguration?: React.ReactElement;
   themeVariantStorage: ThemeVariantStorage; // Theme variant storage for persistence (mandatory)
-  /**
-   * Query parameters of the page hosting the editor. `?node=<id>` reveals and
-   * centres that node once the map has loaded. Falls back to
-   * `window.location` when not supplied.
-   */
   initialSearchParams?: URLSearchParams | undefined;
-  /**
-   * Builds a shareable URL that deep-links to a single node. Supplied by the
-   * host application, which owns routing. When omitted the "copy link to node"
-   * affordance is hidden.
-   */
-  getDeepLink?: ((nodeId: number) => string) | undefined;
 };
 
 const EditorContent = ({
@@ -70,16 +56,11 @@ const EditorContent = ({
   onAction,
   accountConfiguration,
   themeVariantStorage,
-  initialSearchParams,
-  getDeepLink,
 }: EditorProps): ReactElement => {
   // We can access editor instance and other configuration from editor props
   const { model, mindplotRef, mapInfo, capability, options } = config;
   const designer = model?.getDesigner();
   const { mode: internalMode } = useTheme();
-
-  // Reveal and centre the node named by `?node=<id>`, if any.
-  useDeepLinkFocus(model, initialSearchParams);
 
   // Zoom to fit keeps the map clear of the app bar and the floating toolbars.
   useCanvasViewportInsets(designer);
@@ -187,7 +168,7 @@ const EditorContent = ({
 
           {model && (
             <div className="no-print">
-              <EditorToolbar model={model} capability={capability} getDeepLink={getDeepLink} />
+              <EditorToolbar model={model} capability={capability} />
               <VisualizationToolbar model={model} capability={capability} />
             </div>
           )}
@@ -201,15 +182,6 @@ const EditorContent = ({
           })}
 
           <Notifier id="headerNotifier" />
-
-          {!options.enableAppBar && (
-            <CreatorInfoPane mapInfo={mapInfo} showInfo={!options.hideCreatorInfo} />
-          )}
-
-          <WarningDialog
-            capability={capability}
-            message={mapInfo.isLocked() ? mapInfo.getLockedMessage() : ''}
-          />
 
           {!model?.isMapLoadded() && <EditorLoadingSkeleton />}
         </IntlProvider>

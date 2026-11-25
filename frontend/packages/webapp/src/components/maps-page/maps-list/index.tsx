@@ -28,7 +28,6 @@ import useMediaQuery from '@mui/material/useMediaQuery';
 import type { Theme } from '@mui/material/styles';
 import { ErrorInfo, MapInfo } from '../../../classes/client';
 import { ClientContext } from '../../../classes/provider/client-context';
-import { trackToolbarAction } from '../../../utils/analytics';
 import { Filter } from '..';
 import ActionChooser, { ActionType } from '../action-chooser';
 import ActionDispatcher from '../action-dispatcher';
@@ -125,8 +124,7 @@ export const MapsList = ({ filter }: MapsListProps): React.ReactElement => {
     setRowMenu(undefined);
   };
 
-  const openBulkDialog = (actionType: ActionType, event: string): void => {
-    trackToolbarAction(event, `count:${selected.length}`);
+  const openBulkDialog = (actionType: ActionType): void => {
     setActiveDialog({ actionType, mapsId: selected });
   };
 
@@ -224,8 +222,8 @@ export const MapsList = ({ filter }: MapsListProps): React.ReactElement => {
       <ListPaper elevation={0}>
         <MapsListToolbar
           selectedCount={selected.length}
-          onDeleteSelected={() => openBulkDialog('delete', 'delete_selected')}
-          onLabelSelected={() => openBulkDialog('label', 'add_label_selected')}
+          onDeleteSelected={() => openBulkDialog('delete')}
+          onLabelSelected={() => openBulkDialog('label')}
           onSearchChange={changeSearch}
           end={!isMobile && pagination && <PaginationDesktop>{pagination}</PaginationDesktop>}
         />

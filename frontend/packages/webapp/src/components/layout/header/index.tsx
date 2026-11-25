@@ -23,36 +23,20 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { Link } from 'react-router';
 import Button from '@mui/material/Button';
 import { useTheme } from '@mui/material/styles';
-import AppConfig from '../../../classes/app-config';
 
 import { JSX } from '@emotion/react/jsx-runtime';
 
 interface HeaderProps {
-  type: 'only-signup' | 'only-signin' | 'none';
+  type: 'only-signin' | 'none';
 }
 
 export const Header = ({ type }: HeaderProps): React.ReactElement => {
   const intl = useIntl();
   const theme = useTheme();
-  let signUpButton: string | JSX.Element | undefined;
   let text: string | JSX.Element | undefined;
-  let signInButton: string | JSX.Element | undefined;
+  let actionButton: string | JSX.Element | undefined;
 
-  if (type === 'only-signup') {
-    if (!AppConfig.isRegistrationEnabled()) {
-      text = '';
-      signUpButton = '';
-    } else {
-      text = (
-        <span className="header-area-content-span">
-          <span>
-            <FormattedMessage id="header.donthaveaccount" defaultMessage="Don't have an account ?" />
-          </span>
-        </span>
-      );
-      signUpButton = <SignUpButton className="header-area-right2" />;
-    }
-  } else if (type === 'only-signin') {
+  if (type === 'only-signin') {
     text = (
       <span className="header-area-content-span">
         <span>
@@ -60,13 +44,10 @@ export const Header = ({ type }: HeaderProps): React.ReactElement => {
         </span>
       </span>
     );
-    signUpButton = <SignInButton className="header-area-right2" />;
-  } else if (type === 'none') {
-    text = '';
-    signUpButton = '';
+    actionButton = <SignInButton className="header-area-right2" />;
   } else {
-    signUpButton = <SignUpButton className="header-area-right2" />;
-    signInButton = <SignInButton className="header-area-right2" />;
+    text = '';
+    actionButton = '';
   }
 
   return (
@@ -81,8 +62,7 @@ export const Header = ({ type }: HeaderProps): React.ReactElement => {
           </Link>
         </Logo>
         {text}
-        {signUpButton}
-        {signInButton}
+        {actionButton}
       </StyledDiv>
     </StyledNav>
   );
@@ -97,22 +77,6 @@ export const SignInButton = (props: ButtonProps): React.ReactElement => {
     <span className={`${props.className}`}>
       <Button color="primary" size="medium" variant="outlined" component={Link} to="/c/login">
         <FormattedMessage id="login.signin" defaultMessage="Sign In" />
-      </Button>
-    </span>
-  );
-};
-
-const SignUpButton = (props: ButtonProps): React.ReactElement => {
-  return (
-    <span className={`${props.className}`}>
-      <Button
-        color="primary"
-        size="medium"
-        variant="outlined"
-        component={Link}
-        to="/c/registration"
-      >
-        <FormattedMessage id="login.signup" defaultMessage="Sign Up" />
       </Button>
     </span>
   );

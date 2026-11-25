@@ -19,7 +19,7 @@ import { IntlProvider } from 'react-intl';
 import type { Decorator } from '@storybook/react-vite';
 import { EditorThemeProvider } from '../src/contexts/ThemeContext';
 import { MockThemeVariantStorage } from './mocks/ThemeVariantStorage';
-import enMessages from '../src/compiled-lang/en.json';
+import zhMessages from '../src/compiled-lang/zh.json';
 
 const mockThemeStorage = new MockThemeVariantStorage();
 
@@ -30,7 +30,7 @@ const preview = {
   decorators: [
     ((Story) => (
       <EditorThemeProvider themeVariantStorage={mockThemeStorage}>
-        <IntlProvider locale="en" defaultLocale="en" messages={enMessages}>
+        <IntlProvider locale="zh" defaultLocale="zh" messages={zhMessages}>
           <Story />
         </IntlProvider>
       </EditorThemeProvider>

@@ -24,11 +24,5 @@ import loglevel from 'loglevel';
 //   loglevel.getLogger('ads').setLevel('debug')  — ads only
 const DEFAULT_LEVEL: loglevel.LogLevelDesc = 'warn';
 
-export const adsLogger = loglevel.getLogger('ads');
-adsLogger.setDefaultLevel(DEFAULT_LEVEL);
-
-export const analyticsLogger = loglevel.getLogger('analytics');
-analyticsLogger.setDefaultLevel(DEFAULT_LEVEL);
-
 export const appLogger = loglevel.getLogger('app');
 appLogger.setDefaultLevel(DEFAULT_LEVEL);

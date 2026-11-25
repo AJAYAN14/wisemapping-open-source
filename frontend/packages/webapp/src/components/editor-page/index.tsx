@@ -31,8 +31,6 @@ import { IntlProvider } from 'react-intl';
 import AppI18n, { Locales } from '../../classes/app-i18n';
 import { useLocaleMessages } from '../../classes/app-i18n/messages';
 import { useFetchAccount } from '../../classes/middleware';
-import { trackPageView } from '../../utils/analytics';
-import { getMapNodeDeepLink } from '../../utils/map-urls';
 import { useTheme as useMuiTheme } from '@mui/material/styles';
 import MapInfoImpl from '../../classes/editor-map-info';
 import AppConfig from '../../classes/app-config';
@@ -42,8 +40,6 @@ import { useLoaderData, useNavigation, useSearchParams } from 'react-router';
 import { EditorMetadata, PageModeType } from './loader';
 import { ClientContext } from '../../classes/provider/client-context';
 import { KeyboardContext } from '../../classes/provider/keyboard-context';
-import { SEOHead } from '../seo';
-import PublicMapSEO from '../seo/PublicMapSEO';
 import SessionExpiredDialog from '../common-page/session-expired-dialog';
 import VersionConflictDialog from './version-conflict-dialog';
 import queryClient from '../../queryClient';
@@ -143,19 +139,10 @@ const LoadedEditorPage = ({
   const hideCreatorInfoParam = searchParams.get('hideCreatorInfo');
   const themeParam = searchParams.get('theme');
 
-  const getDeepLink = useCallback(
-    (nodeId: number): string => getMapNodeDeepLink(mapId, nodeId),
-    [mapId],
-  );
-
   // If zoom has been define, overwrite the stored value.
   if (zoom) {
     editorMetadata.zoom = zoom;
   }
-
-  useEffect(() => {
-    trackPageView(window.location.pathname, 'Map Editor');
-  }, []);
 
   // Prevent pinch-to-zoom on the editor page (Safari/iOS)
   // Using CSS touch-action is the modern standard approach for SPAs
@@ -177,7 +164,7 @@ const LoadedEditorPage = ({
 
   // Account loads asynchronously and should NOT block editor rendering.
   // AppI18n.getUserLocale() handles undefined account gracefully by falling back to default locale.
-  const enableAppBar = pageMode !== 'view-private' && pageMode !== 'view-public';
+  const enableAppBar = pageMode !== 'view-private';
   const editorOptions: EditorOptions = {
     enableKeyboardEvents: hotkeyEnabled,
     locale: userLocale.code,
@@ -256,23 +243,9 @@ const LoadedEditorPage = ({
   return (
     <IntlProvider
       locale={intlLocale.locale}
-      defaultLocale={Locales.EN.code}
+      defaultLocale={Locales.ZH.code}
       messages={intlLocale.messages}
     >
-      {pageMode === 'view-public' ? (
-        <PublicMapSEO
-          mapTitle={mapInfo?.getTitle() || 'Mind Map'}
-          mapCreator={mapInfo?.getCreatorFullName()}
-          mapId={mapId.toString()}
-        />
-      ) : (
-        <SEOHead
-          title={`${mapInfo?.getTitle() || 'Mind Map'} | WiseMapping`}
-          description={`Edit and collaborate on "${mapInfo?.getTitle() || 'Mind Map'}" using WiseMapping's powerful mind mapping editor.`}
-          keywords={`mind map, ${mapInfo?.getTitle() || 'mind map'}, editing, collaboration, visual thinking`}
-          canonicalUrl={`/c/maps/${mapId}/edit`}
-        />
-      )}
       <SessionExpiredDialog open={sessionExpired} />
       <VersionConflictDialog open={versionConflict} />
       <Editor
@@ -281,7 +254,6 @@ const LoadedEditorPage = ({
         theme={theme}
         themeVariantStorage={createThemeVariantStorage()}
         initialSearchParams={searchParams}
-        getDeepLink={getDeepLink}
         accountConfiguration={
           // Prevent load on non-authenticated.
           editorOptions.mode !== 'showcase' ? (

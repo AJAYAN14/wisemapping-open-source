@@ -34,7 +34,6 @@ import Client, {
 } from '..';
 import AppI18n, { Locale, LocaleCode, Locales, localeFromStr } from '../../app-i18n';
 import JwtTokenConfig from '../../jwt-token-config';
-import { setAnalyticsUserEmail, clearAnalyticsUserId } from '../../../utils/analytics';
 import { appLogger as log } from '../../../utils/logger';
 import { describeHttpError } from '../http-error';
 
@@ -140,7 +139,6 @@ export default class RestClient implements Client {
 
   async logout(): Promise<void> {
     JwtTokenConfig.removeToken();
-    clearAnalyticsUserId();
 
     // Kill backend session ...
     try {
@@ -163,15 +161,6 @@ export default class RestClient implements Client {
           const token = response.data;
 
           JwtTokenConfig.storeToken(token);
-          // Fetch account info and set analytics user ID
-          this.fetchAccountInfo()
-            .then((accountInfo) => {
-              setAnalyticsUserEmail(accountInfo.email);
-            })
-            .catch((error) => {
-              // Don't block login if analytics fails
-              log.warn('Failed to set analytics user ID after login:', error);
-            });
           success();
         })
         .catch((error) => {
@@ -396,8 +385,8 @@ export default class RestClient implements Client {
               accountLocale = localeFromStr(locale);
             } catch {
               // A language the backend knows but this frontend doesn't: fall back to English.
-              log.warn(`Unsupported account locale '${locale}', using English`);
-              accountLocale = Locales.EN;
+              log.warn(`Unsupported account locale '${locale}', using Chinese`);
+              accountLocale = Locales.ZH;
             }
           }
           success({
@@ -857,15 +846,6 @@ export default class RestClient implements Client {
           const token = response.data.jwtToken;
           if (token) {
             JwtTokenConfig.storeToken(token);
-            // Fetch account info and set analytics user ID
-            this.fetchAccountInfo()
-              .then((accountInfo) => {
-                setAnalyticsUserEmail(accountInfo.email);
-              })
-              .catch((error) => {
-                // Don't block OAuth flow if analytics fails
-                log.warn('Failed to set analytics user ID after Google OAuth:', error);
-              });
           }
         })
         .catch((error) => {
@@ -896,15 +876,6 @@ export default class RestClient implements Client {
           const token = response.data.jwtToken;
           if (token) {
             JwtTokenConfig.storeToken(token);
-            // Fetch account info and set analytics user ID
-            this.fetchAccountInfo()
-              .then((accountInfo) => {
-                setAnalyticsUserEmail(accountInfo.email);
-              })
-              .catch((error) => {
-                // Don't block OAuth flow if analytics fails
-                log.warn('Failed to set analytics user ID after Facebook OAuth:', error);
-              });
           }
         })
         .catch((error) => {
@@ -947,15 +918,6 @@ export default class RestClient implements Client {
           const token = response.data.jwtToken;
           if (token) {
             JwtTokenConfig.storeToken(token);
-            // Fetch account info and set analytics user ID
-            this.fetchAccountInfo()
-              .then((accountInfo) => {
-                setAnalyticsUserEmail(accountInfo.email);
-              })
-              .catch((error) => {
-                // Don't block account sync if analytics fails
-                log.warn('Failed to set analytics user ID after account sync:', error);
-              });
           }
         })
         .catch((error) => {

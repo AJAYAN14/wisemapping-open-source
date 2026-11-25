@@ -86,14 +86,7 @@ const MapCardComponent = ({ map, onStar, onOpenMenu }: MapCardProps): React.Reac
             <Typography variant="subtitle2" sx={{ fontSize: '0.75rem' }}>
               {intl.formatMessage({ id: 'map.last-update', defaultMessage: 'Last Update' })}
               <span>: </span>
-              <Tooltip
-                arrow={true}
-                title={intl.formatMessage(
-                  { id: 'maps.modified-by-desc', defaultMessage: 'Modified by {by} on {on}' },
-                  { by: map.lastModificationBy, on: date(map.lastModificationTime).format('lll') },
-                )}
-                placement="bottom-start"
-              >
+              <Tooltip arrow={true} title={date(map.lastModificationTime).format('lll')} placement="bottom-start">
                 <span>{date(map.lastModificationTime).fromNow()}</span>
               </Tooltip>
             </Typography>

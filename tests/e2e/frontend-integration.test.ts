@@ -207,17 +207,15 @@ describe('F2/F3/F4 — Frontend Integration, Auth Entry Guards & R4 Conflict UX 
       },
     );
 
-    it('T1-F03-03: registration routes are gated on AppConfig.isRegistrationEnabled() in app.tsx', () => {
+    it('T1-F03-03: legacy registration routes are removed from app.tsx', () => {
       const ast = parseSourceAst('packages/webapp/src/app.tsx');
       const routes = findJsxRouteElements(ast);
-      const localeReg = routes.get('/:locale/c/registration');
-      expect(localeReg).toBeDefined();
-      expect(localeReg).toContain('AppConfig.isRegistrationEnabled()');
-      expect(localeReg).toContain('<Redirect to="/c/login" />');
-      expect(ast.getText()).toContain('createRegistrationRoutes');
+      expect(routes.get('/c/registration')).toBeUndefined();
+      expect(routes.get('/:locale/c/registration')).toBeUndefined();
+      expect(ast.getText()).not.toContain('createRegistrationRoutes');
     });
 
-    it('T1-F03-04: all 4 password-recovery routes redirect to /c/login when isLocalLoginEnabled() is false', () => {
+    it('T1-F03-04: all 4 password-recovery routes are removed from app.tsx', () => {
       const ast = parseSourceAst('packages/webapp/src/app.tsx');
       const routes = findJsxRouteElements(ast);
       for (const routePath of [
@@ -226,42 +224,36 @@ describe('F2/F3/F4 — Frontend Integration, Auth Entry Guards & R4 Conflict UX 
         '/c/forgot-password-success',
         '/c/reset-password',
       ]) {
-        const el = routes.get(routePath);
-        expect(el, `route ${routePath}`).toBeDefined();
-        expect(el).toContain('AppConfig.isLocalLoginEnabled()');
-        expect(el).toContain('<Redirect to="/c/login" />');
+        expect(routes.get(routePath), `route ${routePath}`).toBeUndefined();
       }
     });
 
-    it('T1-F03-05: LoginPage gates local password form on localLoginEnabled and Sign-Up on isRegistrationEnabled()', () => {
+    it('T1-F03-05: LoginPage renders Google-only sign-in without local password or Facebook/OIDC buttons', () => {
       const loginSrc = parseSourceAst('packages/webapp/src/components/login-page/index.tsx').getText();
-      expect(loginSrc).toContain('const localLoginEnabled = AppConfig.isLocalLoginEnabled()');
-      expect(loginSrc).toContain('{localLoginEnabled && (');
-      expect(loginSrc).toContain("headerType={AppConfig.isRegistrationEnabled() ? 'only-signup' : 'none'}");
-      expect(loginSrc).toContain('AppConfig.isGoogleOauth2Enabled()');
+      expect(loginSrc).toContain('GoogleButton');
+      expect(loginSrc).not.toContain('FacebookButton');
+      expect(loginSrc).not.toContain('OidcButton');
+      expect(loginSrc).not.toContain('autoComplete="current-password"');
     });
   });
 
   describe('Tier 2 — F3: Auth Entry Guard Boundary & Corner Cases', () => {
-    it('T2-F03-01: direct /:locale/c/registration route falls back to <Redirect to="/c/login" />', () => {
+    it('T2-F03-01: registration-facebook and registration pages are removed', () => {
       const routes = findJsxRouteElements(parseSourceAst('packages/webapp/src/app.tsx'));
-      const expr = routes.get('/:locale/c/registration') ?? '';
-      expect(expr).toMatch(/AppConfig\.isRegistrationEnabled\(\)\s*\?\s*<RegistationPage\s*\/>\s*:\s*<Redirect\s+to="\/c\/login"\s*\/>/);
+      expect(routes.get('/c/registration-facebook')).toBeUndefined();
+      expect(fs.existsSync(path.join(FRONTEND, 'packages/webapp/src/components/registration-page'))).toBe(false);
     });
 
-    it('T2-F03-02: /c/forgot-password and /:locale/c/forgot-password both fall back to /c/login', () => {
+    it('T2-F03-02: forgot-password and activation pages are removed', () => {
       const routes = findJsxRouteElements(parseSourceAst('packages/webapp/src/app.tsx'));
-      for (const p of ['/c/forgot-password', '/:locale/c/forgot-password']) {
-        expect(routes.get(p)).toMatch(
-          /AppConfig\.isLocalLoginEnabled\(\)\s*\?\s*<ForgotPasswordPage\s*\/>\s*:\s*<Redirect\s+to="\/c\/login"\s*\/>/,
-        );
-      }
+      expect(routes.get('/c/forgot-password')).toBeUndefined();
+      expect(fs.existsSync(path.join(FRONTEND, 'packages/webapp/src/components/forgot-password-page'))).toBe(false);
+      expect(fs.existsSync(path.join(FRONTEND, 'packages/webapp/src/components/activation-page'))).toBe(false);
     });
 
-    it('T2-F03-03: /c/forgot-password-success and /c/reset-password both fall back to /c/login', () => {
+    it('T2-F03-03: unknown routes fall through to catch-all 404 ErrorPage', () => {
       const routes = findJsxRouteElements(parseSourceAst('packages/webapp/src/app.tsx'));
-      expect(routes.get('/c/forgot-password-success')).toContain('<Redirect to="/c/login" />');
-      expect(routes.get('/c/reset-password')).toContain('<Redirect to="/c/login" />');
+      expect(routes.get('*')).toContain('<ErrorPage />');
     });
 
     it.skipIf(!caps.canRunApiRuntime)(
@@ -283,13 +275,13 @@ describe('F2/F3/F4 — Frontend Integration, Auth Entry Guards & R4 Conflict UX 
       },
     );
 
-    it('T2-F03-05: Editor Capability hides sign-up button in edition-owner and edition-editor modes', () => {
+    it('T2-F03-05: Editor Capability and AppBar omit sign-up, share, publish, print, and info actions', () => {
       const capAst = parseSourceAst('packages/editor/src/classes/action/capability/index.ts');
       const text = capAst.getText();
-      const signUpMatch = /'sign-up'\s*:\s*\{[\s\S]*?hidden\s*:\s*\[([^\]]+)\]/m.exec(text);
-      expect(signUpMatch?.[1]).toBeDefined();
-      expect(signUpMatch?.[1]).toContain("'edition-owner'");
-      expect(signUpMatch?.[1]).toContain("'edition-editor'");
+      expect(text).not.toContain("'sign-up'");
+      expect(text).not.toContain("'share'");
+      expect(text).not.toContain("'publish'");
+      expect(text).not.toContain("'print'");
     });
   });
 
@@ -328,7 +320,7 @@ describe('F2/F3/F4 — Frontend Integration, Auth Entry Guards & R4 Conflict UX 
       expect(text).toContain("if (error.errorType === 'conflict') {\n        this.haltSaving();");
     });
 
-    it('T1-F04-05: VersionConflictDialog is non-dismissible, reloads page, and all 13 locales define editor.conflict.*', () => {
+    it('T1-F04-05: VersionConflictDialog is non-dismissible, reloads page, and Chinese locales define editor.conflict.*', () => {
       const dialogSrc = parseSourceAst(
         'packages/webapp/src/components/editor-page/version-conflict-dialog/index.tsx',
       ).getText();
@@ -336,7 +328,7 @@ describe('F2/F3/F4 — Frontend Integration, Auth Entry Guards & R4 Conflict UX 
       expect(dialogSrc).toContain('window.location.reload()');
       expect(dialogSrc).toContain('editor.conflict.title');
 
-      const locales = ['ar', 'de', 'en', 'es', 'fr', 'hi', 'it', 'ja', 'pt', 'ru', 'uk', 'zh', 'zh-CN'];
+      const locales = ['zh', 'zh-CN'];
       for (const locale of locales) {
         const lang = JSON.parse(readFrontendText(`packages/webapp/lang/${locale}.json`)) as Record<
           string,

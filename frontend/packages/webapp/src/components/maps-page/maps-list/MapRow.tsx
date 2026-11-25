@@ -116,14 +116,7 @@ const MapRowComponent = ({
         />
       </LabelsBodyCell>
       <BodyCell>
-        <Tooltip
-          arrow={true}
-          title={intl.formatMessage(
-            { id: 'maps.modified-by-desc', defaultMessage: 'Modified by {by} on {on}' },
-            { by: map.lastModificationBy, on: date(map.lastModificationTime).format('lll') },
-          )}
-          placement="bottom-start"
-        >
+        <Tooltip arrow={true} title={date(map.lastModificationTime).format('lll')} placement="bottom-start">
           <CellText variant="body2">{date(map.lastModificationTime).fromNow()}</CellText>
         </Tooltip>
       </BodyCell>

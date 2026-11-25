@@ -16,7 +16,7 @@
  *   limitations under the License.
  */
 
-import { ErrorInfo, MapMetadata, Role } from '../../classes/client';
+import { ErrorInfo, MapMetadata } from '../../classes/client';
 import type { EditorRenderMode } from '@wisemapping/mindplot';
 import type { LoaderFunctionArgs } from 'react-router';
 import AppConfig from '../../classes/app-config';
@@ -35,7 +35,7 @@ export type EditorMetadata = {
   bootstrapXML?: string; // Bootstrap XML to use instead of fetching from server
 };
 
-export type PageModeType = 'edit' | 'try' | 'view-public' | 'view-private';
+export type PageModeType = 'edit' | 'view-private';
 
 /**
  * Fetches map metadata using React Query cache.
@@ -56,17 +56,7 @@ async function fetchMapMetadataWithCache(
   });
 }
 
-const isCollaboratorRole = (role: Role): role is Exclude<Role, 'none'> =>
-  role === 'owner' || role === 'editor' || role === 'viewer';
-
-const isErrorInfo = (error: unknown): error is ErrorInfo =>
-  typeof error === 'object' &&
-  error !== null &&
-  ('msg' in error || 'isAuth' in error || 'fields' in error || 'status' in error);
-
-const PUBLIC_MAP_REMOVED_MESSAGE = 'The map you are looking for is no longer available.';
-
-// The editor's own messages, loaded with the map so that its chrome paints in the user's
+// The editor's own messages, loaded with the map so that its chrome paints in Chinese.
 // language. Imported by path: the editor barrel would put the whole editor in the entry.
 const preloadEditorMessages = (): Promise<unknown> =>
   I18nMsg.load(AppI18n.getUserLocale().code).catch((error) =>
@@ -103,22 +93,6 @@ const loadMapFor = (pageMode: PageModeType, bootstrap: boolean) => {
     }
 
     switch (pageMode) {
-      case 'try': {
-        const value = await Promise.resolve({
-          editorMode: 'showcase',
-          mapMetadata: {
-            id: mapId,
-            title: 'What is WiseMapping ?',
-            creatorFullName: 'Paulo Gustavo Veiga',
-            isLocked: false,
-            jsonProps: '{ "zoom": 0.8 }',
-            role: 'owner' as const,
-          },
-          zoom: 0.8,
-        });
-        result = createJsonResponse(value);
-        break;
-      }
       case 'edit':
       case 'view-private': {
         try {
@@ -127,16 +101,10 @@ const loadMapFor = (pageMode: PageModeType, bootstrap: boolean) => {
           const bootstrapXml = bootstrap && !params['hid'];
           const mapMetadata = await fetchMapMetadataWithCache(mapId, client, bootstrapXml);
 
-          let editorMode: EditorRenderMode;
-          if (!isCollaboratorRole(mapMetadata.role)) {
-            // Somebody else's public map: only its public XML can be read, and nothing saved.
-            // A revision has no public endpoint, so it is read through the private one.
-            editorMode = params['hid'] ? 'viewonly-private' : 'viewonly-public';
-          } else if (mapMetadata.isLocked || pageMode === 'view-private') {
-            editorMode = 'viewonly-private';
-          } else {
-            editorMode = `edition-${mapMetadata.role}`;
-          }
+          const editorMode: EditorRenderMode =
+            mapMetadata.isLocked || pageMode === 'view-private'
+              ? 'viewonly-private'
+              : `edition-${mapMetadata.role === 'none' ? 'owner' : mapMetadata.role}`;
 
           // Build result ...
           // Safely parse jsonProps with fallback to default zoom
@@ -176,32 +144,6 @@ const loadMapFor = (pageMode: PageModeType, bootstrap: boolean) => {
             console.warn(e);
             throw e;
           }
-        }
-        break;
-      }
-      case 'view-public': {
-        try {
-          const mapMetadata = await fetchMapMetadataWithCache(mapId, client, bootstrap);
-          const data: EditorMetadata = {
-            editorMode: 'viewonly-public',
-            mapMetadata: mapMetadata,
-            zoom: 0.8,
-          };
-
-          // Include XML if requested and available
-          if (bootstrap && mapMetadata.xml) {
-            data.bootstrapXML = mapMetadata.xml;
-          }
-
-          result = createJsonResponse(data);
-        } catch (error) {
-          if (isErrorInfo(error) && error.status === 410) {
-            throw new Response(error.msg ?? PUBLIC_MAP_REMOVED_MESSAGE, {
-              status: 410,
-              statusText: 'Gone',
-            });
-          }
-          throw error;
         }
         break;
       }

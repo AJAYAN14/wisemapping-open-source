@@ -26,8 +26,7 @@ import type ActionType from '../../classes/action/action-type';
  * is declared separately because navigating away is the host's concern and has
  * no capability entry.
  */
-type DelegatedNames =
-  'export' | 'publish' | 'history' | 'print' | 'share' | 'info' | 'theme' | 'rename';
+type DelegatedNames = 'export' | 'history' | 'rename';
 
 // `Extract` quietly yields `never` for a name that no longer exists in
 // ActionType, which would turn a rename into a silent hole rather than a

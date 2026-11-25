@@ -455,8 +455,10 @@ describe('F7/F8 — App Config, Google OAuth PKCE, Allowlist & 7-Day JWT E2E', (
           path.join(ROOT, 'frontend/packages/webapp/src/app.tsx'),
           'utf8',
         );
-        expect(appTsx).toContain('/c/forgot-password');
-        expect(appTsx).toContain('/:locale/c/registration');
+        expect(appTsx).toContain('/c/login');
+        expect(appTsx).toContain('/c/oauth-callback');
+        expect(appTsx).not.toContain('/c/forgot-password');
+        expect(appTsx).not.toContain('/:locale/c/registration');
       },
     );
 

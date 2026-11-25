@@ -36,18 +36,14 @@ import UndoOutlinedIcon from '@mui/icons-material/UndoOutlined';
 import RedoOutlinedIcon from '@mui/icons-material/RedoOutlined';
 import RestoreOutlinedIcon from '@mui/icons-material/RestoreOutlined';
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
-import PrintOutlinedIcon from '@mui/icons-material/PrintOutlined';
 import FileDownloadOutlinedIcon from '@mui/icons-material/FileDownloadOutlined';
 import StarRateRoundedIcon from '@mui/icons-material/StarRateRounded';
-import CloudUploadOutlinedIcon from '@mui/icons-material/CloudUploadOutlined';
-import HelpOutlineOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import ArrowBackIosNewOutlinedIcon from '@mui/icons-material/ArrowBackIosNewOutlined';
 import PaletteOutlinedIcon from '@mui/icons-material/PaletteOutlined';
 import Brightness4 from '@mui/icons-material/Brightness4';
 import Brightness7 from '@mui/icons-material/Brightness7';
 import Typography from '@mui/material/Typography';
 import UndoAndRedo from '../action-widget/button/undo-and-redo';
-import Button from '@mui/material/Button';
 import LogoTextBlackSvg from '../../../images/logo-text-black.svg';
 import LogoTextOrangeSvg from '../../../images/logo-text-orange.svg';
 import IconButton from '@mui/material/IconButton';
@@ -59,7 +55,6 @@ import NodePropertyValueModelBuilder from '../../classes/model/node-property-bui
 import TextField from '@mui/material/TextField';
 import { $notify } from '@wisemapping/mindplot';
 import { useTheme } from '../../contexts/ThemeContext';
-import { trackAppBarAction } from '../../utils/analytics';
 import debounce from 'lodash/debounce';
 
 interface AppBarProps {
@@ -143,7 +138,6 @@ const AppBar = ({
 
   const handleStarredOnClick = () => {
     const newStatus = !isStarred;
-    trackAppBarAction('starred', newStatus ? 'star' : 'unstar');
     mapInfo.updateStarred(newStatus).then(() => setIsStarred(newStatus));
   };
 
@@ -151,7 +145,6 @@ const AppBar = ({
     if (!canRename) {
       return;
     }
-    trackAppBarAction('rename_map');
     setIsEditingTitle(true);
     setEditedTitle(currentTitle);
   };
@@ -226,7 +219,6 @@ const AppBar = ({
           if (!model) {
             return;
           }
-          trackAppBarAction('save');
           model.save(true).catch((error) => {
             console.error('Save failed from app bar:', error);
           });
@@ -320,7 +312,6 @@ const AppBar = ({
       }),
       'data-testid': 'app-bar-back-button',
       onClick: () => {
-        trackAppBarAction('back_to_maps_list');
         onAction('back');
       },
     },
@@ -391,7 +382,6 @@ const AppBar = ({
               'Z',
             ),
             onClick: () => {
-              trackAppBarAction('undo');
               model!.getDesigner().undo();
             },
           }}
@@ -412,7 +402,6 @@ const AppBar = ({
               'Shift + Z',
             ),
             onClick: () => {
-              trackAppBarAction('redo');
               model!.getDesigner().redo();
             },
           }}
@@ -435,18 +424,8 @@ const AppBar = ({
       disabled: () => !model?.isMapLoadded(),
     },
     {
-      icon: <HelpOutlineOutlinedIcon />,
-      onClick: () => {
-        trackAppBarAction('info');
-        onAction('info');
-      },
-      tooltip: intl.formatMessage({ id: 'appbar.tooltip-info', defaultMessage: 'Information' }),
-      visible: !capability.isHidden('info'),
-    },
-    {
       icon: <RestoreOutlinedIcon />,
       onClick: () => {
-        trackAppBarAction('history');
         onAction('history');
       },
       tooltip: intl.formatMessage({
@@ -492,32 +471,13 @@ const AppBar = ({
       disabled: () => !isMapLoaded,
     },
     {
-      icon: <PrintOutlinedIcon />,
-      onClick: () => {
-        trackAppBarAction('print');
-        onAction('print');
-      },
-      tooltip: intl.formatMessage({ id: 'appbar.tooltip-print', defaultMessage: 'Print' }),
-      visible: !capability.isHidden('print'),
-    },
-    {
       icon: <FileDownloadOutlinedIcon />,
       onClick: () => {
-        trackAppBarAction('export');
         onAction('export');
       },
       tooltip: intl.formatMessage({ id: 'appbar.tooltip-export', defaultMessage: 'Export' }),
       visible: !capability.isHidden('export'),
       disabled: () => !isMapLoaded,
-    },
-    {
-      icon: <CloudUploadOutlinedIcon />,
-      onClick: () => {
-        trackAppBarAction('publish');
-        onAction('publish');
-      },
-      tooltip: intl.formatMessage({ id: 'appbar.tooltip-publish', defaultMessage: 'Publish' }),
-      visible: !capability.isHidden('publish'),
     },
     {
       icon: mode === 'dark' ? <Brightness7 /> : <Brightness4 />,
@@ -526,53 +486,13 @@ const AppBar = ({
         defaultMessage: 'Toggle Theme',
       }),
       onClick: () => {
-        trackAppBarAction('theme_toggle');
         toggleMode();
       },
-    },
-    {
-      render: () => (
-        <Tooltip
-          title={intl.formatMessage({
-            id: 'appbar.tooltip-shared',
-            defaultMessage: 'Share for Collaboration',
-          })}
-        >
-          <Button
-            variant="contained"
-            onClick={() => {
-              trackAppBarAction('share');
-              onAction('share');
-            }}
-          >
-            {intl.formatMessage({ id: 'appbar.shared-button', defaultMessage: 'Share' })}
-          </Button>
-        </Tooltip>
-      ),
-      visible: !capability.isHidden('share'),
     },
     {
       // Renders nothing when no account configuration is provided.
       render: () => accountConfig,
       visible: !capability.isHidden('account'),
-    },
-    {
-      render: () => (
-        <Tooltip
-          title={intl.formatMessage({ id: 'appbar.tooltip-signup', defaultMessage: 'Sign Up' })}
-        >
-          <Button
-            variant="contained"
-            onClick={() => {
-              trackAppBarAction('sign_up');
-              window.location.href = '/c/registration';
-            }}
-          >
-            {intl.formatMessage({ id: 'appbar.button-signup', defaultMessage: 'Sign Up' })}
-          </Button>
-        </Tooltip>
-      ),
-      visible: !capability.isHidden('sign-up'),
     },
   ];
 

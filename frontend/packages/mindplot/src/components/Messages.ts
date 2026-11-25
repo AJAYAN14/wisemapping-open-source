@@ -26,7 +26,7 @@ class Messages {
 
     // Try Chinese first, then user locale, then base language.
     const baseLanguage = userLocale.split(/[-_]/)[0]!.toLowerCase(); // split always has a first item
-    this.__bundle = Bundle.zh || Bundle[userLocale] || Bundle[baseLanguage] || Bundle.en;
+    this.__bundle = Bundle['zh'] || Bundle[userLocale] || Bundle[baseLanguage] || Bundle.en;
   }
 }
 
@@ -35,7 +35,7 @@ const $msg = function $msg(key: MsgKey): string {
     Messages.init('zh');
   }
   // init() always sets the bundle.
-  return Messages.__bundle![key] || Bundle.zh?.[key] || Bundle.en[key] || key;
+  return Messages.__bundle![key] || Bundle['zh']?.[key] || Bundle.en[key] || key;
 };
 
 export default Messages;

@@ -197,7 +197,7 @@ export function createApiHandler(
             firstname,
             lastname,
             fullName: auth.name,
-            locale: 'en',
+            locale: 'zh',
             authenticationType: 'GOOGLE_OAUTH2',
             allowSendEmail: false,
             creationDate: new Date(0).toISOString(),

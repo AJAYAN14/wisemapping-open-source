@@ -20,7 +20,6 @@ import Toolbar from '@mui/material/Toolbar';
 import {
   DesktopDrawer,
   DesktopDrawerToggle,
-  HelpButtonBox,
   MobileDrawer,
   MobileDrawerToggle,
   PageAppBar,
@@ -49,29 +48,14 @@ import ArrowLeft from '@mui/icons-material/NavigateBefore';
 import AddCircleTwoTone from '@mui/icons-material/AddCircleTwoTone';
 import CloudUploadTwoTone from '@mui/icons-material/CloudUploadTwoTone';
 import LabelTwoTone from '@mui/icons-material/LabelTwoTone';
-import PersonOutlineTwoTone from '@mui/icons-material/PersonOutlineTwoTone';
-import PublicTwoTone from '@mui/icons-material/PublicTwoTone';
 import ScatterPlotTwoTone from '@mui/icons-material/ScatterPlotTwoTone';
-import ShareTwoTone from '@mui/icons-material/ShareTwoTone';
 import StarTwoTone from '@mui/icons-material/StarTwoTone';
-import SmartToyTwoTone from '@mui/icons-material/SmartToyTwoTone';
 import Tooltip from '@mui/material/Tooltip';
-import Button from '@mui/material/Button';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
-import DialogTitle from '@mui/material/DialogTitle';
 
 import LabelDeleteConfirm from './maps-list/label-delete-confirm';
 import DrawerNav, { ToolbarButtonInfo } from './drawer-nav';
-import { trackMindmapListAction, trackPageView } from '../../utils/analytics';
 import { ClientContext } from '../../classes/provider/client-context';
-import { SEOHead } from '../seo';
 import { readStorage, writeStorage, removeStorage } from '../../utils/storage';
-
-const CHATGPT_COPILOT_URL =
-  'https://chatgpt.com/g/g-6908d77ed7988191bb7a62f29fcf0177-mind-map-copilot';
 
 export type Filter = GenericFilter | LabelFilter;
 
@@ -141,7 +125,7 @@ const MapsPage = (): ReactElement => {
       try {
         const fileContent = loadEvent.target?.result ?? '';
         const { default: TextImporterFactory } = await import(
-          '@wisemapping/mindplot/src/components/import/TextImporterFactory'
+          '@wisemapping/mindplot/components/import/TextImporterFactory'
         );
         const importer = TextImporterFactory.create(extensionFile, fileContent);
         const content = await importer.import(title, '');
@@ -182,10 +166,8 @@ const MapsPage = (): ReactElement => {
     });
   }, [intl]);
 
-  // Once per visit: a language change retitles the page but is not a new page view.
   useEffect(() => {
     window.scrollTo(0, 0);
-    trackPageView(window.location.pathname, 'Maps List');
   }, []);
 
   const mutation = useMutation({
@@ -261,37 +243,9 @@ const MapsPage = (): ReactElement => {
   return (
     <IntlProvider
       locale={intlLocale.locale}
-      defaultLocale={Locales.EN.code}
+      defaultLocale={Locales.ZH.code}
       messages={intlLocale.messages}
     >
-      <SEOHead
-        title={intl.formatMessage({
-          id: 'seo.maps.title',
-          defaultMessage: 'My Maps | WiseMapping',
-        })}
-        description={intl.formatMessage({
-          id: 'seo.maps.description',
-          defaultMessage:
-            'Access and manage your mind maps in WiseMapping. Create, edit, share, and collaborate on your visual thinking projects. Organize your ideas with our powerful mind mapping tool.',
-        })}
-        keywords="my maps, mind maps, visual thinking, collaboration, organize ideas, brainstorming, project management"
-        canonicalUrl="/c/maps/"
-        ogType="website"
-        structuredData={{
-          '@context': 'https://schema.org',
-          '@type': 'WebPage',
-          name: 'My Maps - WiseMapping',
-          description:
-            'Access and manage your mind maps in WiseMapping. Create, edit, share, and collaborate on your visual thinking projects.',
-          url: 'https://www.wisemapping.com/c/maps/',
-          mainEntity: {
-            '@type': 'WebApplication',
-            name: 'WiseMapping',
-            applicationCategory: 'ProductivityApplication',
-            operatingSystem: 'Web Browser',
-          },
-        }}
-      />
       <PageRoot>
         <PageAppBar position="fixed" expanded={desktopDrawerOpen} variant="outlined" elevation={0}>
           <Toolbar role="banner">

@@ -19,11 +19,10 @@
 import React from 'react';
 import Box from '@mui/material/Box';
 import Header from './header';
-import Footer from './footer';
 import { LayoutContent } from './styled';
 
 type AccountAccessLayoutProps = {
-  headerType: 'only-signup' | 'only-signin' | 'none';
+  headerType: 'only-signin' | 'none';
   children: React.ReactNode;
   /** Less padding around the content, for the long sign-in and sign-up forms. */
   compact?: boolean;
@@ -46,7 +45,6 @@ const AccountAccessLayout = ({
       <LayoutContent compact={compact}>
         <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center' }}>{children}</Box>
       </LayoutContent>
-      <Footer />
     </Box>
   );
 };

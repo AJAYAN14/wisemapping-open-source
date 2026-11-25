@@ -89,7 +89,7 @@ export const buildExpandByLevelConfig = (
   intl: IntlShape,
   currentExpandLevel: number,
   setExpandLevel: (level: number) => void,
-  onInteraction: () => void,
+  onInteraction?: () => void,
 ): ActionConfig => {
   return {
     icon: () => (
@@ -123,7 +123,7 @@ export const buildExpandByLevelConfig = (
     }),
     onClick: () => {
       handleExpandByLevel(model, currentExpandLevel, setExpandLevel);
-      onInteraction();
+      onInteraction?.();
     },
     disabled: () => !model?.isMapLoadded(),
   };
