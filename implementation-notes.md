@@ -61,6 +61,11 @@
 10. **Direct File Import without Redundant Dialog**
     - Clicking the toolbar "导入" (Import) button now directly triggers the native OS file picker (`<input type="file" />`).
     - Stripped the manual "名称 *" and "描述" input modal. The map title automatically takes the selected file's name (without extension), and opens directly into the editor upon selection.
+11. **Comprehensive Shitcode & Relic Audit**
+    - **Admin Console Routes Pruned**: Removed all `/c/admin` routes and lazy components from `app.tsx` (`AdminConsole`, `AdminLayout`, `AccountsPage`, `MapsAdminPage`, `SystemPage`).
+    - **Multi-user Share Action Removed**: Removed internal multi-user map sharing from `action-chooser/index.tsx`.
+    - **Editor Error-Logger Sanitized**: Removed `window.newrelic` residue from `frontend/packages/editor/src/utils/error-logger.ts`.
+    - **Codebase Audited Clean**: Confirmed 0 AdSense publisher IDs (`ca-pub-`), 0 active analytics accounts, 0 New Relic hooks, 0 fake HTML/SVG pages, and 0 commercial donation/PayPal references across runtime code.
 
 ---
 
