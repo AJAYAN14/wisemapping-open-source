@@ -89,12 +89,12 @@ const MapsPage = (): ReactElement => {
   const client = use(ClientContext);
   const queryClient = useQueryClient();
   const [activeDialog, setActiveDialog] = React.useState<ActionType | undefined>(undefined);
-  const [mindMapCopilotDialogOpen, setMindMapCopilotDialogOpen] = React.useState(false);
   const [labelToDelete, setLabelToDelete] = React.useState<number>();
   const [mobileDrawerOpen, setMobileDrawerOpen] = React.useState(false);
   const [desktopDrawerOpen, setDesktopDrawerOpen] = React.useState(
     () => readStorage('desktopDrawerOpen') === 'true',
   );
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   // Get theme-appropriate icon color - match text color
   const getIconColor = () => {
@@ -111,19 +111,51 @@ const MapsPage = (): ReactElement => {
     setDesktopDrawerOpen(!desktopDrawerOpen);
   };
 
-  const handleMindMapCopilotDialogOpen = () => {
-    trackMindmapListAction('ai_copilot_dialog_open', 'mindmap_list_ai');
-    setMindMapCopilotDialogOpen(true);
+  const handleImportButtonClick = () => {
+    fileInputRef.current?.click();
   };
 
-  const handleMindMapCopilotDialogClose = () => {
-    setMindMapCopilotDialogOpen(false);
-  };
+  const handleDirectFileImport = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-  const handleMindMapCopilotDialogContinue = () => {
-    trackMindmapListAction('ai_copilot_open', 'mindmap_list_ai');
-    setMindMapCopilotDialogOpen(false);
-    window.open(CHATGPT_COPILOT_URL, '_blank', 'noopener,noreferrer');
+    // Reset input so re-selecting the same file fires change event
+    event.target.value = '';
+
+    const extensionFile = file.name.split('.').pop()?.toLowerCase();
+    const extensionAccept = ['wxml', 'mm', 'mmx', 'xmind', 'mmap', 'opml'];
+    if (!extensionFile || !extensionAccept.includes(extensionFile)) {
+      alert(
+        '不支持的文件格式。支持导入 WiseMapping (.wxml)、FreeMind (.mm)、Freeplane (.mmx)、XMind (.xmind)、MindManager (.mmap) 和 OPML (.opml) 文件。',
+      );
+      return;
+    }
+
+    // Name is automatically the file name without extension
+    const title = file.name.replace(/\.[^.]*$/, '');
+    const contentType =
+      extensionFile === 'xmind' ? 'application/vnd.xmind.workbook' : 'application/xml';
+
+    const reader = new FileReader();
+    reader.onload = async (loadEvent) => {
+      try {
+        const fileContent = loadEvent.target?.result ?? '';
+        const { TextImporterFactory } = await import('@wisemapping/editor');
+        const importer = TextImporterFactory.create(extensionFile, fileContent);
+        const content = await importer.import(title, '');
+        const mapId = await client.importMap({ title, description: '', contentType, content });
+        window.location.href = `/c/maps/${mapId}/edit`;
+      } catch (err) {
+        console.error('Import failed', err);
+        alert(err instanceof Error ? err.message : '导入思维导图失败，请检查文件内容是否正确。');
+      }
+    };
+
+    if (extensionFile === 'xmind' || extensionFile === 'mmap') {
+      reader.readAsArrayBuffer(file);
+    } else {
+      reader.readAsText(file);
+    }
   };
   const account = useFetchAccount();
   // Reload based on user preference ...
@@ -321,13 +353,20 @@ const MapsPage = (): ReactElement => {
                 type="button"
                 disableElevation={true}
                 startIcon={<CloudUploadTwoTone />}
-                onClick={() => setActiveDialog('import')}
+                onClick={handleImportButtonClick}
               >
                 <span className="message">
                   <FormattedMessage id="action.import" defaultMessage="Import" />
                 </span>
               </ToolbarButton>
             </Tooltip>
+            <input
+              type="file"
+              ref={fileInputRef}
+              accept=".wxml,.mm,.mmx,.xmind,.mmap,.opml"
+              style={{ display: 'none' }}
+              onChange={handleDirectFileImport}
+            />
             <ActionDispatcher
               action={activeDialog}
               onClose={() => setActiveDialog(undefined)}

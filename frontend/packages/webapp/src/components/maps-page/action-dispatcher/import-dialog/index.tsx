@@ -24,12 +24,7 @@ import React, { use, useEffect } from 'react';
 
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useMutation } from '@tanstack/react-query';
-import {
-  ErrorInfo,
-  MAP_DESCRIPTION_MAX_LENGTH,
-  MAP_TITLE_MAX_LENGTH,
-} from '../../../../classes/client';
-import Input from '../../../form/input';
+import { ErrorInfo } from '../../../../classes/client';
 import BaseDialog from '../base-dialog';
 import { HiddenFileInput } from './styled';
 import { ClientContext } from '../../../../classes/provider/client-context';
@@ -120,15 +115,6 @@ const ImportDialog = ({ onClose }: CreateProps): React.ReactElement => {
     showFileError(e instanceof Error ? e.message : String(e));
   };
 
-  // Stable, so that a key re-renders only the field typed in (see Input).
-  const handleOnChange = React.useCallback((event: React.ChangeEvent<HTMLInputElement>): void => {
-    event.preventDefault();
-
-    const name = event.target.name;
-    const value = event.target.value;
-    setModel((current) => ({ ...current, [name as keyof ImportModel]: value }));
-  }, []);
-
   const handleOnFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     // A cancelled picker can fire a change with no file in it.
     const file = event?.target?.files?.[0];
@@ -193,10 +179,11 @@ const ImportDialog = ({ onClose }: CreateProps): React.ReactElement => {
 
           // A file that can not be imported rejects with an ImportError: show it, never save it.
           importer
-            .import(title, description)
+            .import(title, '')
             .then((content) => {
               if (!isStale()) {
                 setModel((current) => ({ ...current, content }));
+                mutation.mutate({ title, description: '', contentType, content });
               }
             })
             .catch((e: unknown) => {
@@ -248,34 +235,6 @@ const ImportDialog = ({ onClose }: CreateProps): React.ReactElement => {
             type="file"
             required={true}
             onChange={handleOnFileChange}
-          />
-
-          <Input
-            name="title"
-            type="text"
-            label={intl.formatMessage({
-              id: 'action.rename-name-placeholder',
-              defaultMessage: 'Name',
-            })}
-            value={model.title}
-            onChange={handleOnChange}
-            error={error}
-            fullWidth={true}
-            maxLength={MAP_TITLE_MAX_LENGTH}
-          />
-
-          <Input
-            name="description"
-            type="text"
-            label={intl.formatMessage({
-              id: 'action.rename-description-placeholder',
-              defaultMessage: 'Description',
-            })}
-            value={model.description}
-            onChange={handleOnChange}
-            required={false}
-            fullWidth={true}
-            maxLength={MAP_DESCRIPTION_MAX_LENGTH}
           />
 
           <label htmlFor="contained-button-file">
