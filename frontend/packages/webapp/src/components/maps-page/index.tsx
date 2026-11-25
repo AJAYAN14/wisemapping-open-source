@@ -33,6 +33,7 @@ import {
   ToolbarSpacer,
 } from './styled';
 import { MapsList } from './maps-list';
+import { ImportProgressDialog, ImportStage } from './import-progress';
 import { createIntl, FormattedMessage, IntlProvider } from 'react-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Label } from '../../classes/client';
@@ -83,6 +84,17 @@ const MapsPage = (): ReactElement => {
     () => readStorage('desktopDrawerOpen') === 'true',
   );
   const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [importState, setImportState] = React.useState<{
+    open: boolean;
+    fileName: string;
+    stage: ImportStage;
+    error?: string | null;
+    progress?: number;
+  }>({
+    open: false,
+    fileName: '',
+    stage: 'reading',
+  });
 
   // Interruptible critically-damped spring driving sidebar + header layout together.
   const springDrawerWidth = useSpringValue(
@@ -114,9 +126,13 @@ const MapsPage = (): ReactElement => {
     const extensionFile = file.name.split('.').pop()?.toLowerCase();
     const extensionAccept = ['wxml', 'mm', 'mmx', 'xmind', 'mmap', 'opml'];
     if (!extensionFile || !extensionAccept.includes(extensionFile)) {
-      alert(
-        '不支持的文件格式。支持导入 WiseMapping (.wxml)、FreeMind (.mm)、Freeplane (.mmx)、XMind (.xmind)、MindManager (.mmap) 和 OPML (.opml) 文件。',
-      );
+      setImportState({
+        open: true,
+        fileName: file.name,
+        stage: 'error',
+        error:
+          '不支持的文件格式。支持导入 WiseMapping (.wxml)、FreeMind (.mm)、Freeplane (.mmx)、XMind (.xmind)、MindManager (.mmap) 和 OPML (.opml) 文件。',
+      });
       return;
     }
 
@@ -125,21 +141,74 @@ const MapsPage = (): ReactElement => {
     const contentType =
       extensionFile === 'xmind' ? 'application/vnd.xmind.workbook' : 'application/xml';
 
+    setImportState({
+      open: true,
+      fileName: file.name,
+      stage: 'reading',
+      progress: 25,
+      error: null,
+    });
+
     const reader = new FileReader();
+
+    reader.onprogress = (pe) => {
+      if (pe.lengthComputable && pe.total > 0) {
+        const percent = Math.min(45, Math.round((pe.loaded / pe.total) * 45));
+        setImportState((prev) => ({ ...prev, progress: percent }));
+      }
+    };
+
     reader.onload = async (loadEvent) => {
       try {
+        setImportState((prev) => ({
+          ...prev,
+          stage: 'parsing',
+          progress: 55,
+        }));
+
         const fileContent = loadEvent.target?.result ?? '';
         const { default: TextImporterFactory } = await import(
           '@wisemapping/mindplot/components/import/TextImporterFactory'
         );
         const importer = TextImporterFactory.create(extensionFile, fileContent);
         const content = await importer.import(title, '');
+
+        setImportState((prev) => ({
+          ...prev,
+          stage: 'saving',
+          progress: 85,
+        }));
+
         const mapId = await client.importMap({ title, description: '', contentType, content });
-        window.location.href = `/c/maps/${mapId}/edit`;
+
+        setImportState((prev) => ({
+          ...prev,
+          stage: 'success',
+          progress: 100,
+        }));
+
+        setTimeout(() => {
+          window.location.href = `/c/maps/${mapId}/edit`;
+        }, 500);
       } catch (err) {
         console.error('Import failed', err);
-        alert(err instanceof Error ? err.message : '导入思维导图失败，请检查文件内容是否正确。');
+        setImportState((prev) => ({
+          ...prev,
+          stage: 'error',
+          error:
+            err instanceof Error
+              ? err.message
+              : '导入思维导图失败，请检查文件内容是否正确或网络是否畅通。',
+        }));
       }
+    };
+
+    reader.onerror = () => {
+      setImportState((prev) => ({
+        ...prev,
+        stage: 'error',
+        error: '读取本地文件时发生错误，请重新选择文件。',
+      }));
     };
 
     if (extensionFile === 'xmind' || extensionFile === 'mmap') {
@@ -369,6 +438,18 @@ const MapsPage = (): ReactElement => {
           label={label}
         />
       )}
+      <ImportProgressDialog
+        open={importState.open}
+        fileName={importState.fileName}
+        stage={importState.stage}
+        error={importState.error}
+        progressPercent={importState.progress}
+        onClose={() => setImportState((prev) => ({ ...prev, open: false }))}
+        onRetry={() => {
+          setImportState((prev) => ({ ...prev, open: false }));
+          fileInputRef.current?.click();
+        }}
+      />
     </IntlProvider>
   );
 };

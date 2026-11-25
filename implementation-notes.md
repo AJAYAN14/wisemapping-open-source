@@ -146,6 +146,19 @@
     - **Studio Ambient Canvas (`ErrorCanvas`, `FallbackBackdrop`)**: Added full-viewport studio ambient background with warm amber radial highlight (`radial-gradient(ellipse 900px 600px ... rgba(245, 158, 11, 0.08))`).
     - **Amber Squircle Emblem (`ErrorBadge`, `FallbackBadge`)**: 64x64px squircle badge (`18px` radius) with amber gradient (`#FFB340` -> `#F59E0B`) housing Google Material Rounded icons: `ExploreOffRounded` for 404 Not Found, `LockRounded` for access required, and `WarningAmberRounded` for unexpected errors.
     - **Tactile Squircle Action Buttons & Google Material Rounded Icons (`ApplePrimaryButton`, `AppleSecondaryButton`, `FallbackLoginButton`)**: Rounded 14px buttons with tactile pointer-down feedback (`:active { transform: scale(0.97) }`) and Google Material Rounded icons: `HomeRounded` (返回首页), `ArrowBackRounded` (返回), and `LoginRounded` (登录).
+24. **Apple Design File & XMind Import HUD (`ImportProgressDialog`)**
+    - **Ultra-Thin Material Frosted Glass HUD (`ImportProgressDialog`)**: Refactored the modal into an authentic Apple macOS/iOS HUD floating dialogue (`backdrop-filter: blur(40px) saturate(200%)`, 22px squircle radius, compact 340px geometry, specular hairline highlight border `inset 0 1px 1px 0 rgba(255, 255, 255, 1)` and ultra-subtle ambient scrim `rgba(0, 0, 0, 0.18)`), eliminating jarring native `alert()` dialogs and clunky full-bleed dividers.
+    - **Contained 4px Pill Progress Track**: Replaced full-bleed edge-to-edge dividing bars with an inset, delicate 4px pill track contained smoothly within content padding.
+    - **SF Pro Typography & Restrained Tone**: Optical tracking (`letter-spacing: -0.022em`), clean punctuation with no shouting exclamation marks, and subtle secondary status text (`正在解析思维导图结构...`, `已同步至个人导图库`).
+    - **Multi-Stage Real-Time Progress Flow**:
+      - `reading`: Reads file bytes locally with dynamic percentage progress.
+      - `parsing`: Unpacks zip archive, extracts hierarchy, notes, and embedded card illustrations.
+      - `saving`: Posts XML to Supabase PostgreSQL cloud database via Netlify Functions.
+      - `success`: Displays Apple System Green `#10B981` checkmark indicator and smoothly transitions directly into `/c/maps/{id}/edit`.
+      - `error`: Displays inline error alert box with tactile "重新选择" and "关闭" buttons.
+25. **Netlify Production Deployment & CI Package Manager Fix**
+    - Removed root `package.json` `"packageManager": "yarn@4.18.1..."` entry to resolve Netlify CI dependency installation crash on repos with root `package-lock.json`.
+    - Production deployed to `https://jian14.netlify.app`.
 
 ---
 
