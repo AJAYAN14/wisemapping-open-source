@@ -298,6 +298,7 @@ describe('Toolbar', () => {
 
     const menu = screen.getByRole('menu');
     expect(getComputedStyle(menu).top).toBe('auto');
+    expect(menu.getAttribute('data-canvas-inset')).toBe('bottom');
   });
 
   it('Execute render if set', () => {

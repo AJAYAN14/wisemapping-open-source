@@ -104,6 +104,15 @@ export const ZoomToolbarSkeleton = styled('div')(({ theme }) => ({
   padding: theme.spacing(1),
   boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
   zIndex: EDITOR_Z_INDEX.canvasChrome,
+  [theme.breakpoints.down('sm')]: {
+    left: 0,
+    right: 0,
+    marginInline: 'auto',
+    width: 'fit-content',
+    maxWidth:
+      'calc(100dvw - 24px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px))',
+    transform: 'none',
+  },
   ...theme.applyStyles('dark', { boxShadow: '0 2px 8px rgba(255,255,255,0.15)' }),
 }));
 

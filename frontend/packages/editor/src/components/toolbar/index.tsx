@@ -415,6 +415,15 @@ const Toolbar = ({ configurations, position }: ToolbarProps): ReactElement => {
                 '& > *': {
                   flexShrink: 0,
                 },
+                [theme.breakpoints.down('sm')]: {
+                  left: 0,
+                  right: 0,
+                  marginInline: 'auto',
+                  width: 'fit-content',
+                  maxWidth:
+                    'calc(100dvw - 24px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px))',
+                  transform: 'none',
+                },
               }
             : {}),
         '&&': {
