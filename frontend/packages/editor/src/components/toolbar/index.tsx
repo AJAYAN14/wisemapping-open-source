@@ -250,7 +250,10 @@ export const ToolbarSubmenu = ({
 type ToolbarMenuItemProps = {
   key?: React.Key;
   configuration?: ActionConfig | undefined;
-  vertical?: boolean;
+  /** True when items inside the parent container stack vertically. */
+  vertical?: boolean | undefined;
+  /** Controls submenu popover drop direction (defaults to `vertical`). */
+  submenuVertical?: boolean | undefined;
   elevation?: number;
 };
 
@@ -262,6 +265,7 @@ type ToolbarMenuItemProps = {
 export const ToolbarMenuItem = ({
   configuration,
   vertical,
+  submenuVertical,
   elevation,
 }: ToolbarMenuItemProps): ReactElement => {
   if (!configuration)
@@ -269,13 +273,23 @@ export const ToolbarMenuItem = ({
       <Divider
         data-testid="divider"
         orientation={!vertical ? 'vertical' : 'horizontal'}
-        flexItem
-        sx={{
-          borderLeftWidth: 1,
-          opacity: 0.6,
-          my: !vertical ? 0.75 : 'auto',
-          mx: !vertical ? 'auto' : 0.75,
-        }}
+        sx={
+          !vertical
+            ? {
+                height: '18px',
+                alignSelf: 'center',
+                borderColor: (theme) =>
+                  theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.16)' : 'rgba(0,0,0,0.12)',
+                mx: '3px',
+              }
+            : {
+                width: '18px',
+                alignSelf: 'center',
+                borderColor: (theme) =>
+                  theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.16)' : 'rgba(0,0,0,0.12)',
+                my: '3px',
+              }
+        }
       />
     );
 
@@ -294,7 +308,7 @@ export const ToolbarMenuItem = ({
       return (
         <ToolbarSubmenu
           configuration={configuration}
-          vertical={vertical}
+          vertical={submenuVertical ?? vertical}
           elevation={elevation || 0}
         />
       );
@@ -415,6 +429,23 @@ const Toolbar = ({ configurations, position }: ToolbarProps): ReactElement => {
                 '& > *': {
                   flexShrink: 0,
                 },
+                '& .MuiIconButton-root': {
+                  width: '34px',
+                  height: '34px',
+                  minWidth: '34px',
+                  minHeight: '34px',
+                  padding: 0,
+                  '& svg': {
+                    fontSize: '1.25rem',
+                  },
+                  '@media (pointer: coarse)': {
+                    '&::after': {
+                      content: '""',
+                      position: 'absolute',
+                      inset: '-4px -1px',
+                    },
+                  },
+                },
                 [theme.breakpoints.down('sm')]: {
                   left: 0,
                   right: 0,
@@ -430,7 +461,7 @@ const Toolbar = ({ configurations, position }: ToolbarProps): ReactElement => {
           ...glassStyle,
         },
         borderRadius: isDock ? '9999px' : '16px',
-        padding: isDock ? '3px 8px' : '6px 3px',
+        padding: isDock ? '4px 6px' : '6px 3px',
         gap: isDock ? '2px' : '3px',
         alignItems: 'center',
         justifyContent: isDock ? 'safe center' : 'center',
@@ -443,7 +474,15 @@ const Toolbar = ({ configurations, position }: ToolbarProps): ReactElement => {
     >
       {configurations.map((c, i) => {
         // eslint-disable-next-line @eslint-react/no-array-index-key -- a toolbar built once, never reordered
-        return <ToolbarMenuItem key={i} configuration={c} elevation={2} vertical={!pos.vertical} />;
+        return (
+          <ToolbarMenuItem
+            key={i}
+            configuration={c}
+            elevation={2}
+            vertical={Boolean(pos.vertical)}
+            submenuVertical={!pos.vertical}
+          />
+        );
       })}
     </AppBar>
   );

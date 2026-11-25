@@ -729,7 +729,7 @@ const AppBar = ({
         <MaterialToolbar>
           {config.map((c, i) => {
             // eslint-disable-next-line @eslint-react/no-array-index-key -- a toolbar built once, never reordered
-            return <ToolbarMenuItem key={i} configuration={c} vertical />;
+            return <ToolbarMenuItem key={i} configuration={c} vertical={false} submenuVertical />;
           })}
         </MaterialToolbar>
       </MaterialAppBar>

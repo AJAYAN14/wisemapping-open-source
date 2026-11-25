@@ -88,9 +88,10 @@ export const ZoomDisplay = ({ model }: ZoomDisplayProps): ReactElement => {
   return (
     <Box
       sx={{
-        px: 1,
-        py: 0.25,
-        minWidth: 46,
+        px: { xs: 0.75, sm: 1 },
+        mx: '2px',
+        height: 26,
+        minWidth: { xs: 42, sm: 46 },
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',

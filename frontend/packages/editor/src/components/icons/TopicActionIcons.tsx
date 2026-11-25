@@ -21,69 +21,39 @@ import SvgIcon from '@mui/material/SvgIcon';
 import type { SvgIconProps } from '@mui/material/SvgIcon';
 
 /**
- * Icon for "Add Sibling Topic": a parent spine branching to an existing topic
- * pill above and a "+" at the same horizontal column below.
+ * Icon for "Add Sibling Topic" (•—口).
  */
 export const AddSiblingTopicIcon: React.FC<SvgIconProps> = (props) => (
   <SvgIcon {...props} viewBox="0 0 24 24">
-    <path
-      d="M4.5,6.5 V17 M4.5,6.5 H8.5 M4.5,17 H9.5"
+    <g
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.8"
+      strokeWidth={2}
       strokeLinecap="round"
       strokeLinejoin="round"
-    />
-    <rect
-      x="9"
-      y="4"
-      width="11"
-      height="5"
-      rx="2"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
-    />
-    <path
-      d="M14.5,13.5 V20.5 M11,17 H18"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-    />
+    >
+      <circle cx="5" cy="12" r="2.0" fill="currentColor" stroke="none" />
+      <line x1="6.5" y1="12" x2="10" y2="12" />
+      <rect x="10" y="8" width="11" height="8" rx="2" />
+    </g>
   </SvgIcon>
 );
 
 /**
- * Icon for "Add Child Topic": a parent topic pill stepping down and right
- * into a "+" node to visually distinguish hierarchy from sibling creation.
+ * Icon for "Add Child Topic" (•↳口).
  */
 export const AddChildTopicIcon: React.FC<SvgIconProps> = (props) => (
   <SvgIcon {...props} viewBox="0 0 24 24">
-    <rect
-      x="3"
-      y="4"
-      width="9.5"
-      height="5"
-      rx="2"
+    <g
       fill="none"
       stroke="currentColor"
-      strokeWidth="1.8"
-    />
-    <path
-      d="M7.5,9 V17 H11.5"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.8"
+      strokeWidth={2}
       strokeLinecap="round"
       strokeLinejoin="round"
-    />
-    <path
-      d="M16,13.5 V20.5 M12.5,17 H19.5"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-    />
+    >
+      <circle cx="9" cy="5.5" r="2.0" fill="currentColor" stroke="none" />
+      <path d="M9 5.5H6.5A2 2 0 0 0 4.5 7.5V13.5A2 2 0 0 0 6.5 15.5H10" />
+      <rect x="10" y="11.5" width="11" height="8" rx="2" />
+    </g>
   </SvgIcon>
 );
