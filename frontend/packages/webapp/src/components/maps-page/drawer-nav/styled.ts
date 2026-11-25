@@ -97,6 +97,10 @@ export const SectionActionButton = styled(IconButton)(({ theme }) => {
     color: c.textTertiary,
     borderRadius: '8px',
     ...applePressMixin,
+    '@media (pointer: coarse)': {
+      minWidth: '44px',
+      minHeight: '44px',
+    },
     '&:hover': {
       color: c.amber,
       backgroundColor: c.hoverFill,
@@ -119,6 +123,11 @@ export const FolderMoreButton = styled(IconButton)(({ theme }) => {
     padding: '3px',
     borderRadius: '8px',
     color: c.textTertiary,
+    '@media (hover: none), (pointer: coarse)': {
+      opacity: 0.75,
+      minWidth: '44px',
+      minHeight: '44px',
+    },
     '&:hover': {
       opacity: 1,
       color: c.textPrimary,
@@ -237,6 +246,11 @@ export const DeleteLabelButton = styled(IconButton)(({ theme }) => {
     transition: 'opacity 0.16s ease, color 0.14s ease, background-color 0.14s ease',
     padding: '4px',
     color: c.textTertiary,
+    '@media (hover: none), (pointer: coarse)': {
+      opacity: 0.75,
+      minWidth: '44px',
+      minHeight: '44px',
+    },
     '&:hover': {
       opacity: 1,
       color: '#EF4444',

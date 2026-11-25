@@ -35,6 +35,12 @@
       "value": "WiseMapping 标志"
     }
   ],
+  "appbar.more-actions": [
+    {
+      "type": 0,
+      "value": "更多操作"
+    }
+  ],
   "appbar.shared-button": [
     {
       "type": 0,

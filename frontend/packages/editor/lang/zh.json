@@ -17,6 +17,9 @@
   "appbar.logo-aria-label": {
     "defaultMessage": "WiseMapping 标志"
   },
+  "appbar.more-actions": {
+    "defaultMessage": "更多操作"
+  },
   "appbar.shared-button": {
     "defaultMessage": "分享"
   },

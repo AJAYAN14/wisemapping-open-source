@@ -30,6 +30,14 @@ class Capability {
   }
 
   private parseMobile = () => {
+    const hasCoarsePointer =
+      typeof window !== 'undefined' &&
+      typeof window.matchMedia === 'function' &&
+      window.matchMedia('(pointer: coarse)').matches &&
+      window.matchMedia('(max-width: 899.95px)').matches;
+    if (hasCoarsePointer) {
+      return true;
+    }
     const result =
       /(android|bb\d+|meego).+mobile|avantgo|bada\/|blackberry|blazer|compal|elaine|fennec|hiptop|iemobile|ip(hone|od)|ipad|iris|kindle|Android|Silk|lge |maemo|midp|mmp|netfront|opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\/|plucker|pocket|psp|series(4|6)0|symbian|treo|up\.(browser|link)|vodafone|wap|windows (ce|phone)|xda|xiino/i.test(
         navigator.userAgent.toLowerCase(),
@@ -120,71 +128,17 @@ const ActionConfigByRenderMode: Record<ActionType, CapabilitySupport> = {
     desktop: {
       hidden: ['viewonly-public', 'viewonly-private', 'edition-viewer', 'showcase', 'desktop'],
     },
-    mobile: {
-      hidden: [
-        'viewonly-public',
-        'viewonly-private',
-        'showcase',
-        'edition-viewer',
-        'edition-editor',
-        'edition-owner',
-        'desktop',
-      ],
-    },
   },
-  export: {
-    mobile: {
-      hidden: [
-        'viewonly-public',
-        'viewonly-private',
-        'showcase',
-        'edition-viewer',
-        'edition-editor',
-        'edition-owner',
-      ],
-    },
-  },
-  'appbar-title': {
-    mobile: {
-      hidden: [
-        'viewonly-public',
-        'viewonly-private',
-        'showcase',
-        'edition-viewer',
-        'edition-editor',
-        'edition-owner',
-      ],
-    },
-  },
+  export: {},
+  'appbar-title': {},
   starred: {
     desktop: {
       hidden: ['showcase', 'viewonly-private', 'viewonly-public', 'desktop'],
-    },
-    mobile: {
-      hidden: [
-        'viewonly-public',
-        'viewonly-private',
-        'showcase',
-        'edition-viewer',
-        'edition-editor',
-        'edition-owner',
-        'desktop',
-      ],
     },
   },
   theme: {
     desktop: {
       hidden: ['viewonly-public', 'viewonly-private', 'edition-viewer'],
-    },
-    mobile: {
-      hidden: [
-        'viewonly-public',
-        'viewonly-private',
-        'showcase',
-        'edition-viewer',
-        'edition-editor',
-        'edition-owner',
-      ],
     },
   },
   rename: {
@@ -197,30 +151,10 @@ const ActionConfigByRenderMode: Record<ActionType, CapabilitySupport> = {
         'edition-editor',
       ],
     },
-    mobile: {
-      hidden: [
-        'viewonly-public',
-        'viewonly-private',
-        'showcase',
-        'edition-viewer',
-        'edition-editor',
-        'edition-owner',
-      ],
-    },
   },
   'outline-view': {
     desktop: {
       hidden: ['showcase'],
-    },
-    mobile: {
-      hidden: [
-        'viewonly-public',
-        'viewonly-private',
-        'showcase',
-        'edition-viewer',
-        'edition-editor',
-        'edition-owner',
-      ],
     },
   },
 };

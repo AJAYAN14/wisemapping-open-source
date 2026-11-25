@@ -16,8 +16,8 @@
  *   limitations under the License.
  */
 
-import React, { use, useCallback, useState } from 'react';
-import { FormattedMessage } from 'react-intl';
+import React, { use, useCallback, useEffect, useRef, useState } from 'react';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { useQuery } from '@tanstack/react-query';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
@@ -37,7 +37,11 @@ import { MapCard } from './MapCard';
 import { MapRow } from './MapRow';
 import { MapsListToolbar } from './MapsListToolbar';
 import { MapsTableHead } from './MapsTableHead';
-import { ChangeLabelMutationFunctionParam, getChangeLabelMutationFunction, isFolderFilter } from './model';
+import {
+  ChangeLabelMutationFunctionParam,
+  getChangeLabelMutationFunction,
+  isFolderFilter,
+} from './model';
 import {
   ListPagination,
   ListPaper,
@@ -79,8 +83,30 @@ export const MapsList = ({
   onFilterChange,
 }: MapsListProps): React.ReactElement => {
   const client = use(ClientContext);
+  const intl = useIntl();
+  const listPaperRef = useRef<HTMLDivElement>(null);
   // Read on the first render (`noSsr`): the page never paints the other view first.
   const isMobile = useMediaQuery(narrowScreen, { noSsr: true });
+  // Also switch to cards when the main column itself is narrower than the table (e.g. tablet
+  // with the sidebar expanded), rather than clipping columns with overflow: hidden.
+  const [isNarrowContainer, setIsNarrowContainer] = useState(false);
+
+  useEffect(() => {
+    const element = listPaperRef.current;
+    if (!element || typeof ResizeObserver === 'undefined') {
+      return undefined;
+    }
+    const observer = new ResizeObserver((entries) => {
+      const width = entries[0]?.contentRect.width ?? 0;
+      if (width > 0) {
+        setIsNarrowContainer(width < 680);
+      }
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  const useCardView = isMobile || isNarrowContainer;
 
   const {
     data: maps = NO_MAPS,
@@ -135,13 +161,20 @@ export const MapsList = ({
     },
     [],
   );
+  const selectedRef = useRef(selected);
+  useEffect(() => {
+    selectedRef.current = selected;
+  }, [selected]);
+
   const handleDragStart = useCallback(
     (mapId: number, event: React.DragEvent<HTMLTableRowElement>) => {
-      const dragIds = selected.includes(mapId) && selected.length > 0 ? selected : [mapId];
+      const currentSelected = selectedRef.current;
+      const dragIds =
+        currentSelected.includes(mapId) && currentSelected.length > 0 ? currentSelected : [mapId];
       event.dataTransfer.effectAllowed = 'move';
       event.dataTransfer.setData(MAP_IDS_DRAG_MIME, JSON.stringify(dragIds));
     },
-    [selected],
+    [],
   );
 
   const handleMenuClose = (action: ActionType): void => {
@@ -197,12 +230,22 @@ export const MapsList = ({
       ))}
     </div>
   ) : message ? (
-    <Card elevation={0} sx={{ borderRadius: '18px', margin: '10px 14px', border: '1px solid rgba(128,128,128,0.16)' }}>
+    <Card
+      elevation={0}
+      sx={{ borderRadius: '18px', margin: '10px 14px', border: '1px solid rgba(128,128,128,0.16)' }}
+    >
       <CardContent sx={{ textAlign: 'center', py: 4, fontWeight: 600 }}>{message}</CardContent>
     </Card>
   ) : (
     pagedMaps.map((map) => (
-      <MapCard key={map.id} map={map} onStar={handleStar} onOpenMenu={handleOpenMenu} />
+      <MapCard
+        key={map.id}
+        map={map}
+        selected={selected.includes(map.id)}
+        onToggleSelected={toggleSelected}
+        onStar={handleStar}
+        onOpenMenu={handleOpenMenu}
+      />
     ))
   );
 
@@ -221,7 +264,10 @@ export const MapsList = ({
           <MapsListSkeleton rowsPerPage={rowsPerPage} />
         ) : message ? (
           <TableRow>
-            <TableCell colSpan={6} sx={{ textAlign: 'center', py: 6, fontWeight: 600, color: 'text.secondary' }}>
+            <TableCell
+              colSpan={6}
+              sx={{ textAlign: 'center', py: 6, fontWeight: 600, color: 'text.secondary' }}
+            >
               {message}
             </TableCell>
           </TableRow>
@@ -254,7 +300,7 @@ export const MapsList = ({
           mapId={rowMenu.mapId}
         />
       )}
-      <ListPaper elevation={0}>
+      <ListPaper ref={listPaperRef} elevation={0}>
         <MapsListToolbar
           filter={filter}
           folders={folders}
@@ -265,15 +311,23 @@ export const MapsList = ({
           onMoveSelected={() => openBulkDialog('move-folder')}
           onFilterChange={onFilterChange}
           onSearchChange={changeSearch}
-          end={!isMobile && pagination && <PaginationDesktop>{pagination}</PaginationDesktop>}
+          end={!useCardView && pagination && <PaginationDesktop>{pagination}</PaginationDesktop>}
         />
 
-        <ListTableContainer>
+        <ListTableContainer
+          tabIndex={useCardView ? undefined : 0}
+          role={useCardView ? undefined : 'region'}
+          aria-label={
+            useCardView
+              ? undefined
+              : intl.formatMessage({ id: 'common.maps-list', defaultMessage: 'Maps list' })
+          }
+        >
           {/* Only the view the screen shows: the other one would be rendered for nothing. */}
-          {isMobile ? <div data-testid="maps-cards">{cards}</div> : table}
+          {useCardView ? <div data-testid="maps-cards">{cards}</div> : table}
         </ListTableContainer>
 
-        {isMobile && pagination && <PaginationMobile>{pagination}</PaginationMobile>}
+        {useCardView && pagination && <PaginationMobile>{pagination}</PaginationMobile>}
       </ListPaper>
       <ActionDispatcher
         action={activeDialog?.actionType}

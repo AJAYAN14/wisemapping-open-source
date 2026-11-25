@@ -44,9 +44,14 @@ export const LoadingAppBar = styled(AppBar)(({ theme }) => {
     },
     marginLeft: 240,
     width: 'calc(100% - 240px)',
+    paddingTop: 'env(safe-area-inset-top, 0px)',
     '& .MuiToolbar-root': {
       backgroundColor: 'transparent',
-      minHeight: '60px',
+      minHeight: '3.75rem',
+    },
+    [theme.breakpoints.down('sm')]: {
+      marginLeft: 0,
+      width: '100%',
     },
   };
 });
@@ -55,7 +60,7 @@ export const LoadingContainer = styled('div')(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
     display: 'flex',
-    minHeight: '100vh',
+    minHeight: '100dvh',
     backgroundColor: c.canvas,
   };
 });
@@ -70,6 +75,9 @@ export const LoadingDrawer = styled('div')(({ theme }) => {
     display: 'flex',
     flexDirection: 'column',
     padding: theme.spacing(2),
+    [theme.breakpoints.down('sm')]: {
+      display: 'none',
+    },
   };
 });
 
@@ -98,6 +106,7 @@ export const LoadingDrawerLogo = styled('div')({
 
 export const LoadingMainContent = styled('div')({
   flexGrow: 1,
+  minWidth: 0,
   display: 'flex',
   flexDirection: 'column',
 });
@@ -165,6 +174,8 @@ export const LoadingTableContainer = styled(TableContainer)(({ theme }) => {
     border: `1px solid ${c.hairline}`,
     borderRadius: '18px',
     boxShadow: c.shadowSubtle,
-    overflow: 'hidden',
+    overflowX: 'auto',
+    overflowY: 'hidden',
+    maxWidth: '100%',
   };
 });

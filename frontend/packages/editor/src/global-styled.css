@@ -1,11 +1,28 @@
 /********************************************************************************/
 /* Header & Toolbar Styles */
 /********************************************************************************/
+:root {
+  --target-size: 24px;
+}
+
+@media (pointer: coarse) {
+  :root {
+    --target-size: 44px;
+  }
+}
+
+html {
+  scroll-padding-top: calc(3.5rem + env(safe-area-inset-top, 0px));
+  scroll-padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px));
+}
+
 body {
-  width: 100vw;
+  width: 100%;
+  min-width: 100%;
   height: 100vh;
-  min-width: 100vw;
+  height: 100dvh;
   min-height: 100vh;
+  min-height: 100dvh;
   margin: 0px;
   /* Disable pull-to-refresh / scroll-to-reload on mobile browsers */
   overscroll-behavior: none;

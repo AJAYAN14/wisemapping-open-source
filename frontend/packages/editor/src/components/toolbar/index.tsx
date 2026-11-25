@@ -77,6 +77,10 @@ export const ToolbarButtonOption = (props: {
             borderRadius: '50%',
             p: 0.75,
             ...applePressMixin,
+            '@media (pointer: coarse)': {
+              minWidth: '44px',
+              minHeight: '44px',
+            },
             '&.Mui-disabled': {
               opacity: 0.35,
             },
@@ -379,16 +383,42 @@ const Toolbar = ({ configurations, position }: ToolbarProps): ReactElement => {
       sx={{
         flexDirection: pos.vertical ? 'column' : 'row',
         width: pos.vertical ? EDITOR_LAYOUT.formattingToolbar.width : 'unset',
-        right: pos.position?.right,
+        right: pos.position?.right
+          ? `max(${pos.position.right}, env(safe-area-inset-right, 0px))`
+          : undefined,
         top: pos.position?.top,
+        bottom: pos.position?.bottom,
         marginTop: pos.position?.marginTop,
         transform: pos.position?.transform,
+        ...(pos.vertical
+          ? {
+              maxHeight:
+                'calc(100dvh - 120px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
+              overflowY: 'auto',
+              overflowX: 'hidden',
+              scrollbarWidth: 'none',
+              '@media (max-height: 540px), (max-width: 599.95px)': {
+                top: 'calc(56px + env(safe-area-inset-top, 0px))',
+              },
+            }
+          : isDock
+            ? {
+                maxWidth:
+                  'calc(100dvw - 60px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px))',
+                overflowX: 'auto',
+                overflowY: 'hidden',
+                scrollbarWidth: 'none',
+                '& > *': {
+                  flexShrink: 0,
+                },
+              }
+            : {}),
         ...glassStyle,
         borderRadius: isDock ? '9999px' : '16px',
         padding: isDock ? '3px 8px' : '6px 3px',
         gap: isDock ? '2px' : '3px',
         alignItems: 'center',
-        justifyContent: 'center',
+        justifyContent: isDock ? 'safe center' : 'center',
         fontFamily: appleFontStack,
         zIndex: pos.zIndex ?? EDITOR_Z_INDEX.formattingToolbar,
       }}

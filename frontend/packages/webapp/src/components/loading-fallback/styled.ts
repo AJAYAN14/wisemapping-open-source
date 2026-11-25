@@ -24,6 +24,6 @@ export const LoadingBox = styled(Box)(({ theme }) => ({
   flexDirection: 'column',
   justifyContent: 'center',
   alignItems: 'center',
-  minHeight: '100vh',
+  minHeight: '100dvh',
   gap: theme.spacing(2),
 }));

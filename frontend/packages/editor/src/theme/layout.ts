@@ -46,6 +46,7 @@ export const EDITOR_LAYOUT = {
     /** No formatting toolbar to clear, so it can sit against the edge. */
     rightCompact: `${COMPACT_EDGE_INSET}px`,
     top: 'calc(100% - 55px)',
+    bottom: 'max(8px, env(safe-area-inset-bottom, 0px))',
   },
   creatorInfoPane: {
     left: `${EDGE_INSET}px`,

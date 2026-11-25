@@ -22,6 +22,8 @@ import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableRow from '@mui/material/TableRow';
 import Toolbar from '@mui/material/Toolbar';
+import useMediaQuery from '@mui/material/useMediaQuery';
+import type { Theme } from '@mui/material/styles';
 import { BodyCell, CompactCardHeader, MapCardRoot } from './shared.styled';
 import {
   DrawerSkeleton,
@@ -97,127 +99,141 @@ export const MapsListSkeleton: React.FC<{ rowsPerPage: number }> = ({ rowsPerPag
   );
 };
 
-export const MapsPageLoading = (): React.ReactElement => (
-  <LoadingContainer>
-    {/* Left Drawer Skeleton */}
-    <LoadingDrawer>
-      {/* Logo */}
-      <LoadingDrawerLogo>
-        <DrawerSkeleton animation="wave" variant="rectangular" width={40} height={40} />
-      </LoadingDrawerLogo>
+const narrowScreen = (theme: Theme): string => theme.breakpoints.down('sm');
 
-      {/* Navigation Items */}
-      <LoadingDrawerList>
-        {[...Array(5)].map((_, i) => (
-          <LoadingDrawerItem
-            // eslint-disable-next-line @eslint-react/no-array-index-key -- identical placeholders in a fixed-length list that never reorders
-            key={i}
-          >
-            <DrawerSkeleton animation="wave" variant="circular" width={24} height={24} />
-            <DrawerSkeleton animation="wave" variant="text" width={180} height={20} />
-          </LoadingDrawerItem>
-        ))}
-      </LoadingDrawerList>
+export const MapsPageLoading = (): React.ReactElement => {
+  const isMobile = useMediaQuery(narrowScreen, { noSsr: true });
 
-      {/* Divider */}
-      <DrawerSkeleton
-        animation="wave"
-        variant="rectangular"
-        width="100%"
-        height={1}
-        sx={{ marginTop: 2, marginBottom: 2 }}
-      />
+  return (
+    <LoadingContainer>
+      {/* Left Drawer Skeleton */}
+      <LoadingDrawer>
+        {/* Logo */}
+        <LoadingDrawerLogo>
+          <DrawerSkeleton animation="wave" variant="rectangular" width={40} height={40} />
+        </LoadingDrawerLogo>
 
-      {/* Label Items */}
-      <LoadingDrawerList>
-        {[...Array(3)].map((_, i) => (
-          <LoadingDrawerItem
-            // eslint-disable-next-line @eslint-react/no-array-index-key -- identical placeholders in a fixed-length list that never reorders
-            key={i}
-          >
-            <DrawerSkeleton animation="wave" variant="circular" width={24} height={24} />
-            <DrawerSkeleton animation="wave" variant="text" width={140} height={20} />
-          </LoadingDrawerItem>
-        ))}
-      </LoadingDrawerList>
+        {/* Navigation Items */}
+        <LoadingDrawerList>
+          {[...Array(5)].map((_, i) => (
+            <LoadingDrawerItem
+              // eslint-disable-next-line @eslint-react/no-array-index-key -- identical placeholders in a fixed-length list that never reorders
+              key={i}
+            >
+              <DrawerSkeleton animation="wave" variant="circular" width={24} height={24} />
+              <DrawerSkeleton animation="wave" variant="text" width={180} height={20} />
+            </LoadingDrawerItem>
+          ))}
+        </LoadingDrawerList>
 
-      {/* Footer - Powered by */}
-      <LoadingDrawerFooter>
-        <DrawerSkeleton animation="wave" variant="rectangular" width={120} height={24} />
-      </LoadingDrawerFooter>
-    </LoadingDrawer>
+        {/* Divider */}
+        <DrawerSkeleton
+          animation="wave"
+          variant="rectangular"
+          width="100%"
+          height={1}
+          sx={{ marginTop: 2, marginBottom: 2 }}
+        />
 
-    {/* Main Content Area */}
-    <LoadingMainContent>
-      {/* Header AppBar with skeleton toolbar */}
-      <LoadingAppBar position="fixed" elevation={0}>
-        <Toolbar>
-          <SkeletonBlock
-            animation="wave"
-            variant="circular"
-            width={40}
-            height={40}
-            sx={{ marginRight: 2 }}
-          />
-          <SkeletonButton
-            animation="wave"
-            variant="rectangular"
-            width={120}
-            height={36}
-            sx={{ marginRight: 2 }}
-          />
-          <SkeletonButton animation="wave" variant="rectangular" width={120} height={36} />
-          <Box sx={{ flexGrow: 1 }} />
-          <SkeletonBlock
-            animation="wave"
-            variant="circular"
-            width={40}
-            height={40}
-            sx={{ marginRight: 1 }}
-          />
-          <SkeletonBlock
-            animation="wave"
-            variant="circular"
-            width={40}
-            height={40}
-            sx={{ marginRight: 1 }}
-          />
-          <SkeletonBlock animation="wave" variant="circular" width={40} height={40} />
-        </Toolbar>
-      </LoadingAppBar>
+        {/* Label Items */}
+        <LoadingDrawerList>
+          {[...Array(3)].map((_, i) => (
+            <LoadingDrawerItem
+              // eslint-disable-next-line @eslint-react/no-array-index-key -- identical placeholders in a fixed-length list that never reorders
+              key={i}
+            >
+              <DrawerSkeleton animation="wave" variant="circular" width={24} height={24} />
+              <DrawerSkeleton animation="wave" variant="text" width={140} height={20} />
+            </LoadingDrawerItem>
+          ))}
+        </LoadingDrawerList>
 
-      {/* Main content area with skeleton table */}
-      <Box sx={{ width: '100%', marginTop: '80px' }}>
-        <LoadingListPaper elevation={0}>
-          {/* Search Toolbar Skeleton */}
-          <LoadingSearchToolbar variant="dense">
-            <LoadingToolbarLeft>
-              {/* Placeholder for action buttons - empty when no selection */}
-            </LoadingToolbarLeft>
-            <LoadingToolbarCenter>
-              {/* Search Input Skeleton - centered; a string: sx multiplies a number radius */}
-              <SkeletonButton
-                animation="wave"
-                variant="rectangular"
-                width={240}
-                height={32}
-                sx={{ borderRadius: '9px' }}
-              />
-            </LoadingToolbarCenter>
-            <LoadingToolbarRight>
-              {/* Pagination removed - hidden when not needed */}
-            </LoadingToolbarRight>
-          </LoadingSearchToolbar>
+        {/* Footer - Powered by */}
+        <LoadingDrawerFooter>
+          <DrawerSkeleton animation="wave" variant="rectangular" width={120} height={24} />
+        </LoadingDrawerFooter>
+      </LoadingDrawer>
 
-          <LoadingTableContainer>
-            <Table sx={{ backgroundColor: 'transparent' }}>
-              <TableBody>
-                <MapsListSkeleton rowsPerPage={10} />
-              </TableBody>
-            </Table>
-          </LoadingTableContainer>
-        </LoadingListPaper>
-      </Box>
-    </LoadingMainContent>
-  </LoadingContainer>
-);
+      {/* Main Content Area */}
+      <LoadingMainContent>
+        {/* Header AppBar with skeleton toolbar */}
+        <LoadingAppBar position="fixed" elevation={0}>
+          <Toolbar>
+            <SkeletonBlock
+              animation="wave"
+              variant="circular"
+              width={40}
+              height={40}
+              sx={{ marginRight: { xs: 1, sm: 2 } }}
+            />
+            <SkeletonButton
+              animation="wave"
+              variant="rectangular"
+              width={isMobile ? 40 : 120}
+              height={36}
+              sx={{ marginRight: { xs: 1, sm: 2 } }}
+            />
+            <SkeletonButton
+              animation="wave"
+              variant="rectangular"
+              width={isMobile ? 40 : 120}
+              height={36}
+            />
+            <Box sx={{ flexGrow: 1 }} />
+            <SkeletonBlock
+              animation="wave"
+              variant="circular"
+              width={40}
+              height={40}
+              sx={{ marginRight: 1 }}
+            />
+            <SkeletonBlock animation="wave" variant="circular" width={40} height={40} />
+          </Toolbar>
+        </LoadingAppBar>
+
+        {/* Main content area with skeleton table or cards */}
+        <Box sx={{ width: '100%', marginTop: '80px' }}>
+          <LoadingListPaper elevation={0}>
+            {/* Search Toolbar Skeleton */}
+            <LoadingSearchToolbar variant="dense">
+              <LoadingToolbarLeft>
+                {/* Placeholder for action buttons - empty when no selection */}
+              </LoadingToolbarLeft>
+              <LoadingToolbarCenter>
+                <SkeletonButton
+                  animation="wave"
+                  variant="rectangular"
+                  width={isMobile ? '100%' : 240}
+                  height={32}
+                  sx={{ borderRadius: '9px' }}
+                />
+              </LoadingToolbarCenter>
+              <LoadingToolbarRight>
+                {/* Pagination removed - hidden when not needed */}
+              </LoadingToolbarRight>
+            </LoadingSearchToolbar>
+
+            {isMobile ? (
+              <Box>
+                {Array.from({ length: 5 }).map((_, index) => (
+                  <CardSkeleton
+                    // eslint-disable-next-line @eslint-react/no-array-index-key -- identical placeholders
+                    key={index}
+                  />
+                ))}
+              </Box>
+            ) : (
+              <LoadingTableContainer>
+                <Table sx={{ backgroundColor: 'transparent' }}>
+                  <TableBody>
+                    <MapsListSkeleton rowsPerPage={10} />
+                  </TableBody>
+                </Table>
+              </LoadingTableContainer>
+            )}
+          </LoadingListPaper>
+        </Box>
+      </LoadingMainContent>
+    </LoadingContainer>
+  );
+};

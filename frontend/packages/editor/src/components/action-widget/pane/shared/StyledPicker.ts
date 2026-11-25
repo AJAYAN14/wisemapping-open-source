@@ -20,7 +20,7 @@ import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import { styled } from '@mui/material/styles';
 
-const PICKER_HEIGHT = 'clamp(280px, 50vh, 350px)';
+const PICKER_HEIGHT = 'clamp(280px, 50dvh, 350px)';
 
 export const PickerCloseButton = styled(IconButton)({
   position: 'absolute',
@@ -30,6 +30,13 @@ export const PickerCloseButton = styled(IconButton)({
   width: 24,
   height: 24,
   '& .MuiSvgIcon-root': { fontSize: '16px' },
+  '@media (pointer: coarse)': {
+    '&::after': {
+      content: '""',
+      position: 'absolute',
+      inset: '-10px',
+    },
+  },
 });
 
 export const PickerTabsBar = styled(Box)(({ theme }) => ({

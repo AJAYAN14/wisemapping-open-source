@@ -130,9 +130,12 @@ export const WidgetPopover = ({
           onClose={closeEditor}
           anchorOrigin={anchorOrigin}
           transformOrigin={transformOrigin}
+          marginThreshold={12}
           slotProps={{
             paper: {
               sx: {
+                maxWidth: 'calc(100dvw - 24px)',
+                maxHeight: 'calc(100dvh - 24px)',
                 borderRadius: '16px',
                 overflow: 'hidden',
                 boxShadow: (theme) =>
@@ -141,10 +144,14 @@ export const WidgetPopover = ({
                     : '0 16px 36px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.04)',
                 border: (theme) =>
                   `1px solid ${
-                    theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)'
+                    theme.palette.mode === 'dark'
+                      ? 'rgba(255, 255, 255, 0.12)'
+                      : 'rgba(0, 0, 0, 0.08)'
                   }`,
                 backgroundColor: (theme) =>
-                  theme.palette.mode === 'dark' ? 'rgba(32, 32, 36, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+                  theme.palette.mode === 'dark'
+                    ? 'rgba(32, 32, 36, 0.95)'
+                    : 'rgba(255, 255, 255, 0.95)',
                 backdropFilter: 'blur(20px) saturate(180%)',
                 WebkitBackdropFilter: 'blur(20px) saturate(180%)',
               },

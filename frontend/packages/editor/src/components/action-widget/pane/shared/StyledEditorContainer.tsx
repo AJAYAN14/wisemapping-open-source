@@ -26,9 +26,9 @@ import { styled } from '@mui/material/styles';
  */
 export const StyledEditorContainer = styled(Box)(({ theme }) => ({
   padding: theme.spacing(1),
-  width: 'clamp(220px, 85vw, 280px)',
+  width: 'clamp(220px, 85dvw, 280px)',
   height: 'auto',
-  maxHeight: '90vh',
+  maxHeight: '90dvh',
   overflow: 'hidden',
   backgroundColor: theme.palette.background.paper,
   borderRadius: '8px',

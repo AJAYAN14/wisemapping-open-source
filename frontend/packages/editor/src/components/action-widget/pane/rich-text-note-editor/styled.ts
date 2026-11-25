@@ -185,7 +185,7 @@ export const FooterBar = styled(Box)(({ theme }) => ({
 }));
 
 export const EmojiPopoverBox = styled(Box)({
-  width: 'clamp(240px, 85vw, 320px)',
-  height: 'clamp(280px, 50vh, 350px)',
+  width: 'clamp(240px, 85dvw, 320px)',
+  height: 'clamp(280px, 50dvh, 350px)',
   overflow: 'hidden',
 });

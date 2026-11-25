@@ -43,10 +43,12 @@ export const Notifier = styled('div')`
   position: fixed;
   padding: 5px 9px;
   color: ${({ theme }) => (theme.palette.mode === 'dark' ? '#E0E0E0' : 'black')};
-  white-space: nowrap;
+  max-width: calc(100dvw - 32px);
+  white-space: normal;
+  text-align: center;
   margin-top: 5px;
   display: none;
-  bottom: 10px;
+  bottom: max(10px, env(safe-area-inset-bottom, 0px));
   left: 50%;
   transform: translateX(-50%);
   z-index: 9999;

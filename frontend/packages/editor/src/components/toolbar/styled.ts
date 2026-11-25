@@ -34,8 +34,8 @@ export const ToolbarContainer = styled('div')`
 `;
 
 export const ToolbarButton = styled('div')`
-  width: 28px;
-  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
   text-align: center;
   z-index: 4;
   margin-top: 3px;
@@ -43,10 +43,15 @@ export const ToolbarButton = styled('div')`
   padding-left: 2px;
   margin-left: 3px;
   display: inline-block;
+
+  @media (pointer: coarse) {
+    min-width: 44px;
+    min-height: 44px;
+  }
 `;
 
 export const ToolbarButtonExt = styled(ToolbarButton)`
-  width: 40px;
+  min-width: 40px;
   text-align: left;
   padding-left: 5px;
 `;
@@ -60,8 +65,8 @@ export const ToolbarRightContainer = styled('div')`
   flex-shrink: 1;
   display: flex;
   flex-direction: row;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
-  height: 100%;
-  overflow: hidden;
+  min-height: 100%;
 `;

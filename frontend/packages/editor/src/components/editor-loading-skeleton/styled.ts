@@ -49,11 +49,14 @@ export const AppBarLeft = styled('div')(({ theme }) => ({
   gap: theme.spacing(1),
 }));
 
-export const AppBarCenter = styled('div')({
+export const AppBarCenter = styled('div')(({ theme }) => ({
   flexGrow: 1,
   display: 'flex',
   justifyContent: 'center',
-});
+  [theme.breakpoints.down('sm')]: {
+    display: 'none',
+  },
+}));
 
 export const AppBarRight = styled('div')(({ theme }) => ({
   display: 'flex',
@@ -63,8 +66,11 @@ export const AppBarRight = styled('div')(({ theme }) => ({
 
 export const FormattingToolbarSkeleton = styled('div')(({ theme }) => ({
   position: 'absolute',
-  right: EDITOR_LAYOUT.formattingToolbar.right,
+  right: `max(${EDITOR_LAYOUT.formattingToolbar.right}, env(safe-area-inset-right, 0px))`,
   top: EDITOR_LAYOUT.formattingToolbar.top,
+  maxHeight:
+    'calc(100dvh - 120px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
+  overflowY: 'hidden',
   display: 'flex',
   flexDirection: 'column',
   width: EDITOR_LAYOUT.formattingToolbar.width,
@@ -76,13 +82,19 @@ export const FormattingToolbarSkeleton = styled('div')(({ theme }) => ({
   padding: theme.spacing(1),
   boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
   zIndex: EDITOR_Z_INDEX.formattingToolbar,
+  [theme.breakpoints.down('sm')]: {
+    top: 'calc(56px + env(safe-area-inset-top, 0px))',
+  },
   ...theme.applyStyles('dark', { boxShadow: '0 2px 8px rgba(255,255,255,0.15)' }),
 }));
 
 export const ZoomToolbarSkeleton = styled('div')(({ theme }) => ({
   position: 'absolute',
-  right: EDITOR_LAYOUT.zoomToolbar.right,
-  top: EDITOR_LAYOUT.zoomToolbar.top,
+  right: `max(${EDITOR_LAYOUT.zoomToolbar.right}, env(safe-area-inset-right, 0px))`,
+  bottom: EDITOR_LAYOUT.zoomToolbar.bottom,
+  maxWidth:
+    'calc(100dvw - 60px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px))',
+  overflow: 'hidden',
   display: 'flex',
   gap: theme.spacing(1),
   alignItems: 'center',
@@ -108,6 +120,9 @@ export const SideNodes = styled('div')(({ theme }) => ({
   display: 'flex',
   gap: theme.spacing(4),
   opacity: 0.2,
+  [theme.breakpoints.down('sm')]: {
+    display: 'none',
+  },
 }));
 
 export const LeftNodes = styled('div')(({ theme }) => ({

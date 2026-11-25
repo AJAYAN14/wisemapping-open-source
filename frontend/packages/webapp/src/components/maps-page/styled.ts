@@ -48,6 +48,10 @@ type ExpandedProps = {
 export const mobileAppbarButton: CSSObject = {
   padding: 0,
   minWidth: 'unset',
+  '@media (pointer: coarse)': {
+    minWidth: '44px',
+    minHeight: '44px',
+  },
   '& .message': {
     display: 'none',
   },
@@ -68,8 +72,12 @@ const drawerPaper = (theme: Theme, expanded: boolean): CSSObject => {
     borderBottomRightRadius: 0,
     boxShadow: 'none',
     width: `var(--drawer-width, ${drawerWidthOf(expanded)}px)`,
+    paddingTop: 'env(safe-area-inset-top, 0px)',
+    paddingBottom: 'env(safe-area-inset-bottom, 0px)',
     [theme.breakpoints.down('sm')]: {
-      width: DRAWER_WIDTH_EXPANDED,
+      width: 'min(240px, 80dvw, 100dvw - 24px)',
+      height: '100svh',
+      maxHeight: '100svh',
     },
   };
 };
@@ -158,7 +166,7 @@ export const PageRoot = styled('div')(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
     display: 'flex',
-    minHeight: '100vh',
+    minHeight: '100dvh',
     backgroundColor: c.canvas,
     color: c.textPrimary,
     fontFamily: APPLE_FONT_STACK,
@@ -183,19 +191,20 @@ export const PageAppBar = styled(AppBar, { shouldForwardProp: notExpanded })<Exp
     zIndex: theme.zIndex.drawer + 1,
     marginLeft: `var(--drawer-width, ${fallbackWidth}px)`,
     width: `calc(100% - var(--drawer-width, ${fallbackWidth}px))`,
+    paddingTop: 'env(safe-area-inset-top, 0px)',
     '& .MuiToolbar-root': {
       backgroundColor: 'transparent',
-      minHeight: '60px',
-      paddingLeft: '20px',
-      paddingRight: '20px',
+      minHeight: '3.75rem',
+      paddingLeft: 'max(20px, env(safe-area-inset-left, 0px))',
+      paddingRight: 'max(20px, env(safe-area-inset-right, 0px))',
       gap: '8px',
     },
     [theme.breakpoints.down('sm')]: {
       marginLeft: 0,
       width: '100%',
       '& .MuiToolbar-root': {
-        paddingLeft: '12px',
-        paddingRight: '12px',
+        paddingLeft: 'max(12px, env(safe-area-inset-left, 0px))',
+        paddingRight: 'max(12px, env(safe-area-inset-right, 0px))',
       },
     },
   };
@@ -209,6 +218,10 @@ export const MobileDrawerToggle = styled(IconButton)(({ theme }) => {
     borderRadius: '10px',
     color: c.textSecondary,
     ...applePressMixin,
+    '@media (pointer: coarse)': {
+      minWidth: '44px',
+      minHeight: '44px',
+    },
     '&:hover': {
       backgroundColor: c.hoverFill,
       color: c.textPrimary,
@@ -232,6 +245,10 @@ export const DesktopDrawerToggle = styled(IconButton)(({ theme }) => {
     borderRadius: '10px',
     color: c.textSecondary,
     ...applePressMixin,
+    '@media (pointer: coarse)': {
+      minWidth: '44px',
+      minHeight: '44px',
+    },
     '&:hover': {
       backgroundColor: c.hoverFill,
       color: c.textPrimary,
@@ -324,7 +341,7 @@ export const MobileDrawer = styled(Drawer, { shouldForwardProp: notExpanded })<E
       [theme.breakpoints.down('sm')]: {
         display: 'block',
         '& .MuiDrawer-paper': {
-          width: DRAWER_WIDTH_EXPANDED,
+          width: 'min(240px, 80dvw, 100dvw - 24px)',
         },
         '& .MuiListItemButton-root': {
           borderRadius: '10px',
@@ -348,14 +365,19 @@ export const DesktopDrawer = styled(Drawer, { shouldForwardProp: notExpanded })<
 export const PageContent = styled('main')({
   flexGrow: 1,
   minWidth: 0,
-  padding: '20px 0px 40px 0px',
+  containerType: 'inline-size',
+  containerName: 'maps-main',
+  paddingTop: '1.25rem',
+  paddingBottom: 'max(2.5rem, env(safe-area-inset-bottom, 0px))',
+  paddingInlineStart: 'env(safe-area-inset-left, 0px)',
+  paddingInlineEnd: 'env(safe-area-inset-right, 0px)',
 });
 
 /** Keeps the content below the fixed translucent app bar. */
 export const ToolbarSpacer = styled('div')({
   display: 'flex',
   justifyContent: 'flex-end',
-  minHeight: '60px',
+  minHeight: 'calc(3.75rem + env(safe-area-inset-top, 0px))',
 });
 
 /** The help button, floating at the bottom right from tablets up. */

@@ -42,7 +42,7 @@ export const CompactCardHeader = styled(CardHeader)(({ theme }) => ({
 export const MapCardRoot = styled(Card)(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
-    maxWidth: '94vw',
+    maxWidth: '100%',
     margin: '10px 14px',
     borderRadius: '18px',
     backgroundColor: c.surface,

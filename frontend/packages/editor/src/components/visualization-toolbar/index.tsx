@@ -347,7 +347,7 @@ const VisualizationToolbar = ({ model, capability }: VisualizationToolbarProps):
           right: isPublicOrEmbedded
             ? EDITOR_LAYOUT.zoomToolbar.rightCompact
             : EDITOR_LAYOUT.zoomToolbar.right,
-          top: EDITOR_LAYOUT.zoomToolbar.top,
+          bottom: EDITOR_LAYOUT.zoomToolbar.bottom,
         },
         vertical: false,
         zIndex: EDITOR_Z_INDEX.canvasChrome,

@@ -24,16 +24,22 @@ import DialogContent from '@mui/material/DialogContent';
 import Paper from '@mui/material/Paper';
 
 export const OutlineContainer = styled(Box)(({ theme }) => ({
-  padding: '79px 118px 10px 118px', // Top reduced to 2/3 (79px), left/right (118px), bottom minimal (10px)
+  padding: '56px 16px 76px 16px',
   maxHeight: '100%',
   height: '100%',
   overflow: 'auto',
   fontFamily: 'Figtree, Segoe UI, Helvetica, Arial, sans-serif',
-  fontSize: '14px',
-  lineHeight: '1.6',
+  fontSize: '0.875rem',
+  lineHeight: 1.6,
   backgroundColor: theme.palette.background.paper,
   color: theme.palette.text.primary,
   position: 'relative',
+  [theme.breakpoints.up('sm')]: {
+    padding: '64px 48px 76px 48px',
+  },
+  [theme.breakpoints.up('md')]: {
+    padding: '79px 118px 10px 118px',
+  },
 }));
 
 export const OutlineNode = styled(Box, {
@@ -52,10 +58,18 @@ export const OutlineNode = styled(Box, {
 export const ExpandButton = styled(IconButton)(({ theme }) => ({
   padding: theme.spacing(0.25),
   marginRight: theme.spacing(0.5),
-  width: '20px',
-  height: '20px',
+  width: '24px',
+  height: '24px',
+  position: 'relative',
   '& .MuiSvgIcon-root': {
     fontSize: '16px',
+  },
+  '@media (pointer: coarse)': {
+    '&::after': {
+      content: '""',
+      position: 'absolute',
+      inset: '-10px',
+    },
   },
 }));
 
@@ -70,10 +84,20 @@ export const FeatureIcon = styled(IconButton)(({ theme }) => ({
   marginLeft: theme.spacing(1),
   padding: theme.spacing(0.5),
   cursor: 'pointer',
+  position: 'relative',
   transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
   borderRadius: '4px',
   border: `1px solid ${theme.palette.divider}`,
   color: theme.palette.text.secondary,
+  '@media (pointer: coarse)': {
+    minWidth: '36px',
+    minHeight: '36px',
+    '&::after': {
+      content: '""',
+      position: 'absolute',
+      inset: '-4px',
+    },
+  },
   '&:hover': {
     backgroundColor: theme.palette.action.hover,
     transform: 'translateY(-1px)',
@@ -153,17 +177,24 @@ export const FeatureIconContainer = styled(Box)({
 });
 
 export const StyledDialogContent = styled(DialogContent)(({ theme }) => ({
-  padding: '26px',
+  padding: theme.spacing(1.5),
   position: 'relative',
   backgroundColor: theme.palette.background.paper,
+  [theme.breakpoints.up('sm')]: {
+    padding: '26px',
+  },
 }));
 
 export const CloseButton = styled(IconButton)({
   position: 'absolute',
-  top: 16,
-  right: 16,
+  top: 'max(16px, env(safe-area-inset-top, 0px))',
+  right: 'max(16px, env(safe-area-inset-right, 0px))',
   zIndex: 1,
   backgroundColor: 'rgba(0, 0, 0, 0.04)',
+  '@media (pointer: coarse)': {
+    minWidth: '44px',
+    minHeight: '44px',
+  },
   '&:hover': {
     backgroundColor: 'rgba(0, 0, 0, 0.08)',
   },
@@ -252,14 +283,27 @@ export const TooltipLink = styled('a')(({ theme }) => ({
 }));
 
 export const StyledDialogPaper = styled(Paper)(({ theme }) => ({
-  margin: '12.5vh 12.5vw',
-  height: '75vh',
-  width: '75vw',
+  margin: '12.5dvh 12.5dvw',
+  height: '75dvh',
+  width: '75dvw',
   maxWidth: 'none',
   maxHeight: 'none',
   borderRadius: '12px',
   overflow: 'hidden',
   zIndex: theme.zIndex.modal + 1,
+  [theme.breakpoints.down('md')]: {
+    margin: '16px',
+    width: 'calc(100dvw - 32px)',
+    height: '85dvh',
+  },
+  [theme.breakpoints.down('sm')]: {
+    margin: 0,
+    width: '100dvw',
+    height: '100dvh',
+    borderRadius: 0,
+    paddingTop: 'env(safe-area-inset-top, 0px)',
+    paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+  },
 }));
 
 // Style object for Popover paper (used with sx prop as Popover doesn't support PaperComponent)
@@ -270,7 +314,7 @@ export const popoverPaperStyles = {
   border: '1px solid',
   borderColor: 'divider',
   backdropFilter: 'blur(8px)',
-  minWidth: '300px',
-  maxWidth: '450px',
+  minWidth: 'min(300px, calc(100dvw - 32px))',
+  maxWidth: 'min(450px, calc(100dvw - 32px))',
   overflow: 'hidden',
 };

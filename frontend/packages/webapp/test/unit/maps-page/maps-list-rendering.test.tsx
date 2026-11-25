@@ -169,4 +169,49 @@ describe('MapsList rows are memoized', () => {
     expect(screen.getByText('Gamma ideas')).toBeTruthy();
     expect(renders()).toEqual(before);
   });
+
+  test('narrow screen keeps search accessible and allows selecting cards for bulk actions', async () => {
+    setNarrowScreen(true);
+    await renderList();
+
+    const search = screen.getByRole('textbox', { name: 'Search maps' });
+    expect(search).toBeTruthy();
+
+    const betaCheckbox = screen.getByRole('checkbox', { name: 'Select Beta notes' });
+    fireEvent.click(betaCheckbox);
+    expect((betaCheckbox as HTMLInputElement).checked).toBe(true);
+    expect(screen.getByRole('button', { name: 'Delete selected' })).toBeTruthy();
+  });
+
+  test('switches to card view when container width is narrower than the table', async () => {
+    let observerCallback: ResizeObserverCallback | undefined;
+    const originalResizeObserver = globalThis.ResizeObserver;
+    globalThis.ResizeObserver = class {
+      constructor(cb: ResizeObserverCallback) {
+        observerCallback = cb;
+      }
+      observe() {}
+      disconnect() {}
+      unobserve() {}
+    } as typeof ResizeObserver;
+
+    try {
+      await renderList();
+      expect(screen.getByRole('region', { name: 'Maps list' })).toBeTruthy();
+
+      await waitFor(() => expect(observerCallback).toBeDefined());
+      const { act } = await import('@testing-library/react');
+      act(() => {
+        observerCallback!(
+          [{ contentRect: { width: 520 } } as ResizeObserverEntry],
+          {} as ResizeObserver,
+        );
+      });
+
+      expect(screen.getByTestId('maps-cards')).toBeTruthy();
+      expect(screen.queryByRole('table')).toBeNull();
+    } finally {
+      globalThis.ResizeObserver = originalResizeObserver;
+    }
+  });
 });

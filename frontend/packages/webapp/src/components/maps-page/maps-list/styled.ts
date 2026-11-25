@@ -102,6 +102,7 @@ export const ToolbarActions = styled('div')(({ theme }) => ({
 export const WorkspaceHeading = styled('div')({
   display: 'flex',
   alignItems: 'center',
+  flexWrap: 'wrap',
   gap: '10px',
   minWidth: 0,
 });
@@ -110,15 +111,13 @@ export const WorkspaceTitle = styled('h1')(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
     margin: 0,
-    fontSize: 'clamp(1.25rem, 2vw, 1.55rem)',
+    fontSize: 'clamp(1.2rem, 1rem + 1vw, 1.55rem)',
     fontWeight: 800,
     lineHeight: 1.15,
     letterSpacing: '-0.025em',
     color: c.textPrimary,
     fontFamily: APPLE_FONT_STACK,
-    whiteSpace: 'nowrap',
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
+    overflowWrap: 'break-word',
   };
 });
 
@@ -165,7 +164,14 @@ export const ToolbarRightCluster = styled('div')(({ theme }) => ({
   gap: '10px',
   marginLeft: 'auto',
   [theme.breakpoints.down('sm')]: {
-    display: 'none',
+    flexBasis: '100%',
+    width: '100%',
+    marginLeft: 0,
+  },
+  '@container maps-main (inline-size < 680px)': {
+    flexBasis: '100%',
+    width: '100%',
+    marginLeft: 0,
   },
 }));
 
@@ -174,7 +180,12 @@ export const SearchContainer = styled('div')(({ theme }) => ({
   alignItems: 'center',
   minWidth: 0,
   [theme.breakpoints.down('sm')]: {
-    display: 'none',
+    flex: 1,
+    width: '100%',
+  },
+  '@container maps-main (inline-size < 680px)': {
+    flex: 1,
+    width: '100%',
   },
 }));
 
@@ -189,6 +200,12 @@ export const SearchBox = styled('div')(({ theme }) => {
     border: `1px solid ${c.hairline}`,
     boxShadow: c.shadowSubtle,
     transition: 'border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease',
+    [theme.breakpoints.down('sm')]: {
+      width: '100%',
+    },
+    '@container maps-main (inline-size < 680px)': {
+      width: '100%',
+    },
     '&:hover': {
       borderColor: c.hairlineStrong,
     },
@@ -223,6 +240,12 @@ export const SearchInput = styled(InputBase)(({ theme }) => {
     fontFamily: APPLE_FONT_STACK,
     fontSize: '0.86rem',
     fontWeight: 600,
+    [theme.breakpoints.down('sm')]: {
+      width: '100%',
+    },
+    '@container maps-main (inline-size < 680px)': {
+      width: '100%',
+    },
     '& .MuiInputBase-input': {
       padding: '7px 38px 7px 34px',
       border: 'none',
@@ -235,6 +258,20 @@ export const SearchInput = styled(InputBase)(({ theme }) => {
       },
       '&:focus': {
         width: '28ch',
+      },
+      [theme.breakpoints.down('sm')]: {
+        width: '100%',
+        paddingRight: '14px',
+        '&:focus': {
+          width: '100%',
+        },
+      },
+      '@container maps-main (inline-size < 680px)': {
+        width: '100%',
+        paddingRight: '14px',
+        '&:focus': {
+          width: '100%',
+        },
       },
       '@media (prefers-reduced-motion: reduce)': {
         transition: 'none',
@@ -258,6 +295,12 @@ export const SearchShortcutHint = styled('kbd')(({ theme }) => {
     color: c.textTertiary,
     border: `1px solid ${c.hairline}`,
     lineHeight: 1.2,
+    [theme.breakpoints.down('sm')]: {
+      display: 'none',
+    },
+    '@media (pointer: coarse)': {
+      display: 'none',
+    },
   };
 });
 
@@ -330,8 +373,16 @@ export const ListTableContainer = styled(TableContainer)(({ theme }) => {
     border: `1px solid ${c.hairline}`,
     borderRadius: '18px',
     boxShadow: c.shadowSubtle,
-    overflow: 'hidden',
+    overflowX: 'auto',
+    overflowY: 'hidden',
+    maxWidth: '100%',
     [theme.breakpoints.down('sm')]: {
+      backgroundColor: 'transparent',
+      border: 'none',
+      borderRadius: 0,
+      boxShadow: 'none',
+    },
+    '@container maps-main (inline-size < 680px)': {
       backgroundColor: 'transparent',
       border: 'none',
       borderRadius: 0,
@@ -412,6 +463,9 @@ export const SelectCheckbox = styled(Checkbox)(({ theme }) => {
   return {
     color: c.hairlineStrong,
     ...applePressMixin,
+    '@media (pointer: coarse)': {
+      padding: '10px',
+    },
     '&.Mui-checked, &.MuiCheckbox-indeterminate': {
       color: c.amber,
     },
@@ -495,6 +549,10 @@ export const ActionIconButton = styled('span')(({ theme }) => {
       borderRadius: '10px',
       color: c.textTertiary,
       ...applePressMixin,
+      '@media (pointer: coarse)': {
+        minWidth: '44px',
+        minHeight: '44px',
+      },
       '&:hover': {
         backgroundColor: c.hoverFill,
         color: c.textPrimary,
@@ -508,11 +566,12 @@ export const ActionIconButton = styled('span')(({ theme }) => {
 export const CardTitle = styled(Typography)(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
-    maxWidth: '70vw',
+    maxWidth: '100%',
     fontSize: '0.96rem',
     fontWeight: 700,
     letterSpacing: '-0.01em',
     fontFamily: APPLE_FONT_STACK,
     color: c.textPrimary,
+    overflowWrap: 'break-word',
   };
 });

@@ -27,6 +27,13 @@ import React, {
 } from 'react';
 import MaterialToolbar from '@mui/material/Toolbar';
 import MaterialAppBar from '@mui/material/AppBar';
+import Box from '@mui/material/Box';
+import Dialog from '@mui/material/Dialog';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import { ToolbarMenuItem } from '../toolbar';
 import ActionConfig from '../../classes/action/action-config';
 import Editor from '../../classes/model/editor';
@@ -40,6 +47,7 @@ import FileDownloadRoundedIcon from '@mui/icons-material/FileDownloadRounded';
 import StarRateRoundedIcon from '@mui/icons-material/StarRateRounded';
 import StarBorderRoundedIcon from '@mui/icons-material/StarBorderRounded';
 import ArrowBackIosNewRoundedIcon from '@mui/icons-material/ArrowBackIosNewRounded';
+import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
 import PaletteOutlinedIcon from '@mui/icons-material/PaletteOutlined';
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined';
 import LightModeRoundedIcon from '@mui/icons-material/LightModeRounded';
@@ -72,14 +80,6 @@ const appBarDivisor = {
   render: () => <Typography component="div" sx={{ flexGrow: 1 }} />,
 };
 
-const StarredOnStyle = {
-  color: '#FDDA0D',
-};
-
-const StarredOffStyle = {
-  color: 'gray',
-};
-
 const AppBar = ({
   model,
   mapInfo,
@@ -92,6 +92,8 @@ const AppBar = ({
   const [editedTitle, setEditedTitle] = useState<string>(() => mapInfo.getTitle());
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [currentTitle, setCurrentTitle] = useState<string>(() => mapInfo.getTitle());
+  const [overflowAnchor, setOverflowAnchor] = useState<HTMLElement | null>(null);
+  const [themeDialogOpen, setThemeDialogOpen] = useState<boolean>(false);
   const canRename = !capability.isHidden('rename');
 
   // Another map: its title replaces the previous one. Adjusted while rendering, not in an effect,
@@ -139,6 +141,7 @@ const AppBar = ({
   const intl = useIntl();
   const { mode, toggleMode } = useTheme();
   const muiTheme = useMuiTheme();
+  const isCompactBar = useMediaQuery(muiTheme.breakpoints.down('md'), { noSsr: true });
 
   const handleStarredOnClick = () => {
     const newStatus = !isStarred;
@@ -248,12 +251,14 @@ const AppBar = ({
       onClick={canRename ? handleTitleClick : undefined}
       data-testid="app-bar-title"
       sx={{
+        minWidth: 0,
+        width: '100%',
         cursor: canRename ? 'pointer' : 'default',
         '& .MuiOutlinedInput-root': {
           fontSize: '0.95rem',
           fontWeight: 600,
           fontFamily: appleFontStack,
-          height: '34px',
+          minHeight: '2.125rem',
           borderRadius: '10px',
           backgroundColor: 'transparent',
           transition: 'background-color 150ms ease, border-color 150ms ease',
@@ -331,25 +336,29 @@ const AppBar = ({
     },
     {
       render: () => (
-        <img
-          src={mode === 'light' ? LogoTextBlackSvg : LogoTextOrangeSvg}
-          aria-label={intl.formatMessage({
-            id: 'appbar.logo-aria-label',
-            defaultMessage: 'WiseMapping Logo',
-          })}
-        />
+        <Box sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', flexShrink: 0 }}>
+          <img
+            src={mode === 'light' ? LogoTextBlackSvg : LogoTextOrangeSvg}
+            aria-label={intl.formatMessage({
+              id: 'appbar.logo-aria-label',
+              defaultMessage: 'WiseMapping Logo',
+            })}
+          />
+        </Box>
       ),
       visible: !capability.isHidden('appbar-title'),
     },
     {
       render: () => (
-        <div
-          style={{
-            marginLeft: '1.5rem',
-            marginRight: '1.5rem',
+        <Box
+          sx={{
+            mx: { xs: 0.5, sm: 1.5, md: 3 },
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
+            gap: 1,
+            minWidth: 0,
+            flex: '0 1 auto',
+            maxWidth: { xs: '40dvw', sm: '240px', md: '320px' },
           }}
         >
           {isEditingTitle && canRename ? (
@@ -363,11 +372,13 @@ const AppBar = ({
               size="small"
               data-testid="app-bar-title"
               sx={{
+                minWidth: 0,
+                width: '100%',
                 '& .MuiOutlinedInput-root': {
                   fontSize: '0.95rem',
                   fontWeight: 600,
                   fontFamily: appleFontStack,
-                  height: '34px',
+                  minHeight: '2.125rem',
                   borderRadius: '10px',
                   border: (theme) => `1px solid ${theme.palette.primary.main}`,
                   boxShadow: (theme) =>
@@ -389,7 +400,7 @@ const AppBar = ({
           ) : (
             readOnlyTitleDisplay
           )}
-        </div>
+        </Box>
       ),
       visible: !capability.isHidden('appbar-title'),
     },
@@ -454,7 +465,7 @@ const AppBar = ({
         id: 'appbar.tooltip-history',
         defaultMessage: 'Changes History',
       }),
-      visible: !capability.isHidden('history'),
+      visible: !isCompactBar && !capability.isHidden('history'),
     },
     {
       icon: isStarred ? (
@@ -464,7 +475,7 @@ const AppBar = ({
       ),
       onClick: handleStarredOnClick,
       tooltip: intl.formatMessage({ id: 'appbar.tooltip-starred', defaultMessage: 'Starred' }),
-      visible: !capability.isHidden('starred'),
+      visible: !isCompactBar && !capability.isHidden('starred'),
       disabled: () => isStarred === undefined,
     },
     appBarDivisor,
@@ -484,7 +495,7 @@ const AppBar = ({
           },
         },
       ],
-      visible: !capability.isHidden('theme'),
+      visible: !isCompactBar && !capability.isHidden('theme'),
       disabled: () => !isMapLoaded,
     },
     {
@@ -493,7 +504,7 @@ const AppBar = ({
         onAction('export');
       },
       tooltip: intl.formatMessage({ id: 'appbar.tooltip-export', defaultMessage: 'Export' }),
-      visible: !capability.isHidden('export'),
+      visible: !isCompactBar && !capability.isHidden('export'),
       disabled: () => !isMapLoaded,
     },
     {
@@ -502,9 +513,141 @@ const AppBar = ({
         id: 'appbar.tooltip-theme-toggle',
         defaultMessage: 'Toggle Theme',
       }),
+      visible: !isCompactBar,
       onClick: () => {
         toggleMode();
       },
+    },
+    {
+      render: () => (
+        <>
+          <Tooltip
+            title={intl.formatMessage({
+              id: 'appbar.more-actions',
+              defaultMessage: 'More actions',
+            })}
+          >
+            <IconButton
+              aria-label={intl.formatMessage({
+                id: 'appbar.more-actions',
+                defaultMessage: 'More actions',
+              })}
+              aria-haspopup="menu"
+              aria-expanded={Boolean(overflowAnchor)}
+              data-testid="app-bar-more-button"
+              onClick={(e) => setOverflowAnchor(e.currentTarget)}
+            >
+              <MoreVertRoundedIcon />
+            </IconButton>
+          </Tooltip>
+          <Menu
+            anchorEl={overflowAnchor}
+            open={Boolean(overflowAnchor)}
+            onClose={() => setOverflowAnchor(null)}
+          >
+            {!capability.isHidden('history') && (
+              <MenuItem
+                onClick={() => {
+                  setOverflowAnchor(null);
+                  onAction('history');
+                }}
+              >
+                <ListItemIcon>
+                  <RestoreRoundedIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText>
+                  {intl.formatMessage({
+                    id: 'appbar.tooltip-history',
+                    defaultMessage: 'Changes History',
+                  })}
+                </ListItemText>
+              </MenuItem>
+            )}
+            {!capability.isHidden('starred') && (
+              <MenuItem
+                disabled={isStarred === undefined}
+                onClick={() => {
+                  setOverflowAnchor(null);
+                  handleStarredOnClick();
+                }}
+              >
+                <ListItemIcon>
+                  {isStarred ? (
+                    <StarRateRoundedIcon fontSize="small" sx={{ color: '#FDDA0D' }} />
+                  ) : (
+                    <StarBorderRoundedIcon fontSize="small" />
+                  )}
+                </ListItemIcon>
+                <ListItemText>
+                  {intl.formatMessage({
+                    id: 'appbar.tooltip-starred',
+                    defaultMessage: 'Starred',
+                  })}
+                </ListItemText>
+              </MenuItem>
+            )}
+            {!capability.isHidden('theme') && (
+              <MenuItem
+                disabled={!isMapLoaded}
+                onClick={() => {
+                  setOverflowAnchor(null);
+                  setThemeDialogOpen(true);
+                }}
+              >
+                <ListItemIcon>
+                  <PaletteOutlinedIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText>
+                  {intl.formatMessage({
+                    id: 'appbar.tooltip-theme',
+                    defaultMessage: 'Theme',
+                  })}
+                </ListItemText>
+              </MenuItem>
+            )}
+            {!capability.isHidden('export') && (
+              <MenuItem
+                disabled={!isMapLoaded}
+                onClick={() => {
+                  setOverflowAnchor(null);
+                  onAction('export');
+                }}
+              >
+                <ListItemIcon>
+                  <FileDownloadRoundedIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText>
+                  {intl.formatMessage({
+                    id: 'appbar.tooltip-export',
+                    defaultMessage: 'Export',
+                  })}
+                </ListItemText>
+              </MenuItem>
+            )}
+            <MenuItem
+              onClick={() => {
+                setOverflowAnchor(null);
+                toggleMode();
+              }}
+            >
+              <ListItemIcon>
+                {mode === 'dark' ? (
+                  <LightModeRoundedIcon fontSize="small" />
+                ) : (
+                  <DarkModeOutlinedIcon fontSize="small" />
+                )}
+              </ListItemIcon>
+              <ListItemText>
+                {intl.formatMessage({
+                  id: 'appbar.tooltip-theme-toggle',
+                  defaultMessage: 'Toggle Theme',
+                })}
+              </ListItemText>
+            </MenuItem>
+          </Menu>
+        </>
+      ),
+      visible: isCompactBar,
     },
     {
       // Renders nothing when no account configuration is provided.
@@ -524,9 +667,15 @@ const AppBar = ({
         sx={{
           ...getFrostedGlassBar(muiTheme),
           fontFamily: appleFontStack,
+          paddingTop: 'env(safe-area-inset-top, 0px)',
           '& .MuiToolbar-root': {
-            minHeight: '48px',
-            px: { xs: 1, sm: 2 },
+            minHeight: '3rem',
+            paddingLeft: 'max(8px, env(safe-area-inset-left, 0px))',
+            paddingRight: 'max(8px, env(safe-area-inset-right, 0px))',
+            [muiTheme.breakpoints.up('sm')]: {
+              paddingLeft: 'max(16px, env(safe-area-inset-left, 0px))',
+              paddingRight: 'max(16px, env(safe-area-inset-right, 0px))',
+            },
             gap: 0.5,
           },
           '& .MuiButtonBase-root': {
@@ -534,6 +683,10 @@ const AppBar = ({
             padding: '6px',
             borderRadius: '10px',
             ...applePressMixin,
+            '@media (pointer: coarse)': {
+              minWidth: '44px',
+              minHeight: '44px',
+            },
           },
         }}
       >
@@ -544,6 +697,19 @@ const AppBar = ({
           })}
         </MaterialToolbar>
       </MaterialAppBar>
+      {themeDialogOpen && model && (
+        <Dialog
+          open={themeDialogOpen}
+          onClose={() => setThemeDialogOpen(false)}
+          maxWidth="sm"
+          fullWidth
+        >
+          <ThemeEditor
+            closeModal={() => setThemeDialogOpen(false)}
+            themeModel={new NodePropertyValueModelBuilder(model.getDesigner()).getThemeModel()}
+          />
+        </Dialog>
+      )}
     </>
   );
 };

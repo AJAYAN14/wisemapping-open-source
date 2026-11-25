@@ -24,7 +24,8 @@ import { styled } from '@mui/material/styles';
 export const StyledNav = styled('nav')(({ theme }) => {
   const isDark = theme.palette.mode === 'dark';
   return {
-    height: '64px',
+    minHeight: '4rem',
+    paddingTop: 'env(safe-area-inset-top, 0px)',
     position: 'sticky',
     top: 0,
     zIndex: 10,
@@ -46,10 +47,16 @@ export const StyledDiv = styled('div')`
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 0 24px;
+  padding: 0 max(16px, env(safe-area-inset-left, 0px)) 0 max(16px, env(safe-area-inset-right, 0px));
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  gap: 8px;
+
+  @media (min-width: 600px) {
+    padding: 0 24px;
+  }
 `;
 
 export const Logo = styled('span')`
@@ -59,7 +66,9 @@ export const Logo = styled('span')`
   .header-logo {
     display: inline-flex;
     align-items: center;
-    transition: opacity 0.15s ease, transform 0.15s ease;
+    transition:
+      opacity 0.15s ease,
+      transform 0.15s ease;
     text-decoration: none;
 
     &:hover {

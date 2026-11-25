@@ -86,8 +86,8 @@ const KeyboardShorcutsHelp = ({ closeModal }: KeyboardShorcutsHelpProps): ReactE
         px: 1.5,
         pb: 1,
         width: '470px',
-        maxWidth: '92vw',
-        maxHeight: '70vh',
+        maxWidth: '92dvw',
+        maxHeight: '70dvh',
         display: 'flex',
         flexDirection: 'column',
         backgroundColor: 'background.paper',
@@ -110,6 +110,13 @@ const KeyboardShorcutsHelp = ({ closeModal }: KeyboardShorcutsHelpProps): ReactE
             height: 24,
             '& .MuiSvgIcon-root': {
               fontSize: '16px',
+            },
+            '@media (pointer: coarse)': {
+              '&::after': {
+                content: '""',
+                position: 'absolute',
+                inset: '-10px',
+              },
             },
           }}
         >

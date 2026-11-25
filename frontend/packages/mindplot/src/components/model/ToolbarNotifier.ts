@@ -71,14 +71,10 @@ class ToolbarNotifier {
     if (container) {
       container.textContent = msg;
 
-      // Calculate center position
-      const windowWidth = window.innerWidth;
-      const elementWidth = container.offsetWidth;
-      const leftPosition = Math.max(0, (windowWidth - elementWidth) / 2 - 9);
-
-      // Override styled component positioning for proper centering
-      container.style.left = `${leftPosition}px`;
-      container.style.transform = 'none'; // Override the translateX(-50%)
+      // Clear any legacy inline horizontal offsets so CSS (left: 50%; transform: translateX(-50%))
+      // keeps the notifier centered across viewport resizes and rotations.
+      container.style.left = '';
+      container.style.transform = '';
 
       if (fade) {
         container.style.display = 'block';

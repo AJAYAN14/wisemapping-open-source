@@ -40,10 +40,11 @@ const AccountAccessLayout = ({
   return (
     <Box
       sx={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
+        paddingBottom: 'env(safe-area-inset-bottom, 0px)',
         backgroundColor: isDark ? '#161618' : '#F5F5F7',
         backgroundImage: isDark
           ? 'radial-gradient(ellipse 70% 50% at 50% 0%, rgba(255, 159, 10, 0.08) 0%, transparent 70%), linear-gradient(180deg, #1C1C1E 0%, #161618 100%)'
@@ -53,7 +54,9 @@ const AccountAccessLayout = ({
     >
       <Header type={headerType} />
       <LayoutContent compact={compact}>
-        <Box sx={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <Box
+          sx={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+        >
           {children}
         </Box>
       </LayoutContent>

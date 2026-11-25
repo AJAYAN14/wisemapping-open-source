@@ -22,9 +22,11 @@ import { styled } from '@mui/material/styles';
 
 /** Ambient full-viewport canvas with subtle amber glow */
 export const ErrorCanvas = styled('div')(({ theme }) => ({
-  minHeight: '100vh',
+  minHeight: '100dvh',
   display: 'flex',
   flexDirection: 'column',
+  paddingTop: 'env(safe-area-inset-top, 0px)',
+  paddingBottom: 'env(safe-area-inset-bottom, 0px)',
   background:
     theme.palette.mode === 'dark'
       ? 'radial-gradient(ellipse 900px 600px at 50% 25%, rgba(245, 158, 11, 0.08), transparent 75%), #121214'
@@ -37,6 +39,7 @@ export const ErrorBody = styled('main')(({ theme }) => ({
   alignItems: 'center',
   justifyContent: 'center',
   padding: theme.spacing(3),
+  paddingInline: `max(${theme.spacing(3)}, env(safe-area-inset-left, 0px))`,
   width: '100%',
 }));
 
@@ -126,8 +129,7 @@ export const AppleSecondaryButton = styled(Button)(({ theme }) => ({
     borderWidth: '1.5px',
     backgroundColor:
       theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
-    borderColor:
-      theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.25)',
+    borderColor: theme.palette.mode === 'dark' ? 'rgba(255, 255, 255, 0.3)' : 'rgba(0, 0, 0, 0.25)',
   },
   '&:active': {
     transform: 'scale(0.97)',

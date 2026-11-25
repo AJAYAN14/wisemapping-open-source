@@ -1,5 +1,39 @@
 /* Global styles for webapp */
 
+:root {
+  --target-size: 24px;
+}
+
+@media (pointer: coarse) {
+  :root {
+    --target-size: 44px;
+  }
+}
+
+html {
+  scroll-padding-top: calc(4rem + env(safe-area-inset-top, 0px));
+  scroll-padding-bottom: calc(2rem + env(safe-area-inset-bottom, 0px));
+}
+
+body {
+  overflow-wrap: break-word;
+}
+
+:where(a, code) {
+  overflow-wrap: anywhere;
+}
+
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+}
+
+p,
+li {
+  text-wrap: pretty;
+}
+
 /* Remove borders from all fieldset elements globally */
 fieldset {
   border: none;

@@ -364,4 +364,30 @@ describe('AppBar', () => {
     await renderAppBar(new Capability('edition-owner', true));
     expect(screen.getByRole('menubar')).toBeDefined();
   });
+
+  it('moves secondary actions into an overflow menu on compact screens', async () => {
+    const originalMatchMedia = window.matchMedia;
+    window.matchMedia = jest.fn().mockImplementation((query: string) => ({
+      matches: query.includes('max-width'),
+      media: query,
+      addEventListener: () => undefined,
+      removeEventListener: () => undefined,
+      addListener: () => undefined,
+      removeListener: () => undefined,
+    })) as typeof window.matchMedia;
+
+    try {
+      await renderAppBar(new Capability('edition-owner', false));
+      const moreButton = screen.getByTestId('app-bar-more-button');
+      expect(moreButton).toBeDefined();
+
+      fireEvent.click(moreButton);
+      expect(screen.getByText('Changes History')).toBeDefined();
+      expect(screen.getByText('Export')).toBeDefined();
+      expect(screen.getByText('Theme')).toBeDefined();
+      expect(screen.getByText('Toggle Theme')).toBeDefined();
+    } finally {
+      window.matchMedia = originalMatchMedia;
+    }
+  });
 });

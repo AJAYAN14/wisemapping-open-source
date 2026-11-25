@@ -224,7 +224,11 @@ const OutlineViewDialog = ({ open, onClose, mindmap }: OutlineViewDialogProps): 
           <FeatureIconContainer>
             {node.linkUrl && (
               <Tooltip title={node.linkUrl}>
-                <FeatureIcon onMouseEnter={(e) => handleLinkHover(e, node.node)} aria-label="link">
+                <FeatureIcon
+                  onMouseEnter={(e) => handleLinkHover(e, node.node)}
+                  onClick={(e) => handleLinkHover(e, node.node)}
+                  aria-label="link"
+                >
                   <LinkRoundedIcon
                     sx={{
                       fontSize: 'small',
@@ -238,7 +242,11 @@ const OutlineViewDialog = ({ open, onClose, mindmap }: OutlineViewDialogProps): 
               <Tooltip
                 title={intl.formatMessage({ id: 'outline.has-note', defaultMessage: 'Has note' })}
               >
-                <FeatureIcon onMouseEnter={(e) => handleNoteHover(e, node.node)} aria-label="note">
+                <FeatureIcon
+                  onMouseEnter={(e) => handleNoteHover(e, node.node)}
+                  onClick={(e) => handleNoteHover(e, node.node)}
+                  aria-label="note"
+                >
                   <StickyNote2RoundedIcon fontSize="small" />
                 </FeatureIcon>
               </Tooltip>

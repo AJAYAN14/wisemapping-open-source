@@ -25,13 +25,17 @@ interface ToolbarPosition {
   vertical?: boolean;
   position?: {
     /**
-     * css properties for appbar rigth
+     * css properties for appbar right
      */
-    right: string;
+    right?: string;
     /**
      * css properties for appbar top
      */
-    top: string;
+    top?: string;
+    /**
+     * css properties for appbar bottom
+     */
+    bottom?: string;
     /**
      * css transform property for positioning
      */
