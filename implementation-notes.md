@@ -58,6 +58,9 @@
      - Deleted `frontend/packages/webapp/newrelic-snippet.html` and stripped all `window.newrelic` calls.
      - Deleted `frontend/packages/webapp/src/components/maps-page/help-menu/` (floating yellow help button with PayPal donation link).
      - Removed `window.adsbygoogle` push on route changes and stripped unused type definitions.
+10. **Direct File Import without Redundant Dialog**
+    - Clicking the toolbar "导入" (Import) button now directly triggers the native OS file picker (`<input type="file" />`).
+    - Stripped the manual "名称 *" and "描述" input modal. The map title automatically takes the selected file's name (without extension), and opens directly into the editor upon selection.
 
 ---
 
