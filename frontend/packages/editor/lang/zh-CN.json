@@ -647,12 +647,6 @@
   "theme.ocean.name": {
     "defaultMessage": "海洋"
   },
-  "theme.retro.description": {
-    "defaultMessage": "80 年代合成波配色，搭配霓虹轮廓、镀铬渐变和网格画布，灵感来自复古夜间派对。"
-  },
-  "theme.retro.name": {
-    "defaultMessage": "80年代复古之夜"
-  },
   "theme.robot.description": {
     "defaultMessage": "科技风格的绿色主题。非常适合技术文档和未来感演示。"
   },

@@ -524,12 +524,6 @@
   "theme.aurora.name": {
     "defaultMessage": "Aurora"
   },
-  "theme.retro.description": {
-    "defaultMessage": "Palette synthwave des années 80 avec contours néon, dégradés chromés et canevas quadrillés inspirés des soirées rétro."
-  },
-  "theme.retro.name": {
-    "defaultMessage": "Nuit Rétro 80s"
-  },
   "theme.ocean.description": {
     "defaultMessage": "Thème bleu inspiré de l'océan, avec variantes claire et sombre. Des couleurs calmes et professionnelles, parfaites pour les projets professionnels et créatifs."
   },

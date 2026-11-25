@@ -23,7 +23,6 @@ import ColorUtil from '../../../src/components/theme/ColorUtil';
 import DefaultTheme from '../../../src/components/theme/DefaultTheme';
 import OceanTheme from '../../../src/components/theme/OceanTheme';
 import PrismTheme from '../../../src/components/theme/PrismTheme';
-import RetroTheme from '../../../src/components/theme/RetroTheme';
 import RobotTheme from '../../../src/components/theme/RobotTheme';
 import SunriseTheme from '../../../src/components/theme/SunriseTheme';
 import ThemeFactory from '../../../src/components/theme/ThemeFactory';
@@ -51,7 +50,6 @@ describe('ThemeFactory', () => {
     ['sunrise', SunriseTheme],
     ['ocean', OceanTheme],
     ['aurora', AuroraTheme],
-    ['retro', RetroTheme],
   ] as const)('creates the %s theme', (id, type) => {
     variants.forEach((variant) => {
       expect(ThemeFactory.createById(id, variant)).toBeInstanceOf(type);

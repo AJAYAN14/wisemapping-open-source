@@ -152,7 +152,6 @@ describe('ThemeEditor', () => {
   it.each([
     ['Summer', 'prism'],
     ['Aurora', 'aurora'],
-    ['80s Retro Night', 'retro'],
     ['Sunrise', 'sunrise'],
     ['Ocean', 'ocean'],
     ['Robot', 'robot'],

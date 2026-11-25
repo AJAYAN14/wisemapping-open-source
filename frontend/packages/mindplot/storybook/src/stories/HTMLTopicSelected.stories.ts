@@ -58,7 +58,7 @@ export default {
     imageEmojiChar: { control: 'text' },
     theme: {
       control: 'select',
-      options: ['classic', 'aurora', 'retro', 'prism', 'robot', 'sunrise', 'ocean'],
+      options: ['classic', 'aurora', 'prism', 'robot', 'sunrise', 'ocean'],
     },
     zoom: {
       control: { type: 'range', min: 0.3, max: 1.9, step: 0.1 },

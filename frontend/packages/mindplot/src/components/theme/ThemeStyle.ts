@@ -49,9 +49,6 @@ import oceanDark from './styles/ocean-dark.json';
 import auroraDefault from './styles/aurora-default.json';
 import auroraLight from './styles/aurora-light.json';
 import auroraDark from './styles/aurora-dark.json';
-import retroDefault from './styles/retro-default.json';
-import retroLight from './styles/retro-light.json';
-import retroDark from './styles/retro-dark.json';
 
 /** The colours a theme picks from by topic order: never empty, which loading checks. */
 export type Palette = readonly [string, ...string[]];
@@ -130,9 +127,6 @@ const STYLE_FILES: Record<string, JsonThemeStyles> = {
   'aurora-default.json': auroraDefault,
   'aurora-light.json': auroraLight,
   'aurora-dark.json': auroraDark,
-  'retro-default.json': retroDefault,
-  'retro-light.json': retroLight,
-  'retro-dark.json': retroDark,
 };
 
 const TOPIC_TYPES: TopicType[] = ['CentralTopic', 'MainTopic', 'SubTopic', 'IsolatedTopic'];

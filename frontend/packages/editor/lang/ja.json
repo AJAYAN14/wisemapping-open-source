@@ -524,12 +524,6 @@
   "theme.aurora.name": {
     "defaultMessage": "オーロラ"
   },
-  "theme.retro.description": {
-    "defaultMessage": "80年代のシンセウェイヴ風パレット。ネオンの縁取り、クロームのグラデーション、グリッド状のキャンバスで、レトロなナイトパーティーを再現します。"
-  },
-  "theme.retro.name": {
-    "defaultMessage": "80s レトロナイト"
-  },
   "theme.ocean.description": {
     "defaultMessage": "海をイメージした青いテーマで、ライト/ダークの各バリエーションがあります。落ち着いたプロフェッショナルな配色で、ビジネスにもクリエイティブなプロジェクトにも最適です。"
   },

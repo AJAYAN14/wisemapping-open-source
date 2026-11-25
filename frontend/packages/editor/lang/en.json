@@ -644,12 +644,6 @@
   "theme.ocean.name": {
     "defaultMessage": "Ocean"
   },
-  "theme.retro.description": {
-    "defaultMessage": "80s synthwave palette with neon rims, chrome gradients, and grid-lined canvases inspired by retro night parties."
-  },
-  "theme.retro.name": {
-    "defaultMessage": "80s Retro Night"
-  },
   "theme.robot.description": {
     "defaultMessage": "Tech-inspired green theme. Perfect for technical documentation and futuristic presentations."
   },

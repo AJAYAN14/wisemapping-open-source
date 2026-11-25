@@ -26,7 +26,6 @@ import RobotTheme from './RobotTheme';
 import type { ThemeVariant } from './Theme';
 import type Theme from './Theme';
 import AuroraTheme from './AuroraTheme';
-import RetroTheme from './RetroTheme';
 
 class ThemeFactory {
   private static _cache = new Map<string, Theme>();
@@ -63,9 +62,6 @@ class ThemeFactory {
         break;
       case 'aurora':
         result = new AuroraTheme(variant);
-        break;
-      case 'retro':
-        result = new RetroTheme(variant);
         break;
       default: {
         // The id comes from the map XML without validation, so do not prevent the map from opening.

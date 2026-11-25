@@ -548,12 +548,6 @@
   "theme.aurora.name": {
     "defaultMessage": "أورورا"
   },
-  "theme.retro.description": {
-    "defaultMessage": "لوحة ألوان سينث-ويف من الثمانينيات بأطر نيون وتدرجات كروم وخلفيات شبكية مستوحاة من ليالي الريترو."
-  },
-  "theme.retro.name": {
-    "defaultMessage": "ليلة ريترو الثمانينيات"
-  },
   "theme.ocean.description": {
     "defaultMessage": "سمة زرقاء مستوحاة من المحيط بإصدارات فاتحة/داكنة. ألوان هادئة ومهنية مثالية للأعمال والمشاريع الإبداعية."
   },

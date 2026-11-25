@@ -22,7 +22,6 @@ export const THEME_TYPES = [
   'sunrise',
   'ocean',
   'aurora',
-  'retro',
 ] as const;
 
 type ThemeType = (typeof THEME_TYPES)[number];

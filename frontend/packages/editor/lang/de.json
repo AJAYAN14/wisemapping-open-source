@@ -524,12 +524,6 @@
   "theme.aurora.name": {
     "defaultMessage": "Aurora"
   },
-  "theme.retro.description": {
-    "defaultMessage": "Synthwave-Palette der 80er mit Neonrändern, Chromverläufen und gerasterten Leinwänden, inspiriert von Retro-Partynächten."
-  },
-  "theme.retro.name": {
-    "defaultMessage": "80er Retro-Nacht"
-  },
   "theme.ocean.description": {
     "defaultMessage": "Vom Ozean inspiriertes blaues Thema mit hellen und dunklen Varianten. Ruhige, professionelle Farben, ideal für geschäftliche und kreative Projekte."
   },
