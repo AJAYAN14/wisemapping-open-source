@@ -395,6 +395,9 @@ describe('AppBar', () => {
 
     try {
       await renderAppBar(new Capability('edition-owner', false));
+      expect(screen.getByTestId('find-in-map-button')).toBeDefined();
+      expect(screen.getByTestId('outline-view-button')).toBeDefined();
+
       const moreButton = screen.getByTestId('app-bar-more-button');
       expect(moreButton).toBeDefined();
 
@@ -406,5 +409,16 @@ describe('AppBar', () => {
     } finally {
       window.matchMedia = originalMatchMedia;
     }
+  });
+
+  it('shows Find in Map and Outline View in AppBar and hides Outline View in showcase mode', async () => {
+    await renderAppBar(new Capability('edition-owner', false));
+    expect(screen.getByTestId('find-in-map-button')).toBeDefined();
+    expect(screen.getByTestId('outline-view-button')).toBeDefined();
+    cleanup();
+
+    await renderAppBar(new Capability('showcase', false));
+    expect(screen.getByTestId('find-in-map-button')).toBeDefined();
+    expect(screen.queryByTestId('outline-view-button')).toBeNull();
   });
 });

@@ -749,6 +749,12 @@
   "unified-styling.tab.shape": {
     "defaultMessage": "形状"
   },
+  "visualization-toolbar.tooltip-add-child": {
+    "defaultMessage": "添加子主題"
+  },
+  "visualization-toolbar.tooltip-add-sibling": {
+    "defaultMessage": "添加同級主題"
+  },
   "visualization-toolbar.tooltip-collapse-all": {
     "defaultMessage": "折叠所有节点"
   },

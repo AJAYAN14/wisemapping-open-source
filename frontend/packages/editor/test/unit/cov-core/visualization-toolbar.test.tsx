@@ -31,7 +31,6 @@ import { formatTooltip } from '../../../src/components/visualization-toolbar/uti
 import Capability from '../../../src/classes/action/capability';
 import type ActionConfig from '../../../src/classes/action/action-config';
 import type Editor from '../../../src/classes/model/editor';
-import { trackEditorInteraction } from '../../../src/utils/analytics';
 import { createThemeStorage, Providers } from './helpers';
 
 const platform = { mac: false, keyboardDisabled: false };
@@ -45,76 +44,101 @@ jest.mock('@wisemapping/mindplot', () => ({
   $notify: jest.fn(),
 }));
 
-jest.mock('../../../src/utils/analytics', () => ({
-  trackEditorInteraction: jest.fn(),
-  trackEditorPanelAction: jest.fn(),
-}));
-
 type FakeTopic = {
   getId: () => number;
   getType: () => string;
   getParent: () => FakeTopic | undefined;
   areChildrenShrunken: () => boolean;
+  isOnFocus: () => boolean;
 };
 
-const topic = (id: number, parent: FakeTopic | undefined, shrunken = false): FakeTopic => ({
+const topic = (
+  id: number,
+  parent: FakeTopic | undefined,
+  shrunken = false,
+  focused = false,
+): FakeTopic => ({
   getId: () => id,
   getType: () => (parent ? 'MainTopic' : 'CentralTopic'),
   getParent: () => parent,
   areChildrenShrunken: () => shrunken,
+  isOnFocus: () => focused,
 });
 
 const createModel = (
-  options: { loaded?: boolean; collapsed?: boolean; maxDepth?: number } = {},
+  options: {
+    loaded?: boolean;
+    collapsed?: boolean;
+    maxDepth?: number;
+    selectedTopicIds?: number[];
+  } = {},
 ) => {
-  const central = topic(0, undefined, true);
-  const first = topic(1, central, options.collapsed ?? false);
-  const second = topic(2, first);
-  const third = topic(3, second);
+  const selectedIds = new Set(options.selectedTopicIds ?? []);
+  const central = topic(0, undefined, true, selectedIds.has(0));
+  const first = topic(1, central, options.collapsed ?? false, selectedIds.has(1));
+  const second = topic(2, first, false, selectedIds.has(2));
+  const third = topic(3, second, false, selectedIds.has(3));
+  const allTopics = [central, first, second, third];
   const state = { loaded: options.loaded ?? true };
   const mindmap = { getMaxDepth: () => options.maxDepth ?? 3 };
+  const listeners: Record<string, (() => void)[]> = {};
+  const dispatcher = { shrinkBranch: jest.fn() };
+  const designerModel = {
+    getTopics: () => allTopics,
+    countSelectedTopics: () => allTopics.filter((t) => t.isOnFocus()).length,
+    countSelectedRelationships: () => 0,
+    filterSelectedTopics: () => allTopics.filter((t) => t.isOnFocus()),
+    getCentralTopic: () => ({
+      ...central,
+      getText: () => 'Central',
+      getModel: () => ({ getPlainText: () => 'Central' }),
+      getChildren: () => [],
+    }),
+  };
   const designer = {
     zoomToFit: jest.fn(),
     zoomIn: jest.fn(),
     zoomOut: jest.fn(),
     expandAllNodes: jest.fn(),
     collapseAllNodes: jest.fn(),
+    createSiblingForSelectedNode: jest.fn(),
+    createChildForSelectedNode: jest.fn(),
     getMindmap: () => mindmap,
-    getModel: () => ({
-      getTopics: () => [central, first, second, third],
-      filterSelectedTopics: () => [],
-      // What the find-in-map panel reads once Ctrl+F opens it.
-      getCentralTopic: () => ({
-        getId: () => 0,
-        getText: () => 'Central',
-        getModel: () => ({ getPlainText: () => 'Central' }),
-        getChildren: () => [],
-      }),
-    }),
+    getModel: () => designerModel,
     getActionDispatcher: () => ({ shrinkBranch: dispatcher.shrinkBranch }),
-    addEvent: jest.fn(),
-    removeEvent: jest.fn(),
+    addEvent: (event: string, cb: () => void) => {
+      listeners[event] = [...(listeners[event] ?? []), cb];
+    },
+    removeEvent: (event: string, cb: () => void) => {
+      listeners[event] = (listeners[event] ?? []).filter((c) => c !== cb);
+    },
     getWorkSpace: () => ({
       getZoom: () => 1,
       getScreenManager: () => ({ addEvent: jest.fn(), removeEvent: jest.fn() }),
     }),
   };
-  const dispatcher = { shrinkBranch: jest.fn() };
   const model = {
     isMapLoadded: () => state.loaded,
     getDesigner: () => designer,
+    getDesignerModel: () => designerModel,
   } as unknown as Editor;
-  return { model, designer, dispatcher, state, mindmap };
+  return { model, designer, dispatcher, state, mindmap, listeners };
 };
 
 const renderToolbar = (
   model: Editor,
   mode: EditorRenderMode = 'edition-owner',
   storage = createThemeStorage(),
+  hasAppBar = true,
+  isLocked = false,
 ) =>
   render(
     <Providers storage={storage}>
-      <VisualizationToolbar model={model} capability={new Capability(mode, false)} />
+      <VisualizationToolbar
+        model={model}
+        capability={new Capability(mode, isLocked)}
+        hasAppBar={hasAppBar}
+      />
     </Providers>,
   );
 
@@ -142,26 +166,94 @@ describe('formatTooltip', () => {
 
 describe('VisualizationToolbar zoom', () => {
   it.each([
-    ['Zoom to Fit', 'zoomToFit', 'zoom_to_fit'],
-    ['Zoom In', 'zoomIn', 'zoom_in'],
-    ['Zoom Out', 'zoomOut', 'zoom_out'],
-  ] as const)('%s goes through the designer', (label, method, tracked) => {
+    ['Zoom to Fit', 'zoomToFit'],
+    ['Zoom In', 'zoomIn'],
+    ['Zoom Out', 'zoomOut'],
+  ] as const)('%s goes through the designer', (label, method) => {
     const { model, designer } = createModel();
     renderToolbar(model);
 
     fireEvent.click(button(label));
 
     expect(designer[method]).toHaveBeenCalledTimes(1);
-    expect(trackEditorInteraction).toHaveBeenCalledWith(tracked);
   });
 
   it('disables every map control until the map is loaded', () => {
     const { model } = createModel({ loaded: false });
     renderToolbar(model);
-    ['Zoom to Fit', 'Zoom In', 'Zoom Out', 'Find in Map', 'Expand by Level'].forEach((name) =>
-      expect(button(name)).toBeDisabled(),
-    );
-    expect(button('Collapse All Nodes')).toBeDisabled();
+    [
+      'Zoom to Fit',
+      'Zoom In',
+      'Zoom Out',
+      'Add Sibling Topic',
+      'Add Child Topic',
+      'Expand by Level',
+      'Collapse All Nodes',
+    ].forEach((name) => expect(button(name)).toBeDisabled());
+  });
+});
+
+describe('VisualizationToolbar topic creation', () => {
+  it('enables both Add Sibling Topic and Add Child Topic when a non-central topic is selected', () => {
+    const { model, designer } = createModel({ selectedTopicIds: [1] });
+    renderToolbar(model);
+
+    const siblingBtn = button('Add Sibling Topic');
+    const childBtn = button('Add Child Topic');
+    expect(siblingBtn).toBeEnabled();
+    expect(childBtn).toBeEnabled();
+
+    fireEvent.click(siblingBtn);
+    fireEvent.click(childBtn);
+    expect(designer.createSiblingForSelectedNode).toHaveBeenCalledTimes(1);
+    expect(designer.createChildForSelectedNode).toHaveBeenCalledTimes(1);
+  });
+
+  it('disables Add Sibling Topic but enables Add Child Topic when CentralTopic is selected', () => {
+    const { model } = createModel({ selectedTopicIds: [0] });
+    renderToolbar(model);
+
+    expect(button('Add Sibling Topic')).toBeDisabled();
+    expect(button('Add Child Topic')).toBeEnabled();
+  });
+
+  it('disables both add buttons when 0 or multiple topics are selected', () => {
+    const empty = createModel({ selectedTopicIds: [] });
+    const { unmount } = renderToolbar(empty.model);
+    expect(button('Add Sibling Topic')).toBeDisabled();
+    expect(button('Add Child Topic')).toBeDisabled();
+    unmount();
+
+    const multi = createModel({ selectedTopicIds: [1, 2] });
+    renderToolbar(multi.model);
+    expect(button('Add Sibling Topic')).toBeDisabled();
+    expect(button('Add Child Topic')).toBeDisabled();
+  });
+
+  it('hides topic creation buttons in read-only and locked modes', () => {
+    const { model } = createModel({ selectedTopicIds: [1] });
+    const { unmount } = renderToolbar(model, 'viewonly-public');
+    expect(screen.queryByRole('button', { name: 'Add Sibling Topic' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Add Child Topic' })).not.toBeInTheDocument();
+    unmount();
+
+    renderToolbar(model, 'edition-owner', createThemeStorage(), true, true);
+    expect(screen.queryByRole('button', { name: 'Add Sibling Topic' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Add Child Topic' })).not.toBeInTheDocument();
+  });
+});
+
+describe('VisualizationToolbar AppBar handoff', () => {
+  it('omits Find in Map and Outline View when AppBar is enabled, and restores them when disabled', () => {
+    const { model } = createModel();
+    const { unmount } = renderToolbar(model, 'edition-owner', createThemeStorage(), true);
+    expect(screen.queryByRole('button', { name: 'Find in Map' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Outline View' })).not.toBeInTheDocument();
+    unmount();
+
+    renderToolbar(model, 'viewonly-private', createThemeStorage(), false);
+    expect(button('Find in Map')).toBeInTheDocument();
+    expect(button('Outline View')).toBeInTheDocument();
   });
 });
 
@@ -173,7 +265,6 @@ describe('VisualizationToolbar expand and collapse', () => {
     fireEvent.click(button('Collapse All Nodes'));
 
     expect(designer.collapseAllNodes).toHaveBeenCalled();
-    expect(trackEditorInteraction).toHaveBeenCalledWith('collapse_all_nodes');
   });
 
   it('expands every node when some are collapsed, showing the deepest level', () => {
@@ -183,7 +274,6 @@ describe('VisualizationToolbar expand and collapse', () => {
     fireEvent.click(button('Expand All Nodes'));
 
     expect(designer.expandAllNodes).toHaveBeenCalled();
-    expect(trackEditorInteraction).toHaveBeenCalledWith('expand_all_nodes');
     expect(screen.getByTestId('expand-level-badge')).toHaveTextContent('4');
   });
 
@@ -196,7 +286,6 @@ describe('VisualizationToolbar expand and collapse', () => {
     expect(screen.getByTestId('expand-level-badge')).toHaveTextContent('2');
     expect(designer.collapseAllNodes).toHaveBeenCalledTimes(1);
     expect(dispatcher.shrinkBranch).toHaveBeenLastCalledWith([1], false);
-    expect(trackEditorInteraction).toHaveBeenCalledWith('expand_by_level');
 
     fireEvent.click(button('Expand by Level'));
     expect(screen.getByTestId('expand-level-badge')).toHaveTextContent('3');
@@ -210,21 +299,20 @@ describe('VisualizationToolbar expand and collapse', () => {
 });
 
 describe('VisualizationToolbar keyboard shortcuts', () => {
-  it('opens find in map with Ctrl+F', () => {
+  it('opens find in map with Ctrl+F when AppBar is absent', () => {
     const { model } = createModel();
-    renderToolbar(model);
+    renderToolbar(model, 'viewonly-private', createThemeStorage(), false);
     expect(findButton()).toHaveAttribute('aria-expanded', 'false');
 
     ctrl('f');
 
     expect(findButton()).toHaveAttribute('aria-expanded', 'true');
-    expect(trackEditorInteraction).toHaveBeenCalledWith('find_in_map_keyboard');
   });
 
   it('uses the command key on a Mac', () => {
     platform.mac = true;
     const { model } = createModel();
-    renderToolbar(model);
+    renderToolbar(model, 'viewonly-private', createThemeStorage(), false);
 
     act(() => {
       fireEvent.keyDown(document, { key: 'f', ctrlKey: true });
@@ -245,7 +333,6 @@ describe('VisualizationToolbar keyboard shortcuts', () => {
 
     expect(dispatcher.shrinkBranch).toHaveBeenCalledWith([1], false);
     expect(screen.getByTestId('expand-level-badge')).toHaveTextContent('2');
-    expect(trackEditorInteraction).toHaveBeenCalledWith('expand_by_level_keyboard');
   });
 
   it('collapses everything with Ctrl+Shift+E when nothing is collapsed', () => {
@@ -255,7 +342,6 @@ describe('VisualizationToolbar keyboard shortcuts', () => {
     ctrl('E', { shiftKey: true });
 
     expect(designer.collapseAllNodes).toHaveBeenCalled();
-    expect(trackEditorInteraction).toHaveBeenCalledWith('collapse_all_keyboard');
   });
 
   it('expands everything with Ctrl+Shift+E when something is collapsed', () => {
@@ -266,7 +352,6 @@ describe('VisualizationToolbar keyboard shortcuts', () => {
 
     expect(designer.expandAllNodes).toHaveBeenCalled();
     expect(screen.getByTestId('expand-level-badge')).toHaveTextContent('3');
-    expect(trackEditorInteraction).toHaveBeenCalledWith('expand_all_keyboard');
   });
 
   it('ignores shortcuts without the modifier, other keys, and an unloaded map', () => {
@@ -283,7 +368,6 @@ describe('VisualizationToolbar keyboard shortcuts', () => {
     renderToolbar(notLoaded.model);
     ctrl('e');
     expect(notLoaded.dispatcher.shrinkBranch).not.toHaveBeenCalled();
-    expect(trackEditorInteraction).not.toHaveBeenCalled();
   });
 
   it('ignores shortcuts while a dialog has paused the keyboard', () => {
@@ -317,7 +401,6 @@ describe('VisualizationToolbar per mode', () => {
     fireEvent.click(button('Toggle theme'));
 
     expect(storage.setThemeVariant).toHaveBeenCalledWith('dark');
-    expect(trackEditorInteraction).toHaveBeenCalledWith('theme_toggle');
   });
 
   it('offers keyboard help but no theme toggle to an editor', () => {
@@ -374,7 +457,7 @@ describe('buildVisualizationToolbarConfig', () => {
     expect(config.find((c) => c?.ariaLabel === 'Toggle theme')).toBeUndefined();
   });
 
-  it('wires the panels to the designer and their close callback', () => {
+  it('wires the fallback panels to the designer and their close callback when hasAppBar is false', () => {
     const { model, designer, mindmap } = createModel();
     const config = buildVisualizationToolbarConfig(
       model,
@@ -382,6 +465,10 @@ describe('buildVisualizationToolbarConfig', () => {
       intl,
       1,
       jest.fn(),
+      undefined,
+      undefined,
+      undefined,
+      false,
     );
     const close = jest.fn();
 
@@ -403,26 +490,6 @@ describe('buildVisualizationToolbarConfig', () => {
       closeModal: () => void;
     }>;
     expect(help.props.closeModal).toBe(close);
-  });
-
-  it('tracks opening the outline view, the search and the keyboard help', () => {
-    const { model } = createModel();
-    const config = buildVisualizationToolbarConfig(
-      model,
-      new Capability('edition-owner', false),
-      intl,
-      0,
-      jest.fn(),
-    );
-    const event = {} as React.MouseEvent<HTMLElement>;
-
-    byLabel(config, 'Outline View').onClick!(event);
-    byLabel(config, 'Find in Map').onClick!(event);
-    byLabel(config, 'Keyboard Shortcuts').onClick!(event);
-
-    expect(trackEditorInteraction).toHaveBeenCalledWith('outline_view');
-    expect(trackEditorInteraction).toHaveBeenCalledWith('find_in_map');
-    expect(trackEditorInteraction).toHaveBeenCalledWith('keyboard_shortcuts');
   });
 
   it('names the current level in the expand-by-level tooltip', () => {

@@ -746,6 +746,12 @@
   "unified-styling.tab.shape": {
     "defaultMessage": "Shape"
   },
+  "visualization-toolbar.tooltip-add-child": {
+    "defaultMessage": "Add Child Topic"
+  },
+  "visualization-toolbar.tooltip-add-sibling": {
+    "defaultMessage": "Add Sibling Topic"
+  },
   "visualization-toolbar.tooltip-collapse-all": {
     "defaultMessage": "Collapse All Nodes"
   },

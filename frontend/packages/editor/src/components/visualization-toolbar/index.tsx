@@ -18,15 +18,20 @@
 import KeyboardRoundedIcon from '@mui/icons-material/KeyboardRounded';
 import DarkModeRoundedIcon from '@mui/icons-material/DarkModeRounded';
 import LightModeRoundedIcon from '@mui/icons-material/LightModeRounded';
-import { ReactElement, useState, useEffect, useMemo } from 'react';
+import {
+  ReactElement,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+} from 'react';
 import { IntlShape, useIntl } from 'react-intl';
 import ActionConfig from '../../classes/action/action-config';
 import Capability from '../../classes/action/capability';
 import Editor from '../../classes/model/editor';
 import Model from '../../classes/model/editor';
 import KeyboardShorcutsHelp from '../action-widget/pane/keyboard-shortcut-help';
-import OutlineViewDialog from '../action-widget/pane/outline-view-dialog';
-import FindInMapPanel from '../action-widget/pane/find-in-map';
 import { DesignerKeyboard, isMacPlatform } from '@wisemapping/mindplot';
 import Toolbar from '../toolbar';
 import ZoomOutRoundedIcon from '@mui/icons-material/ZoomOutRounded';
@@ -34,13 +39,19 @@ import ZoomInRoundedIcon from '@mui/icons-material/ZoomInRounded';
 import CenterFocusStrongRoundedIcon from '@mui/icons-material/CenterFocusStrongRounded';
 import UnfoldLessRoundedIcon from '@mui/icons-material/UnfoldLessRounded';
 import UnfoldMoreRoundedIcon from '@mui/icons-material/UnfoldMoreRounded';
-import TocRoundedIcon from '@mui/icons-material/TocRounded';
-import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
+import { AddChildTopicIcon, AddSiblingTopicIcon } from '../icons/TopicActionIcons';
 import { handleExpandByLevel, buildExpandByLevelConfig } from './expand-by-level-icon';
 import { formatTooltip } from './utils';
 import { EDITOR_LAYOUT, EDITOR_Z_INDEX } from '../../theme/layout';
 import ZoomDisplay from './zoom-display';
 import { useTheme } from '../../contexts/ThemeContext';
+import { SelectionSnapshot, useSelection } from '../../hooks/useSelection';
+import {
+  buildFindInMapConfig,
+  buildOutlineViewConfig,
+  FindInMapState,
+  useFindInMapShortcut,
+} from './mapViewActions';
 
 // Helper function to check if any nodes are currently collapsed
 const areNodesCollapsed = (model: Editor): boolean => {
@@ -51,10 +62,7 @@ const areNodesCollapsed = (model: Editor): boolean => {
   );
 };
 
-export type FindInMapState = {
-  open: boolean;
-  setOpen: (open: boolean) => void;
-};
+export type { FindInMapState };
 
 export function buildVisualizationToolbarConfig(
   model: Editor,
@@ -65,6 +73,9 @@ export function buildVisualizationToolbarConfig(
   themeMode?: 'light' | 'dark',
   toggleTheme?: () => void,
   findInMap?: FindInMapState,
+  hasAppBar = true,
+  selection?: SelectionSnapshot,
+  isCentralFocused?: boolean,
 ): (ActionConfig | undefined)[] {
   const zoomToFitLabel = intl.formatMessage({
     id: 'visualization-toolbar.tooltip-zoom-to-fit',
@@ -74,10 +85,50 @@ export function buildVisualizationToolbarConfig(
     id: 'visualization-toolbar.tooltip-zoom-out',
     defaultMessage: 'Zoom Out',
   });
+  const addSiblingLabel = intl.formatMessage({
+    id: 'visualization-toolbar.tooltip-add-sibling',
+    defaultMessage: 'Add Sibling Topic',
+  });
+  const addChildLabel = intl.formatMessage({
+    id: 'visualization-toolbar.tooltip-add-child',
+    defaultMessage: 'Add Child Topic',
+  });
 
   // Check if we're in public or embedded view
   const isPublicOrEmbedded =
     capability.mode === 'viewonly-public' || capability.mode === 'viewonly-private';
+  const canEditTopics = !capability.isHidden('edition-toolbar');
+  const showKeyboardShortcuts = !capability.isHidden('keyboard-shortcuts');
+
+  const getSelectedTopicCount = (): number => {
+    if (selection) {
+      return selection.topicCount;
+    }
+    try {
+      return model.getDesigner()?.getModel?.()?.filterSelectedTopics?.().length ?? 0;
+    } catch {
+      return 0;
+    }
+  };
+
+  const getIsCentralSelected = (): boolean => {
+    if (isCentralFocused !== undefined) {
+      return isCentralFocused;
+    }
+    try {
+      const designerModel = model.getDesigner()?.getModel?.();
+      const central = designerModel?.getCentralTopic?.() as
+        | { isOnFocus?: () => boolean }
+        | undefined;
+      if (central && typeof central.isOnFocus === 'function') {
+        return central.isOnFocus();
+      }
+      const selected = designerModel?.filterSelectedTopics?.() ?? [];
+      return selected.length === 1 && selected[0]?.getType?.() === 'CentralTopic';
+    } catch {
+      return false;
+    }
+  };
 
   const nodesCollapsed = areNodesCollapsed(model);
 
@@ -122,61 +173,44 @@ export function buildVisualizationToolbarConfig(
       },
       disabled: () => !model?.isMapLoadded(),
     },
-    // Separator between zoom controls and outline view
-    undefined as ActionConfig | undefined,
-    {
-      icon: <SearchRoundedIcon />,
-      tooltip: formatTooltip(
-        intl.formatMessage({
-          id: 'visualization-toolbar.tooltip-find-in-map',
-          defaultMessage: 'Find in Map',
-        }),
-        'F',
-      ),
-      ariaLabel: intl.formatMessage({
-        id: 'visualization-toolbar.tooltip-find-in-map',
-        defaultMessage: 'Find in Map',
-      }),
-      'data-testid': 'find-in-map-button',
-      ...(findInMap && { open: findInMap.open, onOpenChange: findInMap.setOpen }),
-      options: [
-        {
-          render: (closeModal) => (
-            <FindInMapPanel designer={model.getDesigner()} closeModal={closeModal} />
-          ),
-        },
-      ],
-      disabled: () => !model?.isMapLoadded(),
-    },
-    // Separator between find and outline view
-    undefined as ActionConfig | undefined,
-    {
-      icon: <TocRoundedIcon />,
-      tooltip: formatTooltip(
-        intl.formatMessage({
-          id: 'visualization-toolbar.tooltip-outline-view',
-          defaultMessage: 'Outline View',
-        }),
-        'O',
-      ),
-      ariaLabel: intl.formatMessage({
-        id: 'visualization-toolbar.tooltip-outline-view',
-        defaultMessage: 'Outline View',
-      }),
-      options: [
-        {
-          render: (closeModal) => (
-            <OutlineViewDialog
-              open={true}
-              onClose={closeModal}
-              mindmap={model.getDesigner()?.getMindmap()}
-            />
-          ),
-        },
-      ],
-      disabled: () => !model?.isMapLoadded(),
-    },
-    // Separator between outline view and expand/collapse controls
+    // Fallback for embedded view-only modes without a top AppBar
+    ...(!hasAppBar
+      ? [
+          undefined as ActionConfig | undefined,
+          buildFindInMapConfig(model, intl, findInMap),
+          buildOutlineViewConfig(model, capability, intl),
+        ]
+      : []),
+    // Quick topic creation controls for touch and mouse editing
+    ...(canEditTopics
+      ? [
+          undefined as ActionConfig | undefined,
+          {
+            icon: <AddSiblingTopicIcon />,
+            tooltip: `${addSiblingLabel} (Enter)`,
+            ariaLabel: addSiblingLabel,
+            'data-testid': 'add-sibling-topic-button',
+            onClick: () => {
+              model.getDesigner().createSiblingForSelectedNode();
+            },
+            disabled: () =>
+              !model?.isMapLoadded() ||
+              getSelectedTopicCount() !== 1 ||
+              getIsCentralSelected(),
+          } as ActionConfig,
+          {
+            icon: <AddChildTopicIcon />,
+            tooltip: `${addChildLabel} (Tab)`,
+            ariaLabel: addChildLabel,
+            'data-testid': 'add-child-topic-button',
+            onClick: () => {
+              model.getDesigner().createChildForSelectedNode();
+            },
+            disabled: () => !model?.isMapLoadded() || getSelectedTopicCount() !== 1,
+          } as ActionConfig,
+        ]
+      : []),
+    // Separator before expand/collapse controls
     undefined as ActionConfig | undefined,
     {
       icon: nodesCollapsed ? <UnfoldMoreRoundedIcon /> : <UnfoldLessRoundedIcon />,
@@ -214,21 +248,23 @@ export function buildVisualizationToolbarConfig(
       disabled: () => !model?.isMapLoadded(),
     },
     buildExpandByLevelConfig(model, intl, currentExpandLevel, setExpandLevel),
-    // Separator between expand controls and keyboard shortcuts
-    undefined as ActionConfig | undefined,
-    {
-      icon: <KeyboardRoundedIcon />,
-      tooltip: intl.formatMessage({
-        id: 'visualization-toolbar.tooltip-keyboard',
-        defaultMessage: 'Keyboard Shortcuts',
-      }),
-      visible: !capability.isHidden('keyboard-shortcuts'),
-      options: [
-        {
-          render: (closeModal) => <KeyboardShorcutsHelp closeModal={closeModal} />,
-        },
-      ],
-    },
+    ...(showKeyboardShortcuts
+      ? [
+          undefined as ActionConfig | undefined,
+          {
+            icon: <KeyboardRoundedIcon />,
+            tooltip: intl.formatMessage({
+              id: 'visualization-toolbar.tooltip-keyboard',
+              defaultMessage: 'Keyboard Shortcuts',
+            }),
+            options: [
+              {
+                render: (closeModal) => <KeyboardShorcutsHelp closeModal={closeModal} />,
+              },
+            ],
+          } as ActionConfig,
+        ]
+      : []),
     // Separator before theme toggle - only if theme toggle will be shown
     ...(isPublicOrEmbedded && toggleTheme ? [undefined as ActionConfig | undefined] : []),
     // Theme toggle - only for public and embedded views
@@ -262,13 +298,55 @@ export function buildVisualizationToolbarConfig(
 type VisualizationToolbarProps = {
   model: Model;
   capability: Capability;
+  hasAppBar?: boolean;
 };
 
-const VisualizationToolbar = ({ model, capability }: VisualizationToolbarProps): ReactElement => {
+const VisualizationToolbar = ({
+  model,
+  capability,
+  hasAppBar = true,
+}: VisualizationToolbarProps): ReactElement => {
   const intl = useIntl();
   const [expandLevel, setExpandLevel] = useState(0);
   const [findInMapOpen, setFindInMapOpen] = useState(false);
   const { mode, toggleMode } = useTheme();
+  const selection = useSelection(model);
+
+  const subscribeToCentralFocus = useCallback(
+    (onChange: () => void): (() => void) => {
+      const designer = (() => {
+        try {
+          return model?.getDesigner();
+        } catch {
+          return undefined;
+        }
+      })();
+      if (!designer) {
+        return () => undefined;
+      }
+      const events = ['onfocus', 'onblur', 'loadSuccess'] as const;
+      events.forEach((event) => designer.addEvent(event, onChange));
+      return () => {
+        events.forEach((event) => designer.removeEvent(event, onChange));
+      };
+    },
+    [model],
+  );
+
+  const isCentralFocused = useSyncExternalStore(subscribeToCentralFocus, () => {
+    try {
+      if (!model?.isMapLoadded()) return false;
+      const designerModel = model.getDesignerModel?.();
+      const central = designerModel?.getCentralTopic?.() as
+        | { isOnFocus?: () => boolean }
+        | undefined;
+      return Boolean(central?.isOnFocus?.());
+    } catch {
+      return false;
+    }
+  });
+
+  useFindInMapShortcut(model, setFindInMapOpen, !hasAppBar);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -289,28 +367,22 @@ const VisualizationToolbar = ({ model, capability }: VisualizationToolbarProps):
       if (!isModifier) return;
 
       // Zoom (ctrl/meta with 0, -, =) is owned by DesignerKeyboard, not here.
-      switch (event.key.toLowerCase()) {
-        case 'f':
-          event.preventDefault();
-          setFindInMapOpen(true);
-          break;
-        case 'e':
-          event.preventDefault();
-          if (event.shiftKey) {
-            // Expand/Collapse All
-            if (areNodesCollapsed(model)) {
-              model.getDesigner().expandAllNodes();
-              const maxDepth = model.getDesigner().getMindmap().getMaxDepth();
-              setExpandLevel(maxDepth);
-            } else {
-              model.getDesigner().collapseAllNodes();
-              setExpandLevel(0);
-            }
+      if (event.key.toLowerCase() === 'e') {
+        event.preventDefault();
+        if (event.shiftKey) {
+          // Expand/Collapse All
+          if (areNodesCollapsed(model)) {
+            model.getDesigner().expandAllNodes();
+            const maxDepth = model.getDesigner().getMindmap().getMaxDepth();
+            setExpandLevel(maxDepth);
           } else {
-            // Expand by level
-            handleExpandByLevel(model, expandLevel, setExpandLevel);
+            model.getDesigner().collapseAllNodes();
+            setExpandLevel(0);
           }
-          break;
+        } else {
+          // Expand by level
+          handleExpandByLevel(model, expandLevel, setExpandLevel);
+        }
       }
     };
 
@@ -331,8 +403,22 @@ const VisualizationToolbar = ({ model, capability }: VisualizationToolbarProps):
         mode,
         toggleMode,
         { open: findInMapOpen, setOpen: setFindInMapOpen },
+        hasAppBar,
+        selection,
+        isCentralFocused,
       ),
-    [model, capability, intl, expandLevel, mode, toggleMode, findInMapOpen],
+    [
+      model,
+      capability,
+      intl,
+      expandLevel,
+      mode,
+      toggleMode,
+      findInMapOpen,
+      hasAppBar,
+      selection,
+      isCentralFocused,
+    ],
   );
 
   // Check if we're in public or embedded view

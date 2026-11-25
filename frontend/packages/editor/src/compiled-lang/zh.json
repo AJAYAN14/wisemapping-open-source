@@ -1527,6 +1527,18 @@
       "value": "形状"
     }
   ],
+  "visualization-toolbar.tooltip-add-child": [
+    {
+      "type": 0,
+      "value": "添加子主題"
+    }
+  ],
+  "visualization-toolbar.tooltip-add-sibling": [
+    {
+      "type": 0,
+      "value": "添加同級主題"
+    }
+  ],
   "visualization-toolbar.tooltip-collapse-all": [
     {
       "type": 0,

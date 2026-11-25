@@ -245,7 +245,11 @@ const EditorContent = ({
                 capability={capability}
                 uploadTopicImage={options.uploadTopicImage}
               />
-              <VisualizationToolbar model={model} capability={capability} />
+              <VisualizationToolbar
+                model={model}
+                capability={capability}
+                hasAppBar={Boolean(options.enableAppBar)}
+              />
             </div>
           )}
 

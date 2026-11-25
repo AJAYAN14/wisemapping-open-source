@@ -16,6 +16,11 @@
  *   limitations under the License.
  */
 import { formatTooltip } from '../visualization-toolbar/utils';
+import {
+  buildFindInMapConfig,
+  buildOutlineViewConfig,
+  useFindInMapShortcut,
+} from '../visualization-toolbar/mapViewActions';
 import React, {
   ReactElement,
   useCallback,
@@ -94,6 +99,7 @@ const AppBar = ({
   const [currentTitle, setCurrentTitle] = useState<string>(() => mapInfo.getTitle());
   const [overflowAnchor, setOverflowAnchor] = useState<HTMLElement | null>(null);
   const [themeDialogOpen, setThemeDialogOpen] = useState<boolean>(false);
+  const [findInMapOpen, setFindInMapOpen] = useState<boolean>(false);
   const canRename = !capability.isHidden('rename');
 
   // Another map: its title replaces the previous one. Adjusted while rendering, not in an effect,
@@ -142,6 +148,8 @@ const AppBar = ({
   const { mode, toggleMode } = useTheme();
   const muiTheme = useMuiTheme();
   const isCompactBar = useMediaQuery(muiTheme.breakpoints.down('md'), { noSsr: true });
+
+  useFindInMapShortcut(model, setFindInMapOpen, true);
 
   const handleStarredOnClick = () => {
     const newStatus = !isStarred;
@@ -352,13 +360,13 @@ const AppBar = ({
       render: () => (
         <Box
           sx={{
-            mx: { xs: 0.5, sm: 1.5, md: 3 },
+            mx: { xs: 0.25, sm: 1.5, md: 3 },
             display: 'flex',
             alignItems: 'center',
             gap: 1,
-            minWidth: 0,
-            flex: '0 1 auto',
-            maxWidth: { xs: '40dvw', sm: '240px', md: '320px' },
+            minWidth: { xs: '56px', sm: '100px' },
+            flex: { xs: '1 1 72px', sm: '0 1 auto' },
+            maxWidth: { xs: '34dvw', sm: '240px', md: '320px' },
           }}
         >
           {isEditingTitle && canRename ? (
@@ -479,6 +487,8 @@ const AppBar = ({
       disabled: () => isStarred === undefined,
     },
     appBarDivisor,
+    buildFindInMapConfig(model, intl, { open: findInMapOpen, setOpen: setFindInMapOpen }),
+    buildOutlineViewConfig(model, capability, intl),
     {
       icon: <PaletteOutlinedIcon />,
       tooltip: intl.formatMessage({ id: 'appbar.tooltip-theme', defaultMessage: 'Theme' }),
@@ -674,22 +684,44 @@ const AppBar = ({
           '& .MuiToolbar-root': {
             backgroundColor: 'transparent',
             minHeight: '3rem',
-            paddingLeft: 'max(8px, env(safe-area-inset-left, 0px))',
-            paddingRight: 'max(8px, env(safe-area-inset-right, 0px))',
+            paddingLeft: 'max(6px, env(safe-area-inset-left, 0px))',
+            paddingRight: 'max(6px, env(safe-area-inset-right, 0px))',
+            gap: '2px',
+            overflowX: 'auto',
+            overflowY: 'hidden',
+            scrollbarWidth: 'none',
             [muiTheme.breakpoints.up('sm')]: {
               paddingLeft: 'max(16px, env(safe-area-inset-left, 0px))',
               paddingRight: 'max(16px, env(safe-area-inset-right, 0px))',
+              gap: 0.5,
             },
-            gap: 0.5,
           },
           '& .MuiButtonBase-root': {
-            marginX: '3px',
-            padding: '6px',
+            marginX: '1px',
+            padding: '5px',
             borderRadius: '10px',
+            position: 'relative',
+            flexShrink: 0,
             ...applePressMixin,
+            [muiTheme.breakpoints.up('sm')]: {
+              marginX: '3px',
+              padding: '6px',
+            },
             '@media (pointer: coarse)': {
-              minWidth: '44px',
-              minHeight: '44px',
+              minWidth: '36px',
+              minHeight: '36px',
+              '&::after': {
+                content: '""',
+                position: 'absolute',
+                inset: '-4px',
+              },
+              [muiTheme.breakpoints.up('sm')]: {
+                minWidth: '44px',
+                minHeight: '44px',
+                '&::after': {
+                  content: 'none',
+                },
+              },
             },
           },
         }}
@@ -697,7 +729,7 @@ const AppBar = ({
         <MaterialToolbar>
           {config.map((c, i) => {
             // eslint-disable-next-line @eslint-react/no-array-index-key -- a toolbar built once, never reordered
-            return <ToolbarMenuItem key={i} configuration={c} />;
+            return <ToolbarMenuItem key={i} configuration={c} vertical />;
           })}
         </MaterialToolbar>
       </MaterialAppBar>
