@@ -89,8 +89,8 @@ class Mindmap extends IMindmap {
     return this._layout;
   }
 
-  setLayout(layout: LayoutType): void {
-    this._layout = layout;
+  setLayout(_layout: LayoutType): void {
+    this._layout = 'mindmap';
   }
 
   /** */

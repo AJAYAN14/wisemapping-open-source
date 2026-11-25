@@ -32,7 +32,6 @@ import {
   isBackgroundPatternType,
   isFontStyleType,
   isFontWeightType,
-  isLayoutType,
   isLineType,
   isStrokeStyle,
   isThemeType,
@@ -405,16 +404,8 @@ class XMLSerializerTango implements XMLMindmapSerializer {
       mindmap.setTheme('classic');
     }
 
-    // Load layout attribute, defaulting to mindmap
-    const layoutAttr = rootElem.getAttribute('layout');
-    if (layoutAttr && isLayoutType(layoutAttr)) {
-      mindmap.setLayout(layoutAttr);
-    } else {
-      if (layoutAttr) {
-        console.warn(`Unknown layout '${layoutAttr}', falling back to 'mindmap'.`);
-      }
-      mindmap.setLayout('mindmap');
-    }
+    // Always enforce standard horizontal mindmap layout (tree layout has been removed).
+    mindmap.setLayout('mindmap');
 
     // Load canvas style attributes
     this._loadCanvasStyle(rootElem, mindmap);

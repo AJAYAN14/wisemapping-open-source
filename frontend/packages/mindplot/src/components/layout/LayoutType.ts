@@ -16,13 +16,12 @@
  *   limitations under the License.
  */
 
-export type LayoutType = 'mindmap' | 'tree';
+export type LayoutType = 'mindmap';
 
 export type OrientationType = 'horizontal' | 'vertical';
 
 export const LAYOUT_ORIENTATION: Record<LayoutType, OrientationType> = {
   mindmap: 'horizontal',
-  tree: 'vertical',
 };
 
 export default LayoutType;

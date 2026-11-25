@@ -395,12 +395,5 @@ class NodePropertyBuilder {
       };
     return this.topicShapeModel;
   }
-
-  getLayoutModel(): NodeProperty<'mindmap' | 'tree'> {
-    return {
-      getValue: () => this.designer.getLayout(),
-      setValue: (value: 'mindmap' | 'tree') => this.designer.changeLayout(value),
-    };
-  }
 }
 export default NodePropertyBuilder;

@@ -55,7 +55,6 @@
  * const wisemappingXML = await importer.import('My Mind Map', 'Description');
  * ```
  */
-import type { LayoutType } from '../layout/LayoutType';
 import Importer from './Importer';
 import ImportError from './ImportError';
 import SecureXmlParser from '../security/SecureXmlParser';
@@ -321,8 +320,6 @@ class XMindImporter extends Importer {
 
   private topicIdMap: Map<string, number>;
 
-  private currentLayout: LayoutType = 'mindmap';
-
   constructor(map: XMindRawInput) {
     super();
     this.xmindInput = map;
@@ -352,7 +349,6 @@ class XMindImporter extends Importer {
   private resetState(): void {
     this.ids.reset();
     this.topicIdMap.clear();
-    this.currentLayout = 'mindmap';
   }
 
   private importXMLFormat(xmlContent: string, nameMap: string): Mindmap {
@@ -383,67 +379,11 @@ class XMindImporter extends Importer {
       throw new Error('No root topic found in XMind file');
     }
 
-    this.currentLayout = this.detectLayoutFromXML(rootTopic);
-
     return this.buildMindmapFromXML(rootTopic, nameMap);
   }
 
   private importJSONFormat(sheet: XMindSheet, nameMap: string): Mindmap {
-    this.currentLayout = this.detectLayoutFromJson(sheet);
-
     return this.buildMindmapFromJson(sheet, nameMap);
-  }
-
-  private detectLayoutFromXML(rootTopic: Element): LayoutType {
-    const structureClass = rootTopic.getAttribute('structure-class') ?? undefined;
-    return this.mapStructureClassToLayout(structureClass) ?? 'mindmap';
-  }
-
-  private detectLayoutFromJson(sheet: XMindSheet): LayoutType {
-    const rootStructure = sheet.rootTopic?.structureClass;
-    const layoutFromStructure = this.mapStructureClassToLayout(rootStructure);
-    if (layoutFromStructure) {
-      return layoutFromStructure;
-    }
-
-    if (sheet.extensions) {
-      const layoutFromExtensions = sheet.extensions.reduce<LayoutType | undefined>(
-        (found, extension) => {
-          if (found) {
-            return found;
-          }
-          const content = extension.content as { centralTopic?: string } | undefined;
-          return this.mapStructureClassToLayout(content?.centralTopic);
-        },
-        undefined,
-      );
-
-      if (layoutFromExtensions) {
-        return layoutFromExtensions;
-      }
-    }
-
-    return 'mindmap';
-  }
-
-  private mapStructureClassToLayout(structureClass?: string): LayoutType | undefined {
-    if (!structureClass) {
-      return undefined;
-    }
-
-    const normalized = structureClass.toLowerCase();
-
-    const treeIndicators = ['org-chart', 'tree', 'timeline', 'logic', 'fishbone', 'matrix'];
-    if (treeIndicators.some((indicator) => normalized.includes(indicator))) {
-      return 'mindmap';
-    }
-
-    const mindmapIndicators = ['map', 'mindmap'];
-    if (mindmapIndicators.some((indicator) => normalized.includes(indicator))) {
-      return 'mindmap';
-    }
-
-    return undefined;
   }
 
   private async detectInput(): Promise<DetectedInput> {
@@ -621,25 +561,14 @@ class XMindImporter extends Importer {
     return xmindColor;
   }
 
-  // A tree topic goes right of its parent, its siblings centered on it. A mind map main topic
-  // alternates sides.
-  private calculatePosition(order: number, depth: number, siblingCount: number): PositionType {
-    if (this.currentLayout === 'tree') {
-      const horizontalSpacing = 220;
-      const verticalSpacing = 140;
-      const x = (depth + 1) * horizontalSpacing;
-      const offset = ((siblingCount - 1) / 2) * verticalSpacing;
-      const y = order * verticalSpacing - offset;
-
-      return { x, y };
-    }
+  private calculatePosition(order: number, _depth: number, _siblingCount: number): PositionType {
     return alternatingSidePosition(order);
   }
 
   private createMindmap(nameMap: string): Mindmap {
     const mindmap = new Mindmap(nameMap);
     mindmap.setTheme('prism');
-    mindmap.setLayout(this.currentLayout);
+    mindmap.setLayout('mindmap');
     return mindmap;
   }
 

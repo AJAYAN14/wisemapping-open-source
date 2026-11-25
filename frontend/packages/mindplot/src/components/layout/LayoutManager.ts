@@ -20,7 +20,6 @@ import EventDispispatcher from '../EventDispatcher';
 import type { RaphaelPaper } from './RootedTreeSet';
 import RootedTreeSet from './RootedTreeSet';
 import OriginalLayout from './OriginalLayout';
-import TreeLayout from './TreeLayout';
 import ChangeEvent from './ChangeEvent';
 import type SizeType from '../SizeType';
 import type Node from './Node';
@@ -58,8 +57,6 @@ class LayoutManager extends EventDispispatcher<LayoutManagerEvents> {
 
   private _mindmapLayout: OriginalLayout;
 
-  private _treeLayout: TreeLayout;
-
   private _layoutType: LayoutType;
 
   // The central topic: the root created with the manager. Floating topics are roots too.
@@ -76,15 +73,14 @@ class LayoutManager extends EventDispispatcher<LayoutManagerEvents> {
   // change it would move nothing (see needsLayout).
   private _changedSinceLayout = true;
 
-  constructor(rootNodeId: number, rootSize: SizeType, layoutType: LayoutType = 'mindmap') {
+  constructor(rootNodeId: number, rootSize: SizeType, _layoutType: LayoutType = 'mindmap') {
     super();
     $assert(typeof rootNodeId === 'number', 'rootNodeId can not be null');
     $assert(rootSize, 'rootSize can not be null');
 
     this._treeSet = new RootedTreeSet();
     this._mindmapLayout = new OriginalLayout(this._treeSet);
-    this._treeLayout = new TreeLayout(this._treeSet);
-    this._layoutType = layoutType;
+    this._layoutType = 'mindmap';
     this._rootNodeId = rootNodeId;
 
     const rootNode = this._getCurrentLayout().createNode(
@@ -98,8 +94,8 @@ class LayoutManager extends EventDispispatcher<LayoutManagerEvents> {
     this._eventsById = new Map();
   }
 
-  private _getCurrentLayout(): OriginalLayout | TreeLayout {
-    return this._layoutType === 'mindmap' ? this._mindmapLayout : this._treeLayout;
+  private _getCurrentLayout(): OriginalLayout {
+    return this._mindmapLayout;
   }
 
   updateNodeSize(id: number, size: SizeType): void {
@@ -281,22 +277,8 @@ class LayoutManager extends EventDispispatcher<LayoutManagerEvents> {
     return this;
   }
 
-  setLayoutType(layoutType: LayoutType): void {
-    if (this._layoutType !== layoutType) {
-      this._layoutType = layoutType;
-
-      // Migrate node ordering when switching layouts
-      if (layoutType === 'tree') {
-        // Switching to tree: fix ordering gaps from BalancedSorter
-        this._treeLayout.migrateFromLayout();
-      } else if (layoutType === 'mindmap') {
-        // Switching to mindmap: redistribute for balanced sorter
-        this._mindmapLayout.migrateFromLayout(this._rootNodeId);
-      }
-
-      // Trigger re-layout with new layout type
-      this.layout(true);
-    }
+  setLayoutType(_layoutType: LayoutType): void {
+    this._layoutType = 'mindmap';
   }
 
   getLayoutType(): LayoutType {

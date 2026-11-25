@@ -1203,41 +1203,6 @@ class Designer extends EventDispispatcher<DesignerEvents> {
     return this._mindmap!;
   }
 
-  changeLayout(layout: LayoutType): void {
-    this._actionDispatcher.changeLayout(layout);
-  }
-
-  /**
-   * Apply layout directly (internal use - no undo history)
-   * @param layout - Layout type
-   * @internal
-   */
-  applyLayout(layout: LayoutType): void {
-    const mindmap = this.getMindmap();
-    mindmap.setLayout(layout);
-
-    // Update layout manager
-    const layoutManager = this._eventBussDispatcher.getLayoutManager();
-    layoutManager.setLayoutType(layout);
-
-    // Update orientation on all topics
-    // The DragPivot reads orientation from topics when drawing connections
-    const orientation = layoutManager.getOrientation();
-    this.getModel()
-      .getTopics()
-      .forEach((topic) => {
-        topic.setOrientation(orientation);
-      });
-
-    // Reset this designer's DragPivot to clear any stale connection state (none when read-only)
-    this._dragManager?.getDragPivot().reset();
-
-    // Redraw all topics immediately (no queue rendering during editing). Each topic is
-    // redrawn once, parents before children: redrawing every topic with its subtree
-    // redrew each one once per ancestor.
-    this.redrawAllTopics();
-  }
-
   /**
    * Redraws every topic once, floating ones included, parents first, with the current theme
    * variant. It lays nothing out.

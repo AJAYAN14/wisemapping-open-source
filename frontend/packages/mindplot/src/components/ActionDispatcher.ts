@@ -32,7 +32,6 @@ import type FeatureType from './model/FeatureType';
 import type { TopicShapeType } from './model/INodeModel';
 import type { LineType } from './ConnectionLine';
 import type ThemeType from './model/ThemeType';
-import type { LayoutType } from './layout/LayoutType';
 
 /** The events of the ActionDispatcher: 'modelUpdate' after every command, undo or redo. */
 type ActionDispatcherEvents = { modelUpdate: ModelUpdateEvent };
@@ -79,7 +78,6 @@ export interface ActionDispatcherCommands {
   changeRelationshipStartArrow: (relationships: Relationship[], value: boolean) => void;
   changeCanvasStyle: (style: CanvasStyleType | undefined) => void;
   changeTheme: (themeType: ThemeType) => void;
-  changeLayout: (layoutType: LayoutType) => void;
   shrinkBranch: (topicsIds: number[], collapse: boolean) => void;
   addFeatureToTopic: (
     topicIds: number[],
