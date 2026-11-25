@@ -47,6 +47,8 @@ export interface ImportProgressDialogProps {
   skippedCount?: number;
   onClose: () => void;
   onRetry?: () => void;
+  onOpenMap?: () => void;
+  onImportMore?: () => void;
 }
 
 const STAGE_TITLES: Record<ImportStage, string> = {
@@ -61,7 +63,7 @@ const STAGE_DESCRIPTIONS: Record<ImportStage, string> = {
   reading: '正在校验并载入本地思维导图数据',
   parsing: '正在提取主题分支、关联关系与图文素材',
   saving: '正在存入云端数据库并准备画布',
-  success: '数据已安全同步，即将进入编辑界面',
+  success: '导图已安全同步到云端，请选择下一步操作',
   error: '导入过程中遇到问题，请检查文件格式后重试',
 };
 
@@ -80,6 +82,8 @@ export const ImportProgressDialog: React.FC<ImportProgressDialogProps> = ({
   skippedCount = 0,
   onClose,
   onRetry,
+  onOpenMap,
+  onImportMore,
 }) => {
   const theme = useTheme();
   const isDark = isDarkTheme(theme);
@@ -121,14 +125,16 @@ export const ImportProgressDialog: React.FC<ImportProgressDialogProps> = ({
 
   const displayPath = currentPath || fileName;
 
+  const canDismiss = isError || isSuccess;
+
   return (
     <Dialog
       open={open}
       onClose={(_event, reason) => {
-        if (!isError && reason === 'escapeKeyDown') {
+        if (!canDismiss && reason === 'escapeKeyDown') {
           return;
         }
-        if (isError) {
+        if (canDismiss) {
           onClose();
         }
       }}
@@ -375,32 +381,138 @@ export const ImportProgressDialog: React.FC<ImportProgressDialogProps> = ({
           </Box>
         )}
 
+        {/* Single File Success Actions: ask user whether to open, stay, or import more */}
+        {!isBatch && isSuccess && (
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '100%', mt: 2 }}>
+            <Box sx={{ display: 'flex', gap: 1.5, width: '100%' }}>
+              <Button
+                fullWidth
+                variant="outlined"
+                onClick={onClose}
+                sx={{
+                  ...applePressMixin,
+                  borderRadius: '11px',
+                  borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.12)',
+                  color: colors.textPrimary,
+                  fontFamily: APPLE_FONT_STACK,
+                  fontSize: '13.5px',
+                  fontWeight: 600,
+                  textTransform: 'none',
+                  py: 0.9,
+                  '&:hover': {
+                    borderColor: colors.textSecondary,
+                    background: colors.hoverFill,
+                  },
+                }}
+              >
+                留在列表
+              </Button>
+              {onOpenMap && (
+                <Button
+                  fullWidth
+                  variant="contained"
+                  onClick={onOpenMap}
+                  sx={{
+                    ...applePressMixin,
+                    borderRadius: '11px',
+                    background: colors.textPrimary,
+                    color: colors.surface,
+                    fontFamily: APPLE_FONT_STACK,
+                    fontSize: '13.5px',
+                    fontWeight: 600,
+                    textTransform: 'none',
+                    py: 0.9,
+                    boxShadow: 'none',
+                    '&:hover': {
+                      background: colors.textPrimary,
+                      opacity: 0.92,
+                    },
+                  }}
+                >
+                  打开导图
+                </Button>
+              )}
+            </Box>
+            {onImportMore && (
+              <Button
+                size="small"
+                variant="text"
+                onClick={onImportMore}
+                sx={{
+                  ...applePressMixin,
+                  alignSelf: 'center',
+                  borderRadius: '8px',
+                  color: colors.textSecondary,
+                  fontFamily: APPLE_FONT_STACK,
+                  fontSize: '12.5px',
+                  fontWeight: 500,
+                  textTransform: 'none',
+                  px: 1.5,
+                  py: 0.4,
+                  '&:hover': {
+                    color: colors.textPrimary,
+                    background: colors.hoverFill,
+                  },
+                }}
+              >
+                继续导入其他文件
+              </Button>
+            )}
+          </Box>
+        )}
+
         {/* Batch Success Action */}
         {isBatch && isSuccess && (
-          <Box sx={{ display: 'flex', width: '100%', mt: 2.2 }}>
-            <Button
-              fullWidth
-              variant="contained"
-              onClick={onClose}
-              sx={{
-                ...applePressMixin,
-                borderRadius: '11px',
-                background: colors.textPrimary,
-                color: colors.surface,
-                fontFamily: APPLE_FONT_STACK,
-                fontSize: '13.5px',
-                fontWeight: 600,
-                textTransform: 'none',
-                py: 0.9,
-                boxShadow: 'none',
-                '&:hover': {
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, width: '100%', mt: 2 }}>
+            <Box sx={{ display: 'flex', gap: 1.5, width: '100%' }}>
+              {onImportMore && (
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  onClick={onImportMore}
+                  sx={{
+                    ...applePressMixin,
+                    borderRadius: '11px',
+                    borderColor: isDark ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.12)',
+                    color: colors.textPrimary,
+                    fontFamily: APPLE_FONT_STACK,
+                    fontSize: '13.5px',
+                    fontWeight: 600,
+                    textTransform: 'none',
+                    py: 0.9,
+                    '&:hover': {
+                      borderColor: colors.textSecondary,
+                      background: colors.hoverFill,
+                    },
+                  }}
+                >
+                  继续导入
+                </Button>
+              )}
+              <Button
+                fullWidth
+                variant="contained"
+                onClick={onClose}
+                sx={{
+                  ...applePressMixin,
+                  borderRadius: '11px',
                   background: colors.textPrimary,
-                  opacity: 0.92,
-                },
-              }}
-            >
-              完成
-            </Button>
+                  color: colors.surface,
+                  fontFamily: APPLE_FONT_STACK,
+                  fontSize: '13.5px',
+                  fontWeight: 600,
+                  textTransform: 'none',
+                  py: 0.9,
+                  boxShadow: 'none',
+                  '&:hover': {
+                    background: colors.textPrimary,
+                    opacity: 0.92,
+                  },
+                }}
+              >
+                留在列表
+              </Button>
+            </Box>
           </Box>
         )}
 

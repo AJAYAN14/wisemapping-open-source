@@ -107,6 +107,7 @@ const MapsPage = (): ReactElement => {
     error?: string | null;
     progress?: number;
     detailText?: string;
+    createdMapId?: number;
     isBatch?: boolean;
     totalCount?: number;
     currentCount?: number;
@@ -170,6 +171,7 @@ const MapsPage = (): ReactElement => {
         stage: 'reading',
         progress: 15,
         detailText: '正在读取本地文件内容...',
+        createdMapId: undefined,
         isBatch: false,
         error: null,
       });
@@ -241,16 +243,15 @@ const MapsPage = (): ReactElement => {
           folderPath: '',
         });
 
+        void queryClient.invalidateQueries({ queryKey: ['maps'] });
+
         setImportState((prev) => ({
           ...prev,
           stage: 'success',
           progress: 100,
-          detailText: '导图已就绪，即将进入编辑界面...',
+          createdMapId: mapId,
+          detailText: '导图已存入云端，你可以立即打开编辑或留在列表继续其他操作。',
         }));
-
-        setTimeout(() => {
-          window.location.href = `/c/maps/${mapId}/edit`;
-        }, 450);
       } catch (err) {
         console.error('Import failed', err);
         setImportState((prev) => ({
@@ -752,6 +753,17 @@ const MapsPage = (): ReactElement => {
         successCount={importState.successCount}
         skippedCount={importState.skippedCount}
         onClose={() => setImportState((prev) => ({ ...prev, open: false }))}
+        onOpenMap={
+          importState.createdMapId
+            ? () => {
+                window.location.href = `/c/maps/${importState.createdMapId}/edit`;
+              }
+            : undefined
+        }
+        onImportMore={() => {
+          setImportState((prev) => ({ ...prev, open: false }));
+          fileInputRef.current?.click();
+        }}
         onRetry={() => {
           setImportState((prev) => ({ ...prev, open: false }));
           fileInputRef.current?.click();
