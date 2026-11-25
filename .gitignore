@@ -5,10 +5,11 @@
 .env.*.local
 !.env.example
 
-# Root Node / TypeScript / Netlify / Test artifacts
+# Root Node / TypeScript / Netlify / Vercel / Test artifacts
 node_modules/
 dist/
 .netlify/
+.vercel/
 coverage/
 test-output/
 *.tsbuildinfo

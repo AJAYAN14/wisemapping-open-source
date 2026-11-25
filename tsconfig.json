@@ -18,6 +18,7 @@
     "baseUrl": "."
   },
   "include": [
+    "api/**/*.ts",
     "netlify/functions/**/*.ts",
     "tests/**/*.ts",
     "vitest.config.ts"

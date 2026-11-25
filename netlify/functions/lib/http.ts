@@ -84,7 +84,11 @@ export function resolveOrigin(req: Request): string {
   const envUrl =
     process.env.URL?.trim() ||
     process.env.DEPLOY_PRIME_URL?.trim() ||
-    process.env.APP_ORIGIN?.trim();
+    process.env.APP_ORIGIN?.trim() ||
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim()
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL.trim()}`
+      : undefined) ||
+    (process.env.VERCEL_URL?.trim() ? `https://${process.env.VERCEL_URL.trim()}` : undefined);
   if (envUrl) {
     return envUrl.replace(/\/+$/, '');
   }

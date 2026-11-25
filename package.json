@@ -5,7 +5,7 @@
   "type": "module",
   "description": "WiseMapping Personal Private Edition (Netlify Functions + Supabase)",
   "engines": {
-    "node": ">=20.14.0"
+    "node": "24.x"
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
