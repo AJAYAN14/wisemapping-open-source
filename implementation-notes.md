@@ -71,6 +71,9 @@
     - **Pure-TS Importer Import**: Switched `handleDirectFileImport` in `maps-page/index.tsx` from dynamic `import('@wisemapping/editor')` to `import('@wisemapping/mindplot/src/components/import/TextImporterFactory')` to avoid loading the React editor barrel inside the map list page.
     - **MockClient Local Persistence & Dayjs Chinese Normalization**: Persisted imported/created mock maps & XML in `localStorage` so imported maps render with their real nodes and title in local mock preview; normalized `zh` -> `zh-cn` in `dates.ts`.
     - **ErrorPage Sanitization**: Removed `support@wisemapping.com`, commercial site-policy/administrator contact copy, and reCAPTCHA error tagging from `frontend/packages/webapp/src/components/error-page/index.tsx`.
+13. **Single Mindmap Layout Only (Removed Tree Layout & Selector Dialog)**
+    - Removed the layout selector toolbar button from `frontend/packages/editor/src/components/app-bar/index.tsx` and deleted `frontend/packages/editor/src/components/action-widget/pane/layout-selector/index.tsx`.
+    - Updated `XMindImporter` (`frontend/packages/mindplot/src/components/import/XMindImporter.ts`) to always normalize imported structures to `'mindmap'` layout since Tree layout selection is removed.
 
 ---
 

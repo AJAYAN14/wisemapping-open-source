@@ -435,7 +435,7 @@ class XMindImporter extends Importer {
 
     const treeIndicators = ['org-chart', 'tree', 'timeline', 'logic', 'fishbone', 'matrix'];
     if (treeIndicators.some((indicator) => normalized.includes(indicator))) {
-      return 'tree';
+      return 'mindmap';
     }
 
     const mindmapIndicators = ['map', 'mindmap'];
