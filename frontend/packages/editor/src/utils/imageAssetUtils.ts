@@ -32,7 +32,7 @@ export const AVIF_CONVERTIBLE_TYPES = new Set<string>([
   'image/gif',
 ]);
 
-export const AVIF_CONVERT_MIN_BYTES = 150 * 1024;
+export const AVIF_CONVERT_MIN_BYTES = 50 * 1024;
 // Supabase Storage Free tier global ceiling (enforced only after AVIF transcoding).
 export const MAX_TOPIC_IMAGE_UPLOAD_BYTES = 50 * 1024 * 1024;
 
@@ -167,7 +167,7 @@ const validateTopicImageInput = (blob: Blob): string => {
 };
 
 /**
- * Converts GIFs (always -> static first frame) and PNG/JPEG/WebP >= 150 KB to
+ * Converts GIFs (always -> static first frame) and PNG/JPEG/WebP >= 50 KB to
  * visually-lossless AVIF without downscaling dimensions. Input size is uncapped prior
  * to transcoding; only the final output must fit within the 50 MB storage ceiling.
  * Throws strictly on any decode/encode failure rather than silently falling back.
@@ -220,7 +220,7 @@ export const convertBlobToAvifIfEligible = async (
 
 /**
  * Validates a topic image, calculates its compact card display size, and converts
- * GIF (static) or >= 150 KB static images to AVIF without resizing original dimensions.
+ * GIF (static) or >= 50 KB static images to AVIF without resizing original dimensions.
  */
 export const compressTopicImage = async (file: Blob): Promise<CompressedTopicImage> => {
   const mimeType = validateTopicImageInput(file);

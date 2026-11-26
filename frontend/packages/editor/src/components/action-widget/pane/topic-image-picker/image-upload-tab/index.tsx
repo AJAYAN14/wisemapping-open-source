@@ -210,7 +210,7 @@ const ImageUploadTab = ({
             <Typography variant="caption" color="text.secondary">
               <FormattedMessage
                 id="topic-image.paste-hint"
-                defaultMessage="支持选中节点后 Ctrl+V 粘贴截图 · ≥150 KB 或 GIF 自动转静态高画质 AVIF"
+                defaultMessage="支持选中节点后 Ctrl+V 粘贴截图 · ≥50 KB 或 GIF 自动转静态高画质 AVIF"
               />
             </Typography>
           </>

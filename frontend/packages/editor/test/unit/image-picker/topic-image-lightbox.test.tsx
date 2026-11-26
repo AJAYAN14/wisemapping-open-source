@@ -269,10 +269,10 @@ describe('TopicImageLightbox', () => {
     }
   });
 
-  it('skips < 150 KB static images, converts GIF to static AVIF, rejects SVG, and checks 50 MB ceiling post-transcode', async () => {
-    const smallBlob = new Blob([new Uint8Array(100 * 1024)], { type: 'image/png' });
+  it('skips < 50 KB static images, converts GIF to static AVIF, rejects SVG, and checks 50 MB ceiling post-transcode', async () => {
+    const smallBlob = new Blob([new Uint8Array(40 * 1024)], { type: 'image/png' });
     const smallGifBlob = new Blob([new Uint8Array(12 * 1024)], { type: 'image/gif' });
-    const largeBlob = new Blob([new Uint8Array(200 * 1024)], { type: 'image/png' });
+    const largeBlob = new Blob([new Uint8Array(80 * 1024)], { type: 'image/png' });
     const hugeInputBlob = {
       size: 60 * 1024 * 1024,
       type: 'image/png',
@@ -313,7 +313,7 @@ describe('TopicImageLightbox', () => {
       return el;
     }) as typeof document.createElement);
 
-    let nextAvifBytes = new Uint8Array(40 * 1024);
+    let nextAvifBytes = new Uint8Array(20 * 1024);
     let nextWorkerError: string | undefined;
     let triggerWorkerCrash = false;
 
@@ -349,17 +349,17 @@ describe('TopicImageLightbox', () => {
     globalThis.Worker = MockWorker as unknown as typeof Worker;
 
     try {
-      expect(AVIF_CONVERT_MIN_BYTES).toBe(150 * 1024);
+      expect(AVIF_CONVERT_MIN_BYTES).toBe(50 * 1024);
       expect(MAX_TOPIC_IMAGE_UPLOAD_BYTES).toBe(50 * 1024 * 1024);
       expect(isAvifConvertibleMime('image/jpg')).toBe(true);
       expect(isAvifConvertibleMime('image/gif')).toBe(true);
       expect(isAvifConvertibleMime('image/svg+xml')).toBe(false);
       expect(shouldConvertBlobToAvif('image/gif', 1024)).toBe(true);
-      expect(shouldConvertBlobToAvif('image/png', 100 * 1024)).toBe(false);
+      expect(shouldConvertBlobToAvif('image/png', 40 * 1024)).toBe(false);
       expect(replaceFilenameExtension('screenshot.png', 'avif')).toBe('screenshot.avif');
       expect(replaceFilenameExtension(undefined, 'avif', 'pasted')).toBe('pasted.avif');
 
-      // 1. Small PNG (< 150 KB) stays untouched
+      // 1. Small PNG (< 50 KB) stays untouched
       const preparedSmall = await compressTopicImage(smallBlob);
       expect(preparedSmall.blob).toBe(smallBlob);
       expect(preparedSmall.mimeType).toBe('image/png');
@@ -370,25 +370,25 @@ describe('TopicImageLightbox', () => {
       await expect(compressTopicImage(svgBlob)).rejects.toThrow(/SVG/);
       await expect(convertBlobToAvifIfEligible(svgBlob)).rejects.toThrow(/SVG/);
 
-      // 3. GIF (even < 150 KB and even when static AVIF > GIF size) is always converted to static AVIF
+      // 3. GIF (even < 50 KB and even when static AVIF > GIF size) is always converted to static AVIF
       const preparedGif = await compressTopicImage(smallGifBlob);
       expect(preparedGif.mimeType).toBe('image/avif');
-      expect(preparedGif.blob.size).toBe(40 * 1024);
+      expect(preparedGif.blob.size).toBe(20 * 1024);
 
-      // 4. Large PNG (>= 150 KB) converts to AVIF when smaller
+      // 4. Large PNG (>= 50 KB) converts to AVIF when smaller
       const preparedLarge = await compressTopicImage(largeBlob);
       expect(preparedLarge.mimeType).toBe('image/avif');
-      expect(preparedLarge.blob.size).toBe(40 * 1024);
+      expect(preparedLarge.blob.size).toBe(20 * 1024);
       expect(preparedLarge.width).toBe(150);
       expect(preparedLarge.height).toBe(84);
 
       // 5. Over-20MB (even 60MB) input is NOT blocked upfront if AVIF output fits within 50 MB
       const preparedHuge = await compressTopicImage(hugeInputBlob);
       expect(preparedHuge.mimeType).toBe('image/avif');
-      expect(preparedHuge.blob.size).toBe(40 * 1024);
+      expect(preparedHuge.blob.size).toBe(20 * 1024);
 
       // 6. If AVIF output is larger or equal (for non-GIF), keep original blob
-      nextAvifBytes = new Uint8Array(220 * 1024);
+      nextAvifBytes = new Uint8Array(100 * 1024);
       const keptOriginal = await convertBlobToAvifIfEligible(largeBlob);
       expect(keptOriginal.converted).toBe(false);
       expect(keptOriginal.blob).toBe(largeBlob);
@@ -406,7 +406,7 @@ describe('TopicImageLightbox', () => {
       ).rejects.toThrow(/AVIF 转码工作线程异常/);
       triggerWorkerCrash = false;
 
-      // 9. Missing Worker rejects strictly for >= 150 KB images
+      // 9. Missing Worker rejects strictly for >= 50 KB images
       resetAvifWorkerForTests();
       Object.defineProperty(globalThis, 'Worker', {
         value: undefined,

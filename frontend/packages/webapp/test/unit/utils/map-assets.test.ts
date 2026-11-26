@@ -59,10 +59,10 @@ describe('mapAssets AVIF conversion & externalization', () => {
     globalThis.fetch = originalFetch;
   });
 
-  test('converts >= 150 KB inline images and small GIFs to static AVIF, abandons SVG, and uploads deduplicated assets', async () => {
+  test('converts >= 50 KB inline images and small GIFs to static AVIF, abandons SVG, and uploads deduplicated assets', async () => {
     const smallBytes = new Uint8Array(1024).fill(1);
     const smallGifBytes = new Uint8Array(2048).fill(4);
-    const largeBytes = new Uint8Array(180 * 1024).fill(2);
+    const largeBytes = new Uint8Array(80 * 1024).fill(2);
     const avifBytes = new Uint8Array(25 * 1024).fill(9);
 
     const convertSpy = jest
@@ -103,7 +103,7 @@ describe('mapAssets AVIF conversion & externalization', () => {
     const phases: ExternalizeImageProgress['phase'][] = [];
     const nextXml = await externalizeXmlInlineImages(xml, client, (p) => phases.push(p.phase));
 
-    // Unique >= 150 KB PNG + small GIF converted; SVG abandoned without uploading
+    // Unique >= 50 KB PNG + small GIF converted; SVG abandoned without uploading
     expect(convertSpy).toHaveBeenCalledTimes(2);
     expect(requestedItems).toHaveLength(2);
     expect(requestedItems.map((i) => i.mimeType)).toEqual(['image/png', 'image/avif']);
@@ -143,8 +143,8 @@ describe('mapAssets AVIF conversion & externalization', () => {
     expect(client.requestAssetUploadUrls).not.toHaveBeenCalled();
   });
 
-  test('aborts import strictly when AVIF conversion fails for a >= 150 KB inline image', async () => {
-    const largeBytes = new Uint8Array(180 * 1024).fill(3);
+  test('aborts import strictly when AVIF conversion fails for a >= 50 KB inline image', async () => {
+    const largeBytes = new Uint8Array(80 * 1024).fill(3);
     jest
       .spyOn(imageAssetUtils, 'convertBlobToAvifIfEligible')
       .mockRejectedValue(new Error('AVIF 图片转码失败: decode error'));

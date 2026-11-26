@@ -974,7 +974,7 @@
   "topic-image.paste-hint": [
     {
       "type": 0,
-      "value": "支持选中节点后 Ctrl+V 粘贴截图 · ≥150 KB 或 GIF 自动转静态高画质 AVIF"
+      "value": "支持选中节点后 Ctrl+V 粘贴截图 · ≥50 KB 或 GIF 自动转静态高画质 AVIF"
     }
   ],
   "topic-image.remove": [

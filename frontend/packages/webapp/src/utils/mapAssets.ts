@@ -171,7 +171,7 @@ export const uploadBlobToMapAssets = async (
 
 /**
  * Extracts inline `data:image/...` attributes from an imported mindmap XML string,
- * abandons inline SVG images without uploading, converts GIFs (static) and >= 150 KB
+ * abandons inline SVG images without uploading, converts GIFs (static) and >= 50 KB
  * raster images to AVIF, uploads unique blobs directly to Supabase Storage (`map-assets`),
  * and rewrites the XML attributes to CDN URLs.
  */
