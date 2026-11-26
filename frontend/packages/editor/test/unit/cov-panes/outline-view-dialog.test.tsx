@@ -274,8 +274,58 @@ describe('OutlineViewDialog', () => {
     renderPane(<OutlineViewDialog open onClose={onClose} mindmap={sampleMap()} />);
 
     const dialog = screen.getByRole('dialog');
-    fireEvent.click(within(dialog).getByTestId('CloseRoundedIcon').closest('button') as HTMLElement);
+    fireEvent.click(
+      within(dialog).getByTestId('CloseRoundedIcon').closest('button') as HTMLElement,
+    );
 
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('jumps to the clicked node or central topic and closes the dialog when onSelectNode is provided', () => {
+    const onClose = jest.fn();
+    const onSelectNode = jest.fn();
+    renderPane(
+      <OutlineViewDialog
+        open
+        onClose={onClose}
+        mindmap={sampleMap()}
+        onSelectNode={onSelectNode}
+      />,
+    );
+
+    // Expanding/collapsing or opening a feature popover does not jump or close.
+    fireEvent.click(toggleOf('Planning'));
+    fireEvent.click(screen.getByRole('button', { name: 'link' }));
+    expect(onSelectNode).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
+
+    // Dismiss the link popover so the dialog is no longer aria-hidden.
+    const linkPopover = screen.getByRole('link', { name: 'https://wisemapping.com' });
+    fireEvent.keyDown(linkPopover, { key: 'Escape' });
+
+    // Clicking a topic text button triggers jump + close.
+    fireEvent.click(screen.getByRole('button', { name: 'Research' }));
+    expect(onSelectNode).toHaveBeenCalledTimes(1);
+    expect(onSelectNode.mock.calls[0][0].getId()).toBe(5);
+    expect(onClose).toHaveBeenCalledTimes(1);
+
+    onSelectNode.mockClear();
+    onClose.mockClear();
+
+    // Clicking the row area (outside buttons) also triggers jump + close.
+    fireEvent.click(rowOf('Planning'));
+    expect(onSelectNode).toHaveBeenCalledTimes(1);
+    expect(onSelectNode.mock.calls[0][0].getId()).toBe(2);
+    expect(onClose).toHaveBeenCalledTimes(1);
+
+    onSelectNode.mockClear();
+    onClose.mockClear();
+
+    // Clicking the central topic heading button jumps to the central node while preserving heading role.
+    expect(screen.getByRole('heading', { name: 'Central' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Central' }));
+    expect(onSelectNode).toHaveBeenCalledTimes(1);
+    expect(onSelectNode.mock.calls[0][0].getId()).toBe(1);
     expect(onClose).toHaveBeenCalledTimes(1);
   });
 });

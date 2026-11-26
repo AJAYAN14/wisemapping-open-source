@@ -20,6 +20,7 @@ import {
   buildFindInMapConfig,
   buildOutlineViewConfig,
   useFindInMapShortcut,
+  useFindInMapState,
 } from '../visualization-toolbar/mapViewActions';
 import React, {
   ReactElement,
@@ -54,7 +55,6 @@ import ArrowBackIosNewRoundedIcon from '@mui/icons-material/ArrowBackIosNewRound
 import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined';
 import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined';
-import Typography from '@mui/material/Typography';
 import UndoAndRedo from '../action-widget/button/undo-and-redo';
 import LogoTextBlackSvg from '../../../images/logo-text-black.svg';
 import LogoTextOrangeSvg from '../../../images/logo-text-orange.svg';
@@ -67,6 +67,9 @@ import { $notify } from '@wisemapping/mindplot';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useTheme as useMuiTheme } from '@mui/material/styles';
 import { getFrostedGlassBar, appleFontStack, applePressMixin } from '../../theme/appleDesign';
+import { buildEditorPanelConfig } from '../editor-toolbar/configBuilder';
+import { useSelection } from '../../hooks/useSelection';
+import type { UploadTopicImageFn } from '../../hooks/useEditor';
 import debounce from 'lodash/debounce';
 
 interface AppBarProps {
@@ -75,11 +78,8 @@ interface AppBarProps {
   capability: Capability;
   onAction: (type: ToolbarActionType) => void;
   accountConfig?: React.ReactElement | undefined;
+  uploadTopicImage?: UploadTopicImageFn | undefined;
 }
-
-const appBarDivisor = {
-  render: () => <Typography component="div" sx={{ flexGrow: 1 }} />,
-};
 
 const AppBar = ({
   model,
@@ -87,6 +87,7 @@ const AppBar = ({
   capability,
   onAction,
   accountConfig,
+  uploadTopicImage,
 }: AppBarProps): ReactElement => {
   const [isStarred, setIsStarred] = useState<undefined | boolean>(undefined);
   const [isEditingTitle, setIsEditingTitle] = useState<boolean>(false);
@@ -94,7 +95,7 @@ const AppBar = ({
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [currentTitle, setCurrentTitle] = useState<string>(() => mapInfo.getTitle());
   const [overflowAnchor, setOverflowAnchor] = useState<HTMLElement | null>(null);
-  const [findInMapOpen, setFindInMapOpen] = useState<boolean>(false);
+  const findInMap = useFindInMapState(model);
   const canRename = !capability.isHidden('rename');
 
   // Another map: its title replaces the previous one. Adjusted while rendering, not in an effect,
@@ -143,8 +144,26 @@ const AppBar = ({
   const { mode, toggleMode } = useTheme();
   const muiTheme = useMuiTheme();
   const isCompactBar = useMediaQuery(muiTheme.breakpoints.down('md'), { noSsr: true });
+  const selection = useSelection(model);
 
-  useFindInMapShortcut(model, setFindInMapOpen, true);
+  useFindInMapShortcut(model, findInMap.setOpen, true);
+
+  const hasSelection = selection.topicCount > 0 || selection.relationshipCount > 0;
+  const showCenterFormatting =
+    !isCompactBar &&
+    !capability.isHidden('edition-toolbar') &&
+    Boolean(model) &&
+    selection.isMapLoaded &&
+    hasSelection;
+
+  const centerFormattingConfig = useMemo(() => {
+    if (!showCenterFormatting || !model) {
+      return [];
+    }
+    return buildEditorPanelConfig(model, intl, selection, uploadTopicImage).filter(
+      (item) => !(item.disabled && item.disabled()),
+    );
+  }, [intl, model, selection, showCenterFormatting, uploadTopicImage]);
 
   const handleStarredOnClick = () => {
     const newStatus = !isStarred;
@@ -325,7 +344,7 @@ const AppBar = ({
     };
   }, [capability, mapInfo]);
 
-  const config: (ActionConfig | undefined)[] = [
+  const leftConfig: (ActionConfig | undefined)[] = [
     {
       icon: <ArrowBackIosNewRoundedIcon sx={{ '&&': { fontSize: '17px' } }} />,
       tooltip: intl.formatMessage({
@@ -416,7 +435,9 @@ const AppBar = ({
       ),
       visible: !capability.isHidden('appbar-title'),
     },
-    appBarDivisor,
+  ];
+
+  const rightConfig: (ActionConfig | undefined)[] = [
     {
       render: () => (
         <UndoAndRedo
@@ -491,7 +512,7 @@ const AppBar = ({
       disabled: () => isStarred === undefined,
     },
     undefined,
-    buildFindInMapConfig(model, intl, { open: findInMapOpen, setOpen: setFindInMapOpen }),
+    buildFindInMapConfig(model, intl, findInMap),
     buildOutlineViewConfig(model, capability, intl),
     ...(!isCompactBar ? [undefined] : []),
     {
@@ -703,10 +724,43 @@ const AppBar = ({
         }}
       >
         <MaterialToolbar>
-          {config.map((c, i) => {
-            // eslint-disable-next-line @eslint-react/no-array-index-key -- a toolbar built once, never reordered
-            return <ToolbarMenuItem key={i} configuration={c} vertical={false} submenuVertical />;
-          })}
+          {leftConfig.map((c, i) => (
+            // eslint-disable-next-line @eslint-react/no-array-index-key -- fixed order
+            <ToolbarMenuItem key={`left-${i}`} configuration={c} vertical={false} submenuVertical />
+          ))}
+          <Box sx={{ flexGrow: 1 }} />
+          {centerFormattingConfig.length > 0 && (
+            <>
+              <Box
+                role="group"
+                aria-label={intl.formatMessage({
+                  id: 'appbar.context-formatting-group',
+                  defaultMessage: 'Topic formatting',
+                })}
+                data-testid="appbar-context-formatting"
+                sx={{ display: 'flex', alignItems: 'center', gap: '4px', flexShrink: 0 }}
+              >
+                {centerFormattingConfig.map((c) => (
+                  <ToolbarMenuItem
+                    key={c.tooltip ?? ''}
+                    configuration={c}
+                    vertical={false}
+                    submenuVertical
+                  />
+                ))}
+              </Box>
+              <Box sx={{ flexGrow: 1 }} />
+            </>
+          )}
+          {rightConfig.map((c, i) => (
+            <ToolbarMenuItem
+              // eslint-disable-next-line @eslint-react/no-array-index-key -- fixed order, independent from selection
+              key={`right-${i}`}
+              configuration={c}
+              vertical={false}
+              submenuVertical
+            />
+          ))}
         </MaterialToolbar>
       </MaterialAppBar>
     </>

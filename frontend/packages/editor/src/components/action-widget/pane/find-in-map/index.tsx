@@ -15,7 +15,7 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-import React, { ReactElement, useEffect, useMemo, useState } from 'react';
+import React, { ReactElement, useEffect, useMemo, useRef, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import TextField from '@mui/material/TextField';
 import InputAdornment from '@mui/material/InputAdornment';
@@ -23,9 +23,10 @@ import IconButton from '@mui/material/IconButton';
 import Box from '@mui/material/Box';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import ClearRoundedIcon from '@mui/icons-material/ClearRounded';
+import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import KeyboardArrowUpRoundedIcon from '@mui/icons-material/KeyboardArrowUpRounded';
 import KeyboardArrowDownRoundedIcon from '@mui/icons-material/KeyboardArrowDownRounded';
-import { Designer, DesignerKeyboard } from '@wisemapping/mindplot';
+import { Designer } from '@wisemapping/mindplot';
 import { collectSearchableNodes, filterSearchableNodes, SearchableNode } from './findInMapUtils';
 import {
   PanelContainer,
@@ -40,19 +41,56 @@ import {
 type FindInMapPanelProps = {
   designer: Designer;
   closeModal: () => void;
+  query?: string | undefined;
+  onQueryChange?: ((query: string) => void) | undefined;
+  activeIndex?: number | undefined;
+  onActiveIndexChange?: ((index: number) => void) | undefined;
 };
 
-const FindInMapPanel = ({ designer, closeModal }: FindInMapPanelProps): ReactElement => {
+const FindInMapPanel = ({
+  designer,
+  closeModal,
+  query: controlledQuery,
+  onQueryChange,
+  activeIndex: controlledActiveIndex,
+  onActiveIndexChange,
+}: FindInMapPanelProps): ReactElement => {
   const intl = useIntl();
-  const [query, setQuery] = useState('');
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [internalQuery, setInternalQuery] = useState('');
+  const [internalActiveIndex, setInternalActiveIndex] = useState(0);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+  const activeResultRef = useRef<HTMLDivElement | null>(null);
 
-  // The map's own keyboard shortcuts (delete, expand, zoom, ...) must not fire
-  // while the user is typing a search term.
+  const query = controlledQuery !== undefined ? controlledQuery : internalQuery;
+  const setQuery = onQueryChange ?? setInternalQuery;
+  const rawActiveIndex =
+    controlledActiveIndex !== undefined ? controlledActiveIndex : internalActiveIndex;
+  const setActiveIndex = onActiveIndexChange ?? setInternalActiveIndex;
+
+  // Focus the search field after the non-modal <dialog popover="manual"> opens into the top
+  // layer, and select any preserved query so typing replaces it or Enter steps through matches.
   useEffect(() => {
-    DesignerKeyboard.pause();
-    return () => DesignerKeyboard.resume();
+    const input = inputRef.current;
+    if (!input) {
+      return;
+    }
+    input.focus();
+    if (input.value) {
+      input.select();
+    }
   }, []);
+
+  // Allow Escape to dismiss the non-modal search panel even after the user pans or clicks zoom controls.
+  useEffect(() => {
+    const handleGlobalEscape = (event: KeyboardEvent): void => {
+      if (event.key === 'Escape') {
+        event.stopPropagation();
+        closeModal();
+      }
+    };
+    document.addEventListener('keydown', handleGlobalEscape);
+    return () => document.removeEventListener('keydown', handleGlobalEscape);
+  }, [closeModal]);
 
   const allNodes: SearchableNode[] = useMemo(
     () => collectSearchableNodes(designer.getModel().getCentralTopic()),
@@ -60,6 +98,15 @@ const FindInMapPanel = ({ designer, closeModal }: FindInMapPanelProps): ReactEle
   );
 
   const matches = useMemo(() => filterSearchableNodes(allNodes, query), [allNodes, query]);
+  const activeIndex =
+    matches.length > 0 ? Math.min(Math.max(0, rawActiveIndex), matches.length - 1) : 0;
+
+  useEffect(() => {
+    const activeEl = activeResultRef.current;
+    if (activeEl && typeof activeEl.scrollIntoView === 'function') {
+      activeEl.scrollIntoView({ block: 'nearest' });
+    }
+  }, [activeIndex, matches.length]);
 
   const navigateToMatch = (index: number, results: SearchableNode[] = matches): void => {
     const match = results[index];
@@ -81,11 +128,10 @@ const FindInMapPanel = ({ designer, closeModal }: FindInMapPanelProps): ReactEle
     navigateToMatch(0, filterSearchableNodes(allNodes, value));
   };
 
-  // Picking a result is a terminal action: jump to the node and get the panel
-  // out of the way, which also hands the map's keyboard shortcuts back.
+  // Clicking a match reveals it while keeping the search panel open so the user
+  // can zoom/pan around the map or continue stepping through other results.
   const selectMatch = (index: number): void => {
     navigateToMatch(index);
-    closeModal();
   };
 
   const goToOffset = (offset: number): void => {
@@ -96,6 +142,30 @@ const FindInMapPanel = ({ designer, closeModal }: FindInMapPanelProps): ReactEle
   };
 
   const handleKeyDown = (event: React.KeyboardEvent): void => {
+    if (event.nativeEvent.isComposing || event.keyCode === 229) {
+      return;
+    }
+
+    if (event.ctrlKey || event.metaKey) {
+      switch (event.key) {
+        case '=':
+        case '+':
+          event.preventDefault();
+          designer.zoomIn();
+          return;
+        case '-':
+          event.preventDefault();
+          designer.zoomOut();
+          return;
+        case '0':
+          event.preventDefault();
+          designer.zoomToFit();
+          return;
+        default:
+          break;
+      }
+    }
+
     switch (event.key) {
       case 'Escape':
         event.stopPropagation();
@@ -137,48 +207,66 @@ const FindInMapPanel = ({ designer, closeModal }: FindInMapPanelProps): ReactEle
     );
   };
 
+  const searchPlaceholder = intl.formatMessage({
+    id: 'find-in-map.placeholder',
+    defaultMessage: 'Find node...',
+  });
+
   return (
     <PanelContainer elevation={8} data-testid="find-in-map-panel">
-      <HeaderRow>
-        <TextField
-          autoFocus
-          fullWidth
-          size="small"
-          value={query}
-          onChange={(event) => changeQuery(event.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder={intl.formatMessage({
-            id: 'find-in-map.placeholder',
-            defaultMessage: 'Find node...',
-          })}
-          slotProps={{
-            input: {
-              startAdornment: (
-                <InputAdornment position="start">
-                  <SearchRoundedIcon fontSize="small" />
-                </InputAdornment>
-              ),
-              endAdornment: query ? (
-                <InputAdornment position="end">
-                  <IconButton
-                    size="small"
-                    onClick={() => changeQuery('')}
-                    aria-label={intl.formatMessage({
-                      id: 'find-in-map.clear',
-                      defaultMessage: 'Clear search',
-                    })}
-                  >
-                    <ClearRoundedIcon fontSize="small" />
-                  </IconButton>
-                </InputAdornment>
-              ) : undefined,
-            },
-          }}
-        />
-      </HeaderRow>
+      <Box role="search">
+        <HeaderRow>
+          <TextField
+            autoFocus
+            fullWidth
+            size="small"
+            inputRef={inputRef}
+            value={query}
+            onChange={(event) => changeQuery(event.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={searchPlaceholder}
+            slotProps={{
+              htmlInput: {
+                'aria-label': searchPlaceholder,
+              },
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchRoundedIcon fontSize="small" />
+                  </InputAdornment>
+                ),
+                endAdornment: query ? (
+                  <InputAdornment position="end">
+                    <IconButton
+                      size="small"
+                      onClick={() => changeQuery('')}
+                      aria-label={intl.formatMessage({
+                        id: 'find-in-map.clear',
+                        defaultMessage: 'Clear search',
+                      })}
+                    >
+                      <ClearRoundedIcon fontSize="small" />
+                    </IconButton>
+                  </InputAdornment>
+                ) : undefined,
+              },
+            }}
+          />
+          <IconButton
+            size="small"
+            onClick={closeModal}
+            aria-label={intl.formatMessage({
+              id: 'common.close',
+              defaultMessage: 'Close',
+            })}
+          >
+            <CloseRoundedIcon fontSize="small" />
+          </IconButton>
+        </HeaderRow>
+      </Box>
       {hasQuery && (
         <HeaderRow sx={{ justifyContent: 'space-between', mt: 0.5 }}>
-          <MatchCounter data-testid="find-in-map-counter">
+          <MatchCounter data-testid="find-in-map-counter" aria-live="polite">
             {hasMatches
               ? intl.formatMessage(
                   { id: 'find-in-map.match-counter', defaultMessage: '{current} of {total}' },
@@ -218,6 +306,7 @@ const FindInMapPanel = ({ designer, closeModal }: FindInMapPanelProps): ReactEle
             matches.map((match, index) => (
               <ResultItem
                 key={match.id}
+                ref={index === activeIndex ? activeResultRef : undefined}
                 active={index === activeIndex}
                 onClick={() => selectMatch(index)}
                 title={match.text}

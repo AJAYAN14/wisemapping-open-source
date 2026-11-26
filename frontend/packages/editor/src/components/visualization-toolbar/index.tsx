@@ -52,6 +52,7 @@ import {
   buildOutlineViewConfig,
   FindInMapState,
   useFindInMapShortcut,
+  useFindInMapState,
 } from './mapViewActions';
 
 // Helper function to check if any nodes are currently collapsed
@@ -123,8 +124,7 @@ export function buildVisualizationToolbarConfig(
     try {
       const designerModel = model.getDesigner()?.getModel?.();
       const central = designerModel?.getCentralTopic?.() as
-        | { isOnFocus?: () => boolean }
-        | undefined;
+        { isOnFocus?: () => boolean } | undefined;
       if (central && typeof central.isOnFocus === 'function') {
         return central.isOnFocus();
       }
@@ -199,9 +199,7 @@ export function buildVisualizationToolbarConfig(
               model.getDesigner().createSiblingForSelectedNode();
             },
             disabled: () =>
-              !model?.isMapLoadded() ||
-              getSelectedTopicCount() !== 1 ||
-              getIsCentralSelected(),
+              !model?.isMapLoadded() || getSelectedTopicCount() !== 1 || getIsCentralSelected(),
           } as ActionConfig,
           {
             icon: <AddChildTopicIcon />,
@@ -323,7 +321,7 @@ const VisualizationToolbar = ({
 }: VisualizationToolbarProps): ReactElement => {
   const intl = useIntl();
   const [expandLevel, setExpandLevel] = useState(0);
-  const [findInMapOpen, setFindInMapOpen] = useState(false);
+  const findInMap = useFindInMapState(model);
   const { mode, toggleMode } = useTheme();
   const selection = useSelection(model);
 
@@ -353,15 +351,14 @@ const VisualizationToolbar = ({
       if (!model?.isMapLoadded()) return false;
       const designerModel = model.getDesignerModel?.();
       const central = designerModel?.getCentralTopic?.() as
-        | { isOnFocus?: () => boolean }
-        | undefined;
+        { isOnFocus?: () => boolean } | undefined;
       return Boolean(central?.isOnFocus?.());
     } catch {
       return false;
     }
   });
 
-  useFindInMapShortcut(model, setFindInMapOpen, !hasAppBar);
+  useFindInMapShortcut(model, findInMap.setOpen, !hasAppBar);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -417,7 +414,7 @@ const VisualizationToolbar = ({
         setExpandLevel,
         mode,
         toggleMode,
-        { open: findInMapOpen, setOpen: setFindInMapOpen },
+        findInMap,
         hasAppBar,
         selection,
         isCentralFocused,
@@ -429,25 +426,19 @@ const VisualizationToolbar = ({
       expandLevel,
       mode,
       toggleMode,
-      findInMapOpen,
+      findInMap,
       hasAppBar,
       selection,
       isCentralFocused,
     ],
   );
 
-  // Check if we're in public or embedded view
-  const isPublicOrEmbedded =
-    capability.mode === 'viewonly-public' || capability.mode === 'viewonly-private';
-
   return (
     <Toolbar
       configurations={config}
       position={{
         position: {
-          right: isPublicOrEmbedded
-            ? EDITOR_LAYOUT.zoomToolbar.rightCompact
-            : EDITOR_LAYOUT.zoomToolbar.right,
+          right: EDITOR_LAYOUT.zoomToolbar.rightCompact,
           bottom: EDITOR_LAYOUT.zoomToolbar.bottom,
         },
         vertical: false,

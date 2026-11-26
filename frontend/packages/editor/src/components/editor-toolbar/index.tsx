@@ -28,13 +28,14 @@ import Toolbar from '../toolbar';
 import { buildEditorPanelConfig } from './configBuilder';
 import { useSelection } from '../../hooks/useSelection';
 import type { UploadTopicImageFn } from '../../hooks/useEditor';
-import { EDITOR_LAYOUT, EDITOR_Z_INDEX } from '../../theme/layout';
+import { EDITOR_Z_INDEX } from '../../theme/layout';
 import ToolbarPosition from '../../classes/model/toolbar-position';
 
 type EditorToolbarProps = {
   model: Model | undefined;
   capability: Capability;
   uploadTopicImage?: UploadTopicImageFn | undefined;
+  hasAppBar?: boolean | undefined;
 };
 
 const MOBILE_CONTEXT_DOCK_POSITION: ToolbarPosition = {
@@ -51,27 +52,29 @@ const EditorToolbar = ({
   model,
   capability,
   uploadTopicImage,
+  hasAppBar = true,
 }: EditorToolbarProps): ReactElement => {
   const intl = useIntl();
   const theme = useTheme();
-  const isCompactViewport = useMediaQuery(theme.breakpoints.down('sm'), { noSsr: true });
+  const isCompactViewport = useMediaQuery(theme.breakpoints.down('md'), { noSsr: true });
   const selection = useSelection(model);
 
   const config = useMemo(() => {
     if (capability.isHidden('edition-toolbar') || !model || !selection.isMapLoaded) {
       return undefined;
     }
-    const baseConfig = buildEditorPanelConfig(model, intl, selection, uploadTopicImage);
-    if (!isCompactViewport) {
-      return baseConfig;
+    // On desktop when AppBar is present, contextual formatting actions live in the center of AppBar.
+    if (hasAppBar && !isCompactViewport) {
+      return undefined;
     }
 
     const hasSelection = selection.topicCount > 0 || selection.relationshipCount > 0;
     if (!hasSelection) {
-      // Keep mobile viewport unobstructed when nothing is selected.
+      // Keep viewport unobstructed when nothing is selected.
       return undefined;
     }
 
+    const baseConfig = buildEditorPanelConfig(model, intl, selection, uploadTopicImage);
     const enabledActions = baseConfig.filter((item) => !(item.disabled && item.disabled()));
     const contextActions: (ActionConfig | undefined)[] = [];
 
@@ -122,20 +125,12 @@ const EditorToolbar = ({
     }
 
     return contextActions;
-  }, [capability, intl, isCompactViewport, model, selection, uploadTopicImage]);
+  }, [capability, hasAppBar, intl, isCompactViewport, model, selection, uploadTopicImage]);
 
-  const position = isCompactViewport
-    ? MOBILE_CONTEXT_DOCK_POSITION
-    : {
-        vertical: true,
-        position: {
-          right: EDITOR_LAYOUT.formattingToolbar.right,
-          top: EDITOR_LAYOUT.formattingToolbar.top,
-        },
-        zIndex: EDITOR_Z_INDEX.formattingToolbar,
-        canvasInset: 'right' as const,
-      };
-
-  return <span>{config ? <Toolbar configurations={config} position={position} /> : <></>}</span>;
+  return (
+    <span>
+      {config ? <Toolbar configurations={config} position={MOBILE_CONTEXT_DOCK_POSITION} /> : <></>}
+    </span>
+  );
 };
 export default EditorToolbar;

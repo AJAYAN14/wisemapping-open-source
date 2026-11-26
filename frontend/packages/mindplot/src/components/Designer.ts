@@ -294,8 +294,8 @@ class Designer extends EventDispispatcher<DesignerEvents> {
 
   private _registerWheelEvents(): void {
     this._wheelListener = (event: WheelEvent) => {
-      // Avoid managing wheel events if mindplot kb shortcuts are disabled.
-      if (DesignerKeyboard.isDisabled()) return;
+      // Avoid managing wheel events while a modal dialog explicitly paused keyboard/canvas input.
+      if (DesignerKeyboard.isPaused()) return;
 
       // Mouse wheel (and Ctrl/Meta/Alt + wheel or trackpad pinch) directly zooms in/out
       // anchored at the current cursor position instead of scrolling the canvas vertically.

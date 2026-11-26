@@ -250,6 +250,7 @@ const EditorContent = ({
               capability={capability}
               onAction={onAction}
               accountConfig={accountConfiguration}
+              uploadTopicImage={options.uploadTopicImage}
             />
           )}
 
@@ -261,6 +262,7 @@ const EditorContent = ({
                 model={model}
                 capability={capability}
                 uploadTopicImage={options.uploadTopicImage}
+                hasAppBar={Boolean(options.enableAppBar)}
               />
               <VisualizationToolbar
                 model={model}

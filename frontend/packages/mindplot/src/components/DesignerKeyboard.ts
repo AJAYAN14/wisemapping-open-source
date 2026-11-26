@@ -292,6 +292,7 @@ class DesignerKeyboard extends Keyboard {
       if (
         !this.isActive() ||
         DesignerKeyboard.isDisabled() ||
+        KeyboardManager.isTypingInInputField() ||
         DesignerKeyboard.excludeFromEditor.includes((event as KeyboardEvent).code)
       ) {
         return;
@@ -792,6 +793,10 @@ class DesignerKeyboard extends Keyboard {
     if (this._pauseCount === 0) {
       this._outsideCanvas = false;
     }
+  }
+
+  static isPaused() {
+    return this._pauseCount > 0;
   }
 
   static isDisabled() {

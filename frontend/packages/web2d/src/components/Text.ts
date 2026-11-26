@@ -56,6 +56,14 @@ class Text extends WorkspaceElement<TextPeer> {
     return this.peer.getText();
   }
 
+  setMaxWidth(maxWidth: number | undefined): void {
+    this.peer.setMaxWidth(maxWidth);
+  }
+
+  getMaxWidth(): number | undefined {
+    return this.peer.getMaxWidth();
+  }
+
   /** Sets the font. An empty name, or a missing size, style or weight, keeps the current one. */
   setFont(font: string, size?: number, style?: FontStyleType, weight?: FontWeightType): void {
     this.peer.setFont(font, size, style, weight);

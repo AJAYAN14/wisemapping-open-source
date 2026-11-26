@@ -79,7 +79,7 @@ class EditorComponent extends EventDispatcher<EditorEvents> {
     const textareaElem = document.createElement('textarea');
     textareaElem.setAttribute('tabindex', '-1');
     textareaElem.setAttribute('value', '');
-    textareaElem.setAttribute('wrap', 'off');
+    textareaElem.setAttribute('wrap', 'soft');
     // Prevent browser extensions from interfering with this textarea
     textareaElem.setAttribute('autocomplete', 'off');
     textareaElem.setAttribute('data-lpignore', 'true'); // LastPass ignore
@@ -91,7 +91,9 @@ class EditorComponent extends EventDispatcher<EditorEvents> {
     textareaElem.style.resize = 'none';
     textareaElem.style.overflow = 'hidden';
     textareaElem.style.padding = '0px 0px 0px 0px';
-    textareaElem.style.lineHeight = '100%';
+    textareaElem.style.lineHeight = '1.2';
+    textareaElem.style.whiteSpace = 'pre-wrap';
+    textareaElem.style.overflowWrap = 'break-word';
     textareaElem.style.width = '100%';
 
     result.appendChild(textareaElem);
@@ -233,8 +235,12 @@ class EditorComponent extends EventDispatcher<EditorEvents> {
     this._containerElem.style.left = `${left}px`;
 
     const mindmapCompData = EditorComponent.anchorOf(this._topic)?.getBoundingClientRect();
-    const maxWidth = mindmapCompData ? mindmapCompData.width - left : 0;
-    this._containerElem.style.maxWidth = `${maxWidth}px`;
+    const availableWidth = mindmapCompData ? Math.max(0, mindmapCompData.width - left - 12) : 0;
+    const zoom = this._topic.getDesigner()?.getWorkSpace?.()?.getZoom?.() ?? 1;
+    const topicMaxPx = this._topic.getMaxTextWidth() / (zoom > 0 ? zoom : 1);
+    const maxWidth =
+      availableWidth > 0 ? Math.min(availableWidth, topicMaxPx) : topicMaxPx;
+    this._containerElem.style.maxWidth = `${Math.round(maxWidth)}px`;
   }
 
   private sizeToText(textValue: string): void {
@@ -246,8 +252,22 @@ class EditorComponent extends EventDispatcher<EditorEvents> {
     textElem.setAttribute('cols', maxLineLength.toString());
     textElem.setAttribute('rows', rows.toString());
 
+    const zoom = this._topic.getDesigner()?.getWorkSpace?.()?.getZoom?.() ?? 1;
+    const topicMaxPx = this._topic.getMaxTextWidth() / (zoom > 0 ? zoom : 1);
+    const containerRect = EditorComponent.anchorOf(this._topic)?.getBoundingClientRect();
+    const left = Number.parseFloat(this._containerElem.style.left || '0') || 0;
+    const availableWidth = containerRect ? Math.max(120, containerRect.width - left - 12) : topicMaxPx;
+    const maxEditorPx = Math.round(Math.min(topicMaxPx, availableWidth));
+
+    this._containerElem.style.maxWidth = `${maxEditorPx}px`;
     this._containerElem.style.width = `${maxLineLength + 2}em`;
     this._containerElem.style.height = '0';
+
+    // When text soft-wraps past maxWidth in a real browser, grow the textarea height to fit wrapped lines.
+    textElem.style.height = 'auto';
+    if (textElem.scrollHeight > 0) {
+      textElem.style.height = `${textElem.scrollHeight}px`;
+    }
   }
 
   private updateModel() {

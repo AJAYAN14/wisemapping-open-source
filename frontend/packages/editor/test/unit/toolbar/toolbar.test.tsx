@@ -224,6 +224,23 @@ describe('Editor Toolbar Submenu', () => {
 
     expect(screen.queryByRole('menu')).toBeFalsy();
   });
+
+  it('Renders a non-modal popover="manual" dialog without blocking backdrop when nonModal is true', () => {
+    const nonModalConfig: ActionConfig = {
+      icon: <ThreeDRotation />,
+      ariaLabel: 'Non-modal Search',
+      nonModal: true,
+      options: [withCloseSubmenuRender],
+    };
+    render(<ToolbarSubmenu configuration={nonModalConfig} vertical />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Non-modal Search' }));
+
+    const dialog = document.querySelector('dialog[popover="manual"]');
+    expect(dialog).not.toBeNull();
+    expect(document.querySelector('.MuiBackdrop-root')).toBeNull();
+    expect(screen.getByTestId('custom-render-div')).toBeTruthy();
+  });
 });
 
 describe('toolbar menu item', () => {

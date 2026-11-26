@@ -132,7 +132,7 @@ describe('Responsive EditorToolbar & Touch Submenu', () => {
   });
 
   it('hides EditorToolbar on narrow screens when nothing is selected', () => {
-    mockMatchMedia((q) => q.includes('max-width:599.95') || q.includes('max-width: 599.95'));
+    mockMatchMedia((q) => q.includes('max-width:899.95') || q.includes('max-width: 899.95'));
     const { model } = createEditorModel({ topicCount: 0, relationshipCount: 0 });
 
     render(
@@ -145,7 +145,7 @@ describe('Responsive EditorToolbar & Touch Submenu', () => {
   });
 
   it('renders a bottom horizontal context dock with Edit and Delete on narrow screens when a topic is selected', () => {
-    mockMatchMedia((q) => q.includes('max-width:599.95') || q.includes('max-width: 599.95'));
+    mockMatchMedia((q) => q.includes('max-width:899.95') || q.includes('max-width: 899.95'));
     const { model, designer } = createEditorModel({ topicCount: 1, centralOnly: false });
 
     render(
@@ -166,7 +166,7 @@ describe('Responsive EditorToolbar & Touch Submenu', () => {
   });
 
   it('omits the Delete action on narrow screens when only the central topic is selected', () => {
-    mockMatchMedia((q) => q.includes('max-width:599.95') || q.includes('max-width: 599.95'));
+    mockMatchMedia((q) => q.includes('max-width:899.95') || q.includes('max-width: 899.95'));
     const { model } = createEditorModel({ topicCount: 1, centralOnly: true });
 
     render(
@@ -179,9 +179,22 @@ describe('Responsive EditorToolbar & Touch Submenu', () => {
     expect(screen.queryByTestId('mobile-delete-topic-button')).not.toBeInTheDocument();
   });
 
-  it('renders the vertical right formatting toolbar on desktop screens', () => {
+  it('omits the vertical right formatting toolbar on desktop screens when AppBar is present', () => {
     mockMatchMedia(() => false);
-    const { model } = createEditorModel({ topicCount: 0 });
+    const { model } = createEditorModel({ topicCount: 1 });
+
+    render(
+      <Providers>
+        <EditorToolbar model={model} capability={new Capability('edition-owner', false)} />
+      </Providers>,
+    );
+
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
+  });
+
+  it('renders the horizontal bottom context dock on tablet/compact screens (< md) when a topic is selected', () => {
+    mockMatchMedia((q) => q.includes('max-width:899.95') || q.includes('max-width: 899.95'));
+    const { model } = createEditorModel({ topicCount: 1, centralOnly: false });
 
     render(
       <Providers>
@@ -190,7 +203,7 @@ describe('Responsive EditorToolbar & Touch Submenu', () => {
     );
 
     const menu = screen.getByRole('menu');
-    expect(menu).toHaveAttribute('aria-orientation', 'vertical');
-    expect(menu).toHaveAttribute('data-canvas-inset', 'right');
+    expect(menu).toHaveAttribute('aria-orientation', 'horizontal');
+    expect(menu).toHaveAttribute('data-canvas-inset', 'bottom');
   });
 });

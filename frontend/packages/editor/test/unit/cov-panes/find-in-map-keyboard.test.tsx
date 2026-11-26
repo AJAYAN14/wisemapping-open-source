@@ -44,18 +44,24 @@ const harness = () => {
     topic(4, 'Gamma node'),
   ]);
   const revealNode = jest.fn();
+  const zoomIn = jest.fn();
+  const zoomOut = jest.fn();
+  const zoomToFit = jest.fn();
   const designer = {
     getModel: () => ({
       getCentralTopic: () => central,
       findTopicById: (id: number) => (id === 4 ? undefined : topic(id, `topic ${id}`)),
     }),
     revealNode,
+    zoomIn,
+    zoomOut,
+    zoomToFit,
   } as unknown as Designer;
   const closeModal = jest.fn();
   renderPane(<FindInMapPanel designer={designer} closeModal={closeModal} />);
   const revealedIds = (): number[] =>
     revealNode.mock.calls.map(([revealed]) => (revealed as Topic).getId());
-  return { revealNode, revealedIds, closeModal };
+  return { revealNode, revealedIds, closeModal, zoomIn, zoomOut, zoomToFit };
 };
 
 const field = (): HTMLElement => screen.getByPlaceholderText('Find node...');
@@ -141,5 +147,122 @@ describe('FindInMapPanel keyboard and edge cases', () => {
     expect((field() as HTMLInputElement).value).toBe('');
     expect(screen.queryByTestId('find-in-map-results')).toBeNull();
     expect(screen.queryByTestId('find-in-map-counter')).toBeNull();
+  });
+
+  it('keeps the panel open when clicking a result item so the user can keep browsing and zooming', () => {
+    const { closeModal, revealedIds } = harness();
+    fireEvent.change(field(), { target: { value: 'node' } });
+
+    fireEvent.click(screen.getByTitle('Beta node'));
+
+    expect(revealedIds()).toEqual([2, 3]);
+    expect(closeModal).not.toHaveBeenCalled();
+  });
+
+  it('ignores Enter and arrow keys during IME composition', () => {
+    harness();
+    fireEvent.change(field(), { target: { value: 'node' } });
+    expect(counter()).toBe('1 of 3');
+
+    fireEvent.keyDown(field(), { key: 'Enter', isComposing: true });
+    fireEvent.keyDown(field(), { key: 'ArrowDown', keyCode: 229 });
+
+    expect(counter()).toBe('1 of 3');
+  });
+
+  it('supports Ctrl/Cmd zoom shortcuts while search is focused and closes via close button or global Escape', () => {
+    const { closeModal, zoomIn, zoomOut, zoomToFit } = harness();
+
+    key('=', { ctrlKey: true });
+    key('-', { metaKey: true });
+    key('0', { ctrlKey: true });
+
+    expect(zoomIn).toHaveBeenCalledTimes(1);
+    expect(zoomOut).toHaveBeenCalledTimes(1);
+    expect(zoomToFit).toHaveBeenCalledTimes(1);
+
+    fireEvent.click(screen.getByLabelText('Close'));
+    expect(closeModal).toHaveBeenCalledTimes(1);
+
+    fireEvent.keyDown(document.body, { key: 'Escape' });
+    expect(closeModal).toHaveBeenCalledTimes(2);
+  });
+
+  it('preserves controlled query and activeIndex across close/reopen and clamps out-of-range index', () => {
+    const central = topic(1, 'Central', [
+      topic(2, 'Alpha node'),
+      topic(3, 'Beta node'),
+      topic(4, 'Gamma node'),
+    ]);
+    const designer = {
+      getModel: () => ({
+        getCentralTopic: () => central,
+        findTopicById: (id: number) => topic(id, `topic ${id}`),
+      }),
+      revealNode: jest.fn(),
+      zoomIn: jest.fn(),
+      zoomOut: jest.fn(),
+      zoomToFit: jest.fn(),
+    } as unknown as Designer;
+
+    const onQueryChange = jest.fn();
+    const onActiveIndexChange = jest.fn();
+
+    const { unmount } = renderPane(
+      <FindInMapPanel
+        designer={designer}
+        closeModal={jest.fn()}
+        query="node"
+        onQueryChange={onQueryChange}
+        activeIndex={2}
+        onActiveIndexChange={onActiveIndexChange}
+      />,
+    );
+
+    const input = field() as HTMLInputElement;
+    expect(input.value).toBe('node');
+    expect(input.getAttribute('aria-label')).toBe('Find node...');
+    expect(document.activeElement).toBe(input);
+    expect(input.selectionStart).toBe(0);
+    expect(input.selectionEnd).toBe(4);
+    expect(screen.getByTestId('find-in-map-counter').getAttribute('aria-live')).toBe('polite');
+    expect(counter()).toBe('3 of 3');
+
+    unmount();
+
+    // Simulate a match being deleted while closed: activeIndex=5 should clamp to 2 of 2.
+    const shrunkCentral = topic(1, 'Central', [topic(2, 'Alpha node'), topic(3, 'Beta node')]);
+    const shrunkDesigner = {
+      ...designer,
+      getModel: () => ({
+        getCentralTopic: () => shrunkCentral,
+        findTopicById: (id: number) => topic(id, `topic ${id}`),
+      }),
+    } as unknown as Designer;
+
+    const scrollIntoView = jest.fn();
+    const origScrollIntoView = HTMLElement.prototype.scrollIntoView;
+    HTMLElement.prototype.scrollIntoView = scrollIntoView;
+    try {
+      renderPane(
+        <FindInMapPanel
+          designer={shrunkDesigner}
+          closeModal={jest.fn()}
+          query="node"
+          onQueryChange={onQueryChange}
+          activeIndex={5}
+          onActiveIndexChange={onActiveIndexChange}
+        />,
+      );
+
+      expect(counter()).toBe('2 of 2');
+      expect(scrollIntoView).toHaveBeenCalledWith({ block: 'nearest' });
+
+      // Stepping next from clamped index (1) wraps to 0.
+      key('Enter');
+      expect(onActiveIndexChange).toHaveBeenCalledWith(0);
+    } finally {
+      HTMLElement.prototype.scrollIntoView = origScrollIntoView;
+    }
   });
 });

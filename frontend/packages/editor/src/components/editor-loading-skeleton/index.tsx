@@ -25,7 +25,6 @@ import {
   ButtonSkeleton,
   CanvasSkeleton,
   CentralNodeSkeleton,
-  FormattingToolbarSkeleton,
   LeftNodes,
   LoadingContainer,
   RightNodes,
@@ -87,14 +86,6 @@ const EditorLoadingSkeleton: React.FC = () => {
           </RightNodes>
         </SideNodes>
       </CanvasSkeleton>
-
-      {/* Right Vertical Toolbar Skeleton */}
-      <FormattingToolbarSkeleton>
-        {[...Array(8)].map((_, i) => (
-          // eslint-disable-next-line @eslint-react/no-array-index-key -- identical placeholders
-          <ButtonSkeleton key={i} animation="wave" variant="rectangular" width={32} height={32} />
-        ))}
-      </FormattingToolbarSkeleton>
 
       {/* Bottom Visualization Toolbar Skeleton */}
       <ZoomToolbarSkeleton>

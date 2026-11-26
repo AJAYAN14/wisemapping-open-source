@@ -43,13 +43,15 @@ export const OutlineContainer = styled(Box)(({ theme }) => ({
 }));
 
 export const OutlineNode = styled(Box, {
-  shouldForwardProp: (prop) => prop !== 'level',
-})<{ level: number }>(({ theme, level }) => ({
+  shouldForwardProp: (prop) => prop !== 'level' && prop !== 'interactive',
+})<{ level: number; interactive?: boolean }>(({ theme, level, interactive }) => ({
   display: 'flex',
   alignItems: 'center',
   padding: `${theme.spacing(0.5)} 0`,
   paddingLeft: theme.spacing(level * 2),
   position: 'relative',
+  borderRadius: interactive ? '6px' : undefined,
+  cursor: interactive ? 'pointer' : undefined,
   '&:hover': {
     backgroundColor: theme.palette.action.hover,
   },
@@ -118,6 +120,54 @@ export const NodeText = styled(Typography, {
   fontSize: level === 0 ? '17px' : level === 1 ? '17px' : '15px',
   color: theme.palette.text.primary,
   lineHeight: 1.4,
+}));
+
+export const NodeTextButton = styled('button', {
+  shouldForwardProp: (prop) => prop !== 'level',
+})<{ level: number }>(({ theme, level }) => ({
+  appearance: 'none',
+  background: 'transparent',
+  border: 'none',
+  padding: 0,
+  margin: 0,
+  minHeight: '24px',
+  borderRadius: '4px',
+  cursor: 'pointer',
+  textAlign: 'left',
+  fontWeight: level === 0 ? 600 : 400,
+  display: 'inline-flex',
+  alignItems: 'center',
+  fontFamily: 'Figtree, Segoe UI, Helvetica, Arial, sans-serif',
+  fontSize: level === 0 ? '17px' : level === 1 ? '17px' : '15px',
+  color: theme.palette.text.primary,
+  lineHeight: 1.4,
+  '&:hover': {
+    color: theme.palette.primary.main,
+  },
+  '&:focus-visible': {
+    outline: `2px solid ${theme.palette.primary.main}`,
+    outlineOffset: '2px',
+  },
+}));
+
+export const CentralTitleButton = styled('button')(({ theme }) => ({
+  appearance: 'none',
+  background: 'transparent',
+  border: 'none',
+  padding: 0,
+  margin: 0,
+  borderRadius: '6px',
+  cursor: 'pointer',
+  textAlign: 'left',
+  font: 'inherit',
+  color: 'inherit',
+  '&:hover': {
+    color: theme.palette.primary.main,
+  },
+  '&:focus-visible': {
+    outline: `2px solid ${theme.palette.primary.main}`,
+    outlineOffset: '2px',
+  },
 }));
 
 export const VerticalLine = styled(Box, {

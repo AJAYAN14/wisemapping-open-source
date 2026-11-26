@@ -39,6 +39,7 @@ import {
   NodeIcon,
   FeatureIcon,
   NodeText,
+  NodeTextButton,
   VerticalLine,
   FloatingToolbar,
   NodeWrapper,
@@ -49,6 +50,7 @@ import {
   CloseButton,
   OutlineContentWrapper,
   CentralTopicTitle,
+  CentralTitleButton,
   EmptyMessage,
   ToolbarButton,
   TooltipContent,
@@ -62,12 +64,18 @@ interface OutlineViewDialogProps {
   open: boolean;
   onClose: () => void;
   mindmap?: Mindmap | undefined;
+  onSelectNode?: ((node: INodeModel) => void) | undefined;
 }
 
 // Create outline builder instance
 const outlineBuilder = new OutlineBuilder();
 
-const OutlineViewDialog = ({ open, onClose, mindmap }: OutlineViewDialogProps): ReactElement => {
+const OutlineViewDialog = ({
+  open,
+  onClose,
+  mindmap,
+  onSelectNode,
+}: OutlineViewDialogProps): ReactElement => {
   const intl = useIntl();
   const [outlineData, setOutlineData] = useState<OutlineNodeData[]>([]);
   const [centralTopicTitle, setCentralTopicTitle] = useState<string>('');
@@ -152,6 +160,18 @@ const OutlineViewDialog = ({ open, onClose, mindmap }: OutlineViewDialogProps): 
     setDialogType(undefined);
   };
 
+  const isInteractive = Boolean(onSelectNode);
+  const centralTopic = open ? mindmap?.getCentralTopic() : undefined;
+
+  const handleJumpToNode = (targetNode: INodeModel | undefined) => {
+    if (!onSelectNode || !targetNode) {
+      return;
+    }
+    handleCloseTooltip();
+    onSelectNode(targetNode);
+    onClose();
+  };
+
   const renderNode = (node: OutlineNodeData): ReactElement => {
     const hasChildren = node.children.length > 0;
     const showExpandButton = hasChildren;
@@ -161,11 +181,30 @@ const OutlineViewDialog = ({ open, onClose, mindmap }: OutlineViewDialogProps): 
         {node.level > 0 && (
           <VerticalLine level={node.level} hasChildren={hasChildren && node.isExpanded} />
         )}
-        <OutlineNode level={node.level}>
+        <OutlineNode
+          level={node.level}
+          interactive={isInteractive}
+          onClick={
+            isInteractive
+              ? (e) => {
+                  if (
+                    (e.target as HTMLElement).closest('button, a') ||
+                    window.getSelection()?.toString()
+                  ) {
+                    return;
+                  }
+                  handleJumpToNode(node.node);
+                }
+              : undefined
+          }
+        >
           {/* Left side: Expand/collapse button */}
           {showExpandButton ? (
             <ExpandButton
-              onClick={() => toggleExpanded(node.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleExpanded(node.id);
+              }}
               aria-label={
                 node.isExpanded
                   ? intl.formatMessage({ id: 'outline.collapse', defaultMessage: 'Collapse' })
@@ -216,9 +255,22 @@ const OutlineViewDialog = ({ open, onClose, mindmap }: OutlineViewDialogProps): 
           )}
 
           {/* Center: Node text */}
-          <NodeText variant="body2" level={node.level}>
-            {node.text}
-          </NodeText>
+          {isInteractive ? (
+            <NodeTextButton
+              type="button"
+              level={node.level}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleJumpToNode(node.node);
+              }}
+            >
+              {node.text}
+            </NodeTextButton>
+          ) : (
+            <NodeText variant="body2" level={node.level}>
+              {node.text}
+            </NodeText>
+          )}
 
           {/* Right side: Feature icons (links and notes) - aligned to right */}
           <FeatureIconContainer>
@@ -226,7 +278,10 @@ const OutlineViewDialog = ({ open, onClose, mindmap }: OutlineViewDialogProps): 
               <Tooltip title={node.linkUrl}>
                 <FeatureIcon
                   onMouseEnter={(e) => handleLinkHover(e, node.node)}
-                  onClick={(e) => handleLinkHover(e, node.node)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleLinkHover(e, node.node);
+                  }}
                   aria-label="link"
                 >
                   <LinkRoundedIcon
@@ -244,7 +299,10 @@ const OutlineViewDialog = ({ open, onClose, mindmap }: OutlineViewDialogProps): 
               >
                 <FeatureIcon
                   onMouseEnter={(e) => handleNoteHover(e, node.node)}
-                  onClick={(e) => handleNoteHover(e, node.node)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleNoteHover(e, node.node);
+                  }}
                   aria-label="note"
                 >
                   <StickyNote2RoundedIcon fontSize="small" />
@@ -280,7 +338,18 @@ const OutlineViewDialog = ({ open, onClose, mindmap }: OutlineViewDialogProps): 
             <OutlineContentWrapper>
               {/* Central Topic as Title - now part of scrollable content */}
               {centralTopicTitle && (
-                <CentralTopicTitle variant="h4">{centralTopicTitle}</CentralTopicTitle>
+                <CentralTopicTitle variant="h4">
+                  {isInteractive && centralTopic ? (
+                    <CentralTitleButton
+                      type="button"
+                      onClick={() => handleJumpToNode(centralTopic)}
+                    >
+                      {centralTopicTitle}
+                    </CentralTitleButton>
+                  ) : (
+                    centralTopicTitle
+                  )}
+                </CentralTopicTitle>
               )}
 
               {outlineData.length > 0 ? (

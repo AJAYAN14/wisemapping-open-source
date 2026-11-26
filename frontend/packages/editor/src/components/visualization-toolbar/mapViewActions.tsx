@@ -16,7 +16,7 @@
  *   limitations under the License.
  */
 
-import { useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { IntlShape } from 'react-intl';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import TocRoundedIcon from '@mui/icons-material/TocRounded';
@@ -31,7 +31,35 @@ import { formatTooltip } from './utils';
 export type FindInMapState = {
   open: boolean;
   setOpen: (open: boolean) => void;
+  query?: string;
+  setQuery?: (query: string) => void;
+  activeIndex?: number;
+  setActiveIndex?: (index: number) => void;
 };
+
+/**
+ * Owns the Find in Map panel visibility and search state so closing and
+ * reopening the panel within the same map preserves the query and match index,
+ * while switching to a new map resets them cleanly.
+ */
+export function useFindInMapState(model: Editor | undefined): FindInMapState {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [seenModel, setSeenModel] = useState(model);
+
+  if (model !== seenModel) {
+    setSeenModel(model);
+    setOpen(false);
+    setQuery('');
+    setActiveIndex(0);
+  }
+
+  return useMemo(
+    () => ({ open, setOpen, query, setQuery, activeIndex, setActiveIndex }),
+    [open, query, activeIndex],
+  );
+}
 
 /**
  * Shared ActionConfig for "Find in Map", mounted in AppBar by default and kept
@@ -52,12 +80,20 @@ export function buildFindInMapConfig(
     tooltip: formatTooltip(label, 'F'),
     ariaLabel: label,
     'data-testid': 'find-in-map-button',
+    nonModal: true,
     ...(findInMap && { open: findInMap.open, onOpenChange: findInMap.setOpen }),
     options: [
       {
         render: (closeModal) =>
           model ? (
-            <FindInMapPanel designer={model.getDesigner()} closeModal={closeModal} />
+            <FindInMapPanel
+              designer={model.getDesigner()}
+              closeModal={closeModal}
+              query={findInMap?.query}
+              onQueryChange={findInMap?.setQuery}
+              activeIndex={findInMap?.activeIndex}
+              onActiveIndexChange={findInMap?.setActiveIndex}
+            />
           ) : (
             <></>
           ),
@@ -95,6 +131,13 @@ export function buildOutlineViewConfig(
               open={true}
               onClose={closeModal}
               mindmap={model.getDesigner()?.getMindmap()}
+              onSelectNode={(node) => {
+                const designer = model.getDesigner();
+                const topic = designer?.getModel().findTopicById(node.getId());
+                if (topic) {
+                  designer.revealNode(topic, true);
+                }
+              }}
             />
           ) : (
             <></>

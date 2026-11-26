@@ -91,7 +91,7 @@ export const FormattingToolbarSkeleton = styled('div')(({ theme }) => ({
 export const ZoomToolbarSkeleton = styled('div')(({ theme }) => ({
   position: 'absolute',
   top: 'auto',
-  right: `max(${EDITOR_LAYOUT.zoomToolbar.right}, env(safe-area-inset-right, 0px))`,
+  right: `max(${EDITOR_LAYOUT.zoomToolbar.rightCompact}, env(safe-area-inset-right, 0px))`,
   bottom: EDITOR_LAYOUT.zoomToolbar.bottom,
   maxWidth:
     'calc(100dvw - 60px - env(safe-area-inset-left, 0px) - env(safe-area-inset-right, 0px))',

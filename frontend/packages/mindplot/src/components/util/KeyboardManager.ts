@@ -142,7 +142,7 @@ class KeyboardManager {
   /**
    * Check if the user is currently typing in an input field or contentEditable element
    */
-  private static isTypingInInputField(): boolean {
+  static isTypingInInputField(): boolean {
     // With the focus inside a shadow root, the document's active element is its host: go down to
     // the element that has it.
     let { activeElement } = document;

@@ -62,6 +62,8 @@ import TopicShapeFactory from './shape/TopicShapeFactory';
 import type { OrientationType } from './layout/LayoutType';
 
 const ICON_SCALING_FACTOR = 1.3;
+const DEFAULT_MAX_TEXT_WIDTH = 320;
+const CENTRAL_MAX_TEXT_WIDTH = 360;
 
 /** The text values last applied to a topic text shape. */
 type AppliedTextValues = {
@@ -127,6 +129,8 @@ abstract class Topic extends NodeGraph {
   private _suppressEmulatedMouseUntil = 0;
 
   private _cancelLongPress: (() => void) | undefined;
+
+  private _outerHaloSuppressed = false;
 
   constructor(
     model: NodeModel,
@@ -333,14 +337,48 @@ abstract class Topic extends NodeGraph {
       return undefined;
     }
 
-    const rect = nativeElement.getBoundingClientRect();
     const scrollLeft = window.scrollX !== undefined ? window.scrollX : (window.pageXOffset ?? 0);
     const scrollTop = window.scrollY !== undefined ? window.scrollY : (window.pageYOffset ?? 0);
 
-    const left = rect.left + scrollLeft;
-    const right = rect.right + scrollLeft;
-    const top = rect.top + scrollTop;
-    const bottom = rect.bottom + scrollTop;
+    // Measure the card shape itself (or CTM-mapped [0, 0, size.width, size.height]) so hidden or
+    // protruding child primitives such as ShrinkConnector or outerShape never distort selection bounds.
+    let rect: { left: number; right: number; top: number; bottom: number } | undefined;
+    const innerNode = this._innerShape?.getNativeNode?.();
+    if (innerNode && innerNode.isConnected && this.getShapeType() !== 'line') {
+      const innerRect = innerNode.getBoundingClientRect();
+      if (innerRect.width > 0 || innerRect.height > 0) {
+        rect = innerRect;
+      }
+    }
+
+    if (!rect) {
+      const size = this.getSize();
+      const ctm =
+        typeof nativeElement.getScreenCTM === 'function' ? nativeElement.getScreenCTM() : null;
+      if (
+        ctm &&
+        size.width > 0 &&
+        size.height > 0 &&
+        (ctm.e !== 0 || ctm.f !== 0 || ctm.a !== 1 || ctm.d !== 1)
+      ) {
+        const x1 = ctm.e;
+        const y1 = ctm.f;
+        const x2 = ctm.a * size.width + ctm.c * size.height + ctm.e;
+        const y2 = ctm.b * size.width + ctm.d * size.height + ctm.f;
+        rect = {
+          left: Math.min(x1, x2),
+          right: Math.max(x1, x2),
+          top: Math.min(y1, y2),
+          bottom: Math.max(y1, y2),
+        };
+      }
+    }
+
+    const resolved = rect ?? nativeElement.getBoundingClientRect();
+    const left = resolved.left + scrollLeft;
+    const right = resolved.right + scrollLeft;
+    const top = resolved.top + scrollTop;
+    const bottom = resolved.bottom + scrollTop;
 
     return {
       topLeft: { x: left, y: top },
@@ -472,6 +510,10 @@ abstract class Topic extends NodeGraph {
     return this._relationships;
   }
 
+  getMaxTextWidth(): number {
+    return this.isCentralTopic() ? CENTRAL_MAX_TEXT_WIDTH : DEFAULT_MAX_TEXT_WIDTH;
+  }
+
   protected buildTextShape(readOnly: boolean): Text {
     const result = new Text();
     const family = this.getFontFamily();
@@ -479,6 +521,7 @@ abstract class Topic extends NodeGraph {
     const weight = this.getFontWeight();
     const style = this.getFontStyle();
     result.setFont(family, size, style, toTextWeight(weight));
+    result.setMaxWidth(this.getMaxTextWidth());
 
     // Note: Font color will be set later in redraw() method with proper variant
     // const color = this.getFontColor();
@@ -875,6 +918,35 @@ abstract class Topic extends NodeGraph {
     });
   }
 
+  private applyOuterHaloStyle(
+    theme: Theme,
+    outerShape: Rect,
+    focus: boolean,
+  ): void {
+    const fillColor = theme.getOuterBackgroundColor(this, focus);
+    const borderColor = theme.getOuterBorderColor(this);
+    const isFilledShape = this.getShapeType() !== 'line' && this.getShapeType() !== 'none';
+    const hideHalo = this._outerHaloSuppressed && focus && isFilledShape;
+    const haloOpacity = hideHalo ? 0 : 1;
+
+    outerShape.setFill(fillColor, haloOpacity);
+    outerShape.setStroke(1, 'solid', borderColor, haloOpacity);
+  }
+
+  /**
+   * Suppresses the SVG outer halo fill/stroke when HTMLTopicSelected renders a single-selection
+   * ring around a filled card, preventing an opaque double white border while preserving hover
+   * and multi-selection feedback.
+   */
+  setOuterHaloSuppressed(suppressed: boolean): void {
+    if (this._outerHaloSuppressed === suppressed) {
+      return;
+    }
+    this._outerHaloSuppressed = suppressed;
+    const theme = ThemeFactory.create(this.getModel(), this.getThemeVariant());
+    this.applyOuterHaloStyle(theme, this.getOuterShape(), this.isOnFocus());
+  }
+
   setOnFocus(focus: boolean) {
     if (this.isOnFocus() !== focus) {
       const theme = ThemeFactory.create(this.getModel(), this.getThemeVariant());
@@ -882,11 +954,7 @@ abstract class Topic extends NodeGraph {
       this.getDesigner()?.getModel().setTopicSelected(this, focus);
       const outerShape = this.getOuterShape();
 
-      const fillColor = theme.getOuterBackgroundColor(this, focus);
-      const borderColor = theme.getOuterBorderColor(this);
-
-      outerShape.setFill(fillColor);
-      outerShape.setStroke(1, 'solid', borderColor);
+      this.applyOuterHaloStyle(theme, outerShape, focus);
       outerShape.setOpacity(focus ? 1 : 0);
 
       this.setCursor('move');
@@ -1524,6 +1592,7 @@ abstract class Topic extends NodeGraph {
       const fontStyle = this.getFontStyle();
       const fontFamily = this.getFontFamily();
       const text = this.getText();
+      textShape.setMaxWidth(this.getMaxTextWidth());
       this.applyTextValues(textShape, {
         color: fontColor,
         size: fontSize,
@@ -1535,11 +1604,7 @@ abstract class Topic extends NodeGraph {
 
       // Update outer shape style ...
       const outerShape = this.getOuterShape();
-      const outerFillColor = theme.getOuterBackgroundColor(this, this.isOnFocus());
-      const outerBorderColor = theme.getOuterBorderColor(this);
-
-      outerShape.setFill(outerFillColor);
-      outerShape.setStroke(1, 'solid', outerBorderColor);
+      this.applyOuterHaloStyle(theme, outerShape, this.isOnFocus());
 
       // Calculate topic size and adjust elements. The text is measured once: the font
       // height is the height of one of its lines (Text.getFontHeight) ...

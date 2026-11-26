@@ -105,6 +105,52 @@ describe('Topic pointer events', () => {
     groupOf(topic).remove();
     expect(topic.getAbsoluteCornerCoordinates()).toBeUndefined();
   });
+
+  it('prefers inner shape bounds over inflated group bounds and suppresses outer halo fill when single-selected', async () => {
+    const harness = await open();
+    const topic = harness.topic(3);
+    const group = groupOf(topic);
+    const innerNode = topic.getInnerShape().getNativeNode?.();
+    expect(innerNode).toBeDefined();
+
+    jest.spyOn(group, 'getBoundingClientRect').mockReturnValue({
+      left: 100,
+      top: 50,
+      right: 300,
+      bottom: 140,
+      width: 200,
+      height: 90,
+      x: 100,
+      y: 50,
+      toJSON: () => ({}),
+    });
+    jest.spyOn(innerNode!, 'getBoundingClientRect').mockReturnValue({
+      left: 104,
+      top: 80,
+      right: 296,
+      bottom: 136,
+      width: 192,
+      height: 56,
+      x: 104,
+      y: 80,
+      toJSON: () => ({}),
+    });
+
+    const corners = topic.getAbsoluteCornerCoordinates();
+    expect(corners?.topLeft).toEqual({ x: 104, y: 80 });
+    expect(corners?.bottomRight).toEqual({ x: 296, y: 136 });
+
+    const outer = nativeOf(topic.getOuterShape());
+    topic.setOnFocus(true);
+    topic.setOuterHaloSuppressed(true);
+    expect(outer.style.opacity).toBe('1');
+    expect(outer.getAttribute('fill-opacity')).toBe('0');
+    expect(outer.getAttribute('stroke-opacity')).toBe('0');
+
+    topic.setOuterHaloSuppressed(false);
+    expect(outer.getAttribute('fill-opacity')).toBe('1');
+    expect(outer.getAttribute('stroke-opacity')).toBe('1');
+  });
 });
 
 describe('Topic border style', () => {

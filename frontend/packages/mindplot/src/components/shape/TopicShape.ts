@@ -42,6 +42,8 @@ interface TopicShape {
   setStroke(width: number | undefined, style: StrokeStyle | undefined, color: string): void;
 
   getShapeType(): TopicShapeType;
+
+  getNativeNode?(): Element | undefined;
 }
 
 export default TopicShape;

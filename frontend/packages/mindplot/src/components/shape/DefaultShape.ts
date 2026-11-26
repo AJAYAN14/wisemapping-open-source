@@ -54,6 +54,10 @@ abstract class DefaultTopicShape<T extends ElementClass<ElementPeer>> implements
     return this._shape;
   }
 
+  getNativeNode(): Element | undefined {
+    return this._shape.peer?._native;
+  }
+
   setCursor(value: string): void {
     this._shape.setCursor(value);
   }

@@ -304,6 +304,10 @@ class ShirinkConnector {
 
   setVisibility(value: boolean, fade = 0): void {
     this._group.setVisibility(value, fade);
+    // Keep hidden connectors out of parent <g> bounding boxes so leaf topics do not inflate selection bounds.
+    if (!fade || value) {
+      this._group.peer._native.style.display = value ? '' : 'none';
+    }
     if (!value) {
       this._isHovered = false;
     }

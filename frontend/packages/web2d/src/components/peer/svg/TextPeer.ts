@@ -22,6 +22,7 @@ import ElementPeer from './ElementPeer';
 import type SizeType from '../../SizeType';
 import type PositionType from '../../PositionType';
 import type { FontStyleType, FontWeightType } from '../../types';
+import { createTextMeasurer, wrapTextLines } from './wrapTextLines';
 
 // A no-break space: unlike a plain space it is never collapsed, so an empty line keeps its height.
 const EMPTY_LINE = '\u00A0';
@@ -54,6 +55,8 @@ class TextPeer extends ElementPeer<SVGTextElement> {
 
   private _text: string;
 
+  private _maxWidth: number | undefined;
+
   // One tspan per line, in order. They are reused across setText calls.
   private _tspans: SVGTSpanElement[];
 
@@ -70,6 +73,7 @@ class TextPeer extends ElementPeer<SVGTextElement> {
     this._position = { x: 0, y: 0 };
     this._font = fontPeer;
     this._text = '';
+    this._maxWidth = undefined;
     this._tspans = [];
     this._fontApplied = false;
     this._measureKey = undefined;
@@ -91,7 +95,8 @@ class TextPeer extends ElementPeer<SVGTextElement> {
     }
 
     const x = TextPeer.formatCoordinate(this._position.x);
-    this.getTextLines().forEach((line, i) => {
+    const lines = this.getTextLines();
+    lines.forEach((line, i) => {
       let tspan = this._tspans[i];
       if (!tspan) {
         tspan = ElementPeer.createNode('tspan');
@@ -109,8 +114,24 @@ class TextPeer extends ElementPeer<SVGTextElement> {
       }
     });
 
-    const lineCount = this.getTextLines().length;
+    const lineCount = lines.length;
     this._tspans.splice(lineCount).forEach((tspan) => this._native.removeChild(tspan));
+  }
+
+  setMaxWidth(maxWidth: number | undefined): void {
+    const normalized = maxWidth !== undefined && maxWidth > 0 ? maxWidth : undefined;
+    if (this._maxWidth === normalized) {
+      return;
+    }
+    this._maxWidth = normalized;
+    this._measureKey = undefined;
+    if (this._text) {
+      this.setText(this._text);
+    }
+  }
+
+  getMaxWidth(): number | undefined {
+    return this._maxWidth;
   }
 
   /** Whether the node holds exactly the line tspans, in order. */
@@ -127,9 +148,21 @@ class TextPeer extends ElementPeer<SVGTextElement> {
     return value.toFixed(2);
   }
 
-  /** The text split on LF, CRLF or CR. A trailing line break adds an empty last line. */
+  /** The text split on LF, CRLF or CR, soft-wrapped to `_maxWidth` when configured. */
   getTextLines(): string[] {
-    return this._text ? this._text.split(/\r\n|\r|\n/) : [];
+    if (!this._text) {
+      return [];
+    }
+    if (!this._maxWidth) {
+      return this._text.split(/\r\n|\r|\n/);
+    }
+    const measureLine = createTextMeasurer(
+      this._font.getFontName(),
+      this._font.getGraphSize(),
+      this._font.getStyle(),
+      this._font.getWeight(),
+    );
+    return wrapTextLines(this._text, this._maxWidth, measureLine);
   }
 
   getText(): string {
@@ -189,6 +222,9 @@ class TextPeer extends ElementPeer<SVGTextElement> {
     this.attr('font-size', this._font.getGraphSize());
     this.attr('font-style', this._font.getStyle());
     this.attr('font-weight', this._font.getWeight());
+    if (this._maxWidth !== undefined && this._text) {
+      this.setText(this._text);
+    }
   }
 
   setColor(color: string): void {
@@ -253,6 +289,7 @@ class TextPeer extends ElementPeer<SVGTextElement> {
       this._font.getGraphSize(),
       this._font.getStyle(),
       this._font.getWeight(),
+      this._maxWidth ?? '',
       this._text,
     ].join('\u0000');
     if (key === this._measureKey) {

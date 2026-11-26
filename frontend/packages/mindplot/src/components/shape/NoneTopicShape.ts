@@ -74,6 +74,10 @@ class NoneTopicShape implements TopicShape {
   getShapeType(): TopicShapeType {
     return this._shapeType;
   }
+
+  getNativeNode(): Element | undefined {
+    return undefined;
+  }
 }
 
 export default NoneTopicShape;

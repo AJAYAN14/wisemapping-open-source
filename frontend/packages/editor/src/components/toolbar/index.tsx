@@ -15,7 +15,7 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-import React, { ReactElement, useRef, useState } from 'react';
+import React, { ReactElement, useLayoutEffect, useRef, useState } from 'react';
 import AppBar from '@mui/material/AppBar';
 import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
@@ -173,6 +173,111 @@ export const ToolbarSubmenu = ({
       : horizontalAligment;
   // If options has custom render, use click-to-close behavior, otherwise hover (desktop only)
   const hasCustomRender = configuration.options?.some((o) => o?.render);
+  const dialogRef = useRef<HTMLDialogElement | null>(null);
+  const [nonModalCoords, setNonModalCoords] = useState<{
+    top?: number | undefined;
+    bottom?: number | undefined;
+    right?: number | undefined;
+    left?: string | undefined;
+    transform?: string | undefined;
+  }>({});
+
+  useLayoutEffect(() => {
+    if (!configuration.nonModal) {
+      return undefined;
+    }
+
+    const updatePosition = () => {
+      const anchor = (itemRef.current as HTMLElement | null)?.getBoundingClientRect();
+      if (isCompactViewport) {
+        setNonModalCoords({
+          top: vertical ? (anchor ? anchor.bottom + 8 : 56) : undefined,
+          bottom: vertical ? undefined : anchor ? Math.max(8, window.innerHeight - anchor.top + 8) : 64,
+          left: '50%',
+          transform: 'translateX(-50%)',
+        });
+      } else if (vertical) {
+        setNonModalCoords({
+          top: anchor ? anchor.bottom + 8 : 56,
+          right: anchor ? Math.max(8, window.innerWidth - anchor.right) : 16,
+        });
+      } else {
+        setNonModalCoords({
+          bottom: anchor ? Math.max(8, window.innerHeight - anchor.top + 8) : 64,
+          right: anchor ? Math.max(8, window.innerWidth - anchor.right) : 16,
+        });
+      }
+    };
+
+    const dialog = dialogRef.current;
+    if (!dialog) {
+      return undefined;
+    }
+
+    const supportsPopover = typeof dialog.showPopover === 'function';
+    if (open) {
+      updatePosition();
+      try {
+        if (supportsPopover) {
+          if (!dialog.matches(':popover-open')) {
+            dialog.showPopover();
+          }
+        } else if (typeof dialog.show === 'function') {
+          if (!dialog.open) {
+            dialog.show();
+          }
+        } else {
+          dialog.setAttribute('open', '');
+        }
+      } catch {
+        dialog.setAttribute('open', '');
+      }
+      window.addEventListener('resize', updatePosition);
+      return () => window.removeEventListener('resize', updatePosition);
+    }
+
+    try {
+      if (supportsPopover) {
+        if (dialog.matches(':popover-open')) {
+          dialog.hidePopover();
+        }
+      } else if (typeof dialog.close === 'function') {
+        if (dialog.open) {
+          dialog.close();
+        }
+      } else {
+        dialog.removeAttribute('open');
+      }
+    } catch {
+      dialog.removeAttribute('open');
+    }
+    return undefined;
+  }, [configuration.nonModal, open, isCompactViewport, vertical]);
+
+  const submenuContent = (
+    <div style={{ display: 'flex' }} onScroll={(e) => e.stopPropagation()}>
+      {configuration.options?.map((o, i) => {
+        if (o?.visible === false) {
+          return null;
+        }
+        if (!o?.render) {
+          return (
+            <ToolbarMenuItem
+              vertical={!vertical}
+              // eslint-disable-next-line @eslint-react/no-array-index-key -- a menu built once, never reordered
+              key={i}
+              configuration={o}
+              elevation={elevation ? elevation + 3 : 0}
+            />
+          );
+        }
+        return open ? (
+          // eslint-disable-next-line @eslint-react/no-array-index-key -- a menu built once, never reordered
+          <span key={i}>{o.render(() => setOpen(false))}</span>
+        ) : null;
+      })}
+    </div>
+  );
 
   return (
     <Box
@@ -210,64 +315,73 @@ export const ToolbarSubmenu = ({
           selected: () => open,
         }}
       />
-      <Popover
-        // 'submenu' is not an ARIA role; 'menu' is.
-        role="menu"
-        open={open}
-        onClose={() => setOpen(false)}
-        anchorEl={itemRef.current}
-        container={itemRef.current}
-        anchorOrigin={orientationProps.anchorOrigin}
-        transformOrigin={orientationProps.transformOrigin}
-        marginThreshold={10}
-        disableScrollLock={false}
-        disablePortal={false}
-        sx={{
-          // Hover submenus used to sit at z-index -1, i.e. painted behind the
-          // page and clickable only by stacking-context luck.
-          zIndex: hasCustomRender ? EDITOR_Z_INDEX.submenu : EDITOR_Z_INDEX.hoverSubmenu,
-        }}
-        elevation={elevation}
-        slotProps={{
-          paper: {
-            onMouseLeave: () => !lastInputTouchRef.current && !hasCustomRender && setOpen(false),
-            square: true,
-            sx: {
-              backgroundColor: 'transparent',
-              boxShadow: 'none',
-              border: 'none',
-              overflow: isCompactViewport ? 'auto' : 'visible',
-              maxWidth: 'calc(100dvw - 16px)',
-              maxHeight: 'calc(100dvh - 130px)',
+      {configuration.nonModal ? (
+        <Box
+          component="dialog"
+          ref={dialogRef}
+          aria-label={configuration.ariaLabel || configuration.tooltip || undefined}
+          {...({ popover: 'manual' } as Record<string, string>)}
+          sx={{
+            position: 'fixed',
+            inset: 'auto',
+            margin: 0,
+            padding: 0,
+            border: 'none',
+            backgroundColor: 'transparent',
+            color: 'inherit',
+            overflow: 'visible',
+            zIndex: EDITOR_Z_INDEX.submenu,
+            maxWidth: 'calc(100dvw - 16px)',
+            maxHeight: 'calc(100dvh - 130px)',
+            top: nonModalCoords.top !== undefined ? `${nonModalCoords.top}px` : 'auto',
+            bottom: nonModalCoords.bottom !== undefined ? `${nonModalCoords.bottom}px` : 'auto',
+            right: nonModalCoords.right !== undefined ? `${nonModalCoords.right}px` : 'auto',
+            left: nonModalCoords.left ?? 'auto',
+            transform: nonModalCoords.transform ?? 'none',
+            '&:popover-open, &[open]': {
+              display: 'flex',
             },
-          },
-        }}
-      >
-        <div style={{ display: 'flex' }} onScroll={(e) => e.stopPropagation()}>
-          {configuration.options?.map((o, i) => {
-            if (o?.visible === false) {
-              return null;
-            }
-            if (!o?.render) {
-              return (
-                <ToolbarMenuItem
-                  vertical={!vertical}
-                  // eslint-disable-next-line @eslint-react/no-array-index-key -- a menu built once, never reordered
-                  key={i}
-                  configuration={o}
-                  elevation={elevation ? elevation + 3 : 0}
-                />
-              );
-            } else {
-              // Only render custom render functions when popover is open
-              return open ? (
-                // eslint-disable-next-line @eslint-react/no-array-index-key -- a menu built once, never reordered
-                <span key={i}>{o.render(() => setOpen(false))}</span>
-              ) : null;
-            }
-          })}
-        </div>
-      </Popover>
+          }}
+        >
+          {open ? submenuContent : null}
+        </Box>
+      ) : (
+        <Popover
+          // 'submenu' is not an ARIA role; 'menu' is.
+          role="menu"
+          open={open}
+          onClose={() => setOpen(false)}
+          anchorEl={itemRef.current}
+          container={itemRef.current}
+          anchorOrigin={orientationProps.anchorOrigin}
+          transformOrigin={orientationProps.transformOrigin}
+          marginThreshold={10}
+          disableScrollLock={false}
+          disablePortal={false}
+          sx={{
+            // Hover submenus used to sit at z-index -1, i.e. painted behind the
+            // page and clickable only by stacking-context luck.
+            zIndex: hasCustomRender ? EDITOR_Z_INDEX.submenu : EDITOR_Z_INDEX.hoverSubmenu,
+          }}
+          elevation={elevation}
+          slotProps={{
+            paper: {
+              onMouseLeave: () => !lastInputTouchRef.current && !hasCustomRender && setOpen(false),
+              square: true,
+              sx: {
+                backgroundColor: 'transparent',
+                boxShadow: 'none',
+                border: 'none',
+                overflow: isCompactViewport ? 'auto' : 'visible',
+                maxWidth: 'calc(100dvw - 16px)',
+                maxHeight: 'calc(100dvh - 130px)',
+              },
+            },
+          }}
+        >
+          {submenuContent}
+        </Popover>
+      )}
     </Box>
   );
 };

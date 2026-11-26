@@ -416,14 +416,12 @@ class HTMLTopicSelected {
     const width = corners.topRight.x - corners.topLeft.x;
     const height = corners.bottomLeft.y - corners.topLeft.y;
 
-    // Make overlay 5px bigger (2.5px on each side)
-    const padding = 2.5;
-    const verticalOffset = 3;
-    const horizontalOffset = 2;
+    // Symmetrical 4px breathing room around the topic card (matches 8px inner radius + 4px = 12px outer radius)
+    const padding = 4;
     const overlayWidth = width + padding * 2;
     const overlayHeight = height + padding * 2;
-    const overlayLeft = left - padding - horizontalOffset;
-    const overlayTop = top - padding - verticalOffset;
+    const overlayLeft = left - padding;
+    const overlayTop = top - padding;
 
     return {
       overlayLeft,
@@ -487,8 +485,8 @@ class HTMLTopicSelected {
     this._overlay.style.width = `${Math.round(overlayWidth)}px`;
     this._overlay.style.height = `${Math.round(overlayHeight)}px`;
 
-    // Use clean, symmetrical 10px rounded corners on all four sides so the selection frame cleanly wraps the card
-    this._overlay.style.borderRadius = '10px';
+    // Concentric 12px outer radius wrapping the 8px inner card with 4px uniform padding
+    this._overlay.style.borderRadius = '12px';
   }
 
   /**
@@ -951,8 +949,10 @@ class HTMLTopicSelected {
     this._isVisible = !this._isVisible;
 
     if (this._isVisible) {
+      this.withTopic((topic) => topic.setOuterHaloSuppressed?.(true));
       this.updateOverlay();
     } else {
+      this.withTopic((topic) => topic.setOuterHaloSuppressed?.(false));
       if (this._overlay) {
         this._overlay.style.display = 'none';
       }
@@ -1086,6 +1086,7 @@ class HTMLTopicSelected {
   }
 
   dispose(): void {
+    this.withTopic((topic) => topic.setOuterHaloSuppressed?.(false));
     // Remove the listeners added to the topic, so a re-created shadow doesn't stack them
     const onTopicFocus = this._onTopicFocus;
     const onTopicBlur = this._onTopicBlur;

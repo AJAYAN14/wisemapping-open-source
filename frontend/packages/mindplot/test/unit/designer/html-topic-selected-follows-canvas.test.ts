@@ -58,13 +58,13 @@ const overlayOf = (harness: Harness, topic: Topic): HTMLElement => {
   return (shadow as unknown as { _overlay: HTMLElement })._overlay;
 };
 
-// The overlay is drawn 2.5 px around the topic, 2 px left and 3 px up (computeOverlayGeometry).
+// The overlay wraps the topic symmetrically with 4 px padding on each side (computeOverlayGeometry).
 const expectOverlayAround = (overlay: HTMLElement, topicRect: DOMRect) => {
   expect(overlay.style.display).toBe('block');
-  expect(overlay.style.left).toBe(`${Math.round(topicRect.left - 4.5)}px`);
-  expect(overlay.style.top).toBe(`${Math.round(topicRect.top - 5.5)}px`);
-  expect(overlay.style.width).toBe(`${Math.round(topicRect.width + 5)}px`);
-  expect(overlay.style.height).toBe(`${Math.round(topicRect.height + 5)}px`);
+  expect(overlay.style.left).toBe(`${Math.round(topicRect.left - 4)}px`);
+  expect(overlay.style.top).toBe(`${Math.round(topicRect.top - 4)}px`);
+  expect(overlay.style.width).toBe(`${Math.round(topicRect.width + 8)}px`);
+  expect(overlay.style.height).toBe(`${Math.round(topicRect.height + 8)}px`);
 };
 
 describe('HTMLTopicSelected follows the canvas', () => {

@@ -326,6 +326,70 @@ describe('VisualizationToolbar keyboard shortcuts', () => {
     expect(findButton()).toHaveAttribute('aria-expanded', 'true');
   });
 
+  it('preserves Find in Map query and match index across close and reopen, and resets on model change', () => {
+    const first = createModel();
+    const centralWithChildren = {
+      ...first.designer.getModel().getCentralTopic(),
+      getChildren: () => [
+        {
+          getId: () => 10,
+          getText: () => 'Item one',
+          getModel: () => ({ getPlainText: () => 'Item one' }),
+          getChildren: () => [],
+        },
+        {
+          getId: () => 11,
+          getText: () => 'Item two',
+          getModel: () => ({ getPlainText: () => 'Item two' }),
+          getChildren: () => [],
+        },
+      ],
+    };
+    const fullModel = first.designer.getModel();
+    first.designer.getModel = () =>
+      ({
+        ...fullModel,
+        getCentralTopic: () => centralWithChildren,
+        findTopicById: () => undefined,
+      }) as unknown as typeof fullModel;
+
+    const { rerender } = renderToolbar(
+      first.model,
+      'viewonly-private',
+      createThemeStorage(),
+      false,
+    );
+
+    ctrl('f');
+    const searchInput = screen.getByPlaceholderText('Find node...') as HTMLInputElement;
+    fireEvent.change(searchInput, { target: { value: 'Item' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Next match' }));
+    expect(screen.getByTestId('find-in-map-counter')).toHaveTextContent('2 of 2');
+
+    // Close and reopen: query and active match index are preserved.
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(screen.queryByTestId('find-in-map-panel')).not.toBeInTheDocument();
+
+    ctrl('f');
+    expect((screen.getByPlaceholderText('Find node...') as HTMLInputElement).value).toBe('Item');
+    expect(screen.getByTestId('find-in-map-counter')).toHaveTextContent('2 of 2');
+
+    // Switching to another mindmap model resets the preserved search state.
+    const second = createModel();
+    rerender(
+      <Providers storage={createThemeStorage()}>
+        <VisualizationToolbar
+          model={second.model}
+          capability={new Capability('viewonly-private', false)}
+          hasAppBar={false}
+        />
+      </Providers>,
+    );
+    ctrl('f');
+    expect((screen.getByPlaceholderText('Find node...') as HTMLInputElement).value).toBe('');
+    expect(screen.queryByTestId('find-in-map-counter')).not.toBeInTheDocument();
+  });
+
   it('expands by level with Ctrl+E', () => {
     const { model, dispatcher } = createModel();
     renderToolbar(model);
@@ -501,8 +565,21 @@ describe('buildVisualizationToolbarConfig', () => {
       mindmap: unknown;
       onClose: () => void;
       open: boolean;
+      onSelectNode?: (node: { getId: () => number }) => void;
     }>;
     expect(outline.props).toEqual(expect.objectContaining({ mindmap, onClose: close, open: true }));
+
+    const targetTopic = topic(1, undefined);
+    const fullDesignerModel = designer.getModel();
+    const findTopicById = jest.fn(() => targetTopic);
+    const revealNode = jest.fn();
+    designer.getModel = () =>
+      ({ ...fullDesignerModel, findTopicById }) as unknown as typeof fullDesignerModel;
+    (designer as unknown as { revealNode: jest.Mock }).revealNode = revealNode;
+
+    outline.props.onSelectNode?.({ getId: () => 1 });
+    expect(findTopicById).toHaveBeenCalledWith(1);
+    expect(revealNode).toHaveBeenCalledWith(targetTopic, true);
 
     const help = byLabel(config, 'Keyboard Shortcuts').options![0]!.render!(close) as ReactElement<{
       closeModal: () => void;

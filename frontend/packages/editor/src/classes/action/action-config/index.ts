@@ -71,6 +71,11 @@ interface ActionConfig {
    */
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  /**
+   * Renders the submenu as a non-modal top-layer popover (`popover="manual"`) so the user can
+   * keep zooming, panning, and interacting with the canvas while the panel stays open.
+   */
+  nonModal?: boolean;
 }
 
 export default ActionConfig;

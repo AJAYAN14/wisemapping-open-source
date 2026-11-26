@@ -161,36 +161,45 @@ describe('buildEditorPanelConfig panels', () => {
 });
 
 describe('EditorToolbar', () => {
-  const renderToolbar = (model: Editor | undefined, mode: EditorRenderMode = 'edition-owner') =>
+  const renderToolbar = (
+    model: Editor | undefined,
+    mode: EditorRenderMode = 'edition-owner',
+    hasAppBar = true,
+  ) =>
     render(
       <Providers>
-        <EditorToolbar model={model} capability={new Capability(mode, false)} />
+        <EditorToolbar
+          model={model}
+          capability={new Capability(mode, false)}
+          hasAppBar={hasAppBar}
+        />
       </Providers>,
     );
 
-  it('shows the editing tools once the map is loaded without removed actions', () => {
+  it('omits the right vertical bar on desktop when AppBar owns contextual formatting', () => {
     const { model } = createModel({ topics: 1 });
-    renderToolbar(model);
+    renderToolbar(model, 'edition-owner', true);
 
-    expect(screen.getByRole('menu')).toHaveAttribute('aria-orientation', 'vertical');
-    expect(screen.getByRole('button', { name: 'Font Style' })).toBeEnabled();
-    expect(screen.queryByRole('button', { name: 'Style Topic & Connections' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Add Relationship' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Add Icon' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Background' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Relationship Style' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
-  it('follows the selection', () => {
+  it('renders the horizontal bottom context dock without AppBar and follows selection', () => {
     const { model, state, fire } = createModel({ topics: 0 });
-    renderToolbar(model);
-    expect(screen.getByRole('button', { name: 'Font Style' })).toBeDisabled();
-    expect(screen.queryByRole('button', { name: 'Relationship Style' })).not.toBeInTheDocument();
+    renderToolbar(model, 'edition-owner', false);
+    expect(screen.queryByRole('menu')).not.toBeInTheDocument();
 
     state.topics = 1;
     fire('onfocus');
 
+    expect(screen.getByRole('menu')).toHaveAttribute('aria-orientation', 'horizontal');
     expect(screen.getByRole('button', { name: 'Font Style' })).toBeEnabled();
+    expect(
+      screen.queryByRole('button', { name: 'Style Topic & Connections' }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Add Relationship' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Add Icon' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Background' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Relationship Style' })).not.toBeInTheDocument();
 
     state.relationships = 1;
     fire('onfocus');
@@ -199,18 +208,18 @@ describe('EditorToolbar', () => {
 
   it('shows nothing before the map is loaded', () => {
     const { model } = createModel({ loaded: false });
-    renderToolbar(model);
+    renderToolbar(model, 'edition-owner', false);
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
   it('shows nothing without an editor', () => {
-    renderToolbar(undefined);
+    renderToolbar(undefined, 'edition-owner', false);
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 
   it('shows nothing to a viewer', () => {
     const { model } = createModel({ topics: 1 });
-    renderToolbar(model, 'edition-viewer');
+    renderToolbar(model, 'edition-viewer', false);
     expect(screen.queryByRole('menu')).not.toBeInTheDocument();
   });
 });
