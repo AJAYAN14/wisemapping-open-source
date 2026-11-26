@@ -1,5 +1,5 @@
-import type { DbClient, DbUserContext, PoolLike } from './db';
-import { withUserDb } from './db';
+import type { DbClient, DbUserContext, PoolLike } from './db.js';
+import { withUserDb } from './db.js';
 
 export interface LabelDto {
   id: number;

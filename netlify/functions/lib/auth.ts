@@ -1,5 +1,5 @@
 import { SignJWT, jwtVerify } from 'jose';
-import { DEFAULT_ALLOWED_EMAIL, getAllowedEmail, getJwtSecretBytes } from './env';
+import { DEFAULT_ALLOWED_EMAIL, getAllowedEmail, getJwtSecretBytes } from './env.js';
 
 export { DEFAULT_ALLOWED_EMAIL, getAllowedEmail };
 

@@ -1,9 +1,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { restoreRewrittenRequest } from '../../api/_shared';
-import wmApi from '../../api/wm-api';
-import wmOauth from '../../api/wm-oauth';
+import { restoreRewrittenRequest } from '../../api/_shared.js';
+import wmApi from '../../api/wm-api.js';
+import wmOauth from '../../api/wm-oauth.js';
 
 const ROOT = path.resolve(import.meta.dirname, '../..');
 

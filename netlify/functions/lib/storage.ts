@@ -1,5 +1,5 @@
 import { StorageClient } from '@supabase/storage-js';
-import { getSupabaseServiceRoleConfig } from './env';
+import { getSupabaseServiceRoleConfig } from './env.js';
 
 export const MAP_ASSETS_BUCKET = 'map-assets';
 export const MAX_ASSET_BYTES = 5 * 1024 * 1024;

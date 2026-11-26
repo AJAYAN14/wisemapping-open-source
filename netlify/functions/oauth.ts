@@ -7,9 +7,9 @@ import {
   isEmailVerified,
   normalizeEmail,
   signSessionJwt,
-} from './lib/auth';
-import type { VerifiableOAuthUser } from './lib/auth';
-import { getSupabaseClientConfig } from './lib/env';
+} from './lib/auth.js';
+import type { VerifiableOAuthUser } from './lib/auth.js';
+import { getSupabaseClientConfig } from './lib/env.js';
 import {
   buildCorsHeaders,
   isHttpsRequest,
@@ -18,7 +18,7 @@ import {
   readOptionalJsonBody,
   resolveOrigin,
   restErrorResponse,
-} from './lib/http';
+} from './lib/http.js';
 
 export interface OAuthClientLike {
   auth: {

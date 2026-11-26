@@ -3,8 +3,8 @@ import {
   UnauthorizedError,
   requireAuth,
   splitDisplayName,
-} from './lib/auth';
-import type { SessionJwtUser } from './lib/auth';
+} from './lib/auth.js';
+import type { SessionJwtUser } from './lib/auth.js';
 import {
   BadRequestError,
   emptyResponse,
@@ -19,23 +19,23 @@ import {
   textResponse,
   unauthorizedResponse,
   xmlResponse,
-} from './lib/http';
+} from './lib/http.js';
 import {
   NotFoundOrForbiddenError,
   PgMindmapRepository,
   RepoValidationError,
   VersionConflictError,
-} from './lib/repo';
-import { getDbPool } from './lib/db';
-import type { MindmapRepository, RepoUser } from './lib/repo';
+} from './lib/repo.js';
+import { getDbPool } from './lib/db.js';
+import type { MindmapRepository, RepoUser } from './lib/repo.js';
 import {
   MAP_ASSETS_BUCKET,
   StorageConfigurationError,
   StorageValidationError,
   createDefaultAssetStorageService,
   extractReferencedAssetPaths,
-} from './lib/storage';
-import type { AssetStorageService, UploadUrlRequestItem } from './lib/storage';
+} from './lib/storage.js';
+import type { AssetStorageService, UploadUrlRequestItem } from './lib/storage.js';
 import {
   buildDefaultMindmapXml,
   validateDescription,
@@ -44,9 +44,9 @@ import {
   validateMindmapXml,
   validateNoteContent,
   validateTitle,
-} from './lib/validators';
-import { createOAuthHandler } from './oauth';
-import type { OAuthHandlerDeps } from './oauth';
+} from './lib/validators.js';
+import { createOAuthHandler } from './oauth.js';
+import type { OAuthHandlerDeps } from './oauth.js';
 
 export interface ApiHandlerDeps {
   repo?: MindmapRepository;

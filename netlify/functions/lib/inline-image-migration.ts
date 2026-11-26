@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { extensionForImageMime } from './storage';
+import { extensionForImageMime } from './storage.js';
 
 export interface ParsedDataImage {
   mimeType: string;

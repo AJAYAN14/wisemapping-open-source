@@ -4,7 +4,7 @@ import {
   NemoProtectionError,
   assertNotNemoTarget,
   getDatabaseSslRejectUnauthorized,
-} from './env';
+} from './env.js';
 
 export { NemoProtectionError, assertNotNemoTarget };
 
