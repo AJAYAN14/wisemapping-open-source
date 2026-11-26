@@ -17,13 +17,26 @@ describe('Vercel deployment configuration and adapters', () => {
     expect(config.outputDirectory).toBe('frontend/packages/webapp/dist');
 
     const sources = config.rewrites.map((r) => r.source);
-    const oauthRestIdx = sources.indexOf('/api/restful/oauth2/:path*');
-    const restApiIdx = sources.indexOf('/api/restful/:path*');
+    const oauthRestIdx = sources.indexOf('/api/restful/oauth2/:path(.*)');
+    const restApiIdx = sources.indexOf('/api/restful/:path(.*)');
     const spaIdx = sources.indexOf('/((?!api/).*)');
 
     expect(oauthRestIdx).toBeGreaterThanOrEqual(0);
     expect(restApiIdx).toBeGreaterThan(oauthRestIdx);
     expect(spaIdx).toBeGreaterThan(restApiIdx);
+  });
+
+  it('routes trailing-slash REST paths through api/wm-api rather than 404', async () => {
+    for (const trailingPath of ['/api/restful/maps/', '/api/restful/labels/']) {
+      const req = new Request(
+        `https://wisemapping.vercel.app/api/wm-api?__wm_path=${trailingPath}`,
+      );
+      const restored = restoreRewrittenRequest(req);
+      expect(new URL(restored.url).pathname).toBe(trailingPath);
+
+      const res = await wmApi.fetch(req);
+      expect(res.status).toBe(401);
+    }
   });
 
   it('restores rewritten GET path and query parameters cleanly', () => {

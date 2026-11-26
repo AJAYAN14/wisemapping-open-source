@@ -11,20 +11,20 @@
   },
   "rewrites": [
     {
-      "source": "/api/restful/oauth2/:path*",
-      "destination": "/api/wm-oauth?__wm_path=/api/restful/oauth2/:path*"
+      "source": "/api/restful/oauth2/:path(.*)",
+      "destination": "/api/wm-oauth?__wm_path=/api/restful/oauth2/:path"
     },
     {
-      "source": "/api/restful/:path*",
-      "destination": "/api/wm-api?__wm_path=/api/restful/:path*"
+      "source": "/api/restful/:path(.*)",
+      "destination": "/api/wm-api?__wm_path=/api/restful/:path"
     },
     {
-      "source": "/oauth2/:path*",
-      "destination": "/api/wm-oauth?__wm_path=/oauth2/:path*"
+      "source": "/oauth2/:path(.*)",
+      "destination": "/api/wm-oauth?__wm_path=/oauth2/:path"
     },
     {
-      "source": "/login/oauth2/:path*",
-      "destination": "/api/wm-oauth?__wm_path=/login/oauth2/:path*"
+      "source": "/login/oauth2/:path(.*)",
+      "destination": "/api/wm-oauth?__wm_path=/login/oauth2/:path"
     },
     {
       "source": "/((?!api/).*)",
