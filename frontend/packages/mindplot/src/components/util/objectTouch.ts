@@ -23,6 +23,7 @@
  * emulates for the tap selects it, and a background click sent first would unselect everything.
  */
 const objectTouches = new WeakSet<Event>();
+const shrinkConnectorTouches = new WeakSet<Event>();
 
 /** Marks a touchstart as one on a topic or a relationship, before it bubbles to the canvas. */
 export function markObjectTouch(event: Event): void {
@@ -32,4 +33,14 @@ export function markObjectTouch(event: Event): void {
 /** True if the touchstart started on a topic or a relationship (see markObjectTouch). */
 export function isObjectTouch(event: Event): boolean {
   return objectTouches.has(event);
+}
+
+/** Marks a touchstart as starting on a branch shrink/expand connector handle. */
+export function markShrinkConnectorTouch(event: Event): void {
+  shrinkConnectorTouches.add(event);
+}
+
+/** True if the touchstart started on a shrink/expand connector handle. */
+export function isShrinkConnectorTouch(event: Event): boolean {
+  return shrinkConnectorTouches.has(event);
 }

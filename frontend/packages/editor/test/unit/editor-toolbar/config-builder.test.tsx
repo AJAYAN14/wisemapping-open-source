@@ -58,13 +58,10 @@ const byTooltip = (
  */
 describe('buildEditorPanelConfig disabled state', () => {
   const TOPIC_SCOPED = [
-    'Style Topic & Connections',
     'Font Style',
-    'Add Relationship',
-    'Add Link',
-    'Add Note',
-    'Add Icon',
     'Add Topic Image',
+    'Add Note',
+    'Add Link',
   ];
 
   it.each(TOPIC_SCOPED)('disables %s with no topic selected', (tooltip) => {
@@ -83,16 +80,19 @@ describe('buildEditorPanelConfig disabled state', () => {
     expect(byTooltip(build(4), tooltip)!()).toBe(false);
   });
 
-  it('gates relationship styling on the relationship selection, not the topic one', () => {
-    expect(byTooltip(build(3, 0), 'Relationship Style')!()).toBe(true);
-    expect(byTooltip(build(0, 1), 'Relationship Style')!()).toBe(false);
+  it('shows relationship styling only when a relationship is selected', () => {
+    expect(build(3, 0).find((e) => e.tooltip?.includes('Relationship Style'))).toBeUndefined();
+    const entry = build(0, 1).find((e) => e.tooltip?.includes('Relationship Style'));
+    expect(entry).toBeDefined();
+    expect(entry!.disabled!()).toBe(false);
   });
 
-  it('leaves the canvas background always available', () => {
-    // Background styling is map-scoped, so it carries no disabled thunk.
-    const entry = build(0).find((e) => e.tooltip?.includes('Background'));
-    expect(entry).toBeDefined();
-    expect(entry!.disabled).toBeUndefined();
+  it('omits removed Add Icon, Background, Style Topic, and Add Relationship actions', () => {
+    const config = build(1, 1);
+    expect(config.find((e) => e.tooltip?.includes('Add Icon'))).toBeUndefined();
+    expect(config.find((e) => e.tooltip?.includes('Background'))).toBeUndefined();
+    expect(config.find((e) => e.tooltip?.includes('Style Topic'))).toBeUndefined();
+    expect(config.find((e) => e.tooltip?.includes('Add Relationship'))).toBeUndefined();
   });
 
   it('does not consult the designer to decide disabled state', () => {
@@ -100,7 +100,6 @@ describe('buildEditorPanelConfig disabled state', () => {
     const spyModel = {
       getDesigner: () => ({
         getThemeVariant: () => 'light',
-        getMindmap: () => ({ getCanvasStyle: () => ({}) }),
         getModel: () => ({
           selectedTopic: () => undefined,
           selectedRelationship: () => undefined,
@@ -118,9 +117,9 @@ describe('buildEditorPanelConfig disabled state', () => {
     expect(() => config.forEach((entry) => entry.disabled?.())).not.toThrow();
 
     // And the snapshot alone produced the right answers: two topics, no
-    // relationship, so the topic entries are live and the relationship one is not.
+    // relationship, so the topic entries are live and relationship styling is omitted.
     TOPIC_SCOPED.forEach((tooltip) => expect(byTooltip(config, tooltip)!()).toBe(false));
-    expect(byTooltip(config, 'Relationship Style')!()).toBe(true);
+    expect(config.find((e) => e.tooltip?.includes('Relationship Style'))).toBeUndefined();
     expect(filterSelectedTopics).not.toHaveBeenCalled();
   });
 });

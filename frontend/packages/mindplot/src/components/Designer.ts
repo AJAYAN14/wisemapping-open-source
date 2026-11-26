@@ -91,10 +91,19 @@ export type ZoomToFitOptions = { insets?: ViewportInsets };
 /** The payload of 'featureEdit': open the link or note editor of a topic, or close it. */
 export type FeatureEditEvent = { event: 'link' | 'note'; topic: Topic } | { event: 'close' };
 
+/** The payload of 'imagePreview': open a lightbox preview for a topic's attached image. */
+export type ImagePreviewEvent = {
+  url: string;
+  title?: string;
+  width?: number;
+  height?: number;
+};
+
 /** The events a designer fires to its host (the editor) and their payloads. */
 export type DesignerEvents = {
   modelUpdate: ModelUpdateEvent;
   featureEdit: FeatureEditEvent;
+  imagePreview: ImagePreviewEvent;
   onfocus: void;
   onblur: void;
   loadSuccess: void;
@@ -1860,6 +1869,23 @@ class Designer extends EventDispispatcher<DesignerEvents> {
       this.fireEvent('featureEdit', { event: 'note', topic });
       this.closeNodeEditors();
     }
+  }
+
+  /**
+   * Requests the host editor to display a full-size preview for a topic's image.
+   */
+  previewTopicImage(topic: Topic): void {
+    const url = topic.getImageUrl()?.trim();
+    if (!url) {
+      return;
+    }
+    const size = topic.getImageSize();
+    const title = topic.getText();
+    this.fireEvent('imagePreview', {
+      url,
+      ...(title ? { title } : {}),
+      ...(size ? { width: size.width, height: size.height } : {}),
+    });
   }
 
   /**

@@ -27,6 +27,7 @@ import type { TopicImageValue } from '@wisemapping/mindplot';
 import NodeProperty from '../../../../../classes/model/node-property';
 import type { UploadTopicImageFn } from '../../../../../hooks/useEditor';
 import { blobToDataUrl, compressTopicImage } from '../../../../../utils/imageAssetUtils';
+import TopicImageLightbox from '../../../../topic-image-lightbox';
 
 type ImageUploadTabProps = {
   topicImageModel?: NodeProperty<TopicImageValue | undefined> | undefined;
@@ -43,6 +44,7 @@ const ImageUploadTab = ({
   const [isDragging, setIsDragging] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const currentImage = topicImageModel?.getValue();
   const canEdit = Boolean(topicImageModel?.setValue);
@@ -230,16 +232,25 @@ const ImageUploadTab = ({
               component="img"
               src={currentImage.url}
               alt="当前节点配图"
+              title="点击查看大图"
+              onClick={() => setPreviewOpen(true)}
               sx={{
                 width: 44,
                 height: 32,
                 objectFit: 'cover',
                 borderRadius: '6px',
                 flexShrink: 0,
+                cursor: 'zoom-in',
               }}
             />
-            <Typography variant="caption" color="text.secondary" noWrap>
-              {currentImage.width} × {currentImage.height}
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              noWrap
+              onClick={() => setPreviewOpen(true)}
+              sx={{ cursor: 'pointer', '&:hover': { textDecoration: 'underline' } }}
+            >
+              查看大图
             </Typography>
           </Box>
           <Button
@@ -253,6 +264,11 @@ const ImageUploadTab = ({
           </Button>
         </Box>
       )}
+
+      <TopicImageLightbox
+        preview={previewOpen && currentImage ? { url: currentImage.url } : null}
+        onClose={() => setPreviewOpen(false)}
+      />
     </Box>
   );
 };

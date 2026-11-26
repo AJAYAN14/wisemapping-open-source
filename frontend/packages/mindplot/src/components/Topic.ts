@@ -24,7 +24,7 @@ import type {
 } from '@wisemapping/web2d';
 import { $assert } from './util/assert';
 import { hasShortcutModifier } from './util/platform';
-import { markObjectTouch } from './util/objectTouch';
+import { isShrinkConnectorTouch, markObjectTouch } from './util/objectTouch';
 
 import type { NodeOption } from './NodeGraph';
 import NodeGraph from './NodeGraph';
@@ -794,6 +794,10 @@ abstract class Topic extends NodeGraph {
       markObjectTouch(event);
       me._cancelLongPress?.();
 
+      if (isShrinkConnectorTouch(event)) {
+        return;
+      }
+
       if (me.isReadOnly() || !me.isMouseEventsEnabled()) {
         return;
       }
@@ -886,6 +890,7 @@ abstract class Topic extends NodeGraph {
       outerShape.setOpacity(focus ? 1 : 0);
 
       this.setCursor('move');
+      this._connector?.setTopicHighlighted(focus);
 
       // In any case, always try to hide the editor ...
       this.closeEditors();
@@ -975,12 +980,14 @@ abstract class Topic extends NodeGraph {
   handleMouseOver(): void {
     const outerShape = this.getOuterShape();
     outerShape.setOpacity(1);
+    this._connector?.setTopicHighlighted(true);
   }
 
   handleMouseOut(): void {
     const outerShape = this.getOuterShape();
     if (!this.isOnFocus()) {
       outerShape.setOpacity(0);
+      this._connector?.setTopicHighlighted(false);
     }
   }
 
@@ -1301,10 +1308,12 @@ abstract class Topic extends NodeGraph {
       outgoingLine.removeFromWorkspace(workspace);
 
       // Hide connection line?.
-      if (targetTopic.getChildren().length === 0) {
-        const connector = targetTopic.getShrinkConnector();
-        if (connector) {
+      const connector = targetTopic.getShrinkConnector();
+      if (connector) {
+        if (targetTopic.getChildren().length === 0) {
           connector.setVisibility(false);
+        } else {
+          connector.changeRender(targetTopic.areChildrenShrunken());
         }
       }
 
@@ -1358,6 +1367,7 @@ abstract class Topic extends NodeGraph {
     const connector = targetTopic.getShrinkConnector();
     if (connector) {
       connector.setVisibility(true);
+      connector.changeRender(targetTopic.areChildrenShrunken());
     }
 
     // Fire connection event ...
@@ -1559,8 +1569,10 @@ abstract class Topic extends NodeGraph {
       if (hasImage) {
         if (!this._imageShape) {
           this._imageShape = new Image();
+          this.registerImagePreviewHandlers(this._imageShape);
           this.get2DElement().append(this._imageShape);
         }
+        this._imageShape.setCursor(this.isReadOnly() ? 'zoom-in' : 'move');
         this._imageShape.setHref(imageUrl!);
         const customSize = this.getImageSize();
         imgWidth = customSize?.width || 130;
@@ -1731,6 +1743,7 @@ abstract class Topic extends NodeGraph {
         innerShape.setStroke(undefined, strokeStyle, borderColor);
         innerShape.setFill(bgColor);
       }
+      this._connector?.setColor(borderColor);
 
       // The measurement is only valid until the text changes ...
       this._measuredFontHeight = undefined;
@@ -1766,6 +1779,29 @@ abstract class Topic extends NodeGraph {
       textShape.setText(values.text);
     }
     this._appliedText = { ...values };
+  }
+
+  private registerImagePreviewHandlers(imageShape: Image): void {
+    let downX = 0;
+    let downY = 0;
+
+    imageShape.addEvent('mousedown', (event: Event) => {
+      const me = event as MouseEvent;
+      downX = me.clientX;
+      downY = me.clientY;
+    });
+
+    imageShape.addEvent('click', (event: Event) => {
+      if (!this.isReadOnly()) {
+        return;
+      }
+      const me = event as MouseEvent;
+      if (Math.hypot(me.clientX - downX, me.clientY - downY) > 6) {
+        return;
+      }
+      event.stopPropagation();
+      this.getDesigner()?.previewTopicImage(this);
+    });
   }
 
   private flatten2DElements(topic: Topic): (Topic | Relationship | TopicConnection)[] {

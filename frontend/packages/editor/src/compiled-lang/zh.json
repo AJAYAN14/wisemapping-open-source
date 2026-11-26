@@ -143,96 +143,6 @@
       "value": "撤销"
     }
   ],
-  "canvas-style.background-color": [
-    {
-      "type": 0,
-      "value": "背景颜色"
-    }
-  ],
-  "canvas-style.background-style": [
-    {
-      "type": 0,
-      "value": "背景样式"
-    }
-  ],
-  "canvas-style.grid-color": [
-    {
-      "type": 0,
-      "value": "网格颜色"
-    }
-  ],
-  "canvas-style.grid-size-l": [
-    {
-      "type": 0,
-      "value": "大"
-    }
-  ],
-  "canvas-style.grid-size-m": [
-    {
-      "type": 0,
-      "value": "中"
-    }
-  ],
-  "canvas-style.grid-size-s": [
-    {
-      "type": 0,
-      "value": "小"
-    }
-  ],
-  "canvas-style.grid-size-xl": [
-    {
-      "type": 0,
-      "value": "极大"
-    }
-  ],
-  "canvas-style.grid-size-xs": [
-    {
-      "type": 0,
-      "value": "极小"
-    }
-  ],
-  "canvas-style.grid-style": [
-    {
-      "type": 0,
-      "value": "网格大小"
-    }
-  ],
-  "canvas-style.pattern-default-tooltip": [
-    {
-      "type": 0,
-      "value": "默认 - 所有样式将根据主题自动选择"
-    }
-  ],
-  "canvas-style.pattern-dots": [
-    {
-      "type": 0,
-      "value": "点"
-    }
-  ],
-  "canvas-style.pattern-grid": [
-    {
-      "type": 0,
-      "value": "网格线"
-    }
-  ],
-  "canvas-style.pattern-solid": [
-    {
-      "type": 0,
-      "value": "纯色"
-    }
-  ],
-  "canvas-style.tab-color": [
-    {
-      "type": 0,
-      "value": "颜色"
-    }
-  ],
-  "canvas-style.tab-grid": [
-    {
-      "type": 0,
-      "value": "网格颜色"
-    }
-  ],
   "color-picker.color": [
     {
       "type": 0,
@@ -275,18 +185,6 @@
       "value": "无法将链接复制到剪贴板"
     }
   ],
-  "editor-panel.font-family-default": [
-    {
-      "type": 0,
-      "value": "默认"
-    }
-  ],
-  "editor-panel.font-family-mixed": [
-    {
-      "type": 0,
-      "value": "混合"
-    }
-  ],
   "editor-panel.link-panel-title": [
     {
       "type": 0,
@@ -297,12 +195,6 @@
     {
       "type": 0,
       "value": "笔记"
-    }
-  ],
-  "editor-panel.tooltip-add-icon": [
-    {
-      "type": 0,
-      "value": "添加图标"
     }
   ],
   "editor-panel.tooltip-add-link": [
@@ -327,12 +219,6 @@
     {
       "type": 0,
       "value": "添加主题图像"
-    }
-  ],
-  "editor-panel.tooltip-canvas-style": [
-    {
-      "type": 0,
-      "value": "背景"
     }
   ],
   "editor-panel.tooltip-copy-node-link": [
@@ -365,12 +251,6 @@
       "value": "字体样式"
     }
   ],
-  "editor-panel.tooltip-unified-styling": [
-    {
-      "type": 0,
-      "value": "主题和连接样式"
-    }
-  ],
   "editor.edit-description-mobile": [
     {
       "type": 0,
@@ -399,12 +279,6 @@
     {
       "type": 0,
       "value": "这个版本空间展示了一些思维导图功能！"
-    }
-  ],
-  "emoji-picker.search-placeholder": [
-    {
-      "type": 0,
-      "value": "搜索表情..."
     }
   ],
   "find-in-map.clear": [
@@ -471,222 +345,6 @@
     {
       "type": 0,
       "value": "上一个匹配"
-    }
-  ],
-  "icon-collection.border.dashed": [
-    {
-      "type": 0,
-      "value": "虚线"
-    }
-  ],
-  "icon-collection.border.default": [
-    {
-      "type": 0,
-      "value": "默认"
-    }
-  ],
-  "icon-collection.border.default-tooltip": [
-    {
-      "type": 0,
-      "value": "默认 - 颜色将根据所选主题自动设置"
-    }
-  ],
-  "icon-collection.border.dotted": [
-    {
-      "type": 0,
-      "value": "点线"
-    }
-  ],
-  "icon-collection.border.solid": [
-    {
-      "type": 0,
-      "value": "实线"
-    }
-  ],
-  "icon-collection.connection.arc": [
-    {
-      "type": 0,
-      "value": "弧线"
-    }
-  ],
-  "icon-collection.connection.arc-tooltip": [
-    {
-      "type": 0,
-      "value": "圆形弧线连接 - 非常适合放射状布局和有机流动"
-    }
-  ],
-  "icon-collection.connection.curved-polyline": [
-    {
-      "type": 0,
-      "value": "曲线折线"
-    }
-  ],
-  "icon-collection.connection.curved-polyline-tooltip": [
-    {
-      "type": 0,
-      "value": "具有平滑角的多段线 - 最适合结构化布局和清晰路径"
-    }
-  ],
-  "icon-collection.connection.default": [
-    {
-      "type": 0,
-      "value": "默认"
-    }
-  ],
-  "icon-collection.connection.default-tooltip": [
-    {
-      "type": 0,
-      "value": "默认 - 连接样式将根据主题自动选择"
-    }
-  ],
-  "icon-collection.connection.heartbeat": [
-    {
-      "type": 0,
-      "value": "心跳"
-    }
-  ],
-  "icon-collection.connection.heartbeat-tooltip": [
-    {
-      "type": 0,
-      "value": "受心电图启发的波形，具有尖锐的峰值 - 非常适合传达能量、紧迫感或生命信号"
-    }
-  ],
-  "icon-collection.connection.neuron": [
-    {
-      "type": 0,
-      "value": "神经元"
-    }
-  ],
-  "icon-collection.connection.neuron-tooltip": [
-    {
-      "type": 0,
-      "value": "具有分支脉冲的有机脉冲线 - 适合科学、神经网络或未来主义主题"
-    }
-  ],
-  "icon-collection.connection.simple-polyline": [
-    {
-      "type": 0,
-      "value": "简单折线"
-    }
-  ],
-  "icon-collection.connection.simple-polyline-tooltip": [
-    {
-      "type": 0,
-      "value": "直接的直线连接 - 简洁的极简风格用于简单关系"
-    }
-  ],
-  "icon-collection.connection.thick-curved": [
-    {
-      "type": 0,
-      "value": "粗曲线"
-    }
-  ],
-  "icon-collection.connection.thick-curved-tooltip": [
-    {
-      "type": 0,
-      "value": "具有平滑贝塞尔曲线的粗曲线 - 非常适合强调主要分支"
-    }
-  ],
-  "icon-collection.connection.thin-curved": [
-    {
-      "type": 0,
-      "value": "细曲线"
-    }
-  ],
-  "icon-collection.connection.thin-curved-tooltip": [
-    {
-      "type": 0,
-      "value": "具有优雅贝塞尔曲线的细曲线 - 适合详细或密集的心智图"
-    }
-  ],
-  "icon-collection.default-tooltip": [
-    {
-      "type": 0,
-      "value": "默认 - 所有样式将根据主题自动选择"
-    }
-  ],
-  "icon-collection.shape.default": [
-    {
-      "type": 0,
-      "value": "默认"
-    }
-  ],
-  "icon-collection.shape.ellipse": [
-    {
-      "type": 0,
-      "value": "椭圆"
-    }
-  ],
-  "icon-collection.shape.line": [
-    {
-      "type": 0,
-      "value": "线条"
-    }
-  ],
-  "icon-collection.shape.none": [
-    {
-      "type": 0,
-      "value": "无"
-    }
-  ],
-  "icon-collection.shape.none-tooltip": [
-    {
-      "type": 0,
-      "value": "无 - 无可见形状背景"
-    }
-  ],
-  "icon-collection.shape.rectangle": [
-    {
-      "type": 0,
-      "value": "矩形"
-    }
-  ],
-  "icon-collection.shape.rounded": [
-    {
-      "type": 0,
-      "value": "圆角"
-    }
-  ],
-  "icon-picker.emojis": [
-    {
-      "type": 0,
-      "value": "表情符号"
-    }
-  ],
-  "icon-picker.frequently-used": [
-    {
-      "type": 0,
-      "value": "常用"
-    }
-  ],
-  "icon-picker.icons": [
-    {
-      "type": 0,
-      "value": "图标库"
-    }
-  ],
-  "icon-picker.no-results": [
-    {
-      "type": 0,
-      "value": "找不到图标"
-    }
-  ],
-  "icon-picker.search-placeholder": [
-    {
-      "type": 0,
-      "value": "搜索图标..."
-    }
-  ],
-  "icon-picker.show-images": [
-    {
-      "type": 0,
-      "value": "显示图像"
-    }
-  ],
-  "icon-picker.upload-image": [
-    {
-      "type": 0,
-      "value": "上传图片"
     }
   ],
   "layout-selector.accept": [
@@ -907,12 +565,6 @@
     {
       "type": 0,
       "value": "增加缩进 (Tab)"
-    }
-  ],
-  "rich-text-editor.insert-icon": [
-    {
-      "type": 0,
-      "value": "插入图标"
     }
   ],
   "rich-text-editor.insert-link": [
@@ -1263,18 +915,6 @@
       "value": "用滚轮放大或缩小"
     }
   ],
-  "theme.dark": [
-    {
-      "type": 0,
-      "value": "深色"
-    }
-  ],
-  "theme.light": [
-    {
-      "type": 0,
-      "value": "浅色"
-    }
-  ],
   "theme.switch-to-dark": [
     {
       "type": 0,
@@ -1321,12 +961,6 @@
     {
       "type": 0,
       "value": "字体颜色"
-    }
-  ],
-  "topic-font-editor.font-family": [
-    {
-      "type": 0,
-      "value": "字体系列"
     }
   ],
   "topic-font-editor.font-size-style": [
@@ -1387,60 +1021,6 @@
     {
       "type": 0,
       "value": "正在压缩并上传至云端存储..."
-    }
-  ],
-  "unified-styling.background-color": [
-    {
-      "type": 0,
-      "value": "背景颜色"
-    }
-  ],
-  "unified-styling.border-color": [
-    {
-      "type": 0,
-      "value": "边框颜色"
-    }
-  ],
-  "unified-styling.border-style": [
-    {
-      "type": 0,
-      "value": "边框样式"
-    }
-  ],
-  "unified-styling.connection-style": [
-    {
-      "type": 0,
-      "value": "连接样式"
-    }
-  ],
-  "unified-styling.connector-style": [
-    {
-      "type": 0,
-      "value": "连接器样式"
-    }
-  ],
-  "unified-styling.shape-type": [
-    {
-      "type": 0,
-      "value": "形状类型"
-    }
-  ],
-  "unified-styling.tab.border": [
-    {
-      "type": 0,
-      "value": "边框"
-    }
-  ],
-  "unified-styling.tab.connector": [
-    {
-      "type": 0,
-      "value": "连接器"
-    }
-  ],
-  "unified-styling.tab.shape": [
-    {
-      "type": 0,
-      "value": "形状"
     }
   ],
   "visualization-toolbar.tooltip-add-child": [

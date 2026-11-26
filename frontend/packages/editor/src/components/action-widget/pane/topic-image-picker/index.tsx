@@ -15,56 +15,27 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-import React, { ReactElement, useEffect } from 'react';
-import Tab from '@mui/material/Tab';
+import { ReactElement, useEffect } from 'react';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
-import SentimentSatisfiedAltRoundedIcon from '@mui/icons-material/SentimentSatisfiedAltRounded';
-import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
-import AddPhotoAlternateRoundedIcon from '@mui/icons-material/AddPhotoAlternateRounded';
-import { FormattedMessage, useIntl } from 'react-intl';
-import type { EmojiClickData } from 'emoji-picker-react';
-import EmojiPicker from '../shared/emoji-picker';
+import { FormattedMessage } from 'react-intl';
 
 import NodeProperty from '../../../../classes/model/node-property';
 import { DesignerKeyboard, TopicImageValue } from '@wisemapping/mindplot';
-import TopicImageTab from './image-icon-tab';
 import ImageUploadTab from './image-upload-tab';
 import type { UploadTopicImageFn } from '../../../../hooks/useEditor';
-import { StyledEditorsTabs } from '../shared/StyledTabs';
-import {
-  PickerCloseButton,
-  PickerContent,
-  PickerEmojiArea,
-  PickerScrollArea,
-  PickerTabsBar,
-} from '../shared/StyledPicker';
-import { StyledEditorContainer } from '../shared/StyledEditorContainer';
-import { useTheme } from '../../../../contexts/ThemeContext';
+import { PaneCard, PaneCloseButton, PaneSectionTitle } from '../shared/StyledPane';
 
 type TopicImagePickerProp = {
   triggerClose: () => void;
-  emojiModel: NodeProperty<string | undefined>;
-  iconsGalleryModel: NodeProperty<string | undefined>;
   topicImageModel?: NodeProperty<TopicImageValue | undefined> | undefined;
   onUploadTopicImage?: UploadTopicImageFn | undefined;
 };
 
 const TopicImagePicker = ({
   triggerClose,
-  emojiModel,
-  iconsGalleryModel,
   topicImageModel,
   onUploadTopicImage,
 }: TopicImagePickerProp): ReactElement => {
-  const [tabValue, setTabValue] = React.useState(0); // 0 = Image Gallery, 1 = Emojis
-  const { mode } = useTheme();
-  const intl = useIntl();
-
-  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
-    setTabValue(newValue);
-  };
-
-  // Review ...
   useEffect(() => {
     DesignerKeyboard.pause();
     return () => {
@@ -72,89 +43,23 @@ const TopicImagePicker = ({
     };
   }, []);
 
-  const handleEmojiSelect = (emoji: EmojiClickData) => {
-    const emojiChar = emoji.emoji;
-    const setEmojiValue = emojiModel.setValue;
-    const setIconsValue = iconsGalleryModel.setValue;
-
-    if (setEmojiValue) {
-      setEmojiValue(emojiChar); // Store just the emoji character
-    }
-
-    // Clear the icons gallery when emoji is selected
-    if (setIconsValue) {
-      setIconsValue(undefined);
-    }
-
-    // Don't close the picker - allow multiple emoji selections
-    // triggerClose();
-  };
-
   return (
-    <StyledEditorContainer>
-      <PickerCloseButton onClick={triggerClose}>
+    <PaneCard sx={{ p: 0, pt: 1.75 }}>
+      <PaneCloseButton onClick={triggerClose} aria-label="Close">
         <CloseRoundedIcon />
-      </PickerCloseButton>
-      {/* Tabs at the top */}
-      <PickerTabsBar>
-        <StyledEditorsTabs
-          value={tabValue}
-          onChange={handleTabChange}
-          variant="fullWidth"
-          centered
-          aria-label="icon picker tabs"
-        >
-          <Tab
-            icon={<ImageOutlinedIcon />}
-            label={<FormattedMessage id="icon-picker.icons" defaultMessage="Icons Gallery" />}
-            iconPosition="start"
-            sx={{ minWidth: 0, px: 1 }}
-          />
-          <Tab
-            icon={<SentimentSatisfiedAltRoundedIcon />}
-            label={<FormattedMessage id="icon-picker.emojis" defaultMessage="Emojis" />}
-            iconPosition="start"
-            sx={{ minWidth: 0, px: 1 }}
-          />
-          <Tab
-            icon={<AddPhotoAlternateRoundedIcon />}
-            label={<FormattedMessage id="icon-picker.upload-image" defaultMessage="Upload Image" />}
-            iconPosition="start"
-            sx={{ minWidth: 0, px: 1 }}
-          />
-        </StyledEditorsTabs>
-      </PickerTabsBar>
-
-      {/* Content area */}
-      <PickerContent>
-        {tabValue === 0 && (
-          <PickerScrollArea>
-            <TopicImageTab iconModel={iconsGalleryModel} emojiModel={emojiModel} />
-          </PickerScrollArea>
-        )}
-        {tabValue === 1 && (
-          <PickerEmojiArea>
-            <EmojiPicker
-              onEmojiClick={handleEmojiSelect}
-              theme={mode === 'dark' ? 'dark' : 'light'}
-              searchPlaceholder={intl.formatMessage({
-                id: 'emoji-picker.search-placeholder',
-                defaultMessage: 'Search emojis...',
-              })}
-            />
-          </PickerEmojiArea>
-        )}
-        {tabValue === 2 && (
-          <PickerScrollArea>
-            <ImageUploadTab
-              topicImageModel={topicImageModel}
-              onUploadTopicImage={onUploadTopicImage}
-              onImageApplied={triggerClose}
-            />
-          </PickerScrollArea>
-        )}
-      </PickerContent>
-    </StyledEditorContainer>
+      </PaneCloseButton>
+      <PaneSectionTitle variant="subtitle2" sx={{ px: 2, mb: 0 }}>
+        <FormattedMessage
+          id="editor-panel.tooltip-add-topic-image"
+          defaultMessage="Add Topic Image"
+        />
+      </PaneSectionTitle>
+      <ImageUploadTab
+        topicImageModel={topicImageModel}
+        onUploadTopicImage={onUploadTopicImage}
+        onImageApplied={triggerClose}
+      />
+    </PaneCard>
   );
 };
 export default TopicImagePicker;

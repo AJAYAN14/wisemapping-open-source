@@ -183,9 +183,3 @@ export const FooterBar = styled(Box)(({ theme }) => ({
   borderColor: theme.palette.divider,
   backgroundColor: theme.palette.background.default,
 }));
-
-export const EmojiPopoverBox = styled(Box)({
-  width: 'clamp(240px, 85dvw, 320px)',
-  height: 'clamp(280px, 50dvh, 350px)',
-  overflow: 'hidden',
-});

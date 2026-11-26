@@ -128,7 +128,7 @@ describe('Topic touch long-press edit & mobile ergonomics', () => {
     expect(isObjectTouch(event)).toBe(true);
   });
 
-  it('hides keyboard helper shortcuts and expands plus-button touch hit targets on coarse pointers', async () => {
+  it('hides keyboard shortcut keycaps inside action pills and expands touch padding on touch/mobile devices', async () => {
     const originalMatchMedia = window.matchMedia;
     window.matchMedia = jest.fn().mockImplementation((query: string) => ({
       matches: query === '(pointer: coarse)',
@@ -147,12 +147,14 @@ describe('Topic touch long-press edit & mobile ergonomics', () => {
       leaf.setOnFocus(true);
 
       const shadow = harness.designer.getSelectionShadows().get(leaf) as unknown as {
-        _helperContainer: HTMLDivElement;
-        _rightPlus: HTMLDivElement;
+        _rightPlus: HTMLDivElement & {
+          _pillState: { badge: HTMLSpanElement; labelSpan: HTMLSpanElement; kbdSpan: HTMLSpanElement };
+        };
       };
-      expect(shadow._helperContainer.style.display).toBe('none');
-      expect(shadow._rightPlus.style.border).toBe('10px solid transparent');
-      expect(shadow._rightPlus.style.width).toBe('24px');
+      expect(shadow._rightPlus._pillState.kbdSpan.style.display).toBe('none');
+      expect(shadow._rightPlus._pillState.labelSpan.textContent).toBe('子主题');
+      expect(shadow._rightPlus.style.minHeight).toBe('36px');
+      expect(shadow._rightPlus._pillState.badge.style.width).toBe('22px');
     } finally {
       window.matchMedia = originalMatchMedia;
     }

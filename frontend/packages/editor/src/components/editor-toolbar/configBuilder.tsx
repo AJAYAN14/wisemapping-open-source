@@ -15,28 +15,21 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-import PaletteOutlinedIcon from '@mui/icons-material/PaletteOutlined';
 import TextFieldsRoundedIcon from '@mui/icons-material/TextFieldsRounded';
-import SettingsEthernetRoundedIcon from '@mui/icons-material/SettingsEthernetRounded';
 import StickyNote2OutlinedIcon from '@mui/icons-material/StickyNote2Outlined';
 import LinkRoundedIcon from '@mui/icons-material/LinkRounded';
-import SentimentSatisfiedAltRoundedIcon from '@mui/icons-material/SentimentSatisfiedAltRounded';
 import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
-import GridOnOutlinedIcon from '@mui/icons-material/GridOnOutlined';
 
 import ActionConfig from '../../classes/action/action-config';
 import NodePropertyValueModelBuilder from '../../classes/model/node-property-builder';
 import TopicLinkEditor from '../action-widget/pane/topic-link-editor';
 import RichTextNoteEditor from '../action-widget/pane/rich-text-note-editor';
 import TopicImagePicker from '../action-widget/pane/topic-image-picker';
-import TopicStyleEditor from '../action-widget/pane/topic-style-editor';
 import TopicFontEditor from '../action-widget/pane/topic-font-editor';
 import RelationshipStyleEditor from '../action-widget/pane/relationship-style-editor';
 import RelationshipStyleIcon from '../icons/RelationshipStyleIcon';
-import TopicIconEditor from '../action-widget/pane/topic-icon-editor';
 import Editor from '../../classes/model/editor';
 import { IntlShape } from 'react-intl';
-import CanvasStyleEditor, { CanvasStyle } from '../action-widget/pane/canvas-style-editor';
 import { formatTooltip } from '../visualization-toolbar/utils';
 import type { SelectionSnapshot } from '../../hooks/useSelection';
 import type { UploadTopicImageFn } from '../../hooks/useEditor';
@@ -56,32 +49,6 @@ export function buildEditorPanelConfig(
   const modelBuilder = new NodePropertyValueModelBuilder(model.getDesigner());
   const noTopicSelected = selection.topicCount === 0;
   const noRelationshipSelected = selection.relationshipCount === 0;
-
-  const styleConfiguration: ActionConfig = {
-    icon: <PaletteOutlinedIcon />,
-    tooltip: intl.formatMessage({
-      id: 'editor-panel.tooltip-unified-styling',
-      defaultMessage: 'Style Topic & Connections',
-    }),
-    options: [
-      {
-        render: (closeModal) => {
-          return (
-            <TopicStyleEditor
-              closeModal={closeModal}
-              shapeModel={modelBuilder.getTopicShapeModel()}
-              fillColorModel={modelBuilder.getSelectedTopicColorModel()}
-              borderColorModel={modelBuilder.getColorBorderModel()}
-              borderStyleModel={modelBuilder.getBorderStyleModel()}
-              connectionStyleModel={modelBuilder.getConnectionStyleModel()}
-              connectionColorModel={modelBuilder.getConnectionColorModel()}
-            />
-          );
-        },
-      },
-    ],
-    disabled: () => noTopicSelected,
-  };
 
   const relationshipStyleConfiguration: ActionConfig = {
     icon: <RelationshipStyleIcon />,
@@ -122,33 +89,16 @@ export function buildEditorPanelConfig(
           return (
             <TopicFontEditor
               closeModal={closeModal}
-              fontFamilyModel={modelBuilder.getFontFamilyModel()}
               fontSizeModel={modelBuilder.getFontSizeModel()}
               fontWeightModel={modelBuilder.fontWeigthModel()}
               fontStyleModel={modelBuilder.getFontStyleModel()}
               fontColorModel={modelBuilder.getFontColorModel()}
-              // @todo: This does not seem correct.
               model={model}
             />
           );
         },
       },
     ],
-    disabled: () => noTopicSelected,
-  };
-
-  /**
-   * button to show relation pivot
-   */
-  const addRelationConfiguration: ActionConfig = {
-    icon: <SettingsEthernetRoundedIcon />,
-    tooltip: intl.formatMessage({
-      id: 'editor-panel.tooltip-add-relationship',
-      defaultMessage: 'Add Relationship',
-    }),
-    onClick: (e) => {
-      model.getDesigner().showRelPivot(e.nativeEvent);
-    },
     disabled: () => noTopicSelected,
   };
 
@@ -169,34 +119,6 @@ export function buildEditorPanelConfig(
       },
     ],
     disabled: () => noTopicSelected,
-  };
-
-  /**
-   * tool for background customization
-   */
-  const editCanvasStyleConfiguration: ActionConfig = {
-    icon: <GridOnOutlinedIcon />,
-    tooltip: intl.formatMessage({
-      id: 'editor-panel.tooltip-canvas-style',
-      defaultMessage: 'Background',
-    }),
-    options: [
-      {
-        render: (closeModal) => {
-          return (
-            <CanvasStyleEditor
-              closeModal={closeModal}
-              initialStyle={
-                model.getDesigner().getMindmap()?.getCanvasStyle() as Partial<CanvasStyle>
-              }
-              onStyleChange={(style: Partial<CanvasStyle>) => {
-                model.getDesigner().setCanvasStyle(style);
-              }}
-            />
-          );
-        },
-      },
-    ],
   };
 
   /**
@@ -225,27 +147,6 @@ export function buildEditorPanelConfig(
   };
 
   /**
-   * tool for emoji selection
-   */
-  const editIconConfiguration: ActionConfig = {
-    icon: <SentimentSatisfiedAltRoundedIcon />,
-    tooltip: intl.formatMessage({
-      id: 'editor-panel.tooltip-add-icon',
-      defaultMessage: 'Add Icon',
-    }),
-    options: [
-      {
-        render: (closeModal) => {
-          return (
-            <TopicIconEditor closeModal={closeModal} iconModel={modelBuilder.getTopicIconModel()} />
-          );
-        },
-      },
-    ],
-    disabled: () => noTopicSelected,
-  };
-
-  /**
    * tool for topic image selection
    */
   const editTopicImageConfiguration: ActionConfig = {
@@ -264,8 +165,6 @@ export function buildEditorPanelConfig(
           return (
             <TopicImagePicker
               triggerClose={closeModal}
-              emojiModel={modelBuilder.getImageEmojiCharModel()}
-              iconsGalleryModel={modelBuilder.getImageGalleryIconNameModel()}
               topicImageModel={modelBuilder.getTopicImageModel()}
               onUploadTopicImage={uploadTopicImage}
             />
@@ -277,14 +176,10 @@ export function buildEditorPanelConfig(
   };
 
   return [
-    styleConfiguration,
     fontFormatToolbarConfiguration,
-    editIconConfiguration,
     editTopicImageConfiguration,
     editNoteConfiguration,
     editLinkUrlConfiguration,
-    addRelationConfiguration,
-    relationshipStyleConfiguration,
-    editCanvasStyleConfiguration,
+    ...(selection.relationshipCount > 0 ? [relationshipStyleConfiguration] : []),
   ];
 }

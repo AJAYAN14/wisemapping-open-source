@@ -19,6 +19,7 @@ import { Group } from '@wisemapping/web2d';
 import { $assert } from './util/assert';
 
 import Topic from './Topic';
+import TopicConfig from './TopicConfig';
 import Shape from './util/Shape';
 import type Canvas from './Canvas';
 import type PositionType from './PositionType';
@@ -85,12 +86,12 @@ class MainTopic extends Topic {
     const orientation = this.getOrientation();
 
     if (orientation === 'vertical') {
-      // Tree layout: parent receives connection from child at BOTTOM center
+      // Tree layout: parent receives connection from child at the connector center below bottom edge
       const pos = this.getPosition();
       const size = this.getSize();
       return {
         x: pos.x,
-        y: pos.y + size.height / 2, // Bottom center
+        y: pos.y + size.height / 2 + TopicConfig.CONNECTOR_OUTWARD_OFFSET,
       };
     }
 

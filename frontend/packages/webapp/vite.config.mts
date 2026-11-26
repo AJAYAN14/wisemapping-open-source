@@ -144,7 +144,6 @@ export default defineConfig(({ mode }) => {
         'react-router',
         'react-intl',
         '@tanstack/react-query',
-        'emoji-picker-react',
         'lodash',
       ],
     },

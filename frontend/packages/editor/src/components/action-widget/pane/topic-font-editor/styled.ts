@@ -19,8 +19,6 @@
 import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
-import Select from '@mui/material/Select';
-import Typography from '@mui/material/Typography';
 import { styled } from '@mui/material/styles';
 import { StyledEditorContainer } from '../shared/StyledEditorContainer';
 
@@ -48,44 +46,6 @@ export const ActionButton = styled(IconButton)<{ selected?: boolean }>(({ select
   },
 }));
 
-/** The font family menu, written in the font that is selected. */
-export const FontSelect = styled(Select, {
-  shouldForwardProp: (prop) => prop !== 'currentFamily',
-})<{ currentFamily?: string | undefined }>(({ theme, currentFamily }) => ({
-  fontSize: '0.656rem',
-  fontFamily: currentFamily || 'inherit',
-  '& .MuiSelect-select': {
-    paddingTop: theme.spacing(1.25),
-    paddingBottom: theme.spacing(1.25),
-    paddingLeft: theme.spacing(1.5),
-    paddingRight: theme.spacing(1.5),
-  },
-  '& .MuiOutlinedInput-notchedOutline': {
-    borderColor: theme.palette.divider,
-  },
-  '&:hover .MuiOutlinedInput-notchedOutline': {
-    borderColor: theme.palette.text.secondary,
-  },
-  '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-    borderColor: theme.palette.primary.main,
-  },
-}));
-
-/** "Default" or "Mixed", when no one font applies. */
-export const FontFallbackLabel = styled(Typography)(({ theme }) => ({
-  fontStyle: 'italic',
-  color: theme.palette.text.secondary,
-  fontSize: '0.656rem',
-}));
-
-/** A font's name, in that font. */
-export const FontOptionLabel = styled(Typography, {
-  shouldForwardProp: (prop) => prop !== 'family',
-})<{ family: string }>(({ family }) => ({
-  fontFamily: family,
-  fontSize: '0.656rem',
-}));
-
 export const ResetSection = styled(Box)(({ theme }) => ({
   marginTop: theme.spacing(2),
   paddingTop: theme.spacing(2),
@@ -99,18 +59,3 @@ export const ResetButton = styled(Button)(({ theme }) => ({
   paddingTop: theme.spacing(0.75),
   paddingBottom: theme.spacing(0.75),
 }));
-
-/** The options of the font menu: a scrolling list with room around each font. */
-export const fontMenuProps = {
-  slotProps: {
-    paper: {
-      sx: {
-        maxHeight: 300,
-        '& .MuiMenuItem-root': {
-          py: 1,
-          px: 2,
-        },
-      },
-    },
-  },
-};

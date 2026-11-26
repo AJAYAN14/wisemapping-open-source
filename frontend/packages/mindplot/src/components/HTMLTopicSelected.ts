@@ -20,7 +20,6 @@ import type ScreenManager from './ScreenManager';
 import type Topic from './Topic';
 import type Designer from './Designer';
 import ColorUtil from './theme/ColorUtil';
-import type { ThemeVariant } from './theme/Theme';
 import type { OrientationType } from './layout/LayoutType';
 import { $msg } from './Messages';
 import type { LayoutEventPayloads } from './layout/LayoutEventBus';
@@ -45,14 +44,22 @@ type Unsubscribe = () => void;
 /** LayoutEventBus registration made by initializeSelectionShadows, per designer. */
 const unsubscribeByDesigner = new WeakMap<Designer, Unsubscribe>();
 
-type HelperElements = {
-  container: HTMLDivElement;
-  tabRow: HTMLDivElement;
-  tabKey: HTMLDivElement;
-  tabText: HTMLSpanElement;
-  enterRow: HTMLDivElement;
-  enterKey: HTMLDivElement;
-  enterText: HTMLSpanElement;
+type PillVisualState = {
+  badge: HTMLSpanElement;
+  labelSpan: HTMLSpanElement;
+  kbdSpan: HTMLSpanElement;
+  badgeBaseColor?: string;
+  badgeHoverColor?: string;
+  pillBaseBg?: string;
+  pillHoverBg?: string;
+  pillBaseBorder?: string;
+  pillHoverBorder?: string;
+};
+
+type ActionPillElement = HTMLDivElement & {
+  _pillState?: PillVisualState;
+  _baseColor?: string;
+  _hoverColor?: string;
 };
 
 type OverlayGeometry = {
@@ -62,6 +69,7 @@ type OverlayGeometry = {
   overlayHeight: number;
   overlayRight: number;
   topicLeft: number;
+  topicTop: number;
   topicRight: number;
   topicBottom: number;
   topicCenterX: number;
@@ -71,23 +79,52 @@ type OverlayGeometry = {
   isOnLeft: boolean;
 };
 
-const isCoarsePointerDevice = (): boolean =>
-  typeof window !== 'undefined' &&
-  typeof window.matchMedia === 'function' &&
-  window.matchMedia('(pointer: coarse)').matches;
+const MOBILE_USER_AGENT_REGEX = new RegExp(
+  '(android|bb\\d+|meego).+mobile|avantgo|bada\\/|blackberry|blazer|compal|elaine|fennec|' +
+    'hiptop|iemobile|ip(hone|od)|ipad|iris|kindle|Android|Silk|lge |maemo|midp|mmp|netfront|' +
+    'opera m(ob|in)i|palm( os)?|phone|p(ixi|re)\\/|plucker|pocket|psp|series(4|6)0|symbian|' +
+    'treo|up\\.(browser|link)|vodafone|wap|windows (ce|phone)|xda|xiino',
+  'i',
+);
+
+const isTouchOrMobileDevice = (): boolean => {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+  const hasMatchMedia = typeof window.matchMedia === 'function';
+  if (hasMatchMedia && window.matchMedia('(pointer: coarse)').matches) {
+    return true;
+  }
+  const hasAnyCoarseOnly =
+    hasMatchMedia &&
+    window.matchMedia('(any-pointer: coarse)').matches &&
+    !window.matchMedia('(any-pointer: fine)').matches;
+  if (hasAnyCoarseOnly) {
+    return true;
+  }
+  const hasTouchNarrowViewport =
+    hasMatchMedia &&
+    window.matchMedia('(max-width: 899.95px)').matches &&
+    ((typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0) || 'ontouchstart' in window);
+  if (hasTouchNarrowViewport) {
+    return true;
+  }
+  if (typeof navigator !== 'undefined' && MOBILE_USER_AGENT_REGEX.test(navigator.userAgent)) {
+    return true;
+  }
+  return false;
+};
 
 class HTMLTopicSelected {
   private _overlayContainer: HTMLDivElement | undefined;
 
   private _overlay: HTMLDivElement | undefined;
 
-  private _helperContainer: HTMLDivElement | undefined;
+  private _rightPlus: ActionPillElement | undefined;
 
-  private _helperElements: HelperElements | undefined;
+  private _bottomPlus: ActionPillElement | undefined;
 
-  private _rightPlus: HTMLDivElement | undefined;
-
-  private _bottomPlus: HTMLDivElement | undefined;
+  private _imagePreviewButton: HTMLDivElement | undefined;
 
   private _screenManager: ScreenManager;
 
@@ -106,7 +143,6 @@ class HTMLTopicSelected {
     this._containerElement = containerElement;
     this._screenManager = screenManager;
     this._isVisible = false;
-    this._helperContainer = undefined;
 
     // Create overlay container - insert it first so it's behind SVG
     this._overlayContainer = document.createElement('div');
@@ -304,72 +340,61 @@ class HTMLTopicSelected {
     // Hover color: lighten even more to signal interactivity
     const plusButtonHoverColor = ColorUtil.lightenColor(connectionColor, 60);
 
+    const isDark = variant === 'dark';
+    const pillPalette = {
+      badgeBase: plusButtonColor,
+      badgeHover: plusButtonHoverColor,
+      pillBaseBg: isDark ? 'rgba(30, 30, 34, 0.90)' : 'rgba(255, 255, 255, 0.92)',
+      pillHoverBg: isDark ? 'rgba(46, 46, 52, 0.96)' : 'rgba(255, 255, 255, 1)',
+      pillBaseBorder: isDark ? 'rgba(255, 255, 255, 0.14)' : 'rgba(15, 23, 42, 0.12)',
+      pillHoverBorder: ColorUtil.lightenColor(connectionColor, isDark ? 20 : 35),
+      pillShadow: isDark ? '0 2px 10px rgba(0, 0, 0, 0.38)' : '0 2px 8px rgba(15, 23, 42, 0.08)',
+      labelColor: isDark ? '#F4F4F5' : '#1E293B',
+      kbdBg: isDark ? 'rgba(255, 255, 255, 0.10)' : 'rgba(15, 23, 42, 0.06)',
+      kbdColor: isDark ? '#A1A1AA' : '#64748B',
+    };
+
     if (this._rightPlus) {
-      this._rightPlus.style.backgroundColor = plusButtonColor;
-      this.setupHoverEffect(this._rightPlus, plusButtonColor, plusButtonHoverColor);
+      this.applyPillColors(this._rightPlus, pillPalette);
     }
     if (this._bottomPlus) {
-      this._bottomPlus.style.backgroundColor = plusButtonColor;
-      this.setupHoverEffect(this._bottomPlus, plusButtonColor, plusButtonHoverColor);
+      this.applyPillColors(this._bottomPlus, pillPalette);
     }
 
-    // Update helper text colors based on variant
-    this.updateHelperTextColors(variant);
     return true;
   }
 
-  /**
-   * Update helper text colors based on theme variant
-   */
-  private updateHelperTextColors(variant: ThemeVariant): void {
-    if (!this._helperContainer) {
-      return;
+  private applyPillColors(
+    pill: ActionPillElement,
+    palette: {
+      badgeBase: string;
+      badgeHover: string;
+      pillBaseBg: string;
+      pillHoverBg: string;
+      pillBaseBorder: string;
+      pillHoverBorder: string;
+      pillShadow: string;
+      labelColor: string;
+      kbdBg: string;
+      kbdColor: string;
+    },
+  ): void {
+    const state = pill._pillState;
+    if (state) {
+      state.badgeBaseColor = palette.badgeBase;
+      state.badgeHoverColor = palette.badgeHover;
+      state.pillBaseBg = palette.pillBaseBg;
+      state.pillHoverBg = palette.pillHoverBg;
+      state.pillBaseBorder = palette.pillBaseBorder;
+      state.pillHoverBorder = palette.pillHoverBorder;
+      state.badge.style.backgroundColor = palette.badgeBase;
+      state.labelSpan.style.color = palette.labelColor;
+      state.kbdSpan.style.backgroundColor = palette.kbdBg;
+      state.kbdSpan.style.color = palette.kbdColor;
     }
-
-    if (!this._helperElements) {
-      return;
-    }
-
-    const { tabKey, tabText, enterKey, enterText } = this._helperElements;
-    const applyColors = (
-      key: HTMLDivElement,
-      text: HTMLSpanElement,
-      keyStyles: { backgroundColor: string; borderColor: string; color: string },
-      textColor: string,
-    ) => {
-      key.style.backgroundColor = keyStyles.backgroundColor;
-      key.style.borderColor = keyStyles.borderColor;
-      key.style.color = keyStyles.color;
-      text.style.color = textColor;
-    };
-
-    if (variant === 'dark') {
-      applyColors(
-        tabKey,
-        tabText,
-        { backgroundColor: '#2C2C2E', borderColor: '#38383A', color: '#F5F5F7' },
-        '#A1A1A6',
-      );
-      applyColors(
-        enterKey,
-        enterText,
-        { backgroundColor: '#2C2C2E', borderColor: '#38383A', color: '#F5F5F7' },
-        '#A1A1A6',
-      );
-    } else {
-      applyColors(
-        tabKey,
-        tabText,
-        { backgroundColor: '#E5E5EA', borderColor: '#C6C6C8', color: '#1D1D1F' },
-        '#6E6E73',
-      );
-      applyColors(
-        enterKey,
-        enterText,
-        { backgroundColor: '#E5E5EA', borderColor: '#C6C6C8', color: '#1D1D1F' },
-        '#6E6E73',
-      );
-    }
+    pill.style.boxShadow = palette.pillShadow;
+    pill.style.borderColor = palette.pillBaseBorder;
+    this.setupHoverEffect(pill, palette.pillBaseBg, palette.pillHoverBg);
   }
 
   private computeOverlayGeometry(topic: Topic): OverlayGeometry | undefined {
@@ -407,6 +432,7 @@ class HTMLTopicSelected {
       overlayHeight,
       overlayRight: overlayLeft + overlayWidth,
       topicLeft: left,
+      topicTop: top,
       topicRight: left + width,
       topicBottom: top + height,
       topicCenterX: left + width / 2,
@@ -427,6 +453,7 @@ class HTMLTopicSelected {
     }
 
     const hasChildren = this.withTopic((topic) => topic.getChildren().length > 0) ?? false;
+    const hasImage = this.withTopic((topic) => Boolean(topic.getImageUrl()?.trim())) ?? false;
 
     const colorsUpdated = this.updateColors();
     if (colorsUpdated === false) {
@@ -440,9 +467,9 @@ class HTMLTopicSelected {
       this._overlay.style.display = 'block';
       this.applyOverlayFrame(geometry);
     }
-    this.updateHelperBox(geometry, hasChildren);
     this.ensurePlusButtons();
     this.updatePlusButtons(geometry, hasChildren);
+    this.updateImagePreviewButton(geometry, hasImage);
   }
 
   private applyOverlayFrame({
@@ -464,184 +491,16 @@ class HTMLTopicSelected {
     this._overlay.style.borderRadius = '10px';
   }
 
-  private ensureHelperElements(): HelperElements | undefined {
-    if (this._helperElements) {
-      return this._helperElements;
-    }
-
-    if (!this._overlayContainer) {
-      return undefined;
-    }
-
-    const helperContainer = document.createElement('div');
-    helperContainer.style.position = 'absolute';
-    helperContainer.style.pointerEvents = 'none';
-    helperContainer.style.zIndex = '1000';
-    helperContainer.style.transition = 'none';
-    helperContainer.style.display = 'flex';
-    helperContainer.style.flexDirection = 'column';
-    helperContainer.style.gap = '8px';
-    helperContainer.style.alignItems = 'flex-start';
-    helperContainer.style.justifyContent = 'flex-start';
-
-    const createHelperRow = () => {
-      const row = document.createElement('div');
-      row.style.display = 'flex';
-      row.style.alignItems = 'center';
-      row.style.gap = '8px';
-      row.style.justifyContent = 'flex-start';
-      row.style.flexDirection = 'row';
-      row.style.textAlign = 'left';
-      return row;
-    };
-
-    const createKey = (label: string) => {
-      const key = document.createElement('div');
-      key.textContent = label;
-      key.style.padding = '4px 8px';
-      key.style.border = '1px solid';
-      key.style.borderRadius = '4px';
-      key.style.fontSize = '12px';
-      key.style.fontFamily = 'Arial, sans-serif';
-      key.style.display = 'flex';
-      key.style.alignItems = 'center';
-      key.style.justifyContent = 'center';
-      key.style.lineHeight = '1';
-      key.style.whiteSpace = 'nowrap';
-      return key;
-    };
-
-    const createText = (textContent: string) => {
-      const text = document.createElement('span');
-      text.textContent = textContent;
-      text.style.fontSize = '14px';
-      text.style.fontFamily = 'Arial, sans-serif';
-      text.style.display = 'flex';
-      text.style.alignItems = 'center';
-      text.style.lineHeight = '1';
-      text.style.whiteSpace = 'nowrap';
-      return text;
-    };
-
-    const tabRow = createHelperRow();
-    const tabKey = createKey('Tab');
-    const tabText = createText($msg('TAB_TO_CREATE_CHILD'));
-    tabRow.appendChild(tabKey);
-    tabRow.appendChild(tabText);
-
-    const enterRow = createHelperRow();
-    const enterKey = createKey('Enter');
-    const enterText = createText($msg('ENTER_TO_CREATE_SIBLING'));
-    enterRow.appendChild(enterKey);
-    enterRow.appendChild(enterText);
-
-    helperContainer.appendChild(tabRow);
-    helperContainer.appendChild(enterRow);
-    this._overlayContainer.appendChild(helperContainer);
-
-    this._helperContainer = helperContainer;
-    this._helperElements = {
-      container: helperContainer,
-      tabRow,
-      tabKey,
-      tabText,
-      enterRow,
-      enterKey,
-      enterText,
-    };
-
-    const variant = this.withTopic((topic) => topic.getThemeVariant());
-    if (variant) {
-      this.updateHelperTextColors(variant);
-    }
-
-    return this._helperElements;
-  }
-
-  private setHelperRowLayout(
-    row: HTMLDivElement,
-    direction: 'row' | 'row-reverse',
-    justify: 'flex-start' | 'flex-end' | 'center',
-    textAlign: 'left' | 'right' | 'center',
-  ): void {
-    row.style.flexDirection = direction;
-    row.style.justifyContent = justify;
-    row.style.textAlign = textAlign;
-  }
-
-  private updateHelperBox(geometry: OverlayGeometry, hasChildren: boolean): void {
-    const helper = this.ensureHelperElements();
-    if (!helper) {
-      return;
-    }
-
-    const { container, tabRow, enterRow } = helper;
-    // Hide keyboard shortcut helper text on touch/coarse-pointer devices or when topic has children
-    if (isCoarsePointerDevice()) {
-      container.style.display = 'none';
-      return;
-    }
-    container.style.display = hasChildren ? 'none' : 'flex';
-
-    if (hasChildren) {
-      return;
-    }
-
-    const plusButtonDistance = 26; // Same as plus button distance
-    const plusButtonDistanceBottom = 11; // Same as bottom plus button distance
-    const helperHorizontalGap = 13; // Gap between plus button and helper text
-    const helperVerticalGap = 13; // Gap between plus button and helper text
-
-    if (geometry.isVertical) {
-      // For vertical layout, center helper text horizontally on the bottom plus button
-      container.style.flexDirection = 'column';
-      container.style.alignItems = 'center';
-      container.style.justifyContent = 'flex-start';
-      // Position below the bottom plus button, centered horizontally
-      const bottomButtonTop = geometry.topicBottom + plusButtonDistanceBottom;
-      container.style.top = `${bottomButtonTop + helperVerticalGap}px`;
-      // Center horizontally on the topic center (where the bottom plus button is)
-      container.style.left = `${geometry.topicCenterX}px`;
-      container.style.right = 'auto';
-      container.style.transform = 'translateX(-50%)'; // Center horizontally
-      this.setHelperRowLayout(tabRow, 'row', 'center', 'center');
-      this.setHelperRowLayout(enterRow, 'row', 'center', 'center');
-    } else {
-      // For horizontal layout, center helper text vertically on the right/left plus button
-      container.style.flexDirection = 'column';
-      container.style.alignItems = geometry.isOnLeft ? 'flex-end' : 'flex-start';
-      container.style.justifyContent = 'center'; // Center vertically
-      // Position at the same vertical center as the plus button
-      container.style.top = `${geometry.topicCenterY}px`;
-      const helperOffset = plusButtonDistance + helperHorizontalGap;
-      if (geometry.isOnLeft) {
-        container.style.left = `${geometry.topicLeft - helperOffset}px`;
-        container.style.right = 'auto';
-        container.style.transform = 'translateX(-100%) translateY(-50%)'; // Center vertically
-      } else {
-        container.style.left = `${geometry.topicRight + helperOffset}px`;
-        container.style.right = 'auto';
-        container.style.transform = 'translateY(-50%)'; // Center vertically
-      }
-      const direction = geometry.isOnLeft ? 'row-reverse' : 'row';
-      const justify = geometry.isOnLeft ? 'flex-end' : 'flex-start';
-      const textAlign = geometry.isOnLeft ? 'right' : 'left';
-      this.setHelperRowLayout(tabRow, direction, justify, textAlign);
-      this.setHelperRowLayout(enterRow, direction, justify, textAlign);
-    }
-  }
-
   /**
    * Create SVG plus icon
    */
-  private createPlusIcon(): SVGElement {
+  private createPlusIcon(size = 12): SVGElement {
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
     svg.setAttribute('viewBox', '0 0 16 16');
-    svg.setAttribute('width', '16');
-    svg.setAttribute('height', '16');
+    svg.setAttribute('width', String(size));
+    svg.setAttribute('height', String(size));
     svg.style.display = 'block';
     svg.style.fill = 'currentColor';
-    // Allow pointer events to pass through to parent for tooltip
     svg.style.pointerEvents = 'none';
 
     const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -659,75 +518,114 @@ class HTMLTopicSelected {
     return svg;
   }
 
+  private createZoomIcon(size = 14): SVGElement {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('width', String(size));
+    svg.setAttribute('height', String(size));
+    svg.setAttribute('fill', 'none');
+    svg.setAttribute('stroke', 'currentColor');
+    svg.setAttribute('stroke-width', '2.2');
+    svg.setAttribute('stroke-linecap', 'round');
+    svg.setAttribute('stroke-linejoin', 'round');
+    svg.style.display = 'block';
+    svg.style.pointerEvents = 'none';
+
+    const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    circle.setAttribute('cx', '11');
+    circle.setAttribute('cy', '11');
+    circle.setAttribute('r', '7');
+
+    const handle = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    handle.setAttribute('x1', '16.5');
+    handle.setAttribute('y1', '16.5');
+    handle.setAttribute('x2', '21');
+    handle.setAttribute('y2', '21');
+
+    const plusH = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    plusH.setAttribute('x1', '8');
+    plusH.setAttribute('y1', '11');
+    plusH.setAttribute('x2', '14');
+    plusH.setAttribute('y2', '11');
+
+    const plusV = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    plusV.setAttribute('x1', '11');
+    plusV.setAttribute('y1', '8');
+    plusV.setAttribute('x2', '11');
+    plusV.setAttribute('y2', '14');
+
+    svg.appendChild(circle);
+    svg.appendChild(handle);
+    svg.appendChild(plusH);
+    svg.appendChild(plusV);
+    return svg;
+  }
+
+  private setPillActiveState(button: ActionPillElement, active: boolean): void {
+    const state = button._pillState;
+    if (active) {
+      if (button._hoverColor) {
+        button.style.backgroundColor = button._hoverColor;
+      }
+      if (state?.badgeHoverColor) {
+        state.badge.style.backgroundColor = state.badgeHoverColor;
+      }
+      if (state?.pillHoverBorder) {
+        button.style.borderColor = state.pillHoverBorder;
+      }
+    } else {
+      if (button._baseColor) {
+        button.style.backgroundColor = button._baseColor;
+      }
+      if (state?.badgeBaseColor) {
+        state.badge.style.backgroundColor = state.badgeBaseColor;
+      }
+      if (state?.pillBaseBorder) {
+        button.style.borderColor = state.pillBaseBorder;
+      }
+    }
+  }
+
   /**
-   * Set up hover effect for plus buttons
+   * Set up hover effect for action pills
    */
-  private setupHoverEffect(button: HTMLDivElement, baseColor: string, hoverColor: string): void {
-    // Use a data attribute to track if hover is set up to avoid duplicate listeners
+  private setupHoverEffect(
+    button: ActionPillElement,
+    baseColor: string,
+    hoverColor: string,
+  ): void {
     if (button.dataset['hoverSetup'] === 'true') {
-      // Update stored colors on the button for touch feedback
-      const buttonWithColors = button as HTMLDivElement & {
-        _baseColor?: string;
-        _hoverColor?: string;
-      };
-      buttonWithColors._baseColor = baseColor;
-      buttonWithColors._hoverColor = hoverColor;
-      // Ensure current color is the base color when not hovering
+      button._baseColor = baseColor;
+      button._hoverColor = hoverColor;
       if (button.style.backgroundColor !== hoverColor) {
         button.style.backgroundColor = baseColor;
       }
       return;
     }
 
-    // Store colors on the button element for access in event handlers and touch feedback
-    const buttonWithColors = button as HTMLDivElement & {
-      _baseColor?: string;
-      _hoverColor?: string;
-    };
-    buttonWithColors._baseColor = baseColor;
-    buttonWithColors._hoverColor = hoverColor;
+    button._baseColor = baseColor;
+    button._hoverColor = hoverColor;
+    button.style.backgroundColor = baseColor;
 
     // Read the colors on every event: later calls (e.g. after a theme change)
     // only update the stored values.
     button.addEventListener('mouseenter', () => {
-      if (buttonWithColors._hoverColor) {
-        button.style.backgroundColor = buttonWithColors._hoverColor;
-      }
-      button.style.transition = 'background-color 0.2s ease';
+      this.setPillActiveState(button, true);
     });
 
     button.addEventListener('mouseleave', () => {
-      if (buttonWithColors._baseColor) {
-        button.style.backgroundColor = buttonWithColors._baseColor;
-      }
+      this.setPillActiveState(button, false);
     });
 
     button.dataset['hoverSetup'] = 'true';
   }
 
   /**
-   * Helper function to handle both click and touch events for plus buttons
+   * Helper function to handle both click and touch events for action buttons
    * Prevents duplicate triggers by tracking if action was already handled
    */
-  private addPlusButtonHandlers(button: HTMLDivElement, handler: () => void): void {
+  private addPlusButtonHandlers(button: ActionPillElement, handler: () => void): void {
     let touchHandled = false;
-
-    // Get hover color for touch feedback
-    const getHoverColor = (): string | undefined => {
-      const buttonWithColors = button as HTMLDivElement & {
-        _baseColor?: string;
-        _hoverColor?: string;
-      };
-      return buttonWithColors._hoverColor;
-    };
-
-    const getBaseColor = (): string | undefined => {
-      const buttonWithColors = button as HTMLDivElement & {
-        _baseColor?: string;
-        _hoverColor?: string;
-      };
-      return buttonWithColors._baseColor;
-    };
 
     // Handle click events (desktop and mobile fallback)
     button.addEventListener('click', (event) => {
@@ -745,12 +643,7 @@ class HTMLTopicSelected {
     button.addEventListener('touchstart', (event) => {
       // Stop propagation but don't prevent default to allow normal touch behavior
       event.stopPropagation();
-      // Show hover color for visual feedback
-      const hoverColor = getHoverColor();
-      if (hoverColor) {
-        button.style.backgroundColor = hoverColor;
-        button.style.transition = 'background-color 0.1s ease';
-      }
+      this.setPillActiveState(button, true);
     });
 
     button.addEventListener('touchend', (event) => {
@@ -758,14 +651,9 @@ class HTMLTopicSelected {
       event.preventDefault();
       touchHandled = true;
       handler();
-      // Reset to base color after a short delay
-      const baseColor = getBaseColor();
-      if (baseColor) {
-        setTimeout(() => {
-          button.style.backgroundColor = baseColor;
-        }, 150);
-      }
-      // Reset flag after a short delay to allow click event to check it
+      setTimeout(() => {
+        this.setPillActiveState(button, false);
+      }, 150);
       setTimeout(() => {
         touchHandled = false;
       }, 300);
@@ -774,11 +662,74 @@ class HTMLTopicSelected {
     // Reset flag and color if touch is cancelled (e.g., user swipes away)
     button.addEventListener('touchcancel', () => {
       touchHandled = false;
-      const baseColor = getBaseColor();
-      if (baseColor) {
-        button.style.backgroundColor = baseColor;
-      }
+      this.setPillActiveState(button, false);
     });
+  }
+
+  private createActionPill(onTrigger: () => void): ActionPillElement {
+    const isTouch = isTouchOrMobileDevice();
+    const pill = document.createElement('div') as ActionPillElement;
+    pill.style.position = 'absolute';
+    pill.style.left = '0px';
+    pill.style.top = '0px';
+    pill.style.display = 'inline-flex';
+    pill.style.alignItems = 'center';
+    pill.style.gap = '6px';
+    pill.style.boxSizing = 'border-box';
+    pill.style.borderRadius = '9999px';
+    pill.style.border = '1px solid rgba(15, 23, 42, 0.12)';
+    pill.style.padding = isTouch ? '6px 12px 6px 8px' : '3px 8px 3px 4px';
+    pill.style.minHeight = isTouch ? '36px' : '26px';
+    pill.style.margin = '0';
+    pill.style.pointerEvents = 'auto';
+    pill.style.cursor = 'pointer';
+    pill.style.zIndex = CANVAS_AFFORDANCE_Z_INDEX;
+    pill.style.userSelect = 'none';
+    pill.style.whiteSpace = 'nowrap';
+    pill.style.backdropFilter = 'blur(8px)';
+    pill.style.setProperty('-webkit-backdrop-filter', 'blur(8px)');
+    pill.style.transition = 'background-color 0.16s ease, border-color 0.16s ease';
+    pill.style.transformOrigin = 'center center';
+
+    const badge = document.createElement('span');
+    badge.style.width = isTouch ? '22px' : '18px';
+    badge.style.height = isTouch ? '22px' : '18px';
+    badge.style.borderRadius = '50%';
+    badge.style.color = '#ffffff';
+    badge.style.display = 'inline-flex';
+    badge.style.alignItems = 'center';
+    badge.style.justifyContent = 'center';
+    badge.style.flexShrink = '0';
+    badge.style.transition = 'background-color 0.16s ease';
+    badge.appendChild(this.createPlusIcon(isTouch ? 13 : 11));
+
+    const labelSpan = document.createElement('span');
+    labelSpan.style.fontSize = '12px';
+    labelSpan.style.fontWeight = '500';
+    labelSpan.style.fontFamily =
+      'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+    labelSpan.style.lineHeight = '1';
+    labelSpan.style.whiteSpace = 'nowrap';
+
+    const kbdSpan = document.createElement('span');
+    kbdSpan.style.fontSize = '10px';
+    kbdSpan.style.fontWeight = '500';
+    kbdSpan.style.fontFamily =
+      'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace';
+    kbdSpan.style.lineHeight = '1';
+    kbdSpan.style.padding = '2px 5px';
+    kbdSpan.style.borderRadius = '4px';
+    kbdSpan.style.display = isTouch ? 'none' : 'inline-flex';
+    kbdSpan.style.alignItems = 'center';
+    kbdSpan.style.justifyContent = 'center';
+
+    pill.appendChild(badge);
+    pill.appendChild(labelSpan);
+    pill.appendChild(kbdSpan);
+    pill._pillState = { badge, labelSpan, kbdSpan };
+
+    this.addPlusButtonHandlers(pill, onTrigger);
+    return pill;
   }
 
   private ensurePlusButtons(): void {
@@ -790,36 +741,7 @@ class HTMLTopicSelected {
     }
 
     if (!this._rightPlus) {
-      const rightPlus = document.createElement('div');
-      const plusIcon = this.createPlusIcon();
-      rightPlus.appendChild(plusIcon);
-      const isCoarse = isCoarsePointerDevice();
-      rightPlus.style.position = 'absolute';
-      rightPlus.style.left = '0px';
-      rightPlus.style.top = '0px';
-      rightPlus.style.width = isCoarse ? '24px' : '20px';
-      rightPlus.style.height = isCoarse ? '24px' : '20px';
-      if (isCoarse) {
-        // Expand touch hit area to 44x44 without enlarging the visible circle.
-        rightPlus.style.border = '10px solid transparent';
-        rightPlus.style.backgroundClip = 'padding-box';
-        rightPlus.style.boxSizing = 'content-box';
-      } else {
-        rightPlus.style.boxSizing = 'border-box';
-      }
-      rightPlus.style.borderRadius = '50%';
-      rightPlus.style.color = 'white';
-      rightPlus.style.display = 'flex';
-      rightPlus.style.alignItems = 'center';
-      rightPlus.style.justifyContent = 'center';
-      rightPlus.style.padding = '0';
-      rightPlus.style.margin = '0';
-      rightPlus.style.pointerEvents = 'auto';
-      rightPlus.style.cursor = 'pointer';
-      rightPlus.style.zIndex = CANVAS_AFFORDANCE_Z_INDEX;
-      rightPlus.style.transformOrigin = 'center center';
-      rightPlus.style.transform = 'translate(-50%, -50%)';
-      this.addPlusButtonHandlers(rightPlus, () => {
+      const rightPlus = this.createActionPill(() => {
         const isVertical =
           this.withTopic((topic) => topic.getOrientation() === 'vertical') ?? false;
         if (isVertical) {
@@ -835,36 +757,7 @@ class HTMLTopicSelected {
     }
 
     if (!this._bottomPlus) {
-      const bottomPlus = document.createElement('div');
-      const plusIcon = this.createPlusIcon();
-      bottomPlus.appendChild(plusIcon);
-      const isCoarse = isCoarsePointerDevice();
-      bottomPlus.style.position = 'absolute';
-      bottomPlus.style.left = '0px';
-      bottomPlus.style.top = '0px';
-      bottomPlus.style.width = isCoarse ? '24px' : '20px';
-      bottomPlus.style.height = isCoarse ? '24px' : '20px';
-      if (isCoarse) {
-        // Expand touch hit area to 44x44 without enlarging the visible circle.
-        bottomPlus.style.border = '10px solid transparent';
-        bottomPlus.style.backgroundClip = 'padding-box';
-        bottomPlus.style.boxSizing = 'content-box';
-      } else {
-        bottomPlus.style.boxSizing = 'border-box';
-      }
-      bottomPlus.style.borderRadius = '50%';
-      bottomPlus.style.color = 'white';
-      bottomPlus.style.display = 'flex';
-      bottomPlus.style.alignItems = 'center';
-      bottomPlus.style.justifyContent = 'center';
-      bottomPlus.style.padding = '0';
-      bottomPlus.style.margin = '0';
-      bottomPlus.style.pointerEvents = 'auto';
-      bottomPlus.style.cursor = 'pointer';
-      bottomPlus.style.zIndex = CANVAS_AFFORDANCE_Z_INDEX;
-      bottomPlus.style.transformOrigin = 'center center';
-      bottomPlus.style.transform = 'translateX(-50%)';
-      this.addPlusButtonHandlers(bottomPlus, () => {
+      const bottomPlus = this.createActionPill(() => {
         const isVertical =
           this.withTopic((topic) => topic.getOrientation() === 'vertical') ?? false;
         if (isVertical) {
@@ -880,61 +773,147 @@ class HTMLTopicSelected {
     }
   }
 
+  private ensureImagePreviewButton(): void {
+    if (this._imagePreviewButton && !this._imagePreviewButton.parentElement) {
+      this._imagePreviewButton = undefined;
+    }
+    if (this._imagePreviewButton) {
+      return;
+    }
+    const isTouch = isTouchOrMobileDevice();
+    const button = document.createElement('div');
+    button.appendChild(this.createZoomIcon(isTouch ? 15 : 13));
+    button.style.position = 'absolute';
+    button.style.left = '0px';
+    button.style.top = '0px';
+    button.style.width = isTouch ? '30px' : '24px';
+    button.style.height = isTouch ? '30px' : '24px';
+    button.style.borderRadius = '50%';
+    button.style.backgroundColor = 'rgba(15, 23, 42, 0.72)';
+    button.style.color = '#ffffff';
+    button.style.border = '1px solid rgba(255, 255, 255, 0.24)';
+    button.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.25)';
+    button.style.backdropFilter = 'blur(6px)';
+    button.style.setProperty('-webkit-backdrop-filter', 'blur(6px)');
+    button.style.display = 'none';
+    button.style.alignItems = 'center';
+    button.style.justifyContent = 'center';
+    button.style.padding = '0';
+    button.style.margin = '0';
+    button.style.pointerEvents = 'auto';
+    button.style.cursor = 'zoom-in';
+    button.style.zIndex = CANVAS_AFFORDANCE_Z_INDEX;
+    button.style.transform = 'translate(-100%, 0)';
+    button.setAttribute('title', '查看大图');
+    button.setAttribute('aria-label', '查看大图');
+
+    button.addEventListener('mouseenter', () => {
+      button.style.backgroundColor = 'rgba(15, 23, 42, 0.9)';
+    });
+    button.addEventListener('mouseleave', () => {
+      button.style.backgroundColor = 'rgba(15, 23, 42, 0.72)';
+    });
+
+    this.addPlusButtonHandlers(button, () => {
+      this.withTopic((topic) => {
+        topic.getDesigner()?.previewTopicImage(topic);
+      });
+    });
+
+    this._containerElement.appendChild(button);
+    this._imagePreviewButton = button;
+  }
+
+  private updateImagePreviewButton(geometry: OverlayGeometry, hasImage: boolean): void {
+    if (!hasImage) {
+      if (this._imagePreviewButton) {
+        this._imagePreviewButton.style.display = 'none';
+        this._imagePreviewButton.style.pointerEvents = 'none';
+      }
+      return;
+    }
+
+    this.ensureImagePreviewButton();
+    if (!this._imagePreviewButton) {
+      return;
+    }
+
+    const isTouch = isTouchOrMobileDevice();
+    this._imagePreviewButton.style.width = isTouch ? '30px' : '24px';
+    this._imagePreviewButton.style.height = isTouch ? '30px' : '24px';
+    this._imagePreviewButton.style.left = `${geometry.topicRight - 6}px`;
+    this._imagePreviewButton.style.top = `${geometry.topicTop + 6}px`;
+    this._imagePreviewButton.style.display = 'flex';
+    this._imagePreviewButton.style.pointerEvents = 'auto';
+  }
+
   /**
-   * Update tooltips for plus buttons based on orientation
+   * Update tooltips and pill content based on orientation
    */
   private updatePlusButtonTooltips(): void {
     const isVertical = this.withTopic((topic) => topic.getOrientation() === 'vertical') ?? false;
+    const isTouch = isTouchOrMobileDevice();
 
-    if (this._rightPlus) {
-      // Right button: creates child in horizontal, sibling in vertical
-      const tooltip = isVertical
-        ? $msg('PLUS_TOOLTIP_CREATE_SIBLING')
-        : $msg('PLUS_TOOLTIP_CREATE_CHILD');
-      // Set title attribute for native browser tooltip
-      this._rightPlus.setAttribute('title', tooltip);
-      // Also set aria-label for accessibility
-      this._rightPlus.setAttribute('aria-label', tooltip);
-    }
+    const syncPillContent = (
+      pill: ActionPillElement | undefined,
+      tooltip: string,
+      label: string,
+      kbd: string,
+    ) => {
+      if (!pill) {
+        return;
+      }
+      pill.setAttribute('title', tooltip);
+      pill.setAttribute('aria-label', tooltip);
+      const state = pill._pillState;
+      if (state) {
+        state.labelSpan.textContent = label;
+        state.kbdSpan.textContent = kbd;
+        state.kbdSpan.style.display = isTouch ? 'none' : 'inline-flex';
+        state.badge.style.width = isTouch ? '22px' : '18px';
+        state.badge.style.height = isTouch ? '22px' : '18px';
+      }
+      pill.style.padding = isTouch ? '6px 12px 6px 8px' : '3px 8px 3px 4px';
+      pill.style.minHeight = isTouch ? '36px' : '26px';
+    };
 
-    if (this._bottomPlus) {
-      // Bottom button: creates sibling in horizontal, child in vertical
-      const tooltip = isVertical
-        ? $msg('PLUS_TOOLTIP_CREATE_CHILD')
-        : $msg('PLUS_TOOLTIP_CREATE_SIBLING');
-      // Set title attribute for native browser tooltip
-      this._bottomPlus.setAttribute('title', tooltip);
-      // Also set aria-label for accessibility
-      this._bottomPlus.setAttribute('aria-label', tooltip);
-    }
+    syncPillContent(
+      this._rightPlus,
+      isVertical ? $msg('PLUS_TOOLTIP_CREATE_SIBLING') : $msg('PLUS_TOOLTIP_CREATE_CHILD'),
+      isVertical ? '同级' : '子主题',
+      isVertical ? '↵' : 'Tab',
+    );
+    syncPillContent(
+      this._bottomPlus,
+      isVertical ? $msg('PLUS_TOOLTIP_CREATE_CHILD') : $msg('PLUS_TOOLTIP_CREATE_SIBLING'),
+      isVertical ? '子主题' : '同级',
+      isVertical ? 'Tab' : '↵',
+    );
   }
 
   private updatePlusButtons(geometry: OverlayGeometry, hasChildren: boolean): void {
-    const plusButtonDistance = 26; // 26px distance from topic edge (for right/left buttons)
-    const plusButtonDistanceBottom = 11; // 11px distance from topic edge (for bottom button)
+    const rightPillDistance = 14;
+    const bottomPillDistance = 10;
+    const isCentral = this.withTopic((topic) => topic.isCentralTopic()) ?? false;
 
     if (this._rightPlus) {
       if (geometry.isOnLeft) {
-        // Position 26px from the left edge of the topic
-        this._rightPlus.style.left = `${geometry.topicLeft - plusButtonDistance}px`;
+        this._rightPlus.style.left = `${geometry.topicLeft - rightPillDistance}px`;
         this._rightPlus.style.right = 'auto';
+        this._rightPlus.style.transform = 'translate(-100%, -50%)';
+        this._rightPlus.style.flexDirection = 'row-reverse';
       } else {
-        // Position 26px from the right edge of the topic
-        this._rightPlus.style.left = `${geometry.topicRight + plusButtonDistance}px`;
+        this._rightPlus.style.left = `${geometry.topicRight + rightPillDistance}px`;
         this._rightPlus.style.right = 'auto';
+        this._rightPlus.style.transform = 'translate(0, -50%)';
+        this._rightPlus.style.flexDirection = 'row';
       }
-      // Center vertically on the topic - use exact center without rounding for precision
       this._rightPlus.style.top = `${geometry.topicCenterY}px`;
-      const shouldDisplay = geometry.isVertical || !hasChildren;
+      const shouldDisplay = geometry.isVertical ? !isCentral : !hasChildren;
 
       if (shouldDisplay) {
-        this._rightPlus.style.display = 'flex';
+        this._rightPlus.style.display = 'inline-flex';
         this._rightPlus.style.pointerEvents = 'auto';
-        // Use translate(-50%, -50%) to center the button perfectly on the topic center vertically
-        // The button is positioned 5px inside the topic edge horizontally
-        this._rightPlus.style.transform = 'translate(-50%, -50%)';
-        // Update tooltip when button becomes visible
-        this.updatePlusButtonTooltips();
       } else {
         this._rightPlus.style.display = 'none';
         this._rightPlus.style.pointerEvents = 'none';
@@ -942,27 +921,21 @@ class HTMLTopicSelected {
     }
 
     if (this._bottomPlus) {
-      // Center horizontally on the topic - use exact center without rounding for precision
       this._bottomPlus.style.left = `${geometry.topicCenterX}px`;
-      // Position 11px from the bottom edge of the topic
-      this._bottomPlus.style.top = `${geometry.topicBottom + plusButtonDistanceBottom}px`;
-      const shouldDisplay = !geometry.isVertical || !hasChildren;
+      this._bottomPlus.style.top = `${geometry.topicBottom + bottomPillDistance}px`;
+      this._bottomPlus.style.transform = 'translate(-50%, 0)';
+      this._bottomPlus.style.flexDirection = 'row';
+      const shouldDisplay = geometry.isVertical ? !hasChildren : !isCentral;
 
       if (shouldDisplay) {
-        this._bottomPlus.style.display = 'flex';
+        this._bottomPlus.style.display = 'inline-flex';
         this._bottomPlus.style.pointerEvents = 'auto';
-        // Use translate(-50%, 0) to center horizontally on the topic center
-        // The button is positioned 5px inside the topic from the bottom
-        this._bottomPlus.style.transform = 'translate(-50%, 0)';
-        // Update tooltip when button becomes visible
-        this.updatePlusButtonTooltips();
       } else {
         this._bottomPlus.style.display = 'none';
         this._bottomPlus.style.pointerEvents = 'none';
       }
     }
 
-    // Update tooltips when orientation might have changed
     this.updatePlusButtonTooltips();
   }
 
@@ -984,10 +957,6 @@ class HTMLTopicSelected {
         this._overlay.style.display = 'none';
       }
 
-      if (this._helperContainer) {
-        this._helperContainer.style.display = 'none';
-      }
-
       if (this._rightPlus) {
         this._rightPlus.style.display = 'none';
         this._rightPlus.style.pointerEvents = 'none';
@@ -995,6 +964,10 @@ class HTMLTopicSelected {
       if (this._bottomPlus) {
         this._bottomPlus.style.display = 'none';
         this._bottomPlus.style.pointerEvents = 'none';
+      }
+      if (this._imagePreviewButton) {
+        this._imagePreviewButton.style.display = 'none';
+        this._imagePreviewButton.style.pointerEvents = 'none';
       }
     }
   }
@@ -1147,11 +1120,14 @@ class HTMLTopicSelected {
       this._bottomPlus.parentElement.removeChild(this._bottomPlus);
     }
 
+    if (this._imagePreviewButton && this._imagePreviewButton.parentElement) {
+      this._imagePreviewButton.parentElement.removeChild(this._imagePreviewButton);
+    }
+
     // Clear references
     this._rightPlus = undefined;
     this._bottomPlus = undefined;
-    this._helperContainer = undefined;
-    this._helperElements = undefined;
+    this._imagePreviewButton = undefined;
   }
 
   /**

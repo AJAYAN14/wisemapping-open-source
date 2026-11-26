@@ -56,7 +56,7 @@ describe('Selection plus buttons on a mind map', () => {
   it('adds a child with the right button, undoably', async () => {
     const { harness, right } = await open();
     const before = harness.save();
-    expect(right.title).toBe('Create child topic');
+    expect(right.title).toBe('创建子主题');
 
     const click = new MouseEvent('click', { bubbles: true, cancelable: true });
     right.dispatchEvent(click);
@@ -75,11 +75,10 @@ describe('Selection plus buttons on a mind map', () => {
   });
 });
 
-describe('Selection plus buttons on a tree', () => {
-  const TREE = SAMPLE_MAP.replace('version="tango"', 'version="tango" layout="tree"');
-
+describe('Selection plus buttons on vertical orientation', () => {
   it('adds a sibling with the right button and a child with the bottom one', async () => {
-    const { harness, right, bottom } = await open(TREE);
+    const { harness, right, bottom } = await open();
+    harness.topic(1).setOrientation('vertical');
     right.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     expect(childrenOf(harness, 0)).toBe(3);
 
@@ -134,5 +133,33 @@ describe('Selection plus buttons on a touch screen', () => {
     harness.designer.getContainer().addEventListener('touchstart', reached);
     right.dispatchEvent(new Event('touchstart', { bubbles: true }));
     expect(reached).not.toHaveBeenCalled();
+  });
+
+  it('shows image preview button when selected topic has an image and fires imagePreview on click', async () => {
+    const { harness } = await open();
+    const topic = harness.topic(1);
+    topic.setImageUrl('https://example.com/photo.webp');
+    topic.setImageSize(140, 90);
+    topic.setOnFocus(false);
+    topic.setOnFocus(true);
+
+    const shadow = harness.designer.getSelectionShadows().get(topic) as unknown as {
+      _imagePreviewButton?: HTMLDivElement;
+    };
+    expect(shadow._imagePreviewButton).toBeDefined();
+    expect(shadow._imagePreviewButton?.style.display).toBe('flex');
+
+    const previewEvents: unknown[] = [];
+    harness.designer.addEvent('imagePreview', (payload) => previewEvents.push(payload));
+    shadow._imagePreviewButton!.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+
+    expect(previewEvents).toEqual([
+      {
+        url: 'https://example.com/photo.webp',
+        title: topic.getText(),
+        width: 140,
+        height: 90,
+      },
+    ]);
   });
 });

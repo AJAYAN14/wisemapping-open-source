@@ -189,35 +189,6 @@ describe('NodePropertyBuilder font models', () => {
     expect(builder.getFontSizeModel()).toBe(builder.getFontSizeModel());
   });
 
-  it('reports the font family shared by every selected topic', () => {
-    const { builder } = setup({
-      topics: [fakeTopic({ fontFamily: 'Arial' }), fakeTopic({ fontFamily: 'Arial' })],
-    });
-    expect(builder.getFontFamilyModel().getValue()).toBe('Arial');
-  });
-
-  it('reports no font family when the selected topics disagree', () => {
-    const { builder } = setup({
-      topics: [fakeTopic({ fontFamily: 'Arial' }), fakeTopic({ fontFamily: 'Verdana' })],
-    });
-    expect(builder.getFontFamilyModel().getValue()).toBeUndefined();
-  });
-
-  it('reports no font family with nothing selected', () => {
-    const { builder } = setup();
-    expect(builder.getFontFamilyModel().getValue()).toBeUndefined();
-  });
-
-  it('changes the font family, ignoring an empty choice', () => {
-    const { builder, spies } = setup({ topics: [fakeTopic()] });
-    builder.getFontFamilyModel().setValue!('Verdana');
-    builder.getFontFamilyModel().setValue!(undefined);
-    builder.getFontFamilyModel().setValue!('');
-    expect(spies.changeFontFamily).toHaveBeenCalledTimes(1);
-    expect(spies.changeFontFamily).toHaveBeenCalledWith('Verdana');
-    expect(builder.getFontFamilyModel()).toBe(builder.getFontFamilyModel());
-  });
-
   it('reports the font style, normal when nothing is selected', () => {
     expect(
       setup({ topics: [fakeTopic({ fontStyle: 'italic' })] })
@@ -246,107 +217,6 @@ describe('NodePropertyBuilder font models', () => {
     builder.getFontColorModel().setValue!('#00ff00');
     expect(spies.changeFontColor).toHaveBeenCalledWith('#00ff00');
     expect(builder.getFontColorModel()).toBe(builder.getFontColorModel());
-  });
-});
-
-describe('NodePropertyBuilder topic colour and border models', () => {
-  it('reads the background colour of the selected topic for the variant', () => {
-    const topic = fakeTopic({ backgroundColor: '#123456' });
-    const { builder } = setup({ topics: [topic], variant: 'dark' });
-    expect(builder.getSelectedTopicColorModel().getValue()).toBe('#123456');
-    expect(topic.getBackgroundColor).toHaveBeenCalledWith('dark');
-    expect(builder.getSelectedTopicColorModel()).toBe(builder.getSelectedTopicColorModel());
-  });
-
-  it('reads a border colour shared by the selection, for the variant', () => {
-    const a = fakeTopic({ borderColor: '#aaaaaa' });
-    const b = fakeTopic({ borderColor: '#aaaaaa' });
-    const { builder } = setup({ topics: [a, b], variant: 'light' });
-    expect(builder.getColorBorderModel().getValue()).toBe('#aaaaaa');
-    expect(a.getBorderColor).toHaveBeenCalledWith('light');
-  });
-
-  it('reads no border colour for a mixed selection', () => {
-    const { builder } = setup({
-      topics: [fakeTopic({ borderColor: '#aaaaaa' }), fakeTopic({ borderColor: '#bbbbbb' })],
-    });
-    expect(builder.getColorBorderModel().getValue()).toBeUndefined();
-  });
-
-  it('changes the border colour through the designer', () => {
-    const { builder, spies } = setup({ topics: [fakeTopic()] });
-    builder.getColorBorderModel().setValue!('#cccccc');
-    builder.getColorBorderModel().setValue!(undefined);
-    expect(spies.changeBorderColor).toHaveBeenNthCalledWith(1, '#cccccc');
-    expect(spies.changeBorderColor).toHaveBeenNthCalledWith(2, undefined);
-    expect(builder.getColorBorderModel()).toBe(builder.getColorBorderModel());
-  });
-
-  it.each([
-    ['solid', 'solid'],
-    ['dashed', 'dashed'],
-    ['dotted', 'dotted'],
-    ['wavy', undefined],
-    [undefined, undefined],
-  ])('maps a %p border style to %p', (style, expected) => {
-    const { builder } = setup({ topics: [fakeTopic({ borderStyle: style })] });
-    expect(builder.getBorderStyleModel().getValue()).toBe(expected);
-  });
-
-  it('changes the border style through the designer', () => {
-    const { builder, spies } = setup({ topics: [fakeTopic()] });
-    builder.getBorderStyleModel().setValue!('dotted' as never);
-    expect(spies.changeBorderStyle).toHaveBeenCalledWith('dotted');
-    expect(builder.getBorderStyleModel()).toBe(builder.getBorderStyleModel());
-  });
-
-  it('reports the shared shape, mapping none to no shape', () => {
-    expect(
-      setup({ topics: [fakeTopic({ shapeType: 'rectangle' })] })
-        .builder.getTopicShapeModel()
-        .getValue(),
-    ).toBe('rectangle');
-    expect(
-      setup({ topics: [fakeTopic({ shapeType: 'none' })] })
-        .builder.getTopicShapeModel()
-        .getValue(),
-    ).toBeUndefined();
-  });
-
-  it('changes the shape through the designer', () => {
-    const { builder, spies } = setup({ topics: [fakeTopic()] });
-    builder.getTopicShapeModel().setValue!('elipse' as never);
-    expect(spies.changeShapeType).toHaveBeenCalledWith('elipse');
-    expect(builder.getTopicShapeModel()).toBe(builder.getTopicShapeModel());
-  });
-});
-
-describe('NodePropertyBuilder connection models', () => {
-  it('reads the connection style set on the topic model', () => {
-    const { builder } = setup({ topics: [fakeTopic({ connectionStyle: 3 })] });
-    expect(builder.getConnectionStyleModel().getValue()).toBe(3);
-    expect(setup().builder.getConnectionStyleModel().getValue()).toBeUndefined();
-  });
-
-  it('changes the connection style through the designer', () => {
-    const { builder, spies } = setup({ topics: [fakeTopic()] });
-    builder.getConnectionStyleModel().setValue!(2 as never);
-    expect(spies.changeConnectionStyle).toHaveBeenCalledWith(2);
-    expect(builder.getConnectionStyleModel()).toBe(builder.getConnectionStyleModel());
-  });
-
-  it('reads the connection colour for the theme variant', () => {
-    const topic = fakeTopic({ connectionColor: '#999999' });
-    const { builder } = setup({ topics: [topic], variant: 'dark' });
-    expect(builder.getConnectionColorModel().getValue()).toBe('#999999');
-    expect(topic.getConnectionColor).toHaveBeenCalledWith('dark');
-  });
-
-  it('changes the connection colour through the designer', () => {
-    const { builder, spies } = setup({ topics: [fakeTopic()] });
-    builder.getConnectionColorModel().setValue!('#111111');
-    expect(spies.changeConnectionColor).toHaveBeenCalledWith('#111111');
-    expect(builder.getConnectionColorModel()).toBe(builder.getConnectionColorModel());
   });
 });
 
@@ -397,55 +267,6 @@ describe('NodePropertyBuilder link and note models', () => {
     builder.getNoteModel().setValue!(undefined);
     expect(topic.setNoteValue.mock.calls).toEqual([['Remember this'], [undefined], [undefined]]);
     expect(builder.getNoteModel()).toBe(builder.getNoteModel());
-  });
-});
-
-describe('NodePropertyBuilder image and icon models', () => {
-  it('reads the emoji shared by the selection', () => {
-    const { builder } = setup({ topics: [fakeTopic({ emoji: '🙂' }), fakeTopic({ emoji: '🙂' })] });
-    expect(builder.getImageEmojiCharModel().getValue()).toBe('🙂');
-  });
-
-  it('reads no emoji for a mixed selection', () => {
-    const { builder } = setup({ topics: [fakeTopic({ emoji: '🙂' }), fakeTopic({ emoji: '🎉' })] });
-    expect(builder.getImageEmojiCharModel().getValue()).toBeUndefined();
-  });
-
-  it('changes the emoji through the designer', () => {
-    const { builder, spies } = setup({ topics: [fakeTopic()] });
-    builder.getImageEmojiCharModel().setValue!('🎉');
-    expect(spies.changeImageEmojiChar).toHaveBeenCalledWith('🎉');
-    expect(builder.getImageEmojiCharModel()).toBe(builder.getImageEmojiCharModel());
-  });
-
-  it('reads and changes the gallery icon', () => {
-    const { builder, spies } = setup({ topics: [fakeTopic({ galleryIcon: 'star' })] });
-    expect(builder.getImageGalleryIconNameModel().getValue()).toBe('star');
-    builder.getImageGalleryIconNameModel().setValue!('heart');
-    expect(spies.changeImageGalleryIconName).toHaveBeenCalledWith('heart');
-    expect(builder.getImageGalleryIconNameModel()).toBe(builder.getImageGalleryIconNameModel());
-  });
-
-  it('never reports a current icon', () => {
-    const { builder } = setup({ topics: [fakeTopic()] });
-    expect(builder.getTopicIconModel().getValue()).toBeUndefined();
-  });
-
-  it('adds the picked icon, split into its type and name', () => {
-    const { builder, spies } = setup({ topics: [fakeTopic()] });
-    builder.getTopicIconModel().setValue!('emoji:😀');
-    builder.getTopicIconModel().setValue!('image:flag_blue');
-    expect(spies.addIconType.mock.calls).toEqual([
-      ['emoji', '😀'],
-      ['image', 'flag_blue'],
-    ]);
-  });
-
-  it('adds nothing for an empty icon choice', () => {
-    const { builder, spies } = setup({ topics: [fakeTopic()] });
-    builder.getTopicIconModel().setValue!(undefined);
-    expect(spies.addIconType).not.toHaveBeenCalled();
-    expect(builder.getTopicIconModel()).toBe(builder.getTopicIconModel());
   });
 });
 
@@ -506,22 +327,5 @@ describe('NodePropertyBuilder relationship models', () => {
     expect(spies.changeRelationshipStartArrow).toHaveBeenCalledWith(false);
     expect(builder.getRelationshipEndArrowModel()).toBe(builder.getRelationshipEndArrowModel());
     expect(builder.getRelationshipStartArrowModel()).toBe(builder.getRelationshipStartArrowModel());
-  });
-});
-
-describe('NodePropertyBuilder map-scoped models', () => {
-  it('reads the map theme and changes it', () => {
-    const { builder, spies } = setup({ theme: 'prism' });
-    expect(builder.getThemeModel().getValue()).toBe('prism');
-    builder.getThemeModel().setValue!('prism');
-    expect(spies.changeTheme).toHaveBeenCalledWith('prism');
-    expect(builder.getThemeModel()).toBe(builder.getThemeModel());
-  });
-
-  it('reads the layout and changes it', () => {
-    const { builder, spies } = setup({ layout: 'tree' });
-    expect(builder.getLayoutModel().getValue()).toBe('tree');
-    builder.getLayoutModel().setValue!('mindmap');
-    expect(spies.changeLayout).toHaveBeenCalledWith('mindmap');
   });
 });

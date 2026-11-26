@@ -19,14 +19,13 @@
 /**
  * @jest-environment jsdom
  */
-import { act, fireEvent, screen, within } from '@testing-library/react';
+import { act, fireEvent, screen } from '@testing-library/react';
 import TopicFontEditor from '../../../src/components/action-widget/pane/topic-font-editor';
 import { SwitchValueDirection } from '../../../src/classes/model/value-stepper';
 import type Editor from '../../../src/classes/model/editor';
 import { FakeProperty, property, readOnlyProperty, renderPane } from './helpers';
 
 type Models = {
-  fontFamilyModel: FakeProperty<string | undefined>;
   fontSizeModel: FakeProperty<number>;
   fontWeightModel: FakeProperty<string | undefined>;
   fontStyleModel: FakeProperty<string>;
@@ -34,7 +33,6 @@ type Models = {
 };
 
 const models = (overrides: Partial<Models> = {}): Models => ({
-  fontFamilyModel: property<string | undefined>(undefined),
   fontSizeModel: property<number>(10),
   fontWeightModel: property<string | undefined>('normal'),
   fontStyleModel: property<string>('normal'),
@@ -56,31 +54,10 @@ const fakeEditor = (loaded = true) => {
   return { editor, designer, listeners };
 };
 
-const pickFont = (label: string): void => {
-  fireEvent.mouseDown(screen.getByRole('combobox'));
-  fireEvent.click(within(screen.getByRole('listbox')).getByText(label));
-};
-
 describe('TopicFontEditor', () => {
-  it('sets the font family picked from the list', () => {
-    const m = models();
-    renderPane(<TopicFontEditor closeModal={jest.fn()} {...m} />);
-
-    expect(screen.getByRole('combobox').textContent).toContain('Default');
-    pickFont('Georgia');
-
-    expect(m.fontFamilyModel.setValue).toHaveBeenCalledWith('Georgia');
-  });
-
-  it('goes back to the theme font when the default entry is picked', () => {
-    const m = models({ fontFamilyModel: property<string | undefined>('Verdana') });
-    renderPane(<TopicFontEditor closeModal={jest.fn()} {...m} />);
-
-    fireEvent.mouseDown(screen.getByRole('combobox'));
-    // With a font set, the empty entry reads "Mixed".
-    fireEvent.click(within(screen.getByRole('listbox')).getByText('Mixed'));
-
-    expect(m.fontFamilyModel.setValue).toHaveBeenCalledWith(undefined);
+  it('omits the font family selector', () => {
+    renderPane(<TopicFontEditor closeModal={jest.fn()} {...models()} />);
+    expect(screen.queryByRole('combobox')).toBeNull();
   });
 
   it('steps the font size up and down', () => {
@@ -122,14 +99,13 @@ describe('TopicFontEditor', () => {
     const m = models();
     renderPane(<TopicFontEditor closeModal={jest.fn()} {...m} />, 'dark');
 
-    // The font palette has no "default" swatch: resetting is done with its own button.
     expect(screen.queryByRole('button', { name: 'Default color' })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: '#ff0000' }));
 
     expect(m.fontColorModel.setValue).toHaveBeenCalledWith('#ff0000');
   });
 
-  it('offers a reset only when the font or its colour was customised', () => {
+  it('offers a reset only when the font colour was customised', () => {
     const { unmount } = renderPane(<TopicFontEditor closeModal={jest.fn()} {...models()} />);
     expect(screen.queryByRole('button', { name: 'Reset to Default' })).toBeNull();
     unmount();
@@ -138,7 +114,6 @@ describe('TopicFontEditor', () => {
     renderPane(<TopicFontEditor closeModal={jest.fn()} {...m} />);
     fireEvent.click(screen.getByRole('button', { name: 'Reset to Default' }));
 
-    expect(m.fontFamilyModel.setValue).toHaveBeenCalledWith(undefined);
     expect(m.fontColorModel.setValue).toHaveBeenCalledWith(undefined);
   });
 
@@ -155,11 +130,10 @@ describe('TopicFontEditor', () => {
     renderPane(
       <TopicFontEditor
         closeModal={jest.fn()}
-        fontFamilyModel={readOnlyProperty<string | undefined>('Arial')}
         fontSizeModel={readOnlyProperty(10)}
         fontWeightModel={readOnlyProperty<string | undefined>(undefined)}
         fontStyleModel={readOnlyProperty('normal')}
-        fontColorModel={readOnlyProperty<string | undefined>(undefined)}
+        fontColorModel={readOnlyProperty<string | undefined>('#000000')}
       />,
     );
 
@@ -168,19 +142,16 @@ describe('TopicFontEditor', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Bold' }));
     fireEvent.click(screen.getByRole('button', { name: 'Italic' }));
     fireEvent.click(screen.getByRole('button', { name: 'Reset to Default' }));
-    pickFont('Georgia');
 
-    expect(screen.getByRole('combobox').textContent).toContain('Arial');
+    expect(screen.getByRole('button', { name: 'Bold' })).toBeTruthy();
   });
 
   it('follows selection and model changes reported by the designer', () => {
     let weight: string | undefined = 'normal';
     let style = 'normal';
-    let family: string | undefined = undefined;
     const m = models();
     m.fontWeightModel.getValue.mockImplementation(() => weight);
     m.fontStyleModel.getValue.mockImplementation(() => style);
-    m.fontFamilyModel.getValue.mockImplementation(() => family);
     const { editor, designer, listeners } = fakeEditor();
 
     const { unmount } = renderPane(
@@ -190,12 +161,10 @@ describe('TopicFontEditor', () => {
 
     weight = 'bold';
     style = 'italic';
-    family = 'Tahoma';
     act(() => listeners.get('modelUpdate')?.());
 
     expect(screen.getByRole('button', { name: 'Bold (active)' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Italic (active)' })).toBeTruthy();
-    expect(screen.getByRole('combobox').textContent).toContain('Tahoma');
 
     unmount();
     expect(designer.removeEvent).toHaveBeenCalledTimes(3);

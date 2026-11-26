@@ -39,6 +39,7 @@ import ZoomInRoundedIcon from '@mui/icons-material/ZoomInRounded';
 import CenterFocusStrongRoundedIcon from '@mui/icons-material/CenterFocusStrongRounded';
 import UnfoldLessRoundedIcon from '@mui/icons-material/UnfoldLessRounded';
 import UnfoldMoreRoundedIcon from '@mui/icons-material/UnfoldMoreRounded';
+import SettingsEthernetRoundedIcon from '@mui/icons-material/SettingsEthernetRounded';
 import { AddChildTopicIcon, AddSiblingTopicIcon } from '../icons/TopicActionIcons';
 import { handleExpandByLevel, buildExpandByLevelConfig } from './expand-by-level-icon';
 import { formatTooltip } from './utils';
@@ -92,6 +93,10 @@ export function buildVisualizationToolbarConfig(
   const addChildLabel = intl.formatMessage({
     id: 'visualization-toolbar.tooltip-add-child',
     defaultMessage: 'Add Child Topic',
+  });
+  const addRelationshipLabel = intl.formatMessage({
+    id: 'editor-panel.tooltip-add-relationship',
+    defaultMessage: 'Add Relationship',
   });
 
   // Check if we're in public or embedded view
@@ -207,6 +212,16 @@ export function buildVisualizationToolbarConfig(
               model.getDesigner().createChildForSelectedNode();
             },
             disabled: () => !model?.isMapLoadded() || getSelectedTopicCount() !== 1,
+          } as ActionConfig,
+          {
+            icon: <SettingsEthernetRoundedIcon />,
+            tooltip: addRelationshipLabel,
+            ariaLabel: addRelationshipLabel,
+            'data-testid': 'add-relationship-button',
+            onClick: (e) => {
+              model.getDesigner().showRelPivot(e.nativeEvent);
+            },
+            disabled: () => !model?.isMapLoadded() || getSelectedTopicCount() === 0,
           } as ActionConfig,
         ]
       : []),

@@ -83,4 +83,34 @@ describe('DragPivot line (BL5-75)', () => {
       });
     },
   );
+
+  it('uses rounded pill/halo corners and follows target topic connection color', () => {
+    const target = {
+      getPosition: () => ({ x: 0, y: 0 }),
+      getSize: () => ({ width: 100, height: 40 }),
+      getOrientation: () => 'horizontal' as const,
+      getThemeVariant: () => 'light' as const,
+      getConnectionColor: () => '#3b82f6',
+      workoutIncomingConnectionPoint: (): PositionType => ({ x: 50, y: 0 }),
+    } as unknown as Topic;
+
+    const pivot = new DragPivot();
+    const group = new Group();
+    pivot.addToWorkspace({
+      append: (element: CurvedLine) => group.append(element),
+    } as unknown as Canvas);
+    pivot.connectTo(target, { x: 200, y: 0 });
+
+    const internals = pivot as unknown as {
+      _dragPivot: { peer: { _native: SVGRectElement } };
+      _connectRect: { peer: { _native: SVGRectElement } };
+      _straightLine: { peer: { _native: SVGPathElement } };
+    };
+
+    expect(internals._dragPivot.peer._native.getAttribute('rx')).toBe('4');
+    expect(internals._connectRect.peer._native.getAttribute('rx')).toBe('8');
+    expect(internals._dragPivot.peer._native.getAttribute('fill')).toBe('#3b82f6');
+    expect(internals._connectRect.peer._native.getAttribute('stroke')).toBe('#3b82f6');
+    expect(internals._straightLine.peer._native.getAttribute('stroke')).toBe('#3b82f6');
+  });
 });

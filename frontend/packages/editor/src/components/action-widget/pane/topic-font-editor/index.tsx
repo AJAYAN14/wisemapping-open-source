@@ -17,8 +17,6 @@
  */
 
 import { ReactElement, useState, useEffect } from 'react';
-import FormControl from '@mui/material/FormControl';
-import MenuItem from '@mui/material/MenuItem';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import TextIncreaseRoundedIcon from '@mui/icons-material/TextIncreaseRounded';
 import TextDecreaseRoundedIcon from '@mui/icons-material/TextDecreaseRounded';
@@ -26,7 +24,6 @@ import FormatBoldRoundedIcon from '@mui/icons-material/FormatBoldRounded';
 import FormatItalicRoundedIcon from '@mui/icons-material/FormatItalicRounded';
 import BlockRoundedIcon from '@mui/icons-material/BlockRounded';
 import { FormattedMessage, useIntl } from 'react-intl';
-import type { SelectChangeEvent } from '@mui/material/Select';
 
 import NodeProperty from '../../../../classes/model/node-property';
 import { SwitchValueDirection } from '../../../../classes/model/value-stepper';
@@ -40,20 +37,10 @@ import {
   PaneSection,
   PaneSectionTitle,
 } from '../shared/StyledPane';
-import {
-  ActionButton,
-  FontFallbackLabel,
-  FontOptionLabel,
-  FontPaneContainer,
-  FontSelect,
-  ResetButton,
-  ResetSection,
-  fontMenuProps,
-} from './styled';
+import { ActionButton, FontPaneContainer, ResetButton, ResetSection } from './styled';
 
 interface TopicFontEditorProps {
   closeModal: () => void;
-  fontFamilyModel: NodeProperty<string | undefined>;
   fontSizeModel: NodeProperty<number>;
   fontWeightModel: NodeProperty<string | undefined>;
   fontStyleModel: NodeProperty<string>;
@@ -63,18 +50,14 @@ interface TopicFontEditorProps {
 
 const TopicFontEditor = (props: TopicFontEditorProps): ReactElement => {
   const intl = useIntl();
-  const [currentFont, setCurrentFont] = useState<string | undefined>(
-    props.fontFamilyModel.getValue(),
-  );
   const [currentWeight, setCurrentWeight] = useState<string | undefined>(
     props.fontWeightModel.getValue(),
   );
   const [currentStyle, setCurrentStyle] = useState<string>(props.fontStyleModel.getValue());
 
-  const { model, fontFamilyModel, fontWeightModel, fontStyleModel } = props;
+  const { model, fontWeightModel, fontStyleModel } = props;
   const mapLoaded = model?.isMapLoadded() ?? false;
 
-  // Subscribes again when the model or a font property changes, or once the map has loaded ...
   useEffect(() => {
     if (!model || !mapLoaded) {
       return undefined;
@@ -85,7 +68,6 @@ const TopicFontEditor = (props: TopicFontEditorProps): ReactElement => {
     }
 
     const handleUpdate = () => {
-      setCurrentFont(fontFamilyModel.getValue());
       setCurrentWeight(fontWeightModel.getValue());
       setCurrentStyle(fontStyleModel.getValue());
     };
@@ -97,16 +79,7 @@ const TopicFontEditor = (props: TopicFontEditorProps): ReactElement => {
       designer.removeEvent('onfocus', handleUpdate);
       designer.removeEvent('onblur', handleUpdate);
     };
-  }, [model, mapLoaded, fontFamilyModel, fontWeightModel, fontStyleModel]);
-
-  // The styled select does not carry Select's generic: the value is read as a string here.
-  const handleFontFamilyChange = (event: SelectChangeEvent<unknown>) => {
-    const setValue = props.fontFamilyModel.setValue;
-    if (setValue) {
-      const value = event.target.value === '' ? undefined : String(event.target.value);
-      setValue(value);
-    }
-  };
+  }, [model, mapLoaded, fontWeightModel, fontStyleModel]);
 
   const handleFontSizeIncrease = () => {
     const switchValue = props.fontSizeModel.switchValue;
@@ -136,12 +109,9 @@ const TopicFontEditor = (props: TopicFontEditorProps): ReactElement => {
     }
   };
 
-  // Check if any font property is customized
-  const hasCustomFont = currentFont !== undefined || props.fontColorModel.getValue() !== undefined;
+  const hasCustomColor = props.fontColorModel.getValue() !== undefined;
 
   const handleResetToDefault = () => {
-    // Reset all font properties to undefined (theme defaults)
-    props.fontFamilyModel.setValue?.(undefined);
     props.fontColorModel.setValue?.(undefined);
   };
 
@@ -150,64 +120,6 @@ const TopicFontEditor = (props: TopicFontEditorProps): ReactElement => {
       <PaneCloseButton onClick={props.closeModal}>
         <CloseRoundedIcon />
       </PaneCloseButton>
-      {/* Font Family */}
-      <PaneSection>
-        <PaneSectionTitle variant="subtitle2" gutterBottom>
-          <FormattedMessage id="topic-font-editor.font-family" defaultMessage="Font Family" />
-        </PaneSectionTitle>
-        <FormControl variant="outlined" fullWidth size="small">
-          <FontSelect
-            currentFamily={currentFont}
-            value={currentFont || ''}
-            onChange={handleFontFamilyChange}
-            displayEmpty
-            MenuProps={fontMenuProps}
-          >
-            <MenuItem value="">
-              <FontFallbackLabel>
-                {currentFont === undefined
-                  ? intl.formatMessage({
-                      id: 'editor-panel.font-family-default',
-                      defaultMessage: 'Default',
-                    })
-                  : intl.formatMessage({
-                      id: 'editor-panel.font-family-mixed',
-                      defaultMessage: 'Mixed',
-                    })}
-              </FontFallbackLabel>
-            </MenuItem>
-            {[
-              'Arial',
-              'Baskerville',
-              'Georgia',
-              'Helvetica',
-              'Tahoma',
-              'Limunari',
-              'Brush Script MT',
-              'Verdana',
-              'Times',
-              'Times New Roman',
-              'Courier New',
-              'Cursive',
-              'Fantasy',
-              'Inter',
-              'Perpetua',
-              'Brush Script',
-              'Copperplate',
-              'Garamond',
-              'Palatino',
-              'Century Gothic',
-              'Comic Sans MS',
-            ]
-              .sort()
-              .map((f) => (
-                <MenuItem value={f} key={f}>
-                  <FontOptionLabel family={f}>{f}</FontOptionLabel>
-                </MenuItem>
-              ))}
-          </FontSelect>
-        </FormControl>
-      </PaneSection>
       {/* Font Color */}
       <PaneSection>
         <PaneSectionTitle variant="subtitle2" gutterBottom>
@@ -306,7 +218,7 @@ const TopicFontEditor = (props: TopicFontEditorProps): ReactElement => {
         </PaneControlRow>
       </PaneSection>
       {/* Reset to Default Button - At bottom */}
-      {hasCustomFont && (
+      {hasCustomColor && (
         <ResetSection>
           <ResetButton
             variant="outlined"

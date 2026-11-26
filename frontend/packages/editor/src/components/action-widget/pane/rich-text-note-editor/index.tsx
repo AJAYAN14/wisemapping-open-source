@@ -17,11 +17,9 @@
  */
 import Box from '@mui/material/Box';
 import MenuItem from '@mui/material/MenuItem';
-import Popover from '@mui/material/Popover';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import FormatIndentIncreaseRoundedIcon from '@mui/icons-material/FormatIndentIncreaseRounded';
 import FormatIndentDecreaseRoundedIcon from '@mui/icons-material/FormatIndentDecreaseRounded';
-import { useTheme } from '@mui/material/styles';
 import React, {
   ReactElement,
   useState,
@@ -33,14 +31,11 @@ import React, {
 import { FormattedMessage, useIntl } from 'react-intl';
 import NodeProperty from '../../../../classes/model/node-property';
 import SaveAndDelete from '../save-and-delete';
-import type { EmojiClickData } from 'emoji-picker-react';
-import EmojiPicker from '../shared/emoji-picker';
 import { HtmlSanitizer } from '@wisemapping/mindplot';
 import { attachNoteEditing, NoteEditing } from './note-editing';
 import { safeLinkUrl } from './markdown-rules';
 import {
   CloseNoteButton,
-  EmojiPopoverBox,
   FooterBar,
   HeaderControl,
   HeaderSelect,
@@ -110,15 +105,12 @@ const CharacterCounter = ({
 const RichTextNoteEditor = ({ closeModal, noteModel }: RichTextNoteEditorProps): ReactElement => {
   const initialValue = noteModel.getValue() || '';
   const editorRef = useRef<HTMLDivElement>(null);
-  const [iconPickerAnchor, setIconPickerAnchor] = useState<HTMLButtonElement>();
-  const savedRangeRef = useRef<Range | undefined>(undefined);
   const editingRef = useRef<NoteEditing | undefined>(undefined);
   const counterRef = useRef<CharacterCounterHandle>(null);
   // Count visible text, as edits do; DOMParser is inert (no scripts or image loads).
   const [initialCount] = useState(
     () => new DOMParser().parseFromString(initialValue, 'text/html').body.textContent?.length ?? 0,
   );
-  const theme = useTheme();
   const intl = useIntl();
 
   const submitHandler = useCallback(() => {
@@ -180,60 +172,6 @@ const RichTextNoteEditor = ({ closeModal, noteModel }: RichTextNoteEditorProps):
       }
     }
   }, [execCommand]);
-
-  const handleIconPickerOpen = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
-    // Save the current cursor position before opening the picker
-    const selection = window.getSelection();
-    if (selection && selection.rangeCount > 0) {
-      savedRangeRef.current = selection.getRangeAt(0).cloneRange();
-    }
-    setIconPickerAnchor(event.currentTarget);
-  }, []);
-
-  const handleIconPickerClose = useCallback(() => {
-    setIconPickerAnchor(undefined);
-    savedRangeRef.current = undefined;
-  }, []);
-
-  const handleEmojiSelect = useCallback(
-    (emoji: EmojiClickData) => {
-      if (editorRef.current) {
-        // Focus the editor first
-        editorRef.current.focus();
-
-        const selection = window.getSelection();
-        if (selection) {
-          // Restore the saved cursor position
-          if (savedRangeRef.current) {
-            selection.removeAllRanges();
-            selection.addRange(savedRangeRef.current);
-          }
-
-          // Use document.execCommand for better compatibility with contentEditable
-          const success = document.execCommand('insertText', false, emoji.emoji + ' ');
-
-          if (!success) {
-            // Fallback to manual insertion
-            if (selection.rangeCount > 0) {
-              const range = selection.getRangeAt(0);
-              range.deleteContents();
-              const textNode = document.createTextNode(emoji.emoji + ' ');
-              range.insertNode(textNode);
-              range.setStartAfter(textNode);
-              range.setEndAfter(textNode);
-              selection.removeAllRanges();
-              selection.addRange(range);
-            }
-          }
-
-          // Update content state
-          handleContentChange();
-        }
-      }
-      handleIconPickerClose();
-    },
-    [handleContentChange, handleIconPickerClose],
-  );
 
   const setHeader = useCallback(
     (headerType: string) => {
@@ -384,15 +322,6 @@ const RichTextNoteEditor = ({ closeModal, noteModel }: RichTextNoteEditorProps):
             >
               🔗
             </ToolButton>
-            <ToolButton
-              onClick={handleIconPickerOpen}
-              title={intl.formatMessage({
-                id: 'rich-text-editor.insert-icon',
-                defaultMessage: 'Insert Icon',
-              })}
-            >
-              😀
-            </ToolButton>
           </ToolGroup>
 
           <ToolGroup size="small" variant="outlined">
@@ -497,32 +426,6 @@ const RichTextNoteEditor = ({ closeModal, noteModel }: RichTextNoteEditorProps):
         {/* Save and Delete Buttons */}
         <SaveAndDelete model={noteModel} closeModal={closeModal} submitHandler={submitHandler} />
       </FooterBar>
-
-      {/* Emoji Picker Popover */}
-      <Popover
-        open={Boolean(iconPickerAnchor)}
-        anchorEl={iconPickerAnchor}
-        onClose={handleIconPickerClose}
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'left',
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'left',
-        }}
-      >
-        <EmojiPopoverBox>
-          <EmojiPicker
-            onEmojiClick={handleEmojiSelect}
-            theme={theme.palette.mode === 'dark' ? 'dark' : 'light'}
-            searchPlaceholder={intl.formatMessage({
-              id: 'emoji-picker.search-placeholder',
-              defaultMessage: 'Search emojis...',
-            })}
-          />
-        </EmojiPopoverBox>
-      </Popover>
     </NoteEditorFrame>
   );
 };

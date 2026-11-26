@@ -103,6 +103,7 @@ const createModel = (
     collapseAllNodes: jest.fn(),
     createSiblingForSelectedNode: jest.fn(),
     createChildForSelectedNode: jest.fn(),
+    showRelPivot: jest.fn(),
     getMindmap: () => mindmap,
     getModel: () => designerModel,
     getActionDispatcher: () => ({ shrinkBranch: dispatcher.shrinkBranch }),
@@ -409,6 +410,23 @@ describe('VisualizationToolbar per mode', () => {
 
     expect(button('Keyboard Shortcuts')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Toggle theme' })).not.toBeInTheDocument();
+  });
+
+  it('places Add Relationship in the bottom dock and wires it to showRelPivot', () => {
+    const { model, designer } = createModel({ selectedTopicIds: [1] });
+    renderToolbar(model, 'edition-owner');
+
+    const relBtn = screen.getByTestId('add-relationship-button');
+    expect(relBtn).toBeEnabled();
+    fireEvent.click(relBtn);
+    expect(designer.showRelPivot).toHaveBeenCalledTimes(1);
+  });
+
+  it('disables Add Relationship when no topic is selected', () => {
+    const { model } = createModel({ selectedTopicIds: [] });
+    renderToolbar(model, 'edition-owner');
+
+    expect(screen.getByTestId('add-relationship-button')).toBeDisabled();
   });
 });
 

@@ -19,11 +19,9 @@
 /**
  * @jest-environment jsdom
  */
-import { act, fireEvent, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, screen, within } from '@testing-library/react';
 import RichTextNoteEditor from '../../../src/components/action-widget/pane/rich-text-note-editor';
 import { property, readOnlyProperty, renderPane } from './helpers';
-
-jest.mock('emoji-picker-react', () => jest.requireActual('./emoji-picker-mock'));
 
 type ExecCommand = (command: string, showUi?: boolean, value?: string) => boolean;
 
@@ -235,78 +233,6 @@ describe('RichTextNoteEditor', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Accept' }));
     expect(noteModel.setValue).toHaveBeenCalledWith('z'.repeat(10000));
-  });
-
-  it('inserts the picked emoji at the cursor and closes the emoji picker', async () => {
-    const noteModel = property<string | undefined>('note');
-    const { container } = renderPane(
-      <RichTextNoteEditor closeModal={jest.fn()} noteModel={noteModel} />,
-    );
-    const area = editable(container);
-
-    fireEvent.click(screen.getByTitle('Insert Icon'));
-    expect((await screen.findByTestId('emoji-picker')).getAttribute('data-theme')).toBe('light');
-    expect((await screen.findByTestId('emoji-picker')).getAttribute('data-placeholder')).toBe(
-      'Search emojis...',
-    );
-
-    execCommand.mockImplementation((command, _ui, value) => {
-      if (command === 'insertText') {
-        area.innerHTML += value ?? '';
-      }
-      return true;
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'pick party emoji' }));
-
-    expect(execCommand).toHaveBeenCalledWith('insertText', false, '🎉 ');
-    expect(document.activeElement).toBe(area);
-    await waitFor(() => expect(screen.queryByTestId('emoji-picker')).toBeNull());
-
-    fireEvent.click(screen.getByRole('button', { name: 'Accept' }));
-    expect(noteModel.setValue).toHaveBeenCalledWith('note🎉 ');
-  });
-
-  it('falls back to inserting the emoji by hand at the saved cursor position', () => {
-    const noteModel = property<string | undefined>('ab');
-    const { container } = renderPane(
-      <RichTextNoteEditor closeModal={jest.fn()} noteModel={noteModel} />,
-    );
-    const area = editable(container);
-
-    // Cursor between "a" and "b" when the picker opens.
-    const range = document.createRange();
-    range.setStart(area.firstChild as Node, 1);
-    range.collapse(true);
-    window.getSelection()?.removeAllRanges();
-    window.getSelection()?.addRange(range);
-
-    fireEvent.click(screen.getByTitle('Insert Icon'));
-    // The browser refuses insertText, as some do inside contentEditable.
-    execCommand.mockReturnValue(false);
-    fireEvent.click(screen.getByRole('button', { name: 'pick party emoji' }));
-
-    expect(area.textContent).toBe('a🎉 b');
-    fireEvent.click(screen.getByRole('button', { name: 'Accept' }));
-    expect(noteModel.setValue).toHaveBeenCalledWith('a🎉 b');
-  });
-
-  it('closes the emoji picker without inserting anything when dismissed', async () => {
-    const noteModel = property<string | undefined>('note');
-    renderPane(<RichTextNoteEditor closeModal={jest.fn()} noteModel={noteModel} />);
-
-    fireEvent.click(screen.getByTitle('Insert Icon'));
-    fireEvent.keyDown(await screen.findByTestId('emoji-picker'), { key: 'Escape' });
-
-    await waitFor(() => expect(screen.queryByTestId('emoji-picker')).toBeNull());
-    expect(execCommand).not.toHaveBeenCalled();
-  });
-
-  it('gives the emoji picker the dark theme in dark mode', async () => {
-    renderPane(<RichTextNoteEditor closeModal={jest.fn()} noteModel={note('x')} />, 'dark');
-
-    fireEvent.click(screen.getByTitle('Insert Icon'));
-
-    expect((await screen.findByTestId('emoji-picker')).getAttribute('data-theme')).toBe('dark');
   });
 
   it('focuses the note area shortly after opening', () => {

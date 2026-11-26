@@ -16,15 +16,7 @@
  *   limitations under the License.
  */
 
-import { Designer, Topic } from '@wisemapping/mindplot';
-import {
-  Relationship,
-  StrokeStyle,
-  LineType,
-  TopicShapeType,
-  ThemeType,
-  TopicImageValue,
-} from '@wisemapping/mindplot';
+import { Designer, Topic, Relationship, StrokeStyle, TopicImageValue } from '@wisemapping/mindplot';
 import NodeProperty from '../node-property';
 import { SwitchValueDirection, fontSizes, getPreviousValue, getNextValue } from '../value-stepper';
 
@@ -39,27 +31,15 @@ class NodePropertyBuilder {
   designer: Designer;
 
   private fontSizeModel: NodeProperty<number> | undefined;
-  private selectedTopicColorModel: NodeProperty<string | undefined> | undefined;
-  private fontFamilyModel: NodeProperty<string | undefined> | undefined;
   private fontStyleModel: NodeProperty<string> | undefined;
-  private borderColorModel: NodeProperty<string | undefined> | undefined;
-  private borderStyleModel: NodeProperty<StrokeStyle | undefined> | undefined;
   private fontColorModel: NodeProperty<string | undefined> | undefined;
-  private topicShapeModel: NodeProperty<TopicShapeType | undefined> | undefined;
-  private topicIconModel: NodeProperty<string | undefined> | undefined;
-  private connetionStyleModel: NodeProperty<LineType | undefined> | undefined;
-  private connectionColoreModel: NodeProperty<string | undefined> | undefined;
   private relationshipColorModel: NodeProperty<string | undefined> | undefined;
   private relationshipStrokeStyleModel: NodeProperty<StrokeStyle> | undefined;
   private relationshipEndArrowModel: NodeProperty<boolean> | undefined;
   private relationshipStartArrowModel: NodeProperty<boolean> | undefined;
   private noteModel: NodeProperty<string | undefined> | undefined;
   private linkModel: NodeProperty<string> | undefined;
-  private imageEmojiCharModel: NodeProperty<string | undefined> | undefined;
-
-  private imageGalleryIconNameModel: NodeProperty<string | undefined> | undefined;
   private topicImageModel: NodeProperty<TopicImageValue | undefined> | undefined;
-  private _themeModel: NodeProperty<ThemeType> | undefined;
 
   constructor(designer: Designer) {
     this.designer = designer;
@@ -121,27 +101,7 @@ class NodePropertyBuilder {
     return this.fontSizeModel;
   }
 
-  /**
-   *
-   * @returns model to get and set topic color
-   */
-  getSelectedTopicColorModel(): NodeProperty<string | undefined> {
-    let result: NodeProperty<string | undefined> | undefined = this.selectedTopicColorModel;
-    if (!result) {
-      result = {
-        getValue: (): string | undefined => {
-          const variant = this.designer.getThemeVariant();
-          return this.selectedTopic()?.getBackgroundColor(variant);
-        },
-        setValue: (color: string | undefined) => this.designer.changeBackgroundColor(color),
-      };
-      this.selectedTopicColorModel = result;
-    }
-    return result;
-  }
-
   getLinkModel(): NodeProperty<string> {
-    // const selected = this.selectedTopic();
     if (!this.linkModel)
       this.linkModel = {
         getValue: (): string => this.selectedTopic()?.getLinkValue() ?? '',
@@ -154,24 +114,6 @@ class NodePropertyBuilder {
         },
       };
     return this.linkModel;
-  }
-
-  getImageEmojiCharModel(): NodeProperty<string | undefined> {
-    if (!this.imageEmojiCharModel)
-      this.imageEmojiCharModel = {
-        getValue: () => this.uniqueOrUndefined((node) => node.getImageEmojiChar()),
-        setValue: (value: string | undefined) => this.designer.changeImageEmojiChar(value),
-      };
-    return this.imageEmojiCharModel;
-  }
-
-  getImageGalleryIconNameModel(): NodeProperty<string | undefined> {
-    if (!this.imageGalleryIconNameModel)
-      this.imageGalleryIconNameModel = {
-        getValue: () => this.uniqueOrUndefined((node) => node.getImageGalleryIconName()),
-        setValue: (value: string | undefined) => this.designer.changeImageGalleryIconName(value),
-      };
-    return this.imageGalleryIconNameModel;
   }
 
   getTopicImageModel(): NodeProperty<TopicImageValue | undefined> {
@@ -196,58 +138,6 @@ class NodePropertyBuilder {
     return this.topicImageModel;
   }
 
-  getThemeModel(): NodeProperty<ThemeType> {
-    // const selected = this.selectedTopic();
-    if (!this._themeModel)
-      this._themeModel = {
-        getValue: (): ThemeType => this.designer.getMindmap().getTheme(),
-        setValue: (value: ThemeType) => {
-          this.designer.changeTheme(value);
-        },
-      };
-    return this._themeModel;
-  }
-
-  /**
-   *
-   * @returns model to get and set topic border color
-   */
-  getColorBorderModel(): NodeProperty<string | undefined> {
-    let result = this.borderColorModel;
-    if (!result) {
-      result = this.borderColorModel = {
-        getValue: () => {
-          const variant = this.designer.getThemeVariant();
-          return this.uniqueOrUndefined((node) => node.getBorderColor(variant));
-        },
-        setValue: (hex: string | undefined) => this.designer.changeBorderColor(hex),
-      };
-      this.borderColorModel = result;
-    }
-    return result;
-  }
-
-  /**
-   *
-   * @returns model to get and set topic border style
-   */
-  getBorderStyleModel(): NodeProperty<StrokeStyle | undefined> {
-    if (!this.borderStyleModel) {
-      this.borderStyleModel = {
-        getValue: () => {
-          const styleString = this.uniqueOrUndefined((node) => node.getBorderStyle());
-          // Convert string to StrokeStyle enum, return undefined if not set
-          if (styleString === 'solid') return StrokeStyle.SOLID;
-          if (styleString === 'dashed') return StrokeStyle.DASHED;
-          if (styleString === 'dotted') return StrokeStyle.DOTTED;
-          return undefined;
-        },
-        setValue: (style: StrokeStyle | undefined) => this.designer.changeBorderStyle(style),
-      };
-    }
-    return this.borderStyleModel;
-  }
-
   /**
    *
    * @returns model to get and set topic font color
@@ -262,22 +152,6 @@ class NodePropertyBuilder {
         setValue: (hex: string | undefined) => this.designer.changeFontColor(hex),
       };
     return this.fontColorModel;
-  }
-
-  getTopicIconModel(): NodeProperty<string | undefined> {
-    if (!this.topicIconModel)
-      this.topicIconModel = {
-        getValue: () => undefined,
-        setValue: (value: string | undefined) => {
-          if (value) {
-            const [type, id] = value.split(':');
-            if (id !== undefined) {
-              this.designer.addIconType(type as 'image' | 'emoji', id);
-            }
-          }
-        },
-      };
-    return this.topicIconModel;
   }
 
   /**
@@ -301,23 +175,6 @@ class NodePropertyBuilder {
 
   /**
    *
-   * @returns model to get and set topic font family
-   */
-  getFontFamilyModel(): NodeProperty<string | undefined> {
-    if (!this.fontFamilyModel)
-      this.fontFamilyModel = {
-        getValue: () => this.uniqueOrUndefined((node) => node.getFontFamily()),
-        setValue: (value: string | undefined) => {
-          if (value) {
-            this.designer.changeFontFamily(value);
-          }
-        },
-      };
-    return this.fontFamilyModel;
-  }
-
-  /**
-   *
    * @returns model to get and switch topic style
    */
   getFontStyleModel(): NodeProperty<string> {
@@ -327,30 +184,6 @@ class NodePropertyBuilder {
         switchValue: () => this.designer.changeFontStyle(),
       };
     return this.fontStyleModel;
-  }
-
-  getConnectionStyleModel(): NodeProperty<LineType | undefined> {
-    if (!this.connetionStyleModel)
-      this.connetionStyleModel = {
-        getValue: () => {
-          // Get the model's explicit connection style, not the theme-resolved one
-          return this.selectedTopic()?.getModel().getConnectionStyle();
-        },
-        setValue: (value: LineType | undefined) => this.designer.changeConnectionStyle(value),
-      };
-    return this.connetionStyleModel;
-  }
-
-  getConnectionColorModel(): NodeProperty<string | undefined> {
-    if (!this.connectionColoreModel)
-      this.connectionColoreModel = {
-        getValue: () => {
-          const variant = this.designer.getThemeVariant();
-          return this.selectedTopic()?.getConnectionColor(variant);
-        },
-        setValue: (value: string | undefined) => this.designer.changeConnectionColor(value),
-      };
-    return this.connectionColoreModel;
   }
 
   /**
@@ -404,20 +237,6 @@ class NodePropertyBuilder {
         setValue: (value: boolean) => this.designer.changeRelationshipStartArrow(value),
       };
     return this.relationshipStartArrowModel;
-  }
-
-  getTopicShapeModel(): NodeProperty<TopicShapeType | undefined> {
-    if (!this.topicShapeModel)
-      this.topicShapeModel = {
-        getValue: () => {
-          // Get the model's explicit shape value, not the theme-resolved shape
-          const shape = this.uniqueOrUndefined((node) => node.getModel().getShapeType());
-          // Map 'none' to undefined for UI consistency
-          return shape === 'none' ? undefined : shape;
-        },
-        setValue: (value: TopicShapeType | undefined) => this.designer.changeShapeType(value),
-      };
-    return this.topicShapeModel;
   }
 }
 export default NodePropertyBuilder;

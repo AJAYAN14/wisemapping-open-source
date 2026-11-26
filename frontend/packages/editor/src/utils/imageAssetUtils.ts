@@ -26,6 +26,7 @@ export const ALLOWED_TOPIC_IMAGE_TYPES = new Set<string>([
 
 export const MAX_TOPIC_IMAGE_INPUT_BYTES = 15 * 1024 * 1024;
 export const MAX_TOPIC_IMAGE_UPLOAD_BYTES = 5 * 1024 * 1024;
+export const MAX_TOPIC_IMAGE_UPLOAD_EDGE = 1280;
 
 export interface CompressedTopicImage {
   blob: Blob;
@@ -49,6 +50,20 @@ export const scaleTopicImageCardSize = (
   };
 };
 
+export const scaleTopicImageUploadSize = (
+  origW: number,
+  origH: number,
+  maxEdge = MAX_TOPIC_IMAGE_UPLOAD_EDGE,
+): { width: number; height: number } => {
+  const safeW = Number.isFinite(origW) && origW > 0 ? origW : 130;
+  const safeH = Number.isFinite(origH) && origH > 0 ? origH : 90;
+  const scale = Math.min(maxEdge / safeW, maxEdge / safeH, 1.0);
+  return {
+    width: Math.max(Math.round(safeW * scale), 1),
+    height: Math.max(Math.round(safeH * scale), 1),
+  };
+};
+
 export const blobToDataUrl = (blob: Blob): Promise<string> =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -69,8 +84,8 @@ const normalizeImageMime = (rawMime: string): string => {
 };
 
 /**
- * Normalizes and downscales oversized topic images to crisp 2x card resolution
- * in WebP format so both Supabase Storage (1 GB) and egress (5 GB/mo) stay lean.
+ * Normalizes and downscales oversized topic images up to 1280px on the longest edge
+ * in WebP format so lightbox previews stay sharp while storage and egress stay lean.
  */
 export const compressTopicImage = async (file: Blob): Promise<CompressedTopicImage> => {
   const mimeType = normalizeImageMime(file.type || 'image/png');
@@ -106,14 +121,17 @@ export const compressTopicImage = async (file: Blob): Promise<CompressedTopicIma
     });
 
     const cardSize = scaleTopicImageCardSize(img.naturalWidth, img.naturalHeight);
+    const uploadSize = scaleTopicImageUploadSize(img.naturalWidth, img.naturalHeight);
     if (
       mimeType !== 'image/svg+xml' &&
       mimeType !== 'image/gif' &&
-      (file.size > 32 * 1024 || img.naturalWidth > 320 || img.naturalHeight > 220)
+      (file.size > 150 * 1024 ||
+        img.naturalWidth > MAX_TOPIC_IMAGE_UPLOAD_EDGE ||
+        img.naturalHeight > MAX_TOPIC_IMAGE_UPLOAD_EDGE)
     ) {
       const canvas = document.createElement('canvas');
-      canvas.width = cardSize.width * 2;
-      canvas.height = cardSize.height * 2;
+      canvas.width = uploadSize.width;
+      canvas.height = uploadSize.height;
       const ctx = canvas.getContext('2d');
       if (ctx) {
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);

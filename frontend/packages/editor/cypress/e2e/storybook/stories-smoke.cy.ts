@@ -25,76 +25,26 @@ describe('Storybook Editor Components - Tests', () => {
     cy.get('#storybook-root', { timeout: 10000 }).should('be.visible');
   };
 
-  describe('TopicStyleEditor', () => {
-    it('should render and display all shape options', () => {
-      visitStory('editor-topicstyleeditor--default');
-
-      // Wait for tabs to be visible (Shape, Border, Connector)
-      cy.get('[role="tablist"]', { timeout: 10000 }).should('be.visible');
-
-      // Shape tab should be active and have shape icon buttons (IconButton elements)
-      cy.get('button[aria-label*="shape"]', { timeout: 5000 }).should('have.length.at.least', 5);
-
-      // Verify shape buttons are visible
-      cy.get('button[aria-label*="shape"]').first().should('be.visible');
-    });
-
-    it('should trigger action when changing shape', () => {
-      visitStory('editor-topicstyleeditor--default');
-
-      // Wait for tabs and shape buttons
-      cy.get('[role="tablist"]', { timeout: 10000 }).should('be.visible');
-
-      // Click a shape option button
-      cy.get('button[aria-label*="shape"]', { timeout: 5000 })
-        .first()
-        .should('be.visible')
-        .click({ force: true });
-
-      // Verify component remains interactive
-      cy.get('button[aria-label*="shape"]').should('exist');
-    });
-  });
-
   describe('TopicFontEditor', () => {
-    it('should render with font family dropdown', () => {
+    it('should render font color and size controls', () => {
       visitStory('editor-topicfonteditor--default');
 
-      // Check that the editor is rendered - look for Font Family label
-      cy.contains('Font Family', { timeout: 10000 }).should('be.visible');
-
-      // Font family dropdown should exist (MUI Select has role="combobox")
-      cy.get('[role="combobox"]', { timeout: 5000 }).should('be.visible').and('not.be.disabled');
-    });
-
-    it('should have font size controls', () => {
-      visitStory('editor-topicfonteditor--default');
-
-      // Font size controls - look for Bigger and Smaller buttons
-      cy.get('[aria-label*="Bigger"], [aria-label*="Smaller"]', { timeout: 10000 })
+      cy.contains('Font Color', { timeout: 10000 }).should('be.visible');
+      cy.get('[aria-label*="Bigger"], [aria-label*="Smaller"]', { timeout: 5000 })
         .should('have.length.at.least', 2)
         .and('be.visible');
-
-      // Verify both increase and decrease buttons exist
-      cy.get('[aria-label*="Bigger"]').should('be.visible').and('not.be.disabled');
-      cy.get('[aria-label*="Smaller"]').should('be.visible').and('not.be.disabled');
     });
 
-    it('should trigger action when changing font', () => {
+    it('should trigger action when toggling bold', () => {
       visitStory('editor-topicfonteditor--default');
 
-      // Wait for the editor to be fully loaded
-      cy.contains('Font Family', { timeout: 10000 }).should('be.visible');
-
-      // Click bold button (has aria-label containing "Bold")
-      cy.get('[aria-label*="Bold"]', { timeout: 5000 })
+      cy.get('[aria-label*="Bold"]', { timeout: 10000 })
         .should('be.visible')
         .and('not.be.disabled')
         .first()
         .click({ force: true });
 
-      // Verify bold button reacts to click (toggle state or remains clickable)
-      cy.get('[aria-label*="Bold"]').first().should('exist'); // Verifies component is interactive
+      cy.get('[aria-label*="Bold"]').first().should('exist');
     });
   });
 
@@ -149,47 +99,6 @@ describe('Storybook Editor Components - Tests', () => {
     });
   });
 
-  describe('TopicIconEditor', () => {
-    it('should render icon selection interface', () => {
-      visitStory('editor-topiciconeditor--default');
-
-      // Should have tabs (Emojis and Icons Gallery)
-      cy.get('[role="tablist"]', { timeout: 10000 }).should('be.visible');
-
-      // Emoji picker should be rendered by default (first tab)
-      cy.get(
-        '.epr-emoji-category-label, .epr-search, input[placeholder*="Search"], input[placeholder*="search"]',
-        { timeout: 5000 },
-      ).should('exist');
-    });
-
-    it('should display emoji variant', () => {
-      visitStory('editor-topiciconeditor--with-emoji');
-
-      // Tabs should be visible
-      cy.get('[role="tablist"]', { timeout: 10000 }).should('be.visible');
-
-      // Emoji tab should be active - look for emoji picker elements
-      cy.get(
-        '.epr-emoji-category-label, .epr-search, input[placeholder*="Search"], input[placeholder*="search"]',
-        { timeout: 5000 },
-      ).should('exist');
-    });
-
-    it('should display image variant', () => {
-      visitStory('editor-topiciconeditor--with-image');
-
-      // Tabs should be visible
-      cy.get('[role="tablist"]', { timeout: 10000 }).should('be.visible');
-
-      // Switch to Icons Gallery tab (second tab)
-      cy.get('[role="tab"]').eq(1).click();
-
-      // Image icons should be visible
-      cy.get('img, [role="button"]', { timeout: 5000 }).should('exist');
-    });
-  });
-
   describe('ColorPicker', () => {
     it('should render color selection interface', () => {
       visitStory('editor-colorpicker--default');
@@ -226,98 +135,11 @@ describe('Storybook Editor Components - Tests', () => {
     });
   });
 
-  describe('IconPicker', () => {
-    it('should render icon selection grid', () => {
-      visitStory('editor-iconpicker--default');
-
-      // Should have emoji picker visible by default
-      cy.get(
-        '.epr-emoji-category-label, .epr-search, input[placeholder*="Search"], input[placeholder*="search"]',
-        { timeout: 10000 },
-      ).should('exist');
-    });
-
-    it('should display emoji picker variant', () => {
-      visitStory('editor-iconpicker--with-emoji');
-
-      // Emoji picker should be visible
-      cy.get(
-        '.epr-emoji-category-label, .epr-search, input[placeholder*="Search"], input[placeholder*="search"]',
-        { timeout: 10000 },
-      ).should('exist');
-    });
-
-    it('should trigger action when icon is selected', () => {
-      visitStory('editor-iconpicker--default');
-
-      // Wait for emoji picker to load
-      cy.get('.epr-emoji-category-label, .epr-search', { timeout: 10000 }).should('exist');
-
-      // Toggle to show images using the switch (force click because input has opacity: 0)
-      cy.contains('Show images', { timeout: 5000 }).should('exist').click({ force: true });
-
-      // Verify that the emoji picker is no longer visible (switched to images)
-      cy.get('.epr-emoji-category-label').should('not.exist');
-    });
-  });
-
   describe('TopicImagePicker', () => {
-    it('should render image picker interface', () => {
+    it('should render image upload interface', () => {
       visitStory('editor-topicimagepicker--default');
 
-      // Should have image selection interface
-      cy.get('button, [role="button"], img').should('exist');
-    });
-
-    it('should display emoji in picker', () => {
-      visitStory('editor-topicimagepicker--with-emoji');
-
-      cy.get('button, img').should('exist');
-    });
-  });
-
-  describe('CanvasStyleEditor', () => {
-    it('should render canvas style options', () => {
-      visitStory('editor-canvasstyleeditor--default');
-
-      // Should have background pattern options (4 buttons: default, solid, grid, dots)
-      cy.get('button', { timeout: 10000 }).should('have.length.at.least', 4);
-
-      // Background Style label should be visible
-      cy.contains(/background.*style/i).should('be.visible');
-    });
-
-    it('should display solid background variant', () => {
-      visitStory('editor-canvasstyleeditor--with-solid-background');
-
-      // Should show pattern buttons
-      cy.get('button', { timeout: 10000 }).should('have.length.at.least', 4);
-
-      // Tabs should be visible (Color and Grid Color)
-      cy.get('[role="tablist"]', { timeout: 5000 }).should('be.visible');
-    });
-
-    it('should display dots pattern variant', () => {
-      visitStory('editor-canvasstyleeditor--with-dots');
-
-      // Should show pattern buttons
-      cy.get('button', { timeout: 10000 }).should('have.length.at.least', 4);
-
-      // Tabs should be visible
-      cy.get('[role="tablist"]', { timeout: 5000 }).should('be.visible');
-    });
-
-    it('should trigger action when pattern is selected', () => {
-      visitStory('editor-canvasstyleeditor--default');
-
-      // Wait for pattern buttons to be visible (close button + 4 pattern buttons)
-      cy.get('button', { timeout: 10000 }).should('have.length.at.least', 4);
-
-      // Click the solid pattern button (force click to avoid visibility issues)
-      cy.get('button').eq(2).click({ force: true });
-
-      // Verify tabs appear after selecting a pattern (tabs should be rendered)
-      cy.get('[role="tablist"]').should('exist');
+      cy.get('button, [role="button"]').should('exist');
     });
   });
 

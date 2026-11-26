@@ -93,6 +93,10 @@ class FakeTopic {
     return true;
   }
 
+  isEmulatedMouseSuppressed(): boolean {
+    return false;
+  }
+
   closeEditors(): void {
     // Nothing to close.
   }
@@ -331,15 +335,16 @@ describe('HTMLTopicSelected', () => {
       internal.ensurePlusButtons();
       const button: HTMLDivElement = internal._rightPlus;
 
-      // Theme change: a new connection color is applied to the existing button.
+      // Theme change: a new connection color is applied to the existing pill badge.
       topic.connectionColor = '#ff0000';
       internal.updateColors();
+      const badge: HTMLSpanElement = internal._rightPlus._pillState.badge;
 
       button.dispatchEvent(new MouseEvent('mouseenter'));
-      expect(button.style.backgroundColor).toBe(normalize(ColorUtil.lightenColor('#ff0000', 60)));
+      expect(badge.style.backgroundColor).toBe(normalize(ColorUtil.lightenColor('#ff0000', 60)));
 
       button.dispatchEvent(new MouseEvent('mouseleave'));
-      expect(button.style.backgroundColor).toBe(normalize(ColorUtil.lightenColor('#ff0000', 40)));
+      expect(badge.style.backgroundColor).toBe(normalize(ColorUtil.lightenColor('#ff0000', 40)));
 
       shadow.dispose();
     });

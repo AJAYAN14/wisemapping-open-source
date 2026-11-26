@@ -19,8 +19,8 @@
 /**
  * @jest-environment jsdom
  */
-import React, { ReactElement } from 'react';
-import { render, screen, act, fireEvent } from '@testing-library/react';
+import { ReactElement } from 'react';
+import { render, screen, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import { createIntl, createIntlCache } from 'react-intl';
 import type { EditorRenderMode } from '@wisemapping/mindplot';
@@ -30,7 +30,6 @@ import Capability from '../../../src/classes/action/capability';
 import type ActionConfig from '../../../src/classes/action/action-config';
 import type NodeProperty from '../../../src/classes/model/node-property';
 import type Editor from '../../../src/classes/model/editor';
-import { trackEditorPanelAction, trackRelationshipAction } from '../../../src/utils/analytics';
 import { Providers } from './helpers';
 
 jest.mock('@wisemapping/mindplot', () => ({
@@ -38,12 +37,6 @@ jest.mock('@wisemapping/mindplot', () => ({
   isMacPlatform: () => false,
   StrokeStyle: { SOLID: 'solid', DASHED: 'dashed', DOTTED: 'dotted' },
   LineType: {},
-}));
-
-jest.mock('../../../src/utils/analytics', () => ({
-  trackEditorPanelAction: jest.fn(),
-  trackRelationshipAction: jest.fn(),
-  trackEditorInteraction: jest.fn(),
 }));
 
 const intl = createIntl({ locale: 'en', messages: {} }, createIntlCache());
@@ -62,8 +55,8 @@ const createModel = (
     getFontFamily: () => 'Arial',
     getLinkValue: () => 'https://example.com',
     getNoteValue: () => 'a note',
-    getImageEmojiChar: () => '🙂',
-    getImageGalleryIconName: () => undefined,
+    getImageUrl: () => 'https://cdn.example.com/topic.webp',
+    getImageSize: () => ({ width: 200, height: 120 }),
     getModel: () => ({ getShapeType: () => 'rectangle', getConnectionStyle: () => undefined }),
   };
   const relationship = {
@@ -123,23 +116,6 @@ afterEach(() => {
 describe('buildEditorPanelConfig panels', () => {
   const selection = { topicCount: 1, relationshipCount: 1, isMapLoaded: true };
 
-  it('wires the style panel to the selected topic', () => {
-    const { model } = createModel({ topics: 1 });
-    const close = jest.fn();
-    const props = pane(buildEditorPanelConfig(model, intl, selection), 'Style Topic', close).props;
-
-    expect(props.closeModal).toBe(close);
-    expect(value(props['shapeModel'])).toBe('rectangle');
-    [
-      'fillColorModel',
-      'borderColorModel',
-      'borderStyleModel',
-      'connectionStyleModel',
-      'connectionColorModel',
-    ].forEach((name) => expect(props[name]).toBeDefined());
-    expect(trackEditorPanelAction).toHaveBeenCalledWith('open_topic_style_editor');
-  });
-
   it('wires the relationship panel to the selected relationship', () => {
     const { model } = createModel({ relationships: 1 });
     const props = pane(
@@ -152,7 +128,6 @@ describe('buildEditorPanelConfig panels', () => {
     expect(value(props['strokeStyleModel'])).toBe('dotted');
     expect(value(props['endArrowModel'])).toBe(true);
     expect(value(props['startArrowModel'])).toBe(false);
-    expect(trackEditorPanelAction).toHaveBeenCalledWith('open_relationship_style_editor');
   });
 
   it('wires the font panel to the selected topic and the editor', () => {
@@ -163,49 +138,25 @@ describe('buildEditorPanelConfig panels', () => {
       jest.fn(),
     ).props;
 
-    expect(value(props['fontFamilyModel'])).toBe('Arial');
     expect(props['model']).toBe(model);
     ['fontSizeModel', 'fontWeightModel', 'fontStyleModel', 'fontColorModel'].forEach((name) =>
       expect(props[name]).toBeDefined(),
     );
-    expect(trackEditorPanelAction).toHaveBeenCalledWith('open_font_style_editor');
   });
 
   it.each([
-    ['Add Link', 'urlModel', 'https://example.com', 'open_link_editor'],
-    ['Add Note', 'noteModel', 'a note', 'open_note_editor'],
-    ['Add Icon', 'iconModel', undefined, 'open_icon_editor'],
-    ['Add Topic Image', 'emojiModel', '🙂', 'open_topic_image_editor'],
-  ])('wires the %s panel', (tooltip, prop, expected, tracked) => {
+    ['Add Link', 'urlModel', 'https://example.com'],
+    ['Add Note', 'noteModel', 'a note'],
+    [
+      'Add Topic Image',
+      'topicImageModel',
+      { url: 'https://cdn.example.com/topic.webp', width: 200, height: 120 },
+    ],
+  ])('wires the %s panel', (tooltip, prop, expected) => {
     const { model } = createModel({ topics: 1 });
     const props = pane(buildEditorPanelConfig(model, intl, selection), tooltip, jest.fn()).props;
 
-    expect(value(props[prop])).toBe(expected);
-    expect(trackEditorPanelAction).toHaveBeenCalledWith(tracked);
-  });
-
-  it('starts the background panel from the map style and applies changes to it', () => {
-    const { model, designer } = createModel();
-    const props = pane(buildEditorPanelConfig(model, intl, selection), 'Background', jest.fn())
-      .props as PaneProps & { onStyleChange: (style: unknown) => void };
-
-    expect(props['initialStyle']).toEqual({ backgroundColor: '#fafafa' });
-    props.onStyleChange({ backgroundColor: '#000000' });
-
-    expect(designer.setCanvasStyle).toHaveBeenCalledWith({ backgroundColor: '#000000' });
-    expect(trackEditorPanelAction).toHaveBeenCalledWith('open_canvas_style_editor');
-  });
-
-  it('starts a relationship from the pointer event', () => {
-    const { model, designer } = createModel({ topics: 1 });
-    const nativeEvent = new MouseEvent('click');
-
-    entry(buildEditorPanelConfig(model, intl, selection), 'Add Relationship').onClick!({
-      nativeEvent,
-    } as React.MouseEvent<HTMLElement>);
-
-    expect(designer.showRelPivot).toHaveBeenCalledWith(nativeEvent);
-    expect(trackRelationshipAction).toHaveBeenCalledWith('show_relationship_pivot');
+    expect(value(props[prop])).toEqual(expected);
   });
 });
 
@@ -217,26 +168,33 @@ describe('EditorToolbar', () => {
       </Providers>,
     );
 
-  it('shows the editing tools once the map is loaded', () => {
+  it('shows the editing tools once the map is loaded without removed actions', () => {
     const { model } = createModel({ topics: 1 });
     renderToolbar(model);
 
     expect(screen.getByRole('menu')).toHaveAttribute('aria-orientation', 'vertical');
-    expect(screen.getByRole('button', { name: 'Add Relationship' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Background' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Font Style' })).toBeEnabled();
+    expect(screen.queryByRole('button', { name: 'Style Topic & Connections' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Add Relationship' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Add Icon' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Background' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Relationship Style' })).not.toBeInTheDocument();
   });
 
   it('follows the selection', () => {
     const { model, state, fire } = createModel({ topics: 0 });
     renderToolbar(model);
-    expect(screen.getByRole('button', { name: 'Add Relationship' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Font Style' })).toBeDisabled();
+    expect(screen.queryByRole('button', { name: 'Relationship Style' })).not.toBeInTheDocument();
 
     state.topics = 1;
     fire('onfocus');
 
-    expect(screen.getByRole('button', { name: 'Add Relationship' })).toBeEnabled();
-    fireEvent.click(screen.getByRole('button', { name: 'Add Relationship' }));
-    expect(trackRelationshipAction).toHaveBeenCalled();
+    expect(screen.getByRole('button', { name: 'Font Style' })).toBeEnabled();
+
+    state.relationships = 1;
+    fire('onfocus');
+    expect(screen.getByRole('button', { name: 'Relationship Style' })).toBeEnabled();
   });
 
   it('shows nothing before the map is loaded', () => {

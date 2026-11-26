@@ -16,11 +16,12 @@
  *   limitations under the License.
  */
 
-import React, { ReactElement, useMemo, useRef } from 'react';
+import React, { ReactElement, useMemo, useRef, useState } from 'react';
 
 import { IntlProvider } from 'react-intl';
-import { $notify, Designer } from '@wisemapping/mindplot';
+import { $notify, Designer, ImagePreviewEvent } from '@wisemapping/mindplot';
 import { blobToDataUrl, compressTopicImage } from '../utils/imageAssetUtils';
+import TopicImageLightbox from './topic-image-lightbox';
 
 import { useLocaleData } from '../classes/i18n-msg';
 
@@ -62,6 +63,21 @@ const EditorContent = ({
   const { model, mindplotRef, mapInfo, capability, options } = config;
   const designer = model?.getDesigner();
   const { mode: internalMode } = useTheme();
+  const [imagePreview, setImagePreview] = useState<ImagePreviewEvent | null>(null);
+
+  // Subscribe to designer image preview requests (both edit zoom badge and read-only image click)
+  React.useEffect(() => {
+    if (!designer) {
+      return undefined;
+    }
+    const handleImagePreview = (payload: ImagePreviewEvent) => {
+      setImagePreview(payload);
+    };
+    designer.addEvent('imagePreview', handleImagePreview);
+    return () => {
+      designer.removeEvent('imagePreview', handleImagePreview);
+    };
+  }, [designer]);
 
   // Zoom to fit keeps the map clear of the app bar and the floating toolbars.
   useCanvasViewportInsets(designer);
@@ -147,6 +163,7 @@ const EditorContent = ({
   }, [designer, model, isEmbedRoute]);
 
   // Support pasting an image directly onto a selected topic on the canvas
+  const { uploadTopicImage } = options;
   React.useEffect(() => {
     if (!designer || capability.isHidden('edition-toolbar') || typeof document === 'undefined') {
       return undefined;
@@ -195,8 +212,8 @@ const EditorContent = ({
         try {
           $notify('正在上传图片...');
           const compressed = await compressTopicImage(imageFile);
-          const nextImage = options.uploadTopicImage
-            ? await options.uploadTopicImage(compressed.blob, imageFile.name || 'pasted.webp', {
+          const nextImage = uploadTopicImage
+            ? await uploadTopicImage(compressed.blob, imageFile.name || 'pasted.webp', {
                 width: compressed.width,
                 height: compressed.height,
               })
@@ -215,7 +232,7 @@ const EditorContent = ({
 
     document.addEventListener('paste', onDocumentPaste);
     return () => document.removeEventListener('paste', onDocumentPaste);
-  }, [designer, capability, options.uploadTopicImage]);
+  }, [designer, capability, uploadTopicImage]);
 
   // Initialize locale ...
   const locale = options.locale;
@@ -262,6 +279,8 @@ const EditorContent = ({
           })}
 
           <Notifier id="headerNotifier" />
+
+          <TopicImageLightbox preview={imagePreview} onClose={() => setImagePreview(null)} />
 
           {!model?.isMapLoadded() && <EditorLoadingSkeleton />}
         </IntlProvider>

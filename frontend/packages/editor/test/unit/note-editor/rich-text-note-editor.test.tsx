@@ -25,13 +25,6 @@ import RichTextNoteEditor from '../../../src/components/action-widget/pane/rich-
 import type NodeProperty from '../../../src/classes/model/node-property';
 import { defined } from '../defined';
 
-jest.mock('emoji-picker-react', () => ({
-  __esModule: true,
-  default: () => null,
-  EmojiStyle: { NATIVE: 'native' },
-  Theme: { DARK: 'dark', LIGHT: 'light' },
-}));
-
 const renderEditor = (value: string | undefined) => {
   const model: NodeProperty<string | undefined> = {
     getValue: () => value,

@@ -31,6 +31,8 @@ import Shape from './util/Shape';
 import type Canvas from './Canvas';
 import type CanvasElement from './CanvasElement';
 
+const DEFAULT_PREVIEW_ACCENT = '#ec4899';
+
 class DragPivot implements CanvasElement {
   private _position: PositionType;
 
@@ -54,10 +56,10 @@ class DragPivot implements CanvasElement {
     this._position = { x: 0, y: 0 };
     this._size = DragPivot.DEFAULT_PIVOT_SIZE;
 
-    this._straightLine = this._buildStraightLine();
-    this._curvedLine = this._buildCurvedLine();
-    this._dragPivot = this._buildRect();
-    this._connectRect = this._buildRect();
+    this._straightLine = this._buildPreviewLine();
+    this._curvedLine = this._buildPreviewLine();
+    this._dragPivot = this._buildPivotPill();
+    this._connectRect = this._buildConnectHalo();
     this._targetTopic = undefined;
     this._isVisible = false;
     this._isInWorkspace = false;
@@ -71,18 +73,9 @@ class DragPivot implements CanvasElement {
     return this._targetTopic;
   }
 
-  private _buildStraightLine(): CurvedLine {
+  private _buildPreviewLine(): CurvedLine {
     const line = new CurvedLine();
-    line.setStroke(1, 'solid', '#CC0033');
-    line.setOpacity(0.4);
-    line.setVisibility(false);
-    return line;
-  }
-
-  private _buildCurvedLine(): CurvedLine {
-    const line = new CurvedLine();
-    line.setStroke(1, 'solid', '#CC0033');
-    line.setOpacity(0.4);
+    line.setStroke(2, 'dash', DEFAULT_PREVIEW_ACCENT, 0.72);
     line.setVisibility(false);
     return line;
   }
@@ -169,18 +162,46 @@ class DragPivot implements CanvasElement {
     return this._position;
   }
 
-  private _buildRect(): Rect {
+  private _buildPivotPill(): Rect {
     const size = this._size;
-    const rectAttributes = {
-      fillColor: '#CC0033',
-      opacity: 0.4,
+    const rect = new Rect(1, {
+      fillColor: DEFAULT_PREVIEW_ACCENT,
+      fillOpacity: 0.85,
       width: size.width,
       height: size.height,
-      strokeColor: '#FF9933',
-    };
-    const rect = new Rect(0, rectAttributes);
+      stroke: `1.5 solid ${DEFAULT_PREVIEW_ACCENT}`,
+      strokeOpacity: 0.95,
+    });
     rect.setVisibility(false);
     return rect;
+  }
+
+  private _buildConnectHalo(): Rect {
+    const size = this._size;
+    const rect = new Rect(0.5, {
+      fillColor: DEFAULT_PREVIEW_ACCENT,
+      fillOpacity: 0.14,
+      width: size.width,
+      height: size.height,
+      stroke: `2 solid ${DEFAULT_PREVIEW_ACCENT}`,
+      strokeOpacity: 0.82,
+    });
+    rect.setVisibility(false);
+    return rect;
+  }
+
+  private _resolveAccentColor(targetTopic: Topic): string {
+    const maybeTopic = targetTopic as unknown as {
+      getThemeVariant?: () => 'light' | 'dark';
+      getConnectionColor?: (variant: 'light' | 'dark') => string;
+    };
+    const variant =
+      typeof maybeTopic.getThemeVariant === 'function' ? maybeTopic.getThemeVariant() : 'light';
+    const color =
+      typeof maybeTopic.getConnectionColor === 'function'
+        ? maybeTopic.getConnectionColor(variant)
+        : undefined;
+    return color || DEFAULT_PREVIEW_ACCENT;
   }
 
   private _getPivotRect(): Rect {
@@ -267,14 +288,17 @@ class DragPivot implements CanvasElement {
     this._position = position;
     this._targetTopic = targetTopic;
 
-    // Connected to Rect ...
+    const accentColor = this._resolveAccentColor(targetTopic);
+
+    // Highlight halo around the candidate parent topic with rounded corners.
     const connectRect = this._connectRect;
     const targetSize = targetTopic.getSize();
+    const haloPadding = 10;
+    const width = targetSize.width + haloPadding;
+    const height = targetSize.height + haloPadding;
 
-    // Add 4 pixel in order to keep create a rect bigger than the topic.
-    const width = targetSize.width + 4;
-    const height = targetSize.height + 4;
-
+    connectRect.setFill(accentColor, 0.14);
+    connectRect.setStroke(2, 'solid', accentColor, 0.82);
     connectRect.setSize(width, height);
 
     const targetPosition = targetTopic.getPosition();
@@ -282,11 +306,16 @@ class DragPivot implements CanvasElement {
     const cy = Math.ceil(targetPosition.y - height / 2);
     connectRect.setPosition(cx, cy);
 
-    // Change elements position ...
+    // Style drop slot pill and dashed preview line with the same branch accent color.
     const pivotRect = this._getPivotRect();
+    pivotRect.setFill(accentColor, 0.85);
+    pivotRect.setStroke(1.5, 'solid', accentColor, 0.95);
     pivotRect.moveToFront();
 
-    // Position the pivot rect centered at the given position
+    this._straightLine.setStroke(2, 'dash', accentColor, 0.72);
+    this._curvedLine.setStroke(2, 'dash', accentColor, 0.72);
+
+    // Position the pivot pill centered at the predicted drop position.
     const size = this._size;
     const pivotX = position.x - size.width / 2;
     const pivotY = position.y - size.height / 2;
@@ -313,7 +342,7 @@ class DragPivot implements CanvasElement {
     // just hidden and disconnected
   }
 
-  static DEFAULT_PIVOT_SIZE = { width: 50, height: 6 };
+  static DEFAULT_PIVOT_SIZE = { width: 52, height: 8 };
 }
 
 export default DragPivot;

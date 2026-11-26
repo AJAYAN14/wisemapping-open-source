@@ -20,50 +20,28 @@ import React from 'react';
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import TopicImagePicker from './index';
 import NodeProperty from '../../../../classes/model/node-property';
+import type { TopicImageValue } from '@wisemapping/mindplot';
 
-// Wrapper component to expose setValue as an action-trackable callback
 const TopicImagePickerWithActions = (props: {
   triggerClose: () => void;
-  initialEmoji?: string;
-  initialIconsGallery?: string;
-  onEmojiChange?: (emoji: string | undefined) => void;
-  onIconsGalleryChange?: (icon: string | undefined) => void;
+  initialImage?: TopicImageValue;
+  onImageChange?: (image: TopicImageValue | undefined) => void;
 }): React.ReactElement => {
-  const { onEmojiChange, onIconsGalleryChange } = props;
-  const [emoji, setEmoji] = React.useState<string | undefined>(props.initialEmoji);
-  const [iconsGallery, setIconsGallery] = React.useState<string | undefined>(
-    props.initialIconsGallery,
-  );
+  const { onImageChange } = props;
+  const [image, setImage] = React.useState<TopicImageValue | undefined>(props.initialImage);
 
-  const emojiModel: NodeProperty<string | undefined> = React.useMemo(
+  const topicImageModel: NodeProperty<TopicImageValue | undefined> = React.useMemo(
     () => ({
-      getValue: () => emoji,
-      setValue: (v: string | undefined) => {
-        setEmoji(v);
-        onEmojiChange?.(v);
+      getValue: () => image,
+      setValue: (v: TopicImageValue | undefined) => {
+        setImage(v);
+        onImageChange?.(v);
       },
     }),
-    [emoji, onEmojiChange],
+    [image, onImageChange],
   );
 
-  const iconsGalleryModel: NodeProperty<string | undefined> = React.useMemo(
-    () => ({
-      getValue: () => iconsGallery,
-      setValue: (v: string | undefined) => {
-        setIconsGallery(v);
-        onIconsGalleryChange?.(v);
-      },
-    }),
-    [iconsGallery, onIconsGalleryChange],
-  );
-
-  return (
-    <TopicImagePicker
-      triggerClose={props.triggerClose}
-      emojiModel={emojiModel}
-      iconsGalleryModel={iconsGalleryModel}
-    />
-  );
+  return <TopicImagePicker triggerClose={props.triggerClose} topicImageModel={topicImageModel} />;
 };
 
 const meta: Meta<typeof TopicImagePickerWithActions> = {
@@ -75,8 +53,7 @@ const meta: Meta<typeof TopicImagePickerWithActions> = {
   },
   argTypes: {
     triggerClose: { action: 'triggerClose' },
-    onEmojiChange: { action: 'onEmojiChange' },
-    onIconsGalleryChange: { action: 'onIconsGalleryChange' },
+    onImageChange: { action: 'onImageChange' },
   },
 };
 
@@ -85,16 +62,4 @@ type Story = StoryObj<typeof TopicImagePickerWithActions>;
 
 export const Default: Story = {
   args: {},
-};
-
-export const WithEmoji: Story = {
-  args: {
-    initialEmoji: 'emoji:😀',
-  },
-};
-
-export const WithImage: Story = {
-  args: {
-    initialIconsGallery: 'image:tag_blue',
-  },
 };

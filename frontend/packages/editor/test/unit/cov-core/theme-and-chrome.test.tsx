@@ -24,7 +24,6 @@ import '@testing-library/jest-dom';
 import type { Designer, Topic, WidgetBuilder } from '@wisemapping/mindplot';
 import { EditorThemeProvider, useTheme } from '../../../src/contexts/ThemeContext';
 import { createEditorTheme } from '../../../src/theme';
-import ThemeSwitcher from '../../../src/components/common/theme-switcher';
 import ThemeToggle from '../../../src/components/common/theme-toggle';
 import CreatorInfoPane from '../../../src/components/creator-info-pane';
 import EditorLoadingSkeleton from '../../../src/components/editor-loading-skeleton';
@@ -142,26 +141,6 @@ describe('createEditorTheme', () => {
       );
     },
   );
-});
-
-describe('ThemeSwitcher', () => {
-  it('shows the light label and switches to dark', () => {
-    const storage = createThemeStorage('light');
-    render(
-      <Providers storage={storage}>
-        <ThemeSwitcher />
-      </Providers>,
-    );
-    const toggle = screen.getByRole('switch');
-    expect(screen.getByText('Light')).toBeInTheDocument();
-    expect(toggle).not.toBeChecked();
-
-    fireEvent.click(toggle);
-
-    expect(screen.getByText('Dark')).toBeInTheDocument();
-    expect(screen.getByRole('switch')).toBeChecked();
-    expect(storage.setThemeVariant).toHaveBeenCalledWith('dark');
-  });
 });
 
 describe('ThemeToggle', () => {

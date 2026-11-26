@@ -140,25 +140,15 @@ describe('Outline View Suite', () => {
   });
 
   it('Outline View displays topic icons', () => {
-    // First, add an icon to a topic
+    // First, add an icon to a topic via designer model
     cy.focusTopicById(3);
 
-    // Click the Add Icon button using the custom command
-    cy.onClickToolbarButton('Add Icon');
-
-    // Wait for the icon picker popover to be visible
-    cy.get('.MuiPopover-root').should('be.visible');
-
-    // Select an icon by clicking on one
-    cy.getEmoji().first().should('be.visible').click();
-
-    // Wait for the emoji picker to close (replaces cy.wait(300))
-    // After clicking an emoji, the picker stays open (as per icon-picker/index.tsx line 58)
-    // So we need to click elsewhere or press Escape to close it
-    cy.get('body').type('{esc}');
-
-    // Wait for the icon picker popover to close
-    cy.get('.MuiPopover-root').should('not.exist');
+    cy.window().then((win) => {
+      const designer = win as unknown as {
+        designer?: { addIconType: (type: 'image' | 'emoji', iconType: string) => void };
+      };
+      designer.designer?.addIconType('emoji', '😀');
+    });
 
     // Now open the Outline View
     cy.get('button[aria-label*="Outline View"]')

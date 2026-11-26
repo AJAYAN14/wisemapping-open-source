@@ -181,8 +181,8 @@ class Shape {
     const point = Shape.calculateRectConnectionPoint(pos, size, isAtRight);
     const lineOffset = targetNode.getShapeType() === 'line' ? targetNode.getSize().height / 2 : 0;
 
-    // Move a little the position...
-    const offset = TopicConfig.CONNECTOR_WIDTH / 2;
+    // Move outward to the center of the shrink connector (compensating for calculateRectConnectionPoint's 2px inward offset).
+    const offset = TopicConfig.CONNECTOR_OUTWARD_OFFSET + 2;
     return {
       x: point.x + (isAtRight ? -offset : offset),
       y: point.y + lineOffset,

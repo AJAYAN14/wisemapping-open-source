@@ -68,51 +68,6 @@
   "appbar.tooltip-undo": {
     "defaultMessage": "Undo"
   },
-  "canvas-style.background-color": {
-    "defaultMessage": "Background Color"
-  },
-  "canvas-style.background-style": {
-    "defaultMessage": "Background Style"
-  },
-  "canvas-style.grid-color": {
-    "defaultMessage": "Grid Color"
-  },
-  "canvas-style.grid-size-l": {
-    "defaultMessage": "Large"
-  },
-  "canvas-style.grid-size-m": {
-    "defaultMessage": "Medium"
-  },
-  "canvas-style.grid-size-s": {
-    "defaultMessage": "Small"
-  },
-  "canvas-style.grid-size-xl": {
-    "defaultMessage": "Extra Large"
-  },
-  "canvas-style.grid-size-xs": {
-    "defaultMessage": "Extra Small"
-  },
-  "canvas-style.grid-style": {
-    "defaultMessage": "Grid Size"
-  },
-  "canvas-style.pattern-default-tooltip": {
-    "defaultMessage": "Default - All styles will be automatically selected based on the theme"
-  },
-  "canvas-style.pattern-dots": {
-    "defaultMessage": "Dots"
-  },
-  "canvas-style.pattern-grid": {
-    "defaultMessage": "Grid Lines"
-  },
-  "canvas-style.pattern-solid": {
-    "defaultMessage": "Solid Color"
-  },
-  "canvas-style.tab-color": {
-    "defaultMessage": "Color"
-  },
-  "canvas-style.tab-grid": {
-    "defaultMessage": "Grid Color"
-  },
   "color-picker.color": {
     "defaultMessage": "Color"
   },
@@ -134,20 +89,11 @@
   "editor-panel.deeplink-copy-failed": {
     "defaultMessage": "Could not copy the link to the clipboard"
   },
-  "editor-panel.font-family-default": {
-    "defaultMessage": "Default"
-  },
-  "editor-panel.font-family-mixed": {
-    "defaultMessage": "Mixed"
-  },
   "editor-panel.link-panel-title": {
     "defaultMessage": "Link"
   },
   "editor-panel.note-panel-title": {
     "defaultMessage": "Note"
-  },
-  "editor-panel.tooltip-add-icon": {
-    "defaultMessage": "Add Icon"
   },
   "editor-panel.tooltip-add-link": {
     "defaultMessage": "Add Link"
@@ -160,9 +106,6 @@
   },
   "editor-panel.tooltip-add-topic-image": {
     "defaultMessage": "Add Topic Image"
-  },
-  "editor-panel.tooltip-canvas-style": {
-    "defaultMessage": "Background"
   },
   "editor-panel.tooltip-copy-node-link": {
     "defaultMessage": "Copy Link to Node"
@@ -179,9 +122,6 @@
   "editor-panel.tooltip-topic-font-style": {
     "defaultMessage": "Font Style"
   },
-  "editor-panel.tooltip-unified-styling": {
-    "defaultMessage": "Style Topic & Connections"
-  },
   "editor.edit-description-mobile": {
     "defaultMessage": "Limited mindmap edition capabilities are supported in Mobile devices. Use Desktop browser for full editor capabilities."
   },
@@ -196,9 +136,6 @@
   },
   "editor.try-welcome-mobile": {
     "defaultMessage": "This edition space showcases some of the mindmap editor capabilities!"
-  },
-  "emoji-picker.search-placeholder": {
-    "defaultMessage": "Search emojis..."
   },
   "find-in-map.clear": {
     "defaultMessage": "Clear search"
@@ -220,114 +157,6 @@
   },
   "find-in-map.previous": {
     "defaultMessage": "Previous match"
-  },
-  "icon-collection.border.dashed": {
-    "defaultMessage": "Dashed"
-  },
-  "icon-collection.border.default": {
-    "defaultMessage": "Default"
-  },
-  "icon-collection.border.default-tooltip": {
-    "defaultMessage": "Default - Colors will be automatically taken based on the selected theme"
-  },
-  "icon-collection.border.dotted": {
-    "defaultMessage": "Dotted"
-  },
-  "icon-collection.border.solid": {
-    "defaultMessage": "Solid"
-  },
-  "icon-collection.connection.arc": {
-    "defaultMessage": "Arc"
-  },
-  "icon-collection.connection.arc-tooltip": {
-    "defaultMessage": "Circular arc connection - Perfect for radial layouts and organic flow"
-  },
-  "icon-collection.connection.curved-polyline": {
-    "defaultMessage": "Curved Polyline"
-  },
-  "icon-collection.connection.curved-polyline-tooltip": {
-    "defaultMessage": "Multi-segment line with smooth corners - Best for structured layouts and clear paths"
-  },
-  "icon-collection.connection.default": {
-    "defaultMessage": "Default"
-  },
-  "icon-collection.connection.default-tooltip": {
-    "defaultMessage": "Default - Connection style will be automatically selected based on the theme"
-  },
-  "icon-collection.connection.heartbeat": {
-    "defaultMessage": "Heartbeat"
-  },
-  "icon-collection.connection.heartbeat-tooltip": {
-    "defaultMessage": "ECG-inspired waveform with sharp spikes – perfect for conveying energy, urgency, or life signals"
-  },
-  "icon-collection.connection.neuron": {
-    "defaultMessage": "Neuron"
-  },
-  "icon-collection.connection.neuron-tooltip": {
-    "defaultMessage": "Organic impulse line with branching pulses – ideal for science, neural nets, or anything futuristic"
-  },
-  "icon-collection.connection.simple-polyline": {
-    "defaultMessage": "Simple Polyline"
-  },
-  "icon-collection.connection.simple-polyline-tooltip": {
-    "defaultMessage": "Direct straight line connection - Clean and minimalist style for simple relationships"
-  },
-  "icon-collection.connection.thick-curved": {
-    "defaultMessage": "Thick Curved"
-  },
-  "icon-collection.connection.thick-curved-tooltip": {
-    "defaultMessage": "Thick curved line with smooth bezier curves - Great for emphasizing main branches"
-  },
-  "icon-collection.connection.thin-curved": {
-    "defaultMessage": "Thin Curved"
-  },
-  "icon-collection.connection.thin-curved-tooltip": {
-    "defaultMessage": "Thin curved line with elegant bezier curves - Ideal for detailed or dense mind maps"
-  },
-  "icon-collection.default-tooltip": {
-    "defaultMessage": "Default - All styles will be automatically selected based on the theme"
-  },
-  "icon-collection.shape.default": {
-    "defaultMessage": "Default"
-  },
-  "icon-collection.shape.ellipse": {
-    "defaultMessage": "Ellipse"
-  },
-  "icon-collection.shape.line": {
-    "defaultMessage": "Line"
-  },
-  "icon-collection.shape.none": {
-    "defaultMessage": "None"
-  },
-  "icon-collection.shape.none-tooltip": {
-    "defaultMessage": "None - No visible shape background"
-  },
-  "icon-collection.shape.rectangle": {
-    "defaultMessage": "Rectangle"
-  },
-  "icon-collection.shape.rounded": {
-    "defaultMessage": "Rounded"
-  },
-  "icon-picker.emojis": {
-    "defaultMessage": "Emojis"
-  },
-  "icon-picker.frequently-used": {
-    "defaultMessage": "Frequently Used"
-  },
-  "icon-picker.icons": {
-    "defaultMessage": "Icons Gallery"
-  },
-  "icon-picker.no-results": {
-    "defaultMessage": "No icons found"
-  },
-  "icon-picker.search-placeholder": {
-    "defaultMessage": "Search icons..."
-  },
-  "icon-picker.show-images": {
-    "defaultMessage": "Show images"
-  },
-  "icon-picker.upload-image": {
-    "defaultMessage": "Upload Image"
   },
   "layout-selector.accept": {
     "defaultMessage": "Accept"
@@ -436,9 +265,6 @@
   },
   "rich-text-editor.indent": {
     "defaultMessage": "Increase Indent (Tab)"
-  },
-  "rich-text-editor.insert-icon": {
-    "defaultMessage": "Insert Icon"
   },
   "rich-text-editor.insert-link": {
     "defaultMessage": "Insert Link"
@@ -614,12 +440,6 @@
   "shortcut-help-pane.zoom-wheel": {
     "defaultMessage": "Zoom in/out with the wheel"
   },
-  "theme.dark": {
-    "defaultMessage": "Dark"
-  },
-  "theme.light": {
-    "defaultMessage": "Light"
-  },
   "theme.switch-to-dark": {
     "defaultMessage": "Switch to dark mode"
   },
@@ -643,9 +463,6 @@
   },
   "topic-font-editor.font-color": {
     "defaultMessage": "Font Color"
-  },
-  "topic-font-editor.font-family": {
-    "defaultMessage": "Font Family"
   },
   "topic-font-editor.font-size-style": {
     "defaultMessage": "Font Size & Style"
@@ -676,33 +493,6 @@
   },
   "topic-image.uploading": {
     "defaultMessage": "Compressing and uploading to cloud storage..."
-  },
-  "unified-styling.background-color": {
-    "defaultMessage": "Background Color"
-  },
-  "unified-styling.border-color": {
-    "defaultMessage": "Border Color"
-  },
-  "unified-styling.border-style": {
-    "defaultMessage": "Border Style"
-  },
-  "unified-styling.connection-style": {
-    "defaultMessage": "Connection Style"
-  },
-  "unified-styling.connector-style": {
-    "defaultMessage": "Connector Style"
-  },
-  "unified-styling.shape-type": {
-    "defaultMessage": "Shape Type"
-  },
-  "unified-styling.tab.border": {
-    "defaultMessage": "Border"
-  },
-  "unified-styling.tab.connector": {
-    "defaultMessage": "Connector"
-  },
-  "unified-styling.tab.shape": {
-    "defaultMessage": "Shape"
   },
   "visualization-toolbar.tooltip-add-child": {
     "defaultMessage": "Add Child Topic"

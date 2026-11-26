@@ -71,51 +71,6 @@
   "appbar.tooltip-undo": {
     "defaultMessage": "撤销"
   },
-  "canvas-style.background-color": {
-    "defaultMessage": "背景颜色"
-  },
-  "canvas-style.background-style": {
-    "defaultMessage": "背景样式"
-  },
-  "canvas-style.grid-color": {
-    "defaultMessage": "网格颜色"
-  },
-  "canvas-style.grid-size-l": {
-    "defaultMessage": "大"
-  },
-  "canvas-style.grid-size-m": {
-    "defaultMessage": "中"
-  },
-  "canvas-style.grid-size-s": {
-    "defaultMessage": "小"
-  },
-  "canvas-style.grid-size-xl": {
-    "defaultMessage": "极大"
-  },
-  "canvas-style.grid-size-xs": {
-    "defaultMessage": "极小"
-  },
-  "canvas-style.grid-style": {
-    "defaultMessage": "网格大小"
-  },
-  "canvas-style.pattern-default-tooltip": {
-    "defaultMessage": "默认 - 所有样式将根据主题自动选择"
-  },
-  "canvas-style.pattern-dots": {
-    "defaultMessage": "点"
-  },
-  "canvas-style.pattern-grid": {
-    "defaultMessage": "网格线"
-  },
-  "canvas-style.pattern-solid": {
-    "defaultMessage": "纯色"
-  },
-  "canvas-style.tab-color": {
-    "defaultMessage": "颜色"
-  },
-  "canvas-style.tab-grid": {
-    "defaultMessage": "网格颜色"
-  },
   "color-picker.color": {
     "defaultMessage": "颜色"
   },
@@ -137,20 +92,11 @@
   "editor-panel.deeplink-copy-failed": {
     "defaultMessage": "无法将链接复制到剪贴板"
   },
-  "editor-panel.font-family-default": {
-    "defaultMessage": "默认"
-  },
-  "editor-panel.font-family-mixed": {
-    "defaultMessage": "混合"
-  },
   "editor-panel.link-panel-title": {
     "defaultMessage": "链接"
   },
   "editor-panel.note-panel-title": {
     "defaultMessage": "备注"
-  },
-  "editor-panel.tooltip-add-icon": {
-    "defaultMessage": "添加图标"
   },
   "editor-panel.tooltip-add-link": {
     "defaultMessage": "添加链接"
@@ -163,9 +109,6 @@
   },
   "editor-panel.tooltip-add-topic-image": {
     "defaultMessage": "添加主题图像"
-  },
-  "editor-panel.tooltip-canvas-style": {
-    "defaultMessage": "背景"
   },
   "editor-panel.tooltip-copy-node-link": {
     "defaultMessage": "复制主题链接"
@@ -182,9 +125,6 @@
   "editor-panel.tooltip-topic-font-style": {
     "defaultMessage": "字体样式"
   },
-  "editor-panel.tooltip-unified-styling": {
-    "defaultMessage": "主题和连接样式"
-  },
   "editor.edit-description-mobile": {
     "defaultMessage": "移动设备支持有限的思维导图编辑功能。请使用桌面浏览器获得完整的编辑器功能。"
   },
@@ -199,9 +139,6 @@
   },
   "editor.try-welcome-mobile": {
     "defaultMessage": "这个编辑空间展示了思维导图编辑器的一些功能！"
-  },
-  "emoji-picker.search-placeholder": {
-    "defaultMessage": "搜索表情..."
   },
   "find-in-map.clear": {
     "defaultMessage": "清除搜索"
@@ -223,114 +160,6 @@
   },
   "find-in-map.previous": {
     "defaultMessage": "上一个匹配"
-  },
-  "icon-collection.border.dashed": {
-    "defaultMessage": "虚线"
-  },
-  "icon-collection.border.default": {
-    "defaultMessage": "默认"
-  },
-  "icon-collection.border.default-tooltip": {
-    "defaultMessage": "默认 - 颜色将根据所选主题自动设置"
-  },
-  "icon-collection.border.dotted": {
-    "defaultMessage": "点线"
-  },
-  "icon-collection.border.solid": {
-    "defaultMessage": "实线"
-  },
-  "icon-collection.connection.arc": {
-    "defaultMessage": "弧线"
-  },
-  "icon-collection.connection.arc-tooltip": {
-    "defaultMessage": "圆形弧线连接 - 非常适合放射状布局和有机流动"
-  },
-  "icon-collection.connection.curved-polyline": {
-    "defaultMessage": "曲线折线"
-  },
-  "icon-collection.connection.curved-polyline-tooltip": {
-    "defaultMessage": "具有平滑角的多段线 - 最适合结构化布局和清晰路径"
-  },
-  "icon-collection.connection.default": {
-    "defaultMessage": "默认"
-  },
-  "icon-collection.connection.default-tooltip": {
-    "defaultMessage": "默认 - 连接样式将根据主题自动选择"
-  },
-  "icon-collection.connection.heartbeat": {
-    "defaultMessage": "心跳"
-  },
-  "icon-collection.connection.heartbeat-tooltip": {
-    "defaultMessage": "受心电图启发的波形，具有尖锐的峰值 - 非常适合传达能量、紧迫感或生命信号"
-  },
-  "icon-collection.connection.neuron": {
-    "defaultMessage": "神经元"
-  },
-  "icon-collection.connection.neuron-tooltip": {
-    "defaultMessage": "具有分支脉冲的有机脉冲线 - 适合科学、神经网络或未来主义主题"
-  },
-  "icon-collection.connection.simple-polyline": {
-    "defaultMessage": "简单折线"
-  },
-  "icon-collection.connection.simple-polyline-tooltip": {
-    "defaultMessage": "直接的直线连接 - 简洁的极简风格用于简单关系"
-  },
-  "icon-collection.connection.thick-curved": {
-    "defaultMessage": "粗曲线"
-  },
-  "icon-collection.connection.thick-curved-tooltip": {
-    "defaultMessage": "具有平滑贝塞尔曲线的粗曲线 - 非常适合强调主要分支"
-  },
-  "icon-collection.connection.thin-curved": {
-    "defaultMessage": "细曲线"
-  },
-  "icon-collection.connection.thin-curved-tooltip": {
-    "defaultMessage": "具有优雅贝塞尔曲线的细曲线 - 适合详细或密集的思维导图"
-  },
-  "icon-collection.default-tooltip": {
-    "defaultMessage": "默认 - 所有样式将根据主题自动选择"
-  },
-  "icon-collection.shape.default": {
-    "defaultMessage": "默认"
-  },
-  "icon-collection.shape.ellipse": {
-    "defaultMessage": "椭圆"
-  },
-  "icon-collection.shape.line": {
-    "defaultMessage": "线条"
-  },
-  "icon-collection.shape.none": {
-    "defaultMessage": "无"
-  },
-  "icon-collection.shape.none-tooltip": {
-    "defaultMessage": "无 - 无可见形状背景"
-  },
-  "icon-collection.shape.rectangle": {
-    "defaultMessage": "矩形"
-  },
-  "icon-collection.shape.rounded": {
-    "defaultMessage": "圆角"
-  },
-  "icon-picker.emojis": {
-    "defaultMessage": "表情符号"
-  },
-  "icon-picker.frequently-used": {
-    "defaultMessage": "常用"
-  },
-  "icon-picker.icons": {
-    "defaultMessage": "图标库"
-  },
-  "icon-picker.no-results": {
-    "defaultMessage": "未找到图标"
-  },
-  "icon-picker.search-placeholder": {
-    "defaultMessage": "搜索图标..."
-  },
-  "icon-picker.show-images": {
-    "defaultMessage": "显示图像"
-  },
-  "icon-picker.upload-image": {
-    "defaultMessage": "上传图片"
   },
   "layout-selector.accept": {
     "defaultMessage": "确认"
@@ -439,9 +268,6 @@
   },
   "rich-text-editor.indent": {
     "defaultMessage": "增加缩进 (Tab)"
-  },
-  "rich-text-editor.insert-icon": {
-    "defaultMessage": "插入图标"
   },
   "rich-text-editor.insert-link": {
     "defaultMessage": "插入链接"
@@ -617,12 +443,6 @@
   "shortcut-help-pane.zoom-wheel": {
     "defaultMessage": "用滚轮放大或缩小"
   },
-  "theme.dark": {
-    "defaultMessage": "深色"
-  },
-  "theme.light": {
-    "defaultMessage": "浅色"
-  },
   "theme.switch-to-dark": {
     "defaultMessage": "切换到深色模式"
   },
@@ -646,9 +466,6 @@
   },
   "topic-font-editor.font-color": {
     "defaultMessage": "字体颜色"
-  },
-  "topic-font-editor.font-family": {
-    "defaultMessage": "字体系列"
   },
   "topic-font-editor.font-size-style": {
     "defaultMessage": "字体大小和样式"
@@ -679,33 +496,6 @@
   },
   "topic-image.uploading": {
     "defaultMessage": "正在压缩并上传至云端存储..."
-  },
-  "unified-styling.background-color": {
-    "defaultMessage": "背景颜色"
-  },
-  "unified-styling.border-color": {
-    "defaultMessage": "边框颜色"
-  },
-  "unified-styling.border-style": {
-    "defaultMessage": "边框样式"
-  },
-  "unified-styling.connection-style": {
-    "defaultMessage": "连接样式"
-  },
-  "unified-styling.connector-style": {
-    "defaultMessage": "连接器样式"
-  },
-  "unified-styling.shape-type": {
-    "defaultMessage": "形状类型"
-  },
-  "unified-styling.tab.border": {
-    "defaultMessage": "边框"
-  },
-  "unified-styling.tab.connector": {
-    "defaultMessage": "连接器"
-  },
-  "unified-styling.tab.shape": {
-    "defaultMessage": "形状"
   },
   "visualization-toolbar.tooltip-add-child": {
     "defaultMessage": "添加子主题"

@@ -22,39 +22,18 @@ import NodeProperty from '../../../../classes/model/node-property';
 import { SwitchValueDirection } from '../../../../classes/model/value-stepper';
 import React from 'react';
 
-// Wrapper component to expose all setValue and switchValue calls as action-trackable callbacks
 const TopicFontEditorWithActions = (props: {
   closeModal: () => void;
-  onFontFamilyChange?: (family: string | undefined) => void;
   onFontSizeSwitch?: (direction?: SwitchValueDirection) => void;
   onFontWeightSwitch?: () => void;
   onFontStyleSwitch?: () => void;
   onFontColorChange?: (color: string | undefined) => void;
 }): React.ReactElement => {
-  const {
-    onFontFamilyChange,
-    onFontSizeSwitch,
-    onFontWeightSwitch,
-    onFontStyleSwitch,
-    onFontColorChange,
-  } = props;
-  const [fontFamily, setFontFamily] = React.useState<string | undefined>('Arial');
+  const { onFontSizeSwitch, onFontWeightSwitch, onFontStyleSwitch, onFontColorChange } = props;
   const [fontSize, setFontSize] = React.useState<number>(12);
   const [fontWeight, setFontWeight] = React.useState<string | undefined>('normal');
   const [fontStyle, setFontStyle] = React.useState<string>('normal');
   const [fontColor, setFontColor] = React.useState<string | undefined>('#000000');
-
-  const fontFamilyModel: NodeProperty<string | undefined> = React.useMemo(
-    () => ({
-      getValue: () => fontFamily,
-      setValue: (v: string | undefined) => {
-        setFontFamily(v);
-        onFontFamilyChange?.(v);
-      },
-      switchValue: () => {},
-    }),
-    [fontFamily, onFontFamilyChange],
-  );
 
   const fontSizeModel: NodeProperty<number> = React.useMemo(
     () => ({
@@ -116,7 +95,6 @@ const TopicFontEditorWithActions = (props: {
   return (
     <TopicFontEditor
       closeModal={props.closeModal}
-      fontFamilyModel={fontFamilyModel}
       fontSizeModel={fontSizeModel}
       fontWeightModel={fontWeightModel}
       fontStyleModel={fontStyleModel}
@@ -133,7 +111,6 @@ const meta: Meta<typeof TopicFontEditorWithActions> = {
   },
   argTypes: {
     closeModal: { action: 'closeModal' },
-    onFontFamilyChange: { action: 'onFontFamilyChange' },
     onFontSizeSwitch: { action: 'onFontSizeSwitch' },
     onFontWeightSwitch: { action: 'onFontWeightSwitch' },
     onFontStyleSwitch: { action: 'onFontStyleSwitch' },
