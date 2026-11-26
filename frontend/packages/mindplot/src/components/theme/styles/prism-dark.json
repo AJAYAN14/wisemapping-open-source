@@ -9,40 +9,40 @@
   },
   "MainTopic": {
     "backgroundColor": [
-      "#0E243D",
-      "#1B193D",
-      "#0B2B22",
-      "#2E200B",
-      "#331325",
-      "#23173B",
-      "#0B2B29",
-      "#102342",
-      "#1B290C",
-      "#331B0C"
+      "#192535",
+      "#222230",
+      "#1B2C28",
+      "#32291C",
+      "#31202A",
+      "#272234",
+      "#1B2C2C",
+      "#1F2634",
+      "#232A1C",
+      "#32251D"
     ],
-    "fontColor": "#F8FAFC",
-    "outerBackgroundColor": "#1E293B",
-    "outerBorderColor": "#475569"
+    "fontColor": "#F5F5F7",
+    "outerBackgroundColor": "#2C2C2E",
+    "outerBorderColor": "#38383A"
   },
   "SubTopic": {
-    "backgroundColor": "#14161B",
-    "borderColor": "#334155",
-    "fontColor": "#F1F5F9",
+    "backgroundColor": "#1C1C1E",
+    "borderColor": "#38383A",
+    "fontColor": "#F5F5F7",
     "connectionColor": "#64748B",
-    "outerBackgroundColor": "#1E293B",
-    "outerBorderColor": "#475569"
+    "outerBackgroundColor": "#2C2C2E",
+    "outerBorderColor": "#38383A"
   },
   "IsolatedTopic": {
-    "backgroundColor": "#14161B",
-    "borderColor": "#334155",
-    "fontColor": "#F1F5F9",
+    "backgroundColor": "#1C1C1E",
+    "borderColor": "#38383A",
+    "fontColor": "#F5F5F7",
     "connectionColor": "#64748B",
-    "outerBackgroundColor": "#1E293B",
-    "outerBorderColor": "#475569"
+    "outerBackgroundColor": "#2C2C2E",
+    "outerBorderColor": "#38383A"
   },
   "Canvas": {
     "backgroundColor": "#000000",
-    "gridColor": "#1C1C1E",
+    "gridColor": "#2C2C2E",
     "showGrid": false
   }
 }

@@ -22,10 +22,10 @@
   },
   "SubTopic": {
     "backgroundColor": "#FFFFFF",
-    "fontColor": "#1E293B"
+    "fontColor": "#1D1D1F"
   },
   "IsolatedTopic": {
     "backgroundColor": "#FFFFFF",
-    "fontColor": "#1E293B"
+    "fontColor": "#1D1D1F"
   }
 }

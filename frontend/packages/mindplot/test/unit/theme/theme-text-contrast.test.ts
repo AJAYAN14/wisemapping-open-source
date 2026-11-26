@@ -68,7 +68,7 @@ describe('theme text colour contrast', () => {
     it('keeps high-contrast text on all main topic fills (dark slate in light, crisp white in dark)', () => {
       for (let order = 0; order <= 9; order++) {
         expect(prism('light').getFontColor(main({}, order))).toBe('#0F172A');
-        expect(prism('dark').getFontColor(main({}, order))).toBe('#F8FAFC');
+        expect(prism('dark').getFontColor(main({}, order))).toBe('#F5F5F7');
       }
     });
 
@@ -78,9 +78,9 @@ describe('theme text colour contrast', () => {
       expect(prism('light').getFontColor(main({ backgroundColor: 'transparent' }))).toBe('#0F172A');
     });
 
-    it('keeps crisp #F8FAFC text on the pure black #000000 dark canvas', () => {
-      expect(prism('dark').getFontColor(main({ shapeType: 'line' }))).toBe('#F8FAFC');
-      expect(prism('dark').getFontColor(main({ shapeType: 'none' }))).toBe('#F8FAFC');
+    it('keeps crisp #F5F5F7 text on the pure black #000000 dark canvas', () => {
+      expect(prism('dark').getFontColor(main({ shapeType: 'line' }))).toBe('#F5F5F7');
+      expect(prism('dark').getFontColor(main({ shapeType: 'none' }))).toBe('#F5F5F7');
     });
 
     // welcome-prism: "5 min tutorial video ?" has a light fill picked by the user, saved as rgb().
@@ -98,8 +98,8 @@ describe('theme text colour contrast', () => {
     it('keeps high-contrast text on central and sub topics in both light and dark modes', () => {
       expect(prism('light').getFontColor(central)).toBe(WHITE);
       expect(prism('dark').getFontColor(central)).toBe(WHITE);
-      expect(prism('light').getFontColor(sub())).toBe('#1E293B');
-      expect(prism('dark').getFontColor(sub())).toBe('#F1F5F9');
+      expect(prism('light').getFontColor(sub())).toBe('#1D1D1F');
+      expect(prism('dark').getFontColor(sub())).toBe('#F5F5F7');
     });
 
     it('propagates branch connection colour and derives harmonized borders for sub topics', () => {
@@ -111,8 +111,8 @@ describe('theme text colour contrast', () => {
       expect(prism('dark').getConnectionColor(branchSub)).toBe(
         prism('dark').getConnectionColor(branchMain),
       );
-      expect(prism('light').getBorderColor(branchSub)).not.toBe('#CBD5E1');
-      expect(prism('dark').getBorderColor(branchSub)).not.toBe('#334155');
+      expect(prism('light').getBorderColor(branchSub)).not.toBe('#C6C6C8');
+      expect(prism('dark').getBorderColor(branchSub)).not.toBe('#38383A');
     });
   });
 

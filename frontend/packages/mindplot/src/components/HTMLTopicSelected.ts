@@ -342,26 +342,26 @@ class HTMLTopicSelected {
       applyColors(
         tabKey,
         tabText,
-        { backgroundColor: '#1C1C1E', borderColor: '#38383A', color: '#F5F5F7' },
+        { backgroundColor: '#2C2C2E', borderColor: '#38383A', color: '#F5F5F7' },
         '#A1A1A6',
       );
       applyColors(
         enterKey,
         enterText,
-        { backgroundColor: '#1C1C1E', borderColor: '#38383A', color: '#F5F5F7' },
+        { backgroundColor: '#2C2C2E', borderColor: '#38383A', color: '#F5F5F7' },
         '#A1A1A6',
       );
     } else {
       applyColors(
         tabKey,
         tabText,
-        { backgroundColor: '#F5F5F7', borderColor: '#D2D2D7', color: '#1D1D1F' },
+        { backgroundColor: '#E5E5EA', borderColor: '#C6C6C8', color: '#1D1D1F' },
         '#6E6E73',
       );
       applyColors(
         enterKey,
         enterText,
-        { backgroundColor: '#F5F5F7', borderColor: '#D2D2D7', color: '#1D1D1F' },
+        { backgroundColor: '#E5E5EA', borderColor: '#C6C6C8', color: '#1D1D1F' },
         '#6E6E73',
       );
     }

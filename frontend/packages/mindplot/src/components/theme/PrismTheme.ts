@@ -60,13 +60,13 @@ class PrismTheme extends DefaultTheme {
     }
 
     const parent = topic.getParent();
-    // SubTopics derive a subtle, branch-harmonized card border from their parent branch colour.
+    // SubTopics derive a subtle, branch-harmonized card border blended over their Level 1 surface.
     if (parent && !parent.isCentralTopic()) {
       const branchColor = this.getConnectionColor(parent);
       const parsed = ColorUtil.parse(branchColor);
       if (parsed) {
-        const backdrop = this._variant === 'dark' ? '#000000' : '#FFFFFF';
-        const alpha = this._variant === 'dark' ? 0.45 : 0.42;
+        const backdrop = this._variant === 'dark' ? '#1C1C1E' : '#FFFFFF';
+        const alpha = this._variant === 'dark' ? 0.42 : 0.38;
         const tinted = ColorUtil.over(`rgba(${parsed.r}, ${parsed.g}, ${parsed.b}, ${alpha})`, backdrop);
         if (tinted) {
           return tinted;

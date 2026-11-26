@@ -59,42 +59,42 @@
     "fontColor": "#0F172A",
     "connectionStyle": "POLYLINE_CURVED",
     "shapeType": "rounded rectangle",
-    "outerBackgroundColor": "#E2E8F0",
-    "outerBorderColor": "#94A3B8"
+    "outerBackgroundColor": "#E5E5EA",
+    "outerBorderColor": "#C6C6C8"
   },
   "SubTopic": {
     "msgKey": "SUB_TOPIC",
-    "borderColor": "#CBD5E1",
+    "borderColor": "#C6C6C8",
     "backgroundColor": "#FFFFFF",
     "fontFamily": "-apple-system, BlinkMacSystemFont, 'SF Pro Rounded', 'SF Pro Text', system-ui, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif",
     "fontSize": 10,
     "fontStyle": "normal",
     "fontWeight": "normal",
-    "fontColor": "#1E293B",
+    "fontColor": "#1D1D1F",
     "connectionStyle": "POLYLINE_CURVED",
     "connectionColor": "#94A3B8",
     "shapeType": "rounded rectangle",
-    "outerBackgroundColor": "#E2E8F0",
-    "outerBorderColor": "#94A3B8"
+    "outerBackgroundColor": "#E5E5EA",
+    "outerBorderColor": "#C6C6C8"
   },
   "IsolatedTopic": {
     "msgKey": "ISOLATED_TOPIC",
-    "borderColor": "#CBD5E1",
+    "borderColor": "#C6C6C8",
     "backgroundColor": "#FFFFFF",
     "fontFamily": "-apple-system, BlinkMacSystemFont, 'SF Pro Rounded', 'SF Pro Text', system-ui, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif",
     "fontSize": 10.5,
     "fontStyle": "normal",
     "fontWeight": "normal",
-    "fontColor": "#1E293B",
+    "fontColor": "#1D1D1F",
     "connectionStyle": "POLYLINE_CURVED",
     "connectionColor": "#94A3B8",
     "shapeType": "rounded rectangle",
-    "outerBackgroundColor": "#E2E8F0",
-    "outerBorderColor": "#94A3B8"
+    "outerBackgroundColor": "#E5E5EA",
+    "outerBorderColor": "#C6C6C8"
   },
   "Canvas": {
-    "backgroundColor": "#FFFFFF",
-    "gridColor": "#F1F5F9",
+    "backgroundColor": "#F2F2F7",
+    "gridColor": "#E5E5EA",
     "opacity": 1,
     "showGrid": false
   }
