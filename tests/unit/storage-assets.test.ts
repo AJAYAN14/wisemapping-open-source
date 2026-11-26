@@ -41,7 +41,10 @@ describe('Storage asset validation, deduplication, and XML migration', () => {
       validateUploadRequestItems([{ sha256: hashA, mimeType: 'application/pdf' }]),
     ).toThrow(StorageValidationError);
     expect(() =>
-      validateUploadRequestItems([{ sha256: hashA, mimeType: 'image/png', size: 6 * 1024 * 1024 }]),
+      validateUploadRequestItems([{ sha256: hashA, mimeType: 'image/png', size: 20 * 1024 * 1024 }]),
+    ).not.toThrow();
+    expect(() =>
+      validateUploadRequestItems([{ sha256: hashA, mimeType: 'image/png', size: 21 * 1024 * 1024 }]),
     ).toThrow(StorageValidationError);
   });
 

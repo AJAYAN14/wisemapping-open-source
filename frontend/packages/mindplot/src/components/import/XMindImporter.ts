@@ -196,8 +196,17 @@ const encodeXMindResourceImage = async (
 ): Promise<ExtractedImage> => {
   const mime = mimeFromFilename(filename);
   const pngDims = mime === 'image/png' ? readPngDimensions(bytes) : undefined;
+  let cardSize: { width: number; height: number } = pngDims
+    ? scaleCardSize(pngDims.origW, pngDims.origH)
+    : { width: 130, height: 90 };
 
-  if (typeof document !== 'undefined' && typeof URL !== 'undefined' && mime !== 'image/svg+xml') {
+  if (
+    !pngDims &&
+    typeof document !== 'undefined' &&
+    typeof URL !== 'undefined' &&
+    typeof Image !== 'undefined' &&
+    mime !== 'image/svg+xml'
+  ) {
     try {
       const blob = new Blob([new Uint8Array(bytes)], { type: mime });
       const blobUrl = URL.createObjectURL(blob);
@@ -208,38 +217,17 @@ const encodeXMindResourceImage = async (
           el.onerror = () => reject(new Error('Image decode failed'));
           el.src = blobUrl;
         });
-        const origW = img.naturalWidth || pngDims?.origW || 130;
-        const origH = img.naturalHeight || pngDims?.origH || 90;
-        const cardSize = scaleCardSize(origW, origH);
-
-        // Downscale oversized screenshots to crisp 2x card resolution so data URIs stay compact
-        if (bytes.length > 32 * 1024 || origW > 320 || origH > 220) {
-          const canvas = document.createElement('canvas');
-          canvas.width = cardSize.width * 2;
-          canvas.height = cardSize.height * 2;
-          const ctx = canvas.getContext('2d');
-          if (ctx) {
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            const webpUrl = canvas.toDataURL('image/webp', 0.85);
-            const url = webpUrl.startsWith('data:image/webp')
-              ? webpUrl
-              : canvas.toDataURL('image/png');
-            return { url, ...cardSize };
-          }
-        }
-        return {
-          url: `data:${mime};base64,${uint8ArrayToBase64(bytes)}`,
-          ...cardSize,
-        };
+        const origW = img.naturalWidth || 130;
+        const origH = img.naturalHeight || 90;
+        cardSize = scaleCardSize(origW, origH);
       } finally {
         URL.revokeObjectURL(blobUrl);
       }
     } catch {
-      // Fallback to raw base64 below
+      // Fallback to default card size below while keeping raw image bytes intact
     }
   }
 
-  const cardSize = pngDims ? scaleCardSize(pngDims.origW, pngDims.origH) : { width: 130, height: 90 };
   return {
     url: `data:${mime};base64,${uint8ArrayToBase64(bytes)}`,
     ...cardSize,

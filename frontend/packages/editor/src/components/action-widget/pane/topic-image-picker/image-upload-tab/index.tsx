@@ -188,7 +188,7 @@ const ImageUploadTab = ({
             <Typography variant="body2" color="text.secondary">
               <FormattedMessage
                 id="topic-image.uploading"
-                defaultMessage="正在压缩并上传至云端存储..."
+                defaultMessage="正在上传至云端存储..."
               />
             </Typography>
           </>
@@ -204,7 +204,7 @@ const ImageUploadTab = ({
             <Typography variant="caption" color="text.secondary">
               <FormattedMessage
                 id="topic-image.paste-hint"
-                defaultMessage="支持选中节点后直接 Ctrl+V 粘贴截图 · 自动转 WebP 节省空间"
+                defaultMessage="支持选中节点后直接 Ctrl+V 粘贴截图 · 原图直传不压缩（单张上限 20 MB）"
               />
             </Typography>
           </>

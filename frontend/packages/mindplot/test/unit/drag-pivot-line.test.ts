@@ -107,10 +107,14 @@ describe('DragPivot line (BL5-75)', () => {
       _straightLine: { peer: { _native: SVGPathElement } };
     };
 
-    expect(internals._dragPivot.peer._native.getAttribute('rx')).toBe('4');
+    expect(internals._dragPivot.peer._native.getAttribute('width')).toBe('40');
+    expect(internals._dragPivot.peer._native.getAttribute('height')).toBe('18');
+    expect(internals._dragPivot.peer._native.getAttribute('rx')).toBe('5.4');
     expect(internals._connectRect.peer._native.getAttribute('rx')).toBe('8');
     expect(internals._dragPivot.peer._native.getAttribute('fill')).toBe('#3b82f6');
     expect(internals._connectRect.peer._native.getAttribute('stroke')).toBe('#3b82f6');
     expect(internals._straightLine.peer._native.getAttribute('stroke')).toBe('#3b82f6');
+    expect(internals._straightLine.peer._native.getAttribute('fill')).toBe('none');
+    expect(internals._straightLine.peer._native.getAttribute('d')).not.toContain('Z');
   });
 });

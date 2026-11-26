@@ -220,7 +220,7 @@ const EditorContent = ({
           $notify('正在上传图片...');
           const compressed = await compressTopicImage(imageFile);
           const nextImage = uploadTopicImage
-            ? await uploadTopicImage(compressed.blob, imageFile.name || 'pasted.webp', {
+            ? await uploadTopicImage(compressed.blob, imageFile.name || 'pasted-image.png', {
                 width: compressed.width,
                 height: compressed.height,
               })

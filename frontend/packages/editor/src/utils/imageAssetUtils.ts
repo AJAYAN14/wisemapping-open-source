@@ -24,8 +24,8 @@ export const ALLOWED_TOPIC_IMAGE_TYPES = new Set<string>([
   'image/svg+xml',
 ]);
 
-export const MAX_TOPIC_IMAGE_INPUT_BYTES = 15 * 1024 * 1024;
-export const MAX_TOPIC_IMAGE_UPLOAD_BYTES = 5 * 1024 * 1024;
+export const MAX_TOPIC_IMAGE_INPUT_BYTES = 20 * 1024 * 1024;
+export const MAX_TOPIC_IMAGE_UPLOAD_BYTES = 20 * 1024 * 1024;
 export const MAX_TOPIC_IMAGE_UPLOAD_EDGE = 1280;
 
 export interface CompressedTopicImage {
@@ -84,8 +84,8 @@ const normalizeImageMime = (rawMime: string): string => {
 };
 
 /**
- * Normalizes and downscales oversized topic images up to 1280px on the longest edge
- * in WebP format so lightbox previews stay sharp while storage and egress stay lean.
+ * Validates a topic image and calculates its compact card display size without
+ * re-encoding or compressing the original image bytes.
  */
 export const compressTopicImage = async (file: Blob): Promise<CompressedTopicImage> => {
   const mimeType = normalizeImageMime(file.type || 'image/png');
@@ -95,14 +95,11 @@ export const compressTopicImage = async (file: Blob): Promise<CompressedTopicIma
   if (file.size <= 0) {
     throw new Error('图片文件为空。');
   }
-  if (file.size > MAX_TOPIC_IMAGE_INPUT_BYTES) {
-    throw new Error('原始图片不能超过 15 MB。');
+  if (file.size > MAX_TOPIC_IMAGE_UPLOAD_BYTES) {
+    throw new Error('图片文件不能超过 20 MB。');
   }
 
   if (typeof document === 'undefined' || typeof URL === 'undefined' || typeof Image === 'undefined') {
-    if (file.size > MAX_TOPIC_IMAGE_UPLOAD_BYTES) {
-      throw new Error('压缩后图片仍超过 5 MB 上限。');
-    }
     return {
       blob: file,
       mimeType,
@@ -121,47 +118,6 @@ export const compressTopicImage = async (file: Blob): Promise<CompressedTopicIma
     });
 
     const cardSize = scaleTopicImageCardSize(img.naturalWidth, img.naturalHeight);
-    const uploadSize = scaleTopicImageUploadSize(img.naturalWidth, img.naturalHeight);
-    if (
-      mimeType !== 'image/svg+xml' &&
-      mimeType !== 'image/gif' &&
-      (file.size > 150 * 1024 ||
-        img.naturalWidth > MAX_TOPIC_IMAGE_UPLOAD_EDGE ||
-        img.naturalHeight > MAX_TOPIC_IMAGE_UPLOAD_EDGE)
-    ) {
-      const canvas = document.createElement('canvas');
-      canvas.width = uploadSize.width;
-      canvas.height = uploadSize.height;
-      const ctx = canvas.getContext('2d');
-      if (ctx) {
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-        const compressedBlob = await new Promise<Blob | null>((resolve) => {
-          canvas.toBlob((b) => resolve(b), 'image/webp', 0.85);
-        });
-        const finalBlob =
-          compressedBlob && compressedBlob.type === 'image/webp'
-            ? compressedBlob
-            : await new Promise<Blob | null>((resolve) => {
-                canvas.toBlob((b) => resolve(b), 'image/png');
-              });
-
-        if (finalBlob && finalBlob.size > 0 && finalBlob.size <= file.size) {
-          if (finalBlob.size > MAX_TOPIC_IMAGE_UPLOAD_BYTES) {
-            throw new Error('图片压缩后仍超过 5 MB 上限。');
-          }
-          return {
-            blob: finalBlob,
-            mimeType: finalBlob.type || 'image/webp',
-            ...cardSize,
-          };
-        }
-      }
-    }
-
-    if (file.size > MAX_TOPIC_IMAGE_UPLOAD_BYTES) {
-      throw new Error('图片文件超过 5 MB 上限。');
-    }
-
     return {
       blob: file,
       mimeType,

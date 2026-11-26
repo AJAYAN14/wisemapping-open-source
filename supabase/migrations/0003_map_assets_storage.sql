@@ -1,5 +1,5 @@
 -- =============================================================================
--- WiseMapping Personal Private Edition â€?Migration 0003: Map Assets Storage Bucket
+-- WiseMapping Personal Private Edition ï¿½?Migration 0003: Map Assets Storage Bucket
 -- Target: WiseMapping Supabase PostgreSQL (storage schema)
 -- Idempotent migration: safe to re-run without side effects.
 -- =============================================================================
@@ -16,7 +16,7 @@ VALUES (
   'map-assets',
   'map-assets',
   TRUE,
-  5242880,
+  20971520,
   ARRAY['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/svg+xml']
 )
 ON CONFLICT (id) DO UPDATE

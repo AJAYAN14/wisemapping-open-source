@@ -75,6 +75,9 @@ class DragPivot implements CanvasElement {
 
   private _buildPreviewLine(): CurvedLine {
     const line = new CurvedLine();
+    // Keep width < 1 so CurvedLine draws an open stroked path rather than a closed tapered outline.
+    line.setWidth(0);
+    line.setFill('none');
     line.setStroke(2, 'dash', DEFAULT_PREVIEW_ACCENT, 0.72);
     line.setVisibility(false);
     return line;
@@ -164,9 +167,9 @@ class DragPivot implements CanvasElement {
 
   private _buildPivotPill(): Rect {
     const size = this._size;
-    const rect = new Rect(1, {
+    const rect = new Rect(0.6, {
       fillColor: DEFAULT_PREVIEW_ACCENT,
-      fillOpacity: 0.85,
+      fillOpacity: 0.28,
       width: size.width,
       height: size.height,
       stroke: `1.5 solid ${DEFAULT_PREVIEW_ACCENT}`,
@@ -240,9 +243,6 @@ class DragPivot implements CanvasElement {
     const pivotRect = this._getPivotRect();
     workspace.append(pivotRect);
 
-    const connectToRect = this._connectRect;
-    workspace.append(connectToRect);
-
     // Add a hidden straight line ...
     const straighLine = this._straightLine;
     straighLine.setVisibility(false);
@@ -308,7 +308,7 @@ class DragPivot implements CanvasElement {
 
     // Style drop slot pill and dashed preview line with the same branch accent color.
     const pivotRect = this._getPivotRect();
-    pivotRect.setFill(accentColor, 0.85);
+    pivotRect.setFill(accentColor, 0.28);
     pivotRect.setStroke(1.5, 'solid', accentColor, 0.95);
     pivotRect.moveToFront();
 
@@ -342,7 +342,7 @@ class DragPivot implements CanvasElement {
     // just hidden and disconnected
   }
 
-  static DEFAULT_PIVOT_SIZE = { width: 52, height: 8 };
+  static DEFAULT_PIVOT_SIZE = { width: 40, height: 18 };
 }
 
 export default DragPivot;

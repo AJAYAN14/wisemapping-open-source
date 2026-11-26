@@ -332,3 +332,46 @@ describe('XMindImporter (XML format) security', () => {
     await expect(new XMindImporter(entityBomb).import('test')).rejects.toThrow(/unsafe/);
   });
 });
+
+describe('XMindImporter resource image preservation', () => {
+  test('preserves raw PNG bytes without compression even when image exceeds 32 KB and 320x220', async () => {
+    const rawPng = new Uint8Array(40 * 1024);
+    rawPng.set([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a], 0);
+    const view = new DataView(rawPng.buffer);
+    view.setUint32(16, 1600, false);
+    view.setUint32(20, 900, false);
+
+    const xmindSheet = [
+      {
+        id: 'sheet1',
+        class: 'sheet',
+        rootTopic: {
+          id: 'root',
+          title: 'Root',
+          children: {
+            attached: [
+              {
+                id: 'img-node',
+                title: 'Diagram',
+                image: { src: 'xap:resources/big.png' },
+              },
+            ],
+          },
+        },
+      },
+    ];
+
+    const archive = zipSync({
+      'content.json': strToU8(JSON.stringify(xmindSheet)),
+      'resources/big.png': rawPng,
+    });
+
+    const xml = await new XMindImporter(archive).import('test');
+    const mindmap = loadMindmap(xml);
+    const diagramNode = findByText(mindmap, 'Diagram');
+    const expectedBase64 = Buffer.from(rawPng).toString('base64');
+
+    expect(diagramNode.getImageSize()).toEqual({ width: 150, height: 84 });
+    expect(diagramNode.getImageUrl()).toBe(`data:image/png;base64,${expectedBase64}`);
+  });
+});

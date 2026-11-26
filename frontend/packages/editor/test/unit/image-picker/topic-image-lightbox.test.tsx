@@ -22,6 +22,8 @@ import TopicImageLightbox, {
   computeInitialScale,
 } from '../../../src/components/topic-image-lightbox';
 import {
+  compressTopicImage,
+  MAX_TOPIC_IMAGE_UPLOAD_BYTES,
   scaleTopicImageCardSize,
   scaleTopicImageUploadSize,
 } from '../../../src/utils/imageAssetUtils';
@@ -266,6 +268,51 @@ describe('scaleTopicImageUploadSize & TopicImageLightbox', () => {
 
     if (originalDesc) {
       Object.defineProperty(HTMLDialogElement.prototype, 'closedBy', originalDesc);
+    }
+  });
+
+  it('preserves original blob without compression and enforces 20 MB limit', async () => {
+    const rawBlob = new Blob([new Uint8Array(200 * 1024)], { type: 'image/png' });
+    const prevCreateObjectUrl = URL.createObjectURL;
+    const prevRevokeObjectUrl = URL.revokeObjectURL;
+    const prevImage = globalThis.Image;
+
+    URL.createObjectURL = jest.fn(() => 'blob:mock-image');
+    URL.revokeObjectURL = jest.fn();
+    class MockImage {
+      naturalWidth = 2560;
+      naturalHeight = 1440;
+      onload: (() => void) | null = null;
+      onerror: (() => void) | null = null;
+      set src(_value: string) {
+        queueMicrotask(() => this.onload?.());
+      }
+    }
+    globalThis.Image = MockImage as unknown as typeof Image;
+
+    try {
+      const prepared = await compressTopicImage(rawBlob);
+      expect(prepared.blob).toBe(rawBlob);
+      expect(prepared.mimeType).toBe('image/png');
+      expect(prepared.width).toBe(150);
+      expect(prepared.height).toBe(84);
+
+      const atLimit = {
+        size: MAX_TOPIC_IMAGE_UPLOAD_BYTES,
+        type: 'image/png',
+      } as Blob;
+      const preparedAtLimit = await compressTopicImage(atLimit);
+      expect(preparedAtLimit.blob).toBe(atLimit);
+
+      const oversized = {
+        size: MAX_TOPIC_IMAGE_UPLOAD_BYTES + 1,
+        type: 'image/png',
+      } as Blob;
+      await expect(compressTopicImage(oversized)).rejects.toThrow(/20 MB/);
+    } finally {
+      URL.createObjectURL = prevCreateObjectUrl;
+      URL.revokeObjectURL = prevRevokeObjectUrl;
+      globalThis.Image = prevImage;
     }
   });
 });
