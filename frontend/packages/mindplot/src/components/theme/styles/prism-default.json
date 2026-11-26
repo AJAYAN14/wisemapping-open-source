@@ -1,56 +1,56 @@
 {
   "CentralTopic": {
     "msgKey": "CENTRAL_TOPIC",
-    "borderColor": "#0071E3",
-    "backgroundColor": "#0071E3",
+    "borderColor": "#0040DD",
+    "backgroundColor": "#007AFF",
     "fontFamily": "-apple-system, BlinkMacSystemFont, 'SF Pro Rounded', 'SF Pro Text', system-ui, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif",
     "fontSize": 13.5,
     "fontStyle": "normal",
     "fontWeight": "bold",
     "fontColor": "#FFFFFF",
     "connectionStyle": "POLYLINE_CURVED",
-    "connectionColor": "#0071E3",
+    "connectionColor": "#007AFF",
     "shapeType": "rounded rectangle",
-    "outerBackgroundColor": "#DCEEFF",
-    "outerBorderColor": "#0071E3"
+    "outerBackgroundColor": "#E5F0FF",
+    "outerBorderColor": "#007AFF"
   },
   "MainTopic": {
     "msgKey": "MAIN_TOPIC",
     "borderColor": [
-      "#007AFF",
-      "#5856D6",
-      "#10B981",
-      "#F59E0B",
-      "#EC4899",
-      "#8B5CF6",
-      "#14B8A6",
-      "#3B82F6",
-      "#65A30D",
-      "#F97316"
+      "#0040DD",
+      "#3634A3",
+      "#248A3D",
+      "#C93400",
+      "#8944AB",
+      "#008299",
+      "#D30F45",
+      "#0071A4",
+      "#0C817B",
+      "#7F6545"
     ],
     "connectionColor": [
       "#007AFF",
       "#5856D6",
-      "#10B981",
-      "#F59E0B",
-      "#EC4899",
-      "#8B5CF6",
-      "#14B8A6",
-      "#3B82F6",
-      "#65A30D",
-      "#F97316"
+      "#34C759",
+      "#FF9500",
+      "#AF52DE",
+      "#30B0C7",
+      "#FF2D55",
+      "#32ADE6",
+      "#00C7BE",
+      "#A2845E"
     ],
     "backgroundColor": [
-      "#EBF5FF",
-      "#F1EFFF",
-      "#E9FBF1",
-      "#FFF5E6",
-      "#FDF0F7",
-      "#F4F0FF",
-      "#E9FBF8",
-      "#EDF4FF",
-      "#F2FCE7",
-      "#FFF2E8"
+      "#D1E7FF",
+      "#E1E1F8",
+      "#DAF5E1",
+      "#FFECCF",
+      "#F1E0F9",
+      "#DAF1F5",
+      "#FFD9E0",
+      "#DAF0FA",
+      "#D1F5F3",
+      "#EEE9E2"
     ],
     "fontFamily": "-apple-system, BlinkMacSystemFont, 'SF Pro Rounded', 'SF Pro Text', system-ui, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif",
     "fontSize": 11.5,
@@ -72,7 +72,7 @@
     "fontWeight": "normal",
     "fontColor": "#1D1D1F",
     "connectionStyle": "POLYLINE_CURVED",
-    "connectionColor": "#94A3B8",
+    "connectionColor": "#8E8E93",
     "shapeType": "rounded rectangle",
     "outerBackgroundColor": "#E5E5EA",
     "outerBorderColor": "#C6C6C8"
@@ -87,13 +87,13 @@
     "fontWeight": "normal",
     "fontColor": "#1D1D1F",
     "connectionStyle": "POLYLINE_CURVED",
-    "connectionColor": "#94A3B8",
+    "connectionColor": "#8E8E93",
     "shapeType": "rounded rectangle",
     "outerBackgroundColor": "#E5E5EA",
     "outerBorderColor": "#C6C6C8"
   },
   "Canvas": {
-    "backgroundColor": "#FAFAFC",
+    "backgroundColor": "#F2F2F7",
     "opacity": 1
   }
 }

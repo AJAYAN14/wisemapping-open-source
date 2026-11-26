@@ -60,18 +60,9 @@ class PrismTheme extends DefaultTheme {
     }
 
     const parent = topic.getParent();
-    // SubTopics derive a subtle, branch-harmonized card border blended over their Level 1 surface.
+    // Scheme 3: SubTopics derive a crisp, branch-harmonized solid card border
     if (parent && !parent.isCentralTopic()) {
-      const branchColor = this.getConnectionColor(parent);
-      const parsed = ColorUtil.parse(branchColor);
-      if (parsed) {
-        const backdrop = this._variant === 'dark' ? '#1C1C1E' : '#FFFFFF';
-        const alpha = this._variant === 'dark' ? 0.42 : 0.38;
-        const tinted = ColorUtil.over(`rgba(${parsed.r}, ${parsed.g}, ${parsed.b}, ${alpha})`, backdrop);
-        if (tinted) {
-          return tinted;
-        }
-      }
+      return this.getConnectionColor(parent);
     }
 
     const colors = this.getStyles(topic).borderColor;
@@ -83,6 +74,32 @@ class PrismTheme extends DefaultTheme {
     }
 
     return result;
+  }
+
+  override getBackgroundColor(topic: Topic): string {
+    // A colour picked by the user on the topic or an ancestor is used as is ...
+    const picked = this.resolve('backgroundColor', topic, false);
+    if (picked) {
+      return picked;
+    }
+
+    const parent = topic.getParent();
+    // Scheme 3: SubTopics derive a soft branch-harmonized solid surface over Level 1
+    if (parent && !parent.isCentralTopic()) {
+      const branchColor = this.getConnectionColor(parent);
+      const parsed = ColorUtil.parse(branchColor);
+      if (parsed) {
+        const backdrop = this._variant === 'dark' ? '#1C1C1E' : '#FFFFFF';
+        const alpha = this._variant === 'dark' ? 0.10 : 0.08;
+        const tinted = ColorUtil.over(`rgba(${parsed.r}, ${parsed.g}, ${parsed.b}, ${alpha})`, backdrop);
+        if (tinted) {
+          return tinted;
+        }
+      }
+    }
+
+    const colors = this.getStyles(topic).backgroundColor;
+    return pickByOrder(colors, topic.getOrder());
   }
 }
 

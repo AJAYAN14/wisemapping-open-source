@@ -293,3 +293,15 @@
       - **Uncapped Input / 50 MB Post-Transcode Ceiling**: Removed the 20 MB pre-transcode input cap in `imageAssetUtils.ts`; only the final uploaded blob is validated against Supabase Free tier's 50 MB ceiling (`MAX_TOPIC_IMAGE_UPLOAD_BYTES` / `MAX_ASSET_BYTES` = `50 * 1024 * 1024`, `0003_map_assets_storage.sql` = `52428800`).
     - **Export & Dev Server Alignment**: Added `'image/avif'` -> `'avif'` to `XMindImporter.ts` and `ImageAssetCollector.ts` (`ftypavif`/`ftypavis` magic-byte detection so `.xmind` exports keep `.avif` intact); added `.wasm` (`application/wasm`) and `.avif` (`image/avif`) MIME types to `scripts/dev-server.ts`.
     - **Note for Live Deployment**: Re-run `supabase/migrations/0003_map_assets_storage.sql` against the live WiseMapping Supabase database (never `nemo`) so `storage.buckets.map-assets` enforces `52428800` (50 MB) and `allowed_mime_types` includes `'image/avif'` without `'image/svg+xml'`.
+50. **Content Card Solid Fill & Harmonized Border Redesign (Scheme 3 per Nemo Color Palette) (`mindplot`)**
+    - **Palette Alignment (`E:\Android\Nemo\docs\design\color-palette`)**:
+      - `CentralTopic`: Connected to Nemo's `SystemBlue` (`#007AFF` light / `#0A84FF` dark) with `AccessibleBlue` deep border (`#0040DD` light / `#409CFF` dark) and `#FFFFFF` text.
+      - `MainTopic` 10 Branches:
+        - `connectionColor`: Nemo's 10 system dynamic tints in light (`#007AFF`, `#5856D6`, `#34C759`, `#FF9500`, `#AF52DE`, `#30B0C7`, `#FF2D55`, `#32ADE6`, `#00C7BE`, `#A2845E`) and dark (`#0A84FF`, `#5E5CE6`, `#30D158`, `#FF9F0A`, `#BF5AF2`, `#40C8E0`, `#FF375F`, `#64D2FF`, `#66D4CF`, `#AC8E68`).
+        - `borderColor`: Nemo's 10 accessible high-contrast tints in light (`#0040DD`, `#3634A3`, `#248A3D`, `#C93400`, `#8944AB`, `#008299`, `#D30F45`, `#0071A4`, `#0C817B`, `#7F6545`), delivering Scheme 3's crisp harmonized outer edge.
+        - `backgroundColor`: Rich soft solid fills derived from Nemo branch tints (18% solid fill over Level 1 surface in light `#D1E7FF`..`#EEE9E2`; 16% over dark `#1C1C1E` `#162840`..`#31271D`) with high-contrast text (`#0F172A` light / `#F5F5F7` dark).
+    - **SubTopic & Canvas Alignment (`PrismTheme.ts`, `prism-{default,light,dark}.json`)**:
+      - `SubTopic`: Inherits its branch connection color as a crisp 1.5px solid border, and derives an 8% soft solid branch tint over `#FFFFFF` (10% over `#1C1C1E` in dark mode) via `PrismTheme.getBackgroundColor()`.
+      - `Canvas`: Aligned light background with Nemo's `SystemGroupedBackgroundLight` / `SecondarySystemBackgroundLight` (`#F2F2F7`) and dark with OLED pure black (`#000000`).
+    - **Border Stroke Width (`Topic.ts`)**: Standardized `innerShape.setStroke(1.5, strokeStyle, borderColor)` across both text cards and image cards for uniform 1.5px card border hierarchy.
+    - **Test & Snapshot Verification**: Re-ran the 14-suite `test/unit/theme/` Jest suite (`105/105` passed), updated `theme-output-characterization.test.ts` snapshots, and confirmed full production builds across `mindplot`, `editor`, and `webapp`.

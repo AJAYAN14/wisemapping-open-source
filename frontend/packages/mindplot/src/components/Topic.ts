@@ -1805,7 +1805,7 @@ abstract class Topic extends NodeGraph {
         innerShape.setStroke(1.5, strokeStyle, borderColor);
         innerShape.setFill(bgColor);
       } else {
-        innerShape.setStroke(undefined, strokeStyle, borderColor);
+        innerShape.setStroke(1.5, strokeStyle, borderColor);
         innerShape.setFill(bgColor);
       }
       this._connector?.setColor(borderColor);

@@ -1,22 +1,46 @@
 {
   "CentralTopic": {
-    "backgroundColor": "#0071E3",
-    "borderColor": "#0071E3",
-    "connectionColor": "#0071E3",
+    "backgroundColor": "#007AFF",
+    "borderColor": "#0040DD",
+    "connectionColor": "#007AFF",
     "fontColor": "#FFFFFF"
   },
   "MainTopic": {
     "backgroundColor": [
-      "#EBF5FF",
-      "#F1EFFF",
-      "#E9FBF1",
-      "#FFF5E6",
-      "#FDF0F7",
-      "#F4F0FF",
-      "#E9FBF8",
-      "#EDF4FF",
-      "#F2FCE7",
-      "#FFF2E8"
+      "#D1E7FF",
+      "#E1E1F8",
+      "#DAF5E1",
+      "#FFECCF",
+      "#F1E0F9",
+      "#DAF1F5",
+      "#FFD9E0",
+      "#DAF0FA",
+      "#D1F5F3",
+      "#EEE9E2"
+    ],
+    "borderColor": [
+      "#0040DD",
+      "#3634A3",
+      "#248A3D",
+      "#C93400",
+      "#8944AB",
+      "#008299",
+      "#D30F45",
+      "#0071A4",
+      "#0C817B",
+      "#7F6545"
+    ],
+    "connectionColor": [
+      "#007AFF",
+      "#5856D6",
+      "#34C759",
+      "#FF9500",
+      "#AF52DE",
+      "#30B0C7",
+      "#FF2D55",
+      "#32ADE6",
+      "#00C7BE",
+      "#A2845E"
     ],
     "fontColor": "#0F172A"
   },

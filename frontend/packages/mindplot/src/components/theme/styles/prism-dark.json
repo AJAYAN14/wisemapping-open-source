@@ -1,7 +1,7 @@
 {
   "CentralTopic": {
-    "backgroundColor": "#0077ED",
-    "borderColor": "#389BFF",
+    "backgroundColor": "#0A84FF",
+    "borderColor": "#409CFF",
     "connectionColor": "#0A84FF",
     "fontColor": "#FFFFFF",
     "outerBackgroundColor": "#0A2540",
@@ -9,16 +9,16 @@
   },
   "MainTopic": {
     "backgroundColor": [
-      "#192535",
-      "#222230",
-      "#1B2C28",
-      "#32291C",
-      "#31202A",
-      "#272234",
-      "#1B2C2C",
-      "#1F2634",
-      "#232A1C",
-      "#32251D"
+      "#162840",
+      "#232244",
+      "#1A3524",
+      "#3D2714",
+      "#331C42",
+      "#1A333B",
+      "#3D1924",
+      "#1D3244",
+      "#1D3534",
+      "#31271D"
     ],
     "fontColor": "#F5F5F7",
     "outerBackgroundColor": "#2C2C2E",
@@ -28,7 +28,7 @@
     "backgroundColor": "#1C1C1E",
     "borderColor": "#38383A",
     "fontColor": "#F5F5F7",
-    "connectionColor": "#64748B",
+    "connectionColor": "#8E8E93",
     "outerBackgroundColor": "#2C2C2E",
     "outerBorderColor": "#38383A"
   },
@@ -36,7 +36,7 @@
     "backgroundColor": "#1C1C1E",
     "borderColor": "#38383A",
     "fontColor": "#F5F5F7",
-    "connectionColor": "#64748B",
+    "connectionColor": "#8E8E93",
     "outerBackgroundColor": "#2C2C2E",
     "outerBorderColor": "#38383A"
   },
