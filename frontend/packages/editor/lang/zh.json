@@ -170,6 +170,12 @@
   "editor-panel.tooltip-copy-node-link": {
     "defaultMessage": "复制主题链接"
   },
+  "editor-panel.tooltip-delete-selected": {
+    "defaultMessage": "删除"
+  },
+  "editor-panel.tooltip-edit-topic": {
+    "defaultMessage": "编辑"
+  },
   "editor-panel.tooltip-relationship-style": {
     "defaultMessage": "关系样式"
   },

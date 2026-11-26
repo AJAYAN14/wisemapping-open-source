@@ -32,10 +32,9 @@ class ScreenManager {
     $assert(divElement, 'can not be null');
     this._divContainer = divElement as HTMLDivElement;
 
-    // Prevent pull-to-refresh while allowing all zoom gestures
-    // We rely on preventDefault() in touch event handlers to block pull-to-refresh
-    // while keeping pinch-zoom and double-tap zoom enabled
-    this._divContainer.style.touchAction = 'auto';
+    // Take full control of single-finger pan and two-finger pinch-zoom on the canvas
+    // so browser native pinch-zoom does not zoom the surrounding React toolbars.
+    this._divContainer.style.touchAction = 'none';
     this._divContainer.style.overscrollBehavior = 'none';
 
     // Ignore default click event propagation. Prevent 'click' event on drag.
@@ -74,7 +73,9 @@ class ScreenManager {
       this._clickEvents.push(listener);
     } else {
       // Use non-passive listeners for touch events to allow preventDefault()
-      const isTouchEvent = ['touchstart', 'touchmove', 'touchend'].includes(eventType);
+      const isTouchEvent = ['touchstart', 'touchmove', 'touchend', 'touchcancel'].includes(
+        eventType,
+      );
       const options = isTouchEvent ? { passive: false } : undefined;
       EventManager.bind(this._divContainer, eventType, listener, options);
     }
@@ -88,7 +89,7 @@ class ScreenManager {
       }
     } else {
       // Use non-passive listeners for touch events to match addEvent
-      const isTouchEvent = ['touchstart', 'touchmove', 'touchend'].includes(event);
+      const isTouchEvent = ['touchstart', 'touchmove', 'touchend', 'touchcancel'].includes(event);
       const options = isTouchEvent ? { passive: false } : undefined;
       EventManager.unbind(this._divContainer, event, listener, options);
     }
@@ -120,14 +121,16 @@ class ScreenManager {
 
   private mouseEvents = ['mousedown', 'mouseup', 'mousemove', 'dblclick', 'click'];
 
-  private tocuchEvents = ['touchstart', 'touchend', 'touchmove'];
+  private pointerEvents = ['pointerdown', 'pointermove', 'pointerup', 'pointercancel'];
 
-  /** The viewport (client) position of a mouse or touch event. */
-  getClientPosition(event: MouseEvent | TouchEvent): PositionType {
+  private tocuchEvents = ['touchstart', 'touchend', 'touchmove', 'touchcancel'];
+
+  /** The viewport (client) position of a mouse, pointer, or touch event. */
+  getClientPosition(event: MouseEvent | TouchEvent | PointerEvent): PositionType {
     let x: number | undefined;
     let y: number | undefined;
 
-    if (this.mouseEvents.includes(event.type)) {
+    if (this.mouseEvents.includes(event.type) || this.pointerEvents.includes(event.type)) {
       x = (event as MouseEvent).clientX;
       y = (event as MouseEvent).clientY;
     } else if (this.tocuchEvents.includes(event.type)) {
@@ -146,11 +149,11 @@ class ScreenManager {
     return { x, y };
   }
 
-  getWorkspaceMousePosition(event: MouseEvent | TouchEvent): PositionType {
+  getWorkspaceMousePosition(event: MouseEvent | TouchEvent | PointerEvent): PositionType {
     let x: number | undefined;
     let y: number | undefined;
 
-    if (this.mouseEvents.includes(event.type)) {
+    if (this.mouseEvents.includes(event.type) || this.pointerEvents.includes(event.type)) {
       // Retrieve current mouse position.
       x = (event as MouseEvent).clientX;
       y = (event as MouseEvent).clientY;

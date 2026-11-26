@@ -39,6 +39,8 @@ const RENDER_QUEUE_BATCH = 300;
 /** How long to wait for a paint where animation frames don't run (a hidden tab). */
 const NO_FRAME_TIMEOUT = 100;
 const VISIBILITY_PADDING_RATIO = 0.08;
+const TOUCH_PAN_THRESHOLD_PX = 5;
+export const CANVAS_ZOOM_RANGE = { min: 0.3, max: 7 } as const;
 type BoundsType = { left: number; right: number; top: number; bottom: number };
 
 class Canvas {
@@ -62,8 +64,10 @@ class Canvas {
 
   private _mouseUpListener: (() => void) | undefined;
 
-  // Ends the pan in progress without treating it as a release (window blur, dispose) ...
+  // Ends the pan or pinch in progress without treating it as a release (window blur, dispose, long-press) ...
   private _cancelPan: (() => void) | undefined;
+
+  private _cancelPinch: (() => void) | undefined;
 
   private _mouseDownListener: ((event: Event) => void) | undefined;
 
@@ -112,6 +116,7 @@ class Canvas {
     this._mouseMoveListener = undefined;
     this._mouseUpListener = undefined;
     this._cancelPan = undefined;
+    this._cancelPinch = undefined;
     this._mouseDownListener = undefined;
     this._stopResizeObserver = undefined;
   }
@@ -150,10 +155,20 @@ class Canvas {
    * observing the container size, ends any pan in progress, and removes the workspace SVG from the
    * container: a designer built again on it adds its own.
    */
-  dispose(): void {
+  /**
+   * Cancels any active canvas pan or pinch gesture without firing a background click or update.
+   */
+  cancelPan(): void {
     if (this._cancelPan) {
       this._cancelPan();
     }
+    if (this._cancelPinch) {
+      this._cancelPinch();
+    }
+  }
+
+  dispose(): void {
+    this.cancelPan();
 
     if (this._stopResizeObserver) {
       this._stopResizeObserver();
@@ -338,6 +353,31 @@ class Canvas {
   }
 
   /**
+   * Zooms the canvas to `zoom` while keeping the workspace point under (`clientX`, `clientY`)
+   * pinned at the same screen location. Returns false if the workspace cannot map client coordinates.
+   */
+  zoomAtClientPoint(zoom: number, clientX: number, clientY: number): boolean {
+    const workspace = this._workspace as Workspace2D & {
+      clientToWorld?: (x: number, y: number) => PositionType;
+    };
+    if (typeof workspace.clientToWorld !== 'function') {
+      return false;
+    }
+    const container = this._screenManager.getContainer();
+    const rect =
+      typeof container.getBoundingClientRect === 'function'
+        ? container.getBoundingClientRect()
+        : { left: 0, top: 0 };
+    const worldPos = workspace.clientToWorld(clientX, clientY);
+    const screenPoint = {
+      x: clientX - rect.left,
+      y: clientY - rect.top,
+    };
+    this.setZoomAt(zoom, worldPos, screenPoint);
+    return true;
+  }
+
+  /**
    * The one place the viewport changes zoom: the SVG fills the container, the viewBox is the
    * container scaled by `zoom` (workspace units per screen pixel), and the zoom kept here, the
    * screen manager's scale and the viewBox all agree.
@@ -384,6 +424,17 @@ class Canvas {
     this._layoutEventBus.fireEvent('canvasPanned');
   }
 
+  /**
+   * Pans the canvas without firing 'update', so an active inline text editor stays open while
+   * keeping the edited topic clear of the mobile virtual keyboard.
+   */
+  panForEditor(deltaX: number, deltaY: number): void {
+    if (deltaX === 0 && deltaY === 0) return;
+    const origin = this._workspace.getCoordOrigin();
+    this._workspace.setCoordOrigin(origin.x + deltaX * this._zoom, origin.y + deltaY * this._zoom);
+    this._layoutEventBus.fireEvent('canvasPanned');
+  }
+
   setCoordSize(width: number, height: number): void {
     this._workspace.setCoordSize(width, height);
   }
@@ -425,20 +476,102 @@ class Canvas {
       }
     };
 
+    const startPinch = (touchEvent: TouchEvent) => {
+      if (this._cancelPan) {
+        this._cancelPan();
+      }
+      if (this._cancelPinch) {
+        this._cancelPinch();
+      }
+      if (!mWorkspace.isWorkspaceEventsEnabled()) {
+        return;
+      }
+
+      const [t0, t1] = [touchEvent.touches[0]!, touchEvent.touches[1]!];
+      const startDist = Math.hypot(t1.clientX - t0.clientX, t1.clientY - t0.clientY);
+      const startMidX = (t0.clientX + t1.clientX) / 2;
+      const startMidY = (t0.clientY + t1.clientY) / 2;
+      const startZoom = this._zoom;
+      const container = screenManager.getContainer();
+      const rect =
+        typeof container.getBoundingClientRect === 'function'
+          ? container.getBoundingClientRect()
+          : { left: 0, top: 0 };
+      const workspaceWithClient = workspace as Workspace2D & {
+        clientToWorld?: (x: number, y: number) => PositionType;
+      };
+      const anchorWorld =
+        typeof workspaceWithClient.clientToWorld === 'function'
+          ? workspaceWithClient.clientToWorld(startMidX, startMidY)
+          : undefined;
+
+      mWorkspace.enableWorkspaceEvents(false);
+
+      const pinchMoveListener = (moveEvent: Event) => {
+        const te = moveEvent as TouchEvent;
+        if (!te.touches || te.touches.length < 2) {
+          return;
+        }
+        const [p0, p1] = [te.touches[0]!, te.touches[1]!];
+        const currDist = Math.hypot(p1.clientX - p0.clientX, p1.clientY - p0.clientY);
+        const currMidX = (p0.clientX + p1.clientX) / 2;
+        const currMidY = (p0.clientY + p1.clientY) / 2;
+
+        let nextZoom = this._zoom;
+        if (startDist > 5 && currDist > 5) {
+          const rawZoom = startZoom * (startDist / currDist);
+          nextZoom = Math.min(CANVAS_ZOOM_RANGE.max, Math.max(CANVAS_ZOOM_RANGE.min, rawZoom));
+        }
+
+        if (anchorWorld) {
+          this.setZoomAt(nextZoom, anchorWorld, {
+            x: currMidX - rect.left,
+            y: currMidY - rect.top,
+          });
+        } else {
+          this.setZoom(nextZoom, false);
+        }
+
+        te.preventDefault();
+      };
+
+      const endPinch = () => {
+        screenManager.removeEvent('touchmove', pinchMoveListener);
+        screenManager.removeEvent('touchend', pinchEndListener);
+        screenManager.removeEvent('touchcancel', cancelPinch);
+        window.removeEventListener('blur', cancelPinch);
+        this._cancelPinch = undefined;
+        mWorkspace.enableWorkspaceEvents(true);
+      };
+
+      const pinchEndListener = (endEvent: Event) => {
+        const te = endEvent as TouchEvent;
+        if (!te.touches || te.touches.length < 2) {
+          endPinch();
+        }
+      };
+
+      const cancelPinch = () => endPinch();
+      this._cancelPinch = cancelPinch;
+
+      screenManager.addEvent('touchmove', pinchMoveListener);
+      screenManager.addEvent('touchend', pinchEndListener);
+      screenManager.addEvent('touchcancel', cancelPinch);
+      window.addEventListener('blur', cancelPinch);
+      touchEvent.preventDefault();
+    };
+
     const mouseDownListener = (event: Event) => {
+      if (event.type === 'touchstart') {
+        const touchEvent = event as TouchEvent;
+        if (touchEvent.touches.length >= 2) {
+          startPinch(touchEvent);
+          return;
+        }
+      }
+
       if (!this._mouseMoveListener) {
         if (mWorkspace.isWorkspaceEventsEnabled()) {
-          // Don't prevent default on touchstart to allow node selection
-          // Multi-touch (pinch-zoom) should not trigger panning
-          if (event.type === 'touchstart') {
-            const touchEvent = event as TouchEvent;
-            if (touchEvent.touches.length > 1) {
-              // Multi-touch detected (pinch), don't handle it - let browser handle zoom.
-              // Checked before disabling workspace events, as nothing would re-enable them.
-              return;
-            }
-          }
-
           // The left button pans, and its release with no move is a click on the background. The
           // middle button pans too, but its release is no click. The right button, a Ctrl press
           // on a Mac (its right click) and the back and forward buttons do neither: they open a
@@ -472,14 +605,34 @@ class Canvas {
 
           let wasDragged = false;
           this._mouseMoveListener = (mouseMoveEvent: Event) => {
+            if (mouseMoveEvent.type === 'touchmove') {
+              const touchEvent = mouseMoveEvent as TouchEvent;
+              if (touchEvent.touches.length >= 2) {
+                startPinch(touchEvent);
+                return;
+              }
+            }
+
             const currentMousePosition = screenManager.getClientPosition(
               mouseMoveEvent as MouseEvent,
             );
 
-            const offsetX = (currentMousePosition.x - mouseDownPosition.x) * this._zoom;
+            const deltaX = currentMousePosition.x - mouseDownPosition.x;
+            const deltaY = currentMousePosition.y - mouseDownPosition.y;
+
+            if (
+              !wasDragged &&
+              mouseMoveEvent.type === 'touchmove' &&
+              Math.hypot(deltaX, deltaY) < TOUCH_PAN_THRESHOLD_PX
+            ) {
+              mouseMoveEvent.preventDefault();
+              return;
+            }
+
+            const offsetX = deltaX * this._zoom;
             const coordOriginX = -offsetX + originalCoordOrigin.x;
 
-            const offsetY = (currentMousePosition.y - mouseDownPosition.y) * this._zoom;
+            const offsetY = deltaY * this._zoom;
             const coordOriginY = -offsetY + originalCoordOrigin.y;
 
             workspace.setCoordOrigin(coordOriginX, coordOriginY);

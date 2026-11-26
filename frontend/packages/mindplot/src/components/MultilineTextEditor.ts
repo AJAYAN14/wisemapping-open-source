@@ -36,6 +36,8 @@ class EditorComponent extends EventDispatcher<EditorEvents> {
   // Animation frame of the pending layout of the live preview, if any.
   private _pendingRelayout: number | undefined;
 
+  private _cleanupViewportAvoidance: (() => void) | undefined;
+
   constructor(topic: Topic, onClose: () => void) {
     super();
     this._topic = topic;
@@ -300,6 +302,42 @@ class EditorComponent extends EventDispatcher<EditorEvents> {
 
     // Focus the element and select the current text: positionCursor does both ...
     this.positionCursor(this.getTextareaElem(), textOverwrite === undefined);
+    this.setupMobileKeyboardAvoidance();
+  }
+
+  private setupMobileKeyboardAvoidance(): void {
+    const vv = typeof window !== 'undefined' ? window.visualViewport : undefined;
+    if (!vv) {
+      return;
+    }
+
+    const adjustForKeyboard = () => {
+      if (!this._containerElem.isConnected) {
+        return;
+      }
+      // Only adjust when the visual viewport is meaningfully shrunk (soft keyboard visible).
+      if (vv.height >= window.innerHeight - 80) {
+        return;
+      }
+      const rect = this._containerElem.getBoundingClientRect();
+      const visibleTop = vv.offsetTop + 56;
+      const visibleBottom = vv.offsetTop + vv.height - 24;
+      if (rect.bottom <= visibleBottom && rect.top >= visibleTop) {
+        return;
+      }
+      const desiredCenterY = vv.offsetTop + vv.height * 0.45;
+      const currentCenterY = (rect.top + rect.bottom) / 2;
+      const deltaY = currentCenterY - desiredCenterY;
+      this._topic.getDesigner()?.getWorkSpace()?.panForEditor(0, deltaY);
+      this.relayout();
+    };
+
+    const timer = window.setTimeout(adjustForKeyboard, 180);
+    vv.addEventListener('resize', adjustForKeyboard);
+    this._cleanupViewportAvoidance = () => {
+      window.clearTimeout(timer);
+      vv.removeEventListener('resize', adjustForKeyboard);
+    };
   }
 
   private setStyle(fontStyle: FontStyle) {
@@ -365,6 +403,10 @@ class EditorComponent extends EventDispatcher<EditorEvents> {
 
   close(update: boolean): void {
     this.cancelRelayout();
+    if (this._cleanupViewportAvoidance) {
+      this._cleanupViewportAvoidance();
+      this._cleanupViewportAvoidance = undefined;
+    }
 
     // Revert to all text ...
     this._topic.setText(this._oldText);

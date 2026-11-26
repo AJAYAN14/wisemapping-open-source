@@ -18,6 +18,8 @@
 import Popover from '@mui/material/Popover';
 import type { PopoverOrigin } from '@mui/material/Popover';
 import Box from '@mui/material/Box';
+import { useTheme } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import React, { useState, useCallback, useEffect } from 'react';
 import Typography from '@mui/material/Typography';
 import { FormattedMessage, defineMessage } from 'react-intl';
@@ -43,6 +45,8 @@ export const WidgetPopover = ({
   widgetManager,
   designer,
 }: WidgetPopoverProps): React.ReactElement => {
+  const theme = useTheme();
+  const isCompactViewport = useMediaQuery(theme.breakpoints.down('sm'), { noSsr: true });
   const [event, setEvent] = useState<WidgetEventType>('none');
   const [panelTitle, setPanelTitle] = useState<MessageDescriptor | undefined>(undefined);
   const [anchorElem, setAnchorElem] = useState<Element | undefined>(undefined);
@@ -126,18 +130,33 @@ export const WidgetPopover = ({
         <Popover
           id="popover"
           open={isOpen}
-          anchorEl={anchorElem}
+          anchorEl={isCompactViewport ? undefined : anchorElem}
+          anchorReference={isCompactViewport ? 'anchorPosition' : 'anchorEl'}
+          anchorPosition={
+            isCompactViewport && typeof window !== 'undefined'
+              ? {
+                  top: Math.round(window.innerHeight * 0.48),
+                  left: Math.round(window.innerWidth / 2),
+                }
+              : undefined
+          }
           onClose={closeEditor}
           anchorOrigin={anchorOrigin}
-          transformOrigin={transformOrigin}
+          transformOrigin={
+            isCompactViewport
+              ? { vertical: 'center', horizontal: 'center' }
+              : transformOrigin
+          }
           marginThreshold={12}
           slotProps={{
             paper: {
               sx: {
+                width: isCompactViewport ? 'min(360px, calc(100dvw - 24px))' : undefined,
                 maxWidth: 'calc(100dvw - 24px)',
-                maxHeight: 'calc(100dvh - 24px)',
+                maxHeight: 'calc(100dvh - 32px)',
                 borderRadius: '16px',
-                overflow: 'hidden',
+                overflowX: 'hidden',
+                overflowY: 'auto',
                 boxShadow: (theme) =>
                   theme.palette.mode === 'dark'
                     ? '0 16px 40px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.3)'

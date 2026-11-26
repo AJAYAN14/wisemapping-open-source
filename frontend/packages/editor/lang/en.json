@@ -167,6 +167,12 @@
   "editor-panel.tooltip-copy-node-link": {
     "defaultMessage": "Copy Link to Node"
   },
+  "editor-panel.tooltip-delete-selected": {
+    "defaultMessage": "Delete"
+  },
+  "editor-panel.tooltip-edit-topic": {
+    "defaultMessage": "Edit"
+  },
   "editor-panel.tooltip-relationship-style": {
     "defaultMessage": "Relationship Style"
   },

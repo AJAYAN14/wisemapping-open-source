@@ -23,6 +23,7 @@ import Popover, { PopoverOrigin } from '@mui/material/Popover';
 import Tooltip from '@mui/material/Tooltip';
 import '../app-bar/styles.css';
 import Box from '@mui/material/Box';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import ToolbarPosition from '../../classes/model/toolbar-position';
 import ActionConfig from '../../classes/action/action-config';
 import { useTheme } from '@mui/material/styles';
@@ -148,6 +149,9 @@ export const ToolbarSubmenu = ({
 }: ToolbarSubmenuProps): ReactElement => {
   const [uncontrolledOpen, setUncontrolledOpen] = useState(false);
   const itemRef = useRef(null);
+  const lastInputTouchRef = useRef(false);
+  const theme = useTheme();
+  const isCompactViewport = useMediaQuery(theme.breakpoints.down('sm'), { noSsr: true });
 
   // A submenu is controlled when the configuration supplies both `open` and
   // `onOpenChange`; otherwise it owns its own state as before. Controlled mode
@@ -159,8 +163,15 @@ export const ToolbarSubmenu = ({
     ? (value: boolean) => configuration.onOpenChange!(value)
     : setUncontrolledOpen;
 
-  const orientationProps = vertical ? verticalAligment : horizontalAligment;
-  // If options has custom render, use click-to-close behavior, otherwise hover
+  const orientationProps = isCompactViewport
+    ? {
+        anchorOrigin: { vertical: 'top', horizontal: 'center' } as PopoverOrigin,
+        transformOrigin: { vertical: 'bottom', horizontal: 'center' } as PopoverOrigin,
+      }
+    : vertical
+      ? verticalAligment
+      : horizontalAligment;
+  // If options has custom render, use click-to-close behavior, otherwise hover (desktop only)
   const hasCustomRender = configuration.options?.some((o) => o?.render);
 
   return (
@@ -168,8 +179,19 @@ export const ToolbarSubmenu = ({
       component="span"
       role="menuitem"
       ref={itemRef}
-      onMouseLeave={() => !hasCustomRender && setOpen(false)}
+      onTouchStart={() => {
+        lastInputTouchRef.current = true;
+      }}
+      onPointerDown={(e) => {
+        lastInputTouchRef.current = e.pointerType === 'touch' || e.pointerType === 'pen';
+      }}
+      onMouseLeave={() => {
+        if (!lastInputTouchRef.current && !hasCustomRender) {
+          setOpen(false);
+        }
+      }}
       onMouseEnter={() => {
+        if (lastInputTouchRef.current) return;
         if (configuration.disabled && configuration.disabled()) return;
         if (!hasCustomRender) setOpen(true);
       }}
@@ -182,7 +204,7 @@ export const ToolbarSubmenu = ({
         configuration={{
           ...configuration,
           onClick: (event) => {
-            setOpen(true);
+            setOpen(!open);
             if (configuration.onClick) configuration.onClick(event);
           },
           selected: () => open,
@@ -197,6 +219,7 @@ export const ToolbarSubmenu = ({
         container={itemRef.current}
         anchorOrigin={orientationProps.anchorOrigin}
         transformOrigin={orientationProps.transformOrigin}
+        marginThreshold={10}
         disableScrollLock={false}
         disablePortal={false}
         sx={{
@@ -207,13 +230,15 @@ export const ToolbarSubmenu = ({
         elevation={elevation}
         slotProps={{
           paper: {
-            onMouseLeave: () => !hasCustomRender && setOpen(false),
+            onMouseLeave: () => !lastInputTouchRef.current && !hasCustomRender && setOpen(false),
             square: true,
             sx: {
               backgroundColor: 'transparent',
               boxShadow: 'none',
               border: 'none',
-              overflow: 'visible',
+              overflow: isCompactViewport ? 'auto' : 'visible',
+              maxWidth: 'calc(100dvw - 16px)',
+              maxHeight: 'calc(100dvh - 130px)',
             },
           },
         }}

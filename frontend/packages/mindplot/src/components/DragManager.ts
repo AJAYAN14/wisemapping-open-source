@@ -85,6 +85,9 @@ class DragManager {
     const dragManager = this;
     const me = this;
     const mouseDownListener = function mouseDownListener(event: Event) {
+      if (topic.isEmulatedMouseSuppressed()) {
+        return;
+      }
       // Only the main button drags a topic. The right click (a Ctrl press on a Mac) opens the
       // context menu, and the other buttons scroll or navigate: they may select the topic, which
       // the topic itself does, but no drag must wait for their next move. A plain Event, with no

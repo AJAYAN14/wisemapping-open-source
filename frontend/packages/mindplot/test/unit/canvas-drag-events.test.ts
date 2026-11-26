@@ -143,16 +143,28 @@ describe('Canvas drag (pan) events', () => {
     expect(mockSetCoordOrigin).not.toHaveBeenCalled();
   });
 
-  it('keeps workspace events enabled after a multi-touch (pinch) start', () => {
+  it('handles multi-touch pinch zoom and restores workspace events when fingers lift', () => {
     container.dispatchEvent(
       touchEvent('touchstart', [
-        { clientX: 10, clientY: 10 },
-        { clientX: 50, clientY: 50 },
+        { clientX: 0, clientY: 0 },
+        { clientX: 100, clientY: 0 },
       ]),
     );
+    expect(listenerCount('touchmove')).toBe(1);
 
+    // Spreading fingers apart zooms in (zoom value decreases below initial 1).
+    container.dispatchEvent(
+      touchEvent('touchmove', [
+        { clientX: 0, clientY: 0 },
+        { clientX: 200, clientY: 0 },
+      ]),
+    );
+    expect(canvas.getZoom()).toBeCloseTo(0.5, 4);
+
+    container.dispatchEvent(touchEvent('touchend', []));
     expect(canvas.isWorkspaceEventsEnabled()).toBe(true);
     expect(listenerCount('touchmove')).toBe(0);
+    expect(listenerCount('touchend')).toBe(0);
   });
 
   it('still pans with a single finger after a pinch gesture', () => {
@@ -162,6 +174,7 @@ describe('Canvas drag (pan) events', () => {
         { clientX: 50, clientY: 50 },
       ]),
     );
+    container.dispatchEvent(touchEvent('touchend', []));
 
     container.dispatchEvent(touchEvent('touchstart', [{ clientX: 10, clientY: 10 }]));
     container.dispatchEvent(touchEvent('touchmove', [{ clientX: 40, clientY: 25 }]));
@@ -243,6 +256,9 @@ describe('Canvas drag (pan) events', () => {
       ]),
     );
 
+    expect(click).not.toHaveBeenCalled();
+
+    container.dispatchEvent(touchEvent('touchend', []));
     expect(click).not.toHaveBeenCalled();
     expect(canvas.isWorkspaceEventsEnabled()).toBe(true);
   });

@@ -341,6 +341,18 @@
       "value": "复制主题链接"
     }
   ],
+  "editor-panel.tooltip-delete-selected": [
+    {
+      "type": 0,
+      "value": "删除"
+    }
+  ],
+  "editor-panel.tooltip-edit-topic": [
+    {
+      "type": 0,
+      "value": "编辑"
+    }
+  ],
   "editor-panel.tooltip-relationship-style": [
     {
       "type": 0,

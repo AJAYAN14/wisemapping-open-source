@@ -32,7 +32,7 @@ import DesignerModel from './DesignerModel';
 import DesignerKeyboard from './DesignerKeyboard';
 
 import ScreenManager from './ScreenManager';
-import Canvas from './Canvas';
+import Canvas, { CANVAS_ZOOM_RANGE } from './Canvas';
 
 import DragConnector from './DragConnector';
 import DragManager from './DragManager';
@@ -79,7 +79,9 @@ import { hasShortcutModifier } from './util/platform';
  * The zoom range, in workspace units per screen pixel, shared by setZoom(), zoomIn() (down to
  * min), zoomOut() and zoomToFit() (up to max).
  */
-const ZOOM_RANGE = { min: 0.3, max: 7 } as const;
+const ZOOM_RANGE = CANVAS_ZOOM_RANGE;
+
+export type ZoomAnchor = { clientX: number; clientY: number };
 
 /** The part of each edge of the canvas covered by the host's chrome, in pixels. */
 export type ViewportInsets = { top?: number; right?: number; bottom?: number; left?: number };
@@ -199,6 +201,11 @@ class Designer extends EventDispispatcher<DesignerEvents> {
       this._layoutEventBus,
     );
 
+    // Keep DesignerModel zoom in sync with direct canvas gestures (e.g. two-finger pinch zoom).
+    this._layoutEventBus.addEvent('canvasZoomed', ({ zoom }) => {
+      this.getModel().setZoom(zoom);
+    });
+
     this._registerAutoPanOnFocus();
     this._canvas.setResizeHandler(() => this._onContainerResize());
 
@@ -281,30 +288,29 @@ class Designer extends EventDispispatcher<DesignerEvents> {
       // Avoid managing wheel events if mindplot kb shortcuts are disabled.
       if (DesignerKeyboard.isDisabled()) return;
 
-      const isZoomGesture = event.ctrlKey || event.metaKey || event.altKey;
-
-      if (isZoomGesture) {
-        if (event.deltaY === 0) return;
-
-        // Scale the zoom step by the wheel magnitude so trackpad gestures feel
-        // continuous instead of stepped. exp(-deltaY * k) maps deltaY<0 (scroll
-        // up) to zoom-in and deltaY>0 (scroll down) to zoom-out symmetrically.
-        // Clamp magnitude so a single mouse-wheel notch (deltaY≈100) doesn't
-        // overshoot while keeping trackpad gestures (deltaY≈1–30) smooth.
+      // Mouse wheel (and Ctrl/Meta/Alt + wheel or trackpad pinch) directly zooms in/out
+      // anchored at the current cursor position instead of scrolling the canvas vertically.
+      if (event.deltaY !== 0) {
         const clamped = Math.max(-50, Math.min(50, event.deltaY));
         const factor = Math.exp(-clamped * 0.01);
+        const anchor =
+          Number.isFinite(event.clientX) && Number.isFinite(event.clientY)
+            ? { clientX: event.clientX, clientY: event.clientY }
+            : undefined;
         if (factor > 1) {
-          this.zoomIn(factor);
+          this.zoomIn(factor, anchor);
         } else {
-          this.zoomOut(1 / factor);
+          this.zoomOut(1 / factor, anchor);
         }
-      } else {
-        // No modifier: a two-finger trackpad swipe (or a plain wheel) pans the
-        // canvas instead of zooming it.
-        if (event.deltaX === 0 && event.deltaY === 0) return;
-        this.panBy(event.deltaX, event.deltaY);
+        event.preventDefault();
+        return;
       }
-      event.preventDefault();
+
+      // Pure horizontal wheel / trackpad swipe without zoom modifiers pans horizontally.
+      if (event.deltaX !== 0 && !(event.ctrlKey || event.metaKey || event.altKey)) {
+        this.panBy(event.deltaX, 0);
+        event.preventDefault();
+      }
     };
     this.getContainer().addEventListener('wheel', this._wheelListener, { passive: false });
   }
@@ -650,24 +656,40 @@ class Designer extends EventDispispatcher<DesignerEvents> {
     }
   }
 
-  zoomOut(factor = 1.2) {
+  private _applyStepZoom(nextScale: number, anchor?: ZoomAnchor): void {
+    this.getModel().setZoom(nextScale);
+    if (anchor && this._canvas.zoomAtClientPoint(nextScale, anchor.clientX, anchor.clientY)) {
+      return;
+    }
+    this._canvas.setZoom(nextScale);
+  }
+
+  zoomOut(factor = 1.2, anchor?: ZoomAnchor) {
     const model = this.getModel();
-    const scale = model.getZoom() * factor;
+    const currentZoom = model.getZoom();
+    const scale = currentZoom * factor;
     if (scale <= ZOOM_RANGE.max) {
-      model.setZoom(scale);
-      this._canvas.setZoom(scale);
+      this._applyStepZoom(scale, anchor);
+    } else if (anchor) {
+      if (currentZoom < ZOOM_RANGE.max) {
+        this._applyStepZoom(ZOOM_RANGE.max, anchor);
+      }
     } else {
       $notify($msg('ZOOM_ERROR'));
     }
   }
 
-  zoomIn(factor = 1.2): void {
+  zoomIn(factor = 1.2, anchor?: ZoomAnchor): void {
     const model = this.getModel();
-    const scale = model.getZoom() / factor;
+    const currentZoom = model.getZoom();
+    const scale = currentZoom / factor;
 
     if (scale >= ZOOM_RANGE.min) {
-      model.setZoom(scale);
-      this._canvas.setZoom(scale);
+      this._applyStepZoom(scale, anchor);
+    } else if (anchor) {
+      if (currentZoom > ZOOM_RANGE.min) {
+        this._applyStepZoom(ZOOM_RANGE.min, anchor);
+      }
     } else {
       $notify($msg('ZOOM_ERROR'));
     }
@@ -1606,6 +1628,18 @@ class Designer extends EventDispispatcher<DesignerEvents> {
     screenManager.fireEvent('update');
     screenManager.fireEvent('mouseup');
     this._relPivot.dispose();
+  }
+
+  editSelectedTopic(): boolean {
+    if (this.isReadOnly()) {
+      return false;
+    }
+    const selected = this.getModel().selectedTopic();
+    if (!selected) {
+      return false;
+    }
+    this._topicEventDispatcher.show(selected);
+    return true;
   }
 
   deleteSelectedEntities() {

@@ -71,6 +71,11 @@ type OverlayGeometry = {
   isOnLeft: boolean;
 };
 
+const isCoarsePointerDevice = (): boolean =>
+  typeof window !== 'undefined' &&
+  typeof window.matchMedia === 'function' &&
+  window.matchMedia('(pointer: coarse)').matches;
+
 class HTMLTopicSelected {
   private _overlayContainer: HTMLDivElement | undefined;
 
@@ -571,7 +576,11 @@ class HTMLTopicSelected {
     }
 
     const { container, tabRow, enterRow } = helper;
-    // Hide helper text if topic has children
+    // Hide keyboard shortcut helper text on touch/coarse-pointer devices or when topic has children
+    if (isCoarsePointerDevice()) {
+      container.style.display = 'none';
+      return;
+    }
     container.style.display = hasChildren ? 'none' : 'flex';
 
     if (hasChildren) {
@@ -784,11 +793,20 @@ class HTMLTopicSelected {
       const rightPlus = document.createElement('div');
       const plusIcon = this.createPlusIcon();
       rightPlus.appendChild(plusIcon);
+      const isCoarse = isCoarsePointerDevice();
       rightPlus.style.position = 'absolute';
       rightPlus.style.left = '0px';
       rightPlus.style.top = '0px';
-      rightPlus.style.width = '20px';
-      rightPlus.style.height = '20px';
+      rightPlus.style.width = isCoarse ? '24px' : '20px';
+      rightPlus.style.height = isCoarse ? '24px' : '20px';
+      if (isCoarse) {
+        // Expand touch hit area to 44x44 without enlarging the visible circle.
+        rightPlus.style.border = '10px solid transparent';
+        rightPlus.style.backgroundClip = 'padding-box';
+        rightPlus.style.boxSizing = 'content-box';
+      } else {
+        rightPlus.style.boxSizing = 'border-box';
+      }
       rightPlus.style.borderRadius = '50%';
       rightPlus.style.color = 'white';
       rightPlus.style.display = 'flex';
@@ -796,7 +814,6 @@ class HTMLTopicSelected {
       rightPlus.style.justifyContent = 'center';
       rightPlus.style.padding = '0';
       rightPlus.style.margin = '0';
-      rightPlus.style.boxSizing = 'border-box';
       rightPlus.style.pointerEvents = 'auto';
       rightPlus.style.cursor = 'pointer';
       rightPlus.style.zIndex = CANVAS_AFFORDANCE_Z_INDEX;
@@ -821,11 +838,20 @@ class HTMLTopicSelected {
       const bottomPlus = document.createElement('div');
       const plusIcon = this.createPlusIcon();
       bottomPlus.appendChild(plusIcon);
+      const isCoarse = isCoarsePointerDevice();
       bottomPlus.style.position = 'absolute';
       bottomPlus.style.left = '0px';
       bottomPlus.style.top = '0px';
-      bottomPlus.style.width = '20px';
-      bottomPlus.style.height = '20px';
+      bottomPlus.style.width = isCoarse ? '24px' : '20px';
+      bottomPlus.style.height = isCoarse ? '24px' : '20px';
+      if (isCoarse) {
+        // Expand touch hit area to 44x44 without enlarging the visible circle.
+        bottomPlus.style.border = '10px solid transparent';
+        bottomPlus.style.backgroundClip = 'padding-box';
+        bottomPlus.style.boxSizing = 'content-box';
+      } else {
+        bottomPlus.style.boxSizing = 'border-box';
+      }
       bottomPlus.style.borderRadius = '50%';
       bottomPlus.style.color = 'white';
       bottomPlus.style.display = 'flex';
@@ -833,7 +859,6 @@ class HTMLTopicSelected {
       bottomPlus.style.justifyContent = 'center';
       bottomPlus.style.padding = '0';
       bottomPlus.style.margin = '0';
-      bottomPlus.style.boxSizing = 'border-box';
       bottomPlus.style.pointerEvents = 'auto';
       bottomPlus.style.cursor = 'pointer';
       bottomPlus.style.zIndex = CANVAS_AFFORDANCE_Z_INDEX;
@@ -954,9 +979,6 @@ class HTMLTopicSelected {
 
     if (this._isVisible) {
       this.updateOverlay();
-      if (this._helperContainer) {
-        this._helperContainer.style.display = 'flex';
-      }
     } else {
       if (this._overlay) {
         this._overlay.style.display = 'none';

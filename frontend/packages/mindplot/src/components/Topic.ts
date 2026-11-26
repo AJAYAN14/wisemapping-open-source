@@ -123,6 +123,11 @@ abstract class Topic extends NodeGraph {
   // Font height measured by the redraw in progress, so the text is measured once per redraw.
   private _measuredFontHeight: number | undefined;
 
+  // Suppresses synthetic mousedown/click emitted by mobile browsers after a long-press edit.
+  private _suppressEmulatedMouseUntil = 0;
+
+  private _cancelLongPress: (() => void) | undefined;
+
   constructor(
     model: NodeModel,
     options: NodeOption,
@@ -161,6 +166,9 @@ abstract class Topic extends NodeGraph {
 
     // Prevent click on the topics being propagated ...
     this.addEvent('click', (event: Event) => {
+      if (Date.now() < this._suppressEmulatedMouseUntil) {
+        event.preventDefault();
+      }
       event.stopPropagation();
     });
 
@@ -729,6 +737,10 @@ abstract class Topic extends NodeGraph {
     group.setTestId(String(model.getId()));
   }
 
+  isEmulatedMouseSuppressed(): boolean {
+    return Date.now() < this._suppressEmulatedMouseUntil;
+  }
+
   private registerDefaultListenersToElement(elem: ElementClass<ElementPeer>, topic: Topic) {
     const mouseOver = function mouseOver() {
       if (topic.isMouseEventsEnabled()) {
@@ -748,6 +760,12 @@ abstract class Topic extends NodeGraph {
     // Focus events ...
     elem.addEvent('mousedown', (event: Event) => {
       const mouseEvent = event as MouseEvent;
+      if (me.isEmulatedMouseSuppressed()) {
+        mouseEvent.stopImmediatePropagation?.();
+        mouseEvent.stopPropagation();
+        mouseEvent.preventDefault();
+        return;
+      }
       if (!me.isReadOnly()) {
         // Disable topic selection of readOnly mode ...
         let value = true;
@@ -770,9 +788,87 @@ abstract class Topic extends NodeGraph {
       mouseEvent.stopPropagation();
     });
     // A tap selects through the mousedown the browser emulates for it, which the handler above
-    // keeps from the canvas. The touch itself still reaches it, to pan on a swipe, but its release
-    // must not be a click on the background ...
-    elem.addEvent('touchstart', markObjectTouch);
+    // keeps from the canvas. The touch itself still reaches it, to pan on a swipe, while a
+    // stationary long-press (~420ms) on a topic opens inline text editing directly.
+    elem.addEvent('touchstart', (event: Event) => {
+      markObjectTouch(event);
+      me._cancelLongPress?.();
+
+      if (me.isReadOnly() || !me.isMouseEventsEnabled()) {
+        return;
+      }
+      const touchEvent = event as TouchEvent;
+      if (!touchEvent.touches || touchEvent.touches.length !== 1) {
+        return;
+      }
+
+      const touch = touchEvent.touches[0]!;
+      const startX = touch.clientX;
+      const startY = touch.clientY;
+      let longPressTriggered = false;
+
+      const cleanup = () => {
+        window.clearTimeout(timer);
+        window.removeEventListener('touchmove', onTouchMove);
+        window.removeEventListener('touchend', onTouchEnd);
+        window.removeEventListener('touchcancel', onTouchCancel);
+        me._cancelLongPress = undefined;
+      };
+
+      const onTouchMove = (moveEvent: Event) => {
+        const te = moveEvent as TouchEvent;
+        if (!te.touches || te.touches.length !== 1) {
+          cleanup();
+          return;
+        }
+        const current = te.touches[0]!;
+        if (Math.hypot(current.clientX - startX, current.clientY - startY) > 10) {
+          cleanup();
+        }
+      };
+
+      const onTouchEnd = (endEvent: Event) => {
+        if (longPressTriggered) {
+          endEvent.preventDefault();
+          endEvent.stopPropagation();
+        }
+        cleanup();
+      };
+
+      const onTouchCancel = () => {
+        cleanup();
+      };
+
+      const timer = window.setTimeout(() => {
+        longPressTriggered = true;
+        cleanup();
+
+        const designer = me.getDesigner();
+        if (!designer || me.isReadOnly()) {
+          return;
+        }
+        // End any pending touch pan silently so lifting the finger will not clear selection.
+        designer.getWorkSpace().cancelPan();
+        me._suppressEmulatedMouseUntil = Date.now() + 650;
+
+        if (!me.isOnFocus()) {
+          designer.selectOnClick(topic, true, new MouseEvent('mousedown'));
+        }
+        me._getTopicEventDispatcher()?.show(me);
+        if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+          try {
+            navigator.vibrate(15);
+          } catch {
+            // Ignore vibration permission errors.
+          }
+        }
+      }, 420);
+
+      me._cancelLongPress = cleanup;
+      window.addEventListener('touchmove', onTouchMove, { passive: true });
+      window.addEventListener('touchend', onTouchEnd, { passive: false });
+      window.addEventListener('touchcancel', onTouchCancel, { passive: true });
+    });
   }
 
   setOnFocus(focus: boolean) {
@@ -1302,6 +1398,7 @@ abstract class Topic extends NodeGraph {
   }
 
   removeFromWorkspace(workspace: Canvas): void {
+    this._cancelLongPress?.();
     // Unselect topic first (fires topicUnselected event)
     // This ensures topicUnselected fires before topicRemoved
     if (this.isOnFocus()) {

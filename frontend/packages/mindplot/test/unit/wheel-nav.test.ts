@@ -106,11 +106,13 @@ describe('Designer Wheel Navigation (Pan vs Zoom)', () => {
     jest.restoreAllMocks();
   });
 
-  describe('2-finger / Wheel Panning (no modifiers)', () => {
-    it('pans canvas when deltaX and deltaY are emitted without modifier keys', () => {
+  describe('Direct Mouse Wheel Zooming (no modifiers)', () => {
+    it('zooms in when deltaY < 0 without modifier keys (anchored at pointer)', () => {
       const event = {
-        deltaX: 25,
-        deltaY: 40,
+        deltaX: 0,
+        deltaY: -40,
+        clientX: 320,
+        clientY: 240,
         ctrlKey: false,
         metaKey: false,
         altKey: false,
@@ -119,13 +121,55 @@ describe('Designer Wheel Navigation (Pan vs Zoom)', () => {
 
       wheelHandler(event);
 
-      expect(designer.panBy).toHaveBeenCalledWith(25, 40);
+      expect(designer.zoomIn).toHaveBeenCalledWith(expect.any(Number), {
+        clientX: 320,
+        clientY: 240,
+      });
+      expect(designer.panBy).not.toHaveBeenCalled();
+      expect(event.preventDefault).toHaveBeenCalled();
+    });
+
+    it('zooms out when deltaY > 0 without modifier keys (anchored at pointer)', () => {
+      const event = {
+        deltaX: 0,
+        deltaY: 40,
+        clientX: 320,
+        clientY: 240,
+        ctrlKey: false,
+        metaKey: false,
+        altKey: false,
+        preventDefault: jest.fn(),
+      } as unknown as WheelEvent;
+
+      wheelHandler(event);
+
+      expect(designer.zoomOut).toHaveBeenCalledWith(expect.any(Number), {
+        clientX: 320,
+        clientY: 240,
+      });
+      expect(designer.panBy).not.toHaveBeenCalled();
+      expect(event.preventDefault).toHaveBeenCalled();
+    });
+
+    it('pans horizontally when only deltaX is non-zero without modifiers', () => {
+      const event = {
+        deltaX: 25,
+        deltaY: 0,
+        ctrlKey: false,
+        metaKey: false,
+        altKey: false,
+        preventDefault: jest.fn(),
+      } as unknown as WheelEvent;
+
+      wheelHandler(event);
+
+      expect(designer.panBy).toHaveBeenCalledWith(25, 0);
       expect(designer.zoomIn).not.toHaveBeenCalled();
       expect(designer.zoomOut).not.toHaveBeenCalled();
       expect(event.preventDefault).toHaveBeenCalled();
     });
 
-    it('does not pan when deltaX and deltaY are both 0', () => {
+    it('does not pan or zoom when deltaX and deltaY are both 0', () => {
       const event = {
         deltaX: 0,
         deltaY: 0,

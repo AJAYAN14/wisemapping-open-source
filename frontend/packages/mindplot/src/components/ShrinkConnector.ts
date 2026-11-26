@@ -21,6 +21,7 @@ import { Ellipse } from '@wisemapping/web2d';
 import TopicConfig from './TopicConfig';
 import type Topic from './Topic';
 import ColorUtil from './theme/ColorUtil';
+import { markObjectTouch } from './util/objectTouch';
 
 class ShirinkConnector {
   private _isShrink: boolean;
@@ -49,6 +50,11 @@ class ShirinkConnector {
     ellipse.addEvent('mousedown', (event: Event) => {
       // Avoid node creation ...
       event.stopPropagation();
+    });
+
+    ellipse.addEvent('touchstart', (event: Event) => {
+      // Keep a tap on the collapse handle from turning into a background click.
+      markObjectTouch(event);
     });
 
     ellipse.addEvent('dblclick', (event: Event) => {
