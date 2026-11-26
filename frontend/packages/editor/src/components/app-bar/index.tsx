@@ -47,13 +47,13 @@ import UndoRoundedIcon from '@mui/icons-material/UndoRounded';
 import RedoRoundedIcon from '@mui/icons-material/RedoRounded';
 import RestoreRoundedIcon from '@mui/icons-material/RestoreRounded';
 import SaveOutlinedIcon from '@mui/icons-material/SaveOutlined';
-import FileDownloadRoundedIcon from '@mui/icons-material/FileDownloadRounded';
+import IosShareRoundedIcon from '@mui/icons-material/IosShareRounded';
 import StarRateRoundedIcon from '@mui/icons-material/StarRateRounded';
 import StarBorderRoundedIcon from '@mui/icons-material/StarBorderRounded';
 import ArrowBackIosNewRoundedIcon from '@mui/icons-material/ArrowBackIosNewRounded';
 import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined';
-import LightModeRoundedIcon from '@mui/icons-material/LightModeRounded';
+import LightModeOutlinedIcon from '@mui/icons-material/LightModeOutlined';
 import Typography from '@mui/material/Typography';
 import UndoAndRedo from '../action-widget/button/undo-and-redo';
 import LogoTextBlackSvg from '../../../images/logo-text-black.svg';
@@ -327,7 +327,7 @@ const AppBar = ({
 
   const config: (ActionConfig | undefined)[] = [
     {
-      icon: <ArrowBackIosNewRoundedIcon sx={{ fontSize: 18 }} />,
+      icon: <ArrowBackIosNewRoundedIcon sx={{ '&&': { fontSize: '17px' } }} />,
       tooltip: intl.formatMessage({
         id: 'appbar.back-to-map-list',
         defaultMessage: 'Back to maps list',
@@ -339,10 +339,18 @@ const AppBar = ({
     },
     {
       render: () => (
-        <Box sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', flexShrink: 0 }}>
+        <Box
+          sx={{
+            display: { xs: 'none', sm: 'flex' },
+            alignItems: 'center',
+            flexShrink: 0,
+            ml: 0.5,
+            mr: 0.25,
+          }}
+        >
           <img
             src={mode === 'light' ? LogoTextBlackSvg : LogoTextOrangeSvg}
-            style={{ height: 28, width: 'auto', display: 'block' }}
+            style={{ height: 24, width: 'auto', display: 'block' }}
             aria-label={intl.formatMessage({
               id: 'appbar.logo-aria-label',
               defaultMessage: 'WiseMapping Logo',
@@ -356,13 +364,13 @@ const AppBar = ({
       render: () => (
         <Box
           sx={{
-            mx: { xs: 0.25, sm: 1.5, md: 3 },
+            ml: { xs: 0.25, sm: 0.75 },
+            mr: { xs: 0.5, sm: 1.5 },
             display: 'flex',
             alignItems: 'center',
-            gap: 1,
-            minWidth: { xs: '56px', sm: '100px' },
+            minWidth: { xs: '56px', sm: '120px' },
             flex: { xs: '1 1 72px', sm: '0 1 auto' },
-            maxWidth: { xs: '34dvw', sm: '240px', md: '320px' },
+            maxWidth: { xs: '34dvw', sm: '260px', md: '380px' },
           }}
         >
           {isEditingTitle && canRename ? (
@@ -408,7 +416,7 @@ const AppBar = ({
       ),
       visible: !capability.isHidden('appbar-title'),
     },
-    undefined,
+    appBarDivisor,
     {
       render: () => (
         <UndoAndRedo
@@ -482,11 +490,12 @@ const AppBar = ({
       visible: !isCompactBar && !capability.isHidden('starred'),
       disabled: () => isStarred === undefined,
     },
-    appBarDivisor,
+    undefined,
     buildFindInMapConfig(model, intl, { open: findInMapOpen, setOpen: setFindInMapOpen }),
     buildOutlineViewConfig(model, capability, intl),
+    ...(!isCompactBar ? [undefined] : []),
     {
-      icon: <FileDownloadRoundedIcon />,
+      icon: <IosShareRoundedIcon />,
       onClick: () => {
         onAction('export');
       },
@@ -495,7 +504,7 @@ const AppBar = ({
       disabled: () => !isMapLoaded,
     },
     {
-      icon: mode === 'dark' ? <LightModeRoundedIcon /> : <DarkModeOutlinedIcon />,
+      icon: mode === 'dark' ? <LightModeOutlinedIcon /> : <DarkModeOutlinedIcon />,
       tooltip: intl.formatMessage({
         id: 'appbar.tooltip-theme-toggle',
         defaultMessage: 'Toggle Theme',
@@ -582,7 +591,7 @@ const AppBar = ({
                 }}
               >
                 <ListItemIcon>
-                  <FileDownloadRoundedIcon fontSize="small" />
+                  <IosShareRoundedIcon fontSize="small" />
                 </ListItemIcon>
                 <ListItemText>
                   {intl.formatMessage({
@@ -600,7 +609,7 @@ const AppBar = ({
             >
               <ListItemIcon>
                 {mode === 'dark' ? (
-                  <LightModeRoundedIcon fontSize="small" />
+                  <LightModeOutlinedIcon fontSize="small" />
                 ) : (
                   <DarkModeOutlinedIcon fontSize="small" />
                 )}
@@ -642,28 +651,37 @@ const AppBar = ({
           '& .MuiToolbar-root': {
             backgroundColor: 'transparent',
             minHeight: '3rem',
-            paddingLeft: 'max(6px, env(safe-area-inset-left, 0px))',
-            paddingRight: 'max(6px, env(safe-area-inset-right, 0px))',
+            paddingLeft: 'max(8px, env(safe-area-inset-left, 0px))',
+            paddingRight: 'max(8px, env(safe-area-inset-right, 0px))',
             gap: '2px',
             overflowX: 'auto',
             overflowY: 'hidden',
             scrollbarWidth: 'none',
             [muiTheme.breakpoints.up('sm')]: {
-              paddingLeft: 'max(16px, env(safe-area-inset-left, 0px))',
-              paddingRight: 'max(16px, env(safe-area-inset-right, 0px))',
-              gap: 0.5,
+              paddingLeft: 'max(14px, env(safe-area-inset-left, 0px))',
+              paddingRight: 'max(14px, env(safe-area-inset-right, 0px))',
+              gap: '4px',
             },
           },
+          '& .MuiDivider-vertical': {
+            height: '16px',
+            mx: { xs: '4px', sm: '6px' },
+          },
           '& .MuiButtonBase-root': {
-            marginX: '1px',
-            padding: '5px',
+            width: '34px',
+            height: '34px',
+            padding: 0,
+            marginX: 0,
             borderRadius: '10px',
             position: 'relative',
             flexShrink: 0,
+            '& .MuiSvgIcon-root': {
+              fontSize: '20px',
+            },
             ...applePressMixin,
             [muiTheme.breakpoints.up('sm')]: {
-              marginX: '3px',
-              padding: '6px',
+              width: '36px',
+              height: '36px',
             },
             '@media (pointer: coarse)': {
               minWidth: '36px',

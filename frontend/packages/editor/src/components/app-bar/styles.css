@@ -17,11 +17,6 @@
   transform: scale(0.92) !important;
 }
 
-.material-menubar .MuiButtonBase-root:last-child {
-  margin-right: 0.75rem;
-  margin-left: 0.5rem;
-}
-
 .truncated {
   max-width: 250px;
   white-space: nowrap;
