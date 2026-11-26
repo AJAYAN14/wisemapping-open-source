@@ -73,11 +73,6 @@ const scenario = async (file: string) => {
   dispatcher.deleteEntities([mains[mains.length - 1]!.getId()], []);
   record('a main topic is deleted');
 
-  designer.changeLayout('tree');
-  record('switched to the tree layout');
-  designer.changeLayout('mindmap');
-  record('switched back to the mind map layout');
-
   return steps;
 };
 

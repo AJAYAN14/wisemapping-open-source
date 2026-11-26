@@ -306,7 +306,7 @@ const OAuthCallbackPage = (): React.ReactElement => {
   }
 
   return (
-    <AccountAccessLayout headerType="none">
+    <AccountAccessLayout>
       <FormContainer>
         <Typography variant="h4" component="h1">
           {needConfirmSignIn ? (

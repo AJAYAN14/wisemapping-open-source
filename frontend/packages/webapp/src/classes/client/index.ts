@@ -15,20 +15,11 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-import { Locale, LocaleCode } from '../app-i18n';
+import { Locale } from '../app-i18n';
 
 export type JwtAuth = {
   email: string;
   password: string;
-};
-
-export type NewUser = {
-  email: string;
-  firstname: string;
-  lastname: string;
-  password: string;
-  recaptcha: string;
-  acceptedTerms: boolean;
 };
 
 export type ImportMapInfo = {
@@ -128,11 +119,6 @@ export const LABEL_TITLE_MAX_LENGTH = 30;
  */
 export const MAP_DESCRIPTION_MAX_LENGTH = 512;
 
-export type FieldError = {
-  id: string;
-  msg: string;
-};
-
 export type ErrorInfo = {
   isAuth?: boolean;
   msg?: string;
@@ -150,9 +136,6 @@ export type LoginErrorInfo = ErrorInfo & {
 
 export enum AuthenticationType {
   GOOGLE_OAUTH2 = 'GOOGLE_OAUTH2',
-  FACEBOOK_OAUTH2 = 'FACEBOOK_OAUTH2',
-  DATABASE = 'DATABASE',
-  LDAP = 'LDAP',
 }
 
 export type AccountInfo = {
@@ -167,20 +150,10 @@ export type AccountInfo = {
   isAdmin: boolean;
 };
 
-export type Permission = {
-  name?: string;
-  email: string;
-  role: Role;
-};
-
 export type Oauth2CallbackResult = {
   email: string;
   oauthSync: boolean;
   syncCode?: string;
-};
-
-export type ForgotPasswordResult = {
-  action: 'EMAIL_SENT' | 'OAUTH2_USER';
 };
 
 export type AssetUploadUrlRequest = {
@@ -224,7 +197,6 @@ export type AssetCleanupResult = {
 interface Client {
   login(auth: JwtAuth): Promise<void>;
   logout(): Promise<void>;
-  deleteAccount(): Promise<void>;
   importMap(model: ImportMapInfo): Promise<number>;
   createMap(map: BasicMapInfo): Promise<number>;
   deleteMaps(ids: number[]): Promise<void>;
@@ -233,20 +205,10 @@ interface Client {
   renameMap(id: number, changes: Partial<BasicMapInfo>): Promise<void>;
   fetchAllMaps(): Promise<MapInfo[]>;
   fetchMapMetadata(id: number, includeXml?: boolean): Promise<MapMetadata>;
-  fetchMapInfo(id: number): Promise<MapInfo>;
-
-  fetchMapPermissions(id: number): Promise<Permission[]>;
-  addMapPermissions(id: number, message: string, permissions: Permission[]): Promise<void>;
-  deleteMapPermission(id: number, email: string): Promise<void>;
 
   duplicateMap(id: number, basicInfo: BasicMapInfo): Promise<number>;
 
-  updateAccountLanguage(locale: LocaleCode): Promise<void>;
-  updateAccountPassword(pasword: string): Promise<void>;
-  updateAccountInfo(firstname: string, lastname: string): Promise<void>;
-
   updateStarred(id: number, starred: boolean): Promise<void>;
-  updateMapToPublic(id: number, isPublic: boolean): Promise<void>;
 
   createLabel(title: string, color: string): Promise<number>;
   fetchLabels(): Promise<Label[]>;
@@ -260,12 +222,7 @@ interface Client {
   moveMapsToFolder?(mapIds: number[], folderId: number | null): Promise<void>;
   fetchAccountInfo(): Promise<AccountInfo>;
 
-  registerNewUser(user: NewUser): Promise<void>;
-  resetPassword(email: string): Promise<ForgotPasswordResult>;
-  resetPasswordFromToken(token: string, newPassword: string): Promise<void>;
-  activateAccount(code: string): Promise<void>;
   processGoogleCallback(code: string): Promise<Oauth2CallbackResult>;
-  processFacebookCallback(code: string): Promise<Oauth2CallbackResult>;
   confirmAccountSync(
     email: string,
     code?: string,

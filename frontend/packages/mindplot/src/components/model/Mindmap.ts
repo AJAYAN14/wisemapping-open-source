@@ -72,17 +72,7 @@ class Mindmap extends IMindmap {
   }
 
   setCanvasStyle(value: CanvasStyleType | undefined): void {
-    // Normalize: if backgroundPattern is undefined, ensure all background attributes are also undefined
-    if (value && value.backgroundPattern === undefined) {
-      this._canvasStyle = {
-        ...value,
-        backgroundColor: undefined,
-        backgroundGridSize: undefined,
-        backgroundGridColor: undefined,
-      };
-    } else {
-      this._canvasStyle = value;
-    }
+    this._canvasStyle = value;
   }
 
   getLayout(): LayoutType {

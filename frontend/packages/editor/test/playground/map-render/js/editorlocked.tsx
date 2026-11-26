@@ -16,19 +16,10 @@
  *   limitations under the License.
  */
 import { createRoot } from 'react-dom/client';
-import { LocalStorageManager, Designer } from '@wisemapping/mindplot';
+import { LocalStorageManager } from '@wisemapping/mindplot';
 import MapInfoImpl from './MapInfoImpl';
 import Editor, { EditorOptions, useEditor } from '../../../../src';
 import { createMockThemeVariantStorage } from './MockThemeVariantStorage';
-
-const initialization = (designer: Designer) => {
-  designer.addEvent('loadSuccess', () => {
-    const elem = document.getElementById('mindmap-comp');
-    if (elem) {
-      elem.classList.add('ready');
-    }
-  });
-};
 
 const persistence = new LocalStorageManager(
   '/map-render/samples/{id}.wxml',
@@ -62,7 +53,6 @@ const Playground = () => {
     <Editor
       config={editor}
       onAction={(action) => console.log('action called:', action)}
-      onLoad={initialization}
       themeVariantStorage={themeVariantStorage}
     />
   );

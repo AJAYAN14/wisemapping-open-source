@@ -91,13 +91,6 @@ export const PaneCenteredRow = styled(Box)({
   justifyContent: 'center',
 });
 
-/** A few buttons side by side, centred. */
-export const PaneButtonRow = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  gap: theme.spacing(1),
-  justifyContent: 'center',
-}));
-
 /** Controls side by side, centred in both directions. */
 export const PaneControlRow = styled(Box)(({ theme }) => ({
   display: 'flex',

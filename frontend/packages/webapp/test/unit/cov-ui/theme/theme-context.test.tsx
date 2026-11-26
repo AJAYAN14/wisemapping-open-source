@@ -19,7 +19,6 @@
 import React from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { AppThemeProvider, useTheme } from '../../../../src/contexts/ThemeContext';
-import ThemeToggle from '../../../../src/components/common/theme-toggle';
 import ThemeToggleButton from '../../../../src/components/common/theme-toggle-button';
 import { renderWithProviders } from '../../helpers/render';
 import { installMatchMedia } from '../helpers';
@@ -132,7 +131,7 @@ describe('AppThemeProvider', () => {
   });
 });
 
-describe('theme toggles', () => {
+describe('theme toggle button', () => {
   beforeEach(() => {
     localStorage.clear();
     installMatchMedia(false);
@@ -140,25 +139,6 @@ describe('theme toggles', () => {
 
   const withTheme = (ui: React.ReactElement) =>
     renderWithProviders(<AppThemeProvider>{ui}</AppThemeProvider>);
-
-  test('ThemeToggle switches between light and dark', () => {
-    withTheme(<ThemeToggle />);
-    const toggle = screen.getByRole('switch') as HTMLInputElement;
-    expect(toggle.checked).toBe(false);
-    expect(screen.getByText('Light')).toBeTruthy();
-
-    fireEvent.click(toggle);
-
-    expect(toggle.checked).toBe(true);
-    expect(screen.getByText('Dark')).toBeTruthy();
-    expect(localStorage.getItem('themeMode')).toBe('dark');
-  });
-
-  test('ThemeToggle starts dark on a dark preference', () => {
-    localStorage.setItem('themeMode', 'dark');
-    withTheme(<ThemeToggle showBackground={true} />);
-    expect((screen.getByRole('switch') as HTMLInputElement).checked).toBe(true);
-  });
 
   test('ThemeToggleButton shows the current mode and toggles it', () => {
     withTheme(<ThemeToggleButton />);

@@ -67,16 +67,6 @@ const countCalls = <T extends object>(
   return count;
 };
 
-const depthOf = (topic: Topic): number => {
-  let depth = 0;
-  let parent = topic.getParent();
-  while (parent) {
-    depth += 1;
-    parent = parent.getParent();
-  }
-  return depth;
-};
-
 const subtreeSize = (topic: Topic): number =>
   1 + topic.getChildren().reduce((sum, child) => sum + subtreeSize(child), 0);
 
@@ -97,21 +87,6 @@ beforeAll(async () => {
 
 afterAll(() => {
   jest.restoreAllMocks();
-});
-
-describe('Designer.applyLayout', () => {
-  it('redraws every topic once, not once per ancestor', () => {
-    const n = topics.length;
-    const oldCost = topics.reduce((sum, t) => sum + depthOf(t) + 1, 0);
-
-    const redraws = countCalls(Topic.prototype, 'redraw', () => {
-      harness.designer.applyLayout('tree');
-    });
-    harness.designer.applyLayout('mindmap');
-
-    console.info(`applyLayout: ${redraws} redraws for ${n} topics (O(n·depth) = ${oldCost})`);
-    expect(redraws).toBeLessThanOrEqual(n);
-  });
 });
 
 describe('Designer theme variant toggle', () => {

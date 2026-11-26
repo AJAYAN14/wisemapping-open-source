@@ -86,18 +86,10 @@ describe('MockClient maps', () => {
     await expect(client.fetchHistory(id)).resolves.toEqual([]);
   });
 
-  it('fetchMapInfo and fetchMapMetadata return persisted metadata or reject for unknown maps', async () => {
+  it('fetchMapMetadata returns persisted metadata or rejects for unknown maps', async () => {
     const id = await client.createMap({ title: 'Project', description: 'Notes' });
     await client.updateStarred(id, true);
-    await client.updateMapToPublic(id, true);
     localStorage.setItem(`wisemapping.mock.props.${id}`, '{"zoom":1.5}');
-
-    await expect(client.fetchMapInfo(id)).resolves.toMatchObject({
-      title: 'Project',
-      starred: true,
-      public: true,
-    });
-    await expect(client.fetchMapInfo(9999)).rejects.toThrow('Map could not be found 9999');
 
     const plain = await client.fetchMapMetadata(id);
     expect(plain).toMatchObject({
@@ -105,7 +97,7 @@ describe('MockClient maps', () => {
       title: 'Project',
       description: 'Notes',
       starred: true,
-      public: true,
+      public: false,
       isLocked: false,
       role: 'owner',
       jsonProps: '{"zoom":1.5}',
@@ -239,14 +231,13 @@ describe('MockClient maps', () => {
     await expect(client.revertHistory(id, 999999)).rejects.toMatchObject({ status: 400 });
   });
 
-  it('revertHistory uses account displayName when set and rejects storage quota errors without partial writes', async () => {
+  it('revertHistory uses account displayName and rejects storage quota errors without partial writes', async () => {
     await client.login({ email: 'editor@x.y', password: 'p' });
-    await client.updateAccountInfo('Jian', 'Tan');
     const id = await client.createMap({ title: 'QuotaTest' });
 
     const persistence = new MockPersistenceManager(
       '<map version="tango"><topic central="true" text="Init" id="1"/></map>',
-      { editorName: 'Jian Tan' },
+      { editorName: 'editor@x.y' },
     );
     const docV1 = new DOMParser().parseFromString(
       '<map version="tango"><topic central="true" text="V1" id="1"/></map>',
@@ -285,7 +276,7 @@ describe('MockClient maps', () => {
     await client.revertHistory(id, v1Id);
     const historyAfter = await client.fetchHistory(id);
     expect(historyAfter).toHaveLength(3);
-    expect(defined(historyAfter[0]).lastModificationBy).toBe('Jian Tan');
+    expect(defined(historyAfter[0]).lastModificationBy).toBe('editor@x.y');
     expect((await client.fetchMapMetadata(id, true)).xml).toContain('V1');
   });
 
@@ -385,39 +376,6 @@ describe('MockClient labels', () => {
   });
 });
 
-describe('MockClient sharing', () => {
-  it('returns single-owner permission for the active account', async () => {
-    await client.login({ email: 'owner@x.y', password: 'p' });
-    const perms = await client.fetchMapPermissions(1);
-
-    expect(perms).toEqual([
-      {
-        name: 'owner@x.y',
-        email: 'owner@x.y',
-        role: 'owner',
-      },
-    ]);
-  });
-
-  it('adds and removes collaborators', async () => {
-    await client.login({ email: 'owner@x.y', password: 'p' });
-    await client.fetchMapPermissions(1);
-    await client.addMapPermissions(1, 'welcome', [{ email: 'new@x.y', role: 'viewer' }]);
-    await client.deleteMapPermission(1, 'owner@x.y');
-
-    const emails = (await client.fetchMapPermissions(1)).map((p) => p.email);
-    expect(emails).toEqual(['new@x.y']);
-  });
-
-  it('adding or removing on a fresh map starts from an empty list', async () => {
-    await client.deleteMapPermission(7, 'nobody@x.y');
-    expect(await client.fetchMapPermissions(7)).toEqual([]);
-
-    await client.addMapPermissions(8, '', [{ email: 'a@x.y', role: 'editor' }]);
-    expect(await client.fetchMapPermissions(8)).toEqual([{ email: 'a@x.y', role: 'editor' }]);
-  });
-});
-
 describe('MockClient account', () => {
   it('fetchAccountInfo rejects as unauthenticated until somebody logs in and sets isAdmin false', async () => {
     await expect(client.fetchAccountInfo()).rejects.toEqual({
@@ -438,55 +396,15 @@ describe('MockClient account', () => {
     expect(JwtTokenConfig.retreiveToken()).toBe('me@x.y');
   });
 
-  it('updateAccountLanguage and updateAccountInfo are reflected in fetchAccountInfo', async () => {
-    await client.login({ email: 'me@x.y', password: 'p' });
-    await client.updateAccountLanguage('zh-CN');
-    await client.updateAccountInfo('A', 'B');
-
-    const account = await client.fetchAccountInfo();
-    expect(account.locale?.code).toBe('zh-CN');
-    expect(account.firstname).toBe('A');
-    expect(account.lastname).toBe('B');
-  });
-
-  it('accepts the remaining account operations', async () => {
+  it('logout completes cleanly', async () => {
     await expect(client.logout()).resolves.toBeUndefined();
-    await expect(client.deleteAccount()).resolves.toBeUndefined();
-    await expect(client.updateAccountInfo('A', 'B')).resolves.toBeUndefined();
-    await expect(client.updateAccountPassword('p')).resolves.toBeUndefined();
-    await expect(client.resetPassword('a@x.y')).resolves.toEqual({ action: 'EMAIL_SENT' });
-    await expect(client.resetPasswordFromToken('t', 'p')).resolves.toBeUndefined();
   });
 
-  it('registerNewUser fails only for the error@example.com address', async () => {
-    const user = {
-      email: 'ok@example.com',
-      firstname: 'a',
-      lastname: 'b',
-      password: 'p',
-      recaptcha: '',
-      acceptedTerms: true,
-    };
-
-    await expect(client.registerNewUser(user)).resolves.toBeUndefined();
-    await expect(client.registerNewUser({ ...user, email: 'error@example.com' })).rejects.toEqual({
-      msg: 'Unexpected error',
-    });
-  });
-
-  it('activateAccount rejects the reserved invalid code', async () => {
-    await expect(client.activateAccount('123')).resolves.toBeUndefined();
-    await expect(client.activateAccount('999999999')).rejects.toEqual({
-      msg: 'Invalid activation code. The link may be incorrect or expired.',
-    });
-  });
-
-  it('OAuth callbacks return the active user email instead of hardcoded test@email.com', async () => {
+  it('OAuth callbacks return the active user email', async () => {
     await client.login({ email: 'me@x.y', password: 'p' });
     const expected = { email: 'me@x.y', oauthSync: true };
 
     await expect(client.processGoogleCallback()).resolves.toEqual(expected);
-    await expect(client.processFacebookCallback()).resolves.toEqual(expected);
     await expect(client.confirmAccountSync('a@x.y')).resolves.toEqual(expected);
   });
 

@@ -266,9 +266,9 @@ describe('F1/F14/F15 — Repository, Infrastructure & Documentation E2E', () => 
           const bundledApi = path.join(ROOT, '.vercel', 'functions-check', 'wm-api.js');
           const bundledSpec = `/@fs/${bundledApi.replace(/\\/g, '/')}`;
           const mod = (await import(bundledSpec)) as {
-            default: (req: Request) => Promise<Response>;
+            default: { fetch: (req: Request) => Promise<Response> };
           };
-          const res = await mod.default(new Request('https://e2e.local/api/restful/app/config'));
+          const res = await mod.default.fetch(new Request('https://e2e.local/api/restful/app/config'));
           expect(res.status).toBe(200);
           const body = (await res.json()) as { apiBaseUrl?: string };
           expect(body.apiBaseUrl).toBeTruthy();

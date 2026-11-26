@@ -23,11 +23,9 @@ import Client, { MapMetadata } from '../../../src/classes/client';
 import { ClientContext } from '../../../src/classes/provider/client-context';
 import {
   useFetchAccount,
-  useFetchAccountWithState,
   useFetchMapById,
   useFetchMapMetadata,
 } from '../../../src/classes/middleware';
-import { useAdminPermissions } from '../../../src/classes/hooks/useAdminPermissions';
 
 const wrapperFor = (client: Partial<Client>) => {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -43,7 +41,7 @@ const account = {
   firstname: 'Ana',
   lastname: 'Li',
   email: 'ana@x.y',
-  authenticationType: 'DATABASE',
+  authenticationType: 'GOOGLE_OAUTH2',
   isAdmin: true,
 };
 
@@ -80,6 +78,8 @@ describe('useFetchMapById', () => {
       lastModificationBy: '',
       lastModificationTime: '',
       description: '',
+      folderId: null,
+      folderPath: '',
       public: false,
       role: 'viewer',
     });
@@ -176,79 +176,11 @@ describe('account hooks', () => {
     window.history.pushState({}, '', '/c/login');
     const fetchAccountInfo = jest.fn();
 
-    const { result } = renderHook(
-      () => ({ plain: useFetchAccount(), state: useFetchAccountWithState() }),
-      { wrapper: wrapperFor({ fetchAccountInfo }) },
-    );
-
-    expect(fetchAccountInfo).not.toHaveBeenCalled();
-    expect(result.current.plain).toBeUndefined();
-    expect(result.current.state.data).toBeUndefined();
-  });
-
-  it('useFetchAccountWithState reports loading, then the account', async () => {
-    const fetchAccountInfo = jest.fn().mockResolvedValue(account);
-    const { result } = renderHook(() => useFetchAccountWithState(), {
+    const { result } = renderHook(() => useFetchAccount(), {
       wrapper: wrapperFor({ fetchAccountInfo }),
     });
 
-    expect(result.current.isLoading).toBe(true);
-    await waitFor(() => expect(result.current.data).toEqual(account));
-    expect(result.current).toMatchObject({ isLoading: false, error: undefined });
-  });
-});
-
-describe('useAdminPermissions', () => {
-  const render = (fetchAccountInfo: jest.Mock) =>
-    renderHook(() => useAdminPermissions(), { wrapper: wrapperFor({ fetchAccountInfo }) });
-
-  it('is loading while the account is fetched', () => {
-    const { result } = render(jest.fn(() => new Promise(() => undefined)));
-
-    expect(result.current).toEqual({ isAdmin: undefined, loading: true, error: undefined });
-  });
-
-  it('grants admin rights to an admin account', async () => {
-    const { result } = render(jest.fn().mockResolvedValue(account));
-
-    await waitFor(() =>
-      expect(result.current).toEqual({ isAdmin: true, loading: false, error: undefined }),
-    );
-  });
-
-  it('denies admin rights to a regular account', async () => {
-    const { result } = render(jest.fn().mockResolvedValue({ ...account, isAdmin: false }));
-
-    await waitFor(() =>
-      expect(result.current).toEqual({ isAdmin: false, loading: false, error: undefined }),
-    );
-  });
-
-  it('reports the error message when the account can not be loaded', async () => {
-    const { result } = render(jest.fn().mockRejectedValue({ msg: 'Session expired' }));
-
-    await waitFor(() =>
-      expect(result.current).toEqual({
-        isAdmin: undefined,
-        loading: false,
-        error: 'Session expired',
-      }),
-    );
-  });
-
-  it('uses a generic message for an error without one', async () => {
-    const { result } = render(jest.fn().mockRejectedValue({ status: 500 }));
-
-    await waitFor(() => expect(result.current.error).toBe('Failed to load account information'));
-  });
-
-  it('is not an admin on a public page, where the account is never fetched', () => {
-    window.history.pushState({}, '', '/c/maps/1/public');
-    const fetchAccountInfo = jest.fn();
-
-    const { result } = render(fetchAccountInfo);
-
     expect(fetchAccountInfo).not.toHaveBeenCalled();
-    expect(result.current).toEqual({ isAdmin: false, loading: false, error: undefined });
+    expect(result.current).toBeUndefined();
   });
 });

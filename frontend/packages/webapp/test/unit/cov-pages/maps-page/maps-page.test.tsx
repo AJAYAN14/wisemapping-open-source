@@ -44,20 +44,9 @@ jest.mock('../../../../src/components/maps-page/account-menu', () => ({
   __esModule: true,
   default: () => <span>account-menu</span>,
 }));
-jest.mock('../../../../src/components/maps-page/help-menu', () => ({
-  __esModule: true,
-  default: () => <span>help-menu</span>,
-}));
-jest.mock('../../../../src/components/maps-page/language-menu', () => ({
-  __esModule: true,
-  default: () => <span>language-menu</span>,
-}));
 jest.mock('../../../../src/components/common/theme-toggle-button', () => ({
   __esModule: true,
   default: () => <span>theme-toggle</span>,
-}));
-jest.mock('../../../../src/components/seo', () => ({
-  SEOHead: () => null,
 }));
 // DrawerNav reads the colour mode for its logo; the real hook needs AppThemeProvider.
 jest.mock('../../../../src/contexts/ThemeContext', () => ({
@@ -120,7 +109,7 @@ describe('MapsPage', () => {
     renderPage();
 
     const nav = desktopNav();
-    for (const name of ['All', 'My Maps', 'Starred', 'Shared with me', 'Public']) {
+    for (const name of ['All', 'Starred', '未分类']) {
       expect(within(nav).getByText(name)).toBeTruthy();
     }
     expect(await within(nav).findByText('Research')).toBeTruthy();
@@ -131,8 +120,8 @@ describe('MapsPage', () => {
     const { client, queryClient } = renderPage();
     const invalidate = jest.spyOn(queryClient, 'invalidateQueries');
 
-    fireEvent.click(within(desktopNav()).getByText('Shared with me'));
-    expect(listFilter()).toBe('shared');
+    fireEvent.click(within(desktopNav()).getByText('未分类'));
+    expect(listFilter()).toBe('uncategorized');
     expect(invalidate).toHaveBeenCalledWith({ queryKey: ['maps'] });
 
     fireEvent.click(await within(desktopNav()).findByText('Research'));
@@ -140,7 +129,7 @@ describe('MapsPage', () => {
     expect(client.fetchLabels).toHaveBeenCalled();
   });
 
-  test('"New map" and "Import" open the matching dialog, which can be closed', () => {
+  test('"New map" opens create dialog and "Import" opens import menu', async () => {
     renderPage();
 
     fireEvent.click(screen.getByTestId('create'));
@@ -149,55 +138,21 @@ describe('MapsPage', () => {
     expect(screen.queryByTestId('dispatcher')).toBeNull();
 
     fireEvent.click(screen.getByRole('button', { name: 'Import from other tools' }));
-    expect(screen.getByTestId('dispatcher').textContent).toContain('import');
-  });
-
-  test('the AI Copilot dialog opens the copilot in a new tab', async () => {
-    const openSpy = jest.spyOn(window, 'open').mockImplementation(() => null);
-    renderPage();
-
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Start a mindmap with ChatGPT-powered AI Copilot' }),
-    );
-    const dialog = await screen.findByRole('dialog', { name: 'ChatGPT-powered Mindmap Copilot' });
-
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Open Copilot' }));
-
-    expect(openSpy).toHaveBeenCalledWith(
-      expect.stringContaining('https://chatgpt.com/g/'),
-      '_blank',
-      'noopener,noreferrer',
-    );
-    await waitFor(() =>
-      expect(screen.queryByRole('dialog', { name: 'ChatGPT-powered Mindmap Copilot' })).toBeNull(),
-    );
-  });
-
-  test('the AI Copilot dialog can be dismissed without opening anything', async () => {
-    const openSpy = jest.spyOn(window, 'open').mockImplementation(() => null);
-    renderPage();
-
-    fireEvent.click(
-      screen.getByRole('button', { name: 'Start a mindmap with ChatGPT-powered AI Copilot' }),
-    );
-    const dialog = await screen.findByRole('dialog');
-    fireEvent.keyDown(dialog, { key: 'Escape' });
-
-    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
-    expect(openSpy).not.toHaveBeenCalled();
+    expect(await screen.findByRole('menuitem', { name: '导入文件' })).toBeTruthy();
+    expect(screen.getByRole('menuitem', { name: '导入文件夹 (含子目录)' })).toBeTruthy();
   });
 
   test('the desktop drawer toggle remembers its state', () => {
     renderPage();
 
     const toggle = document.getElementById('open-desktop-drawer') as HTMLElement;
-    expect(within(toggle).getByTestId('NavigateNextIcon')).toBeTruthy();
+    expect(within(toggle).getByTestId('NavigateNextRoundedIcon')).toBeTruthy();
     // Collapsed: the account box is not shown.
     expect(screen.queryByText('ada@example.com')).toBeNull();
 
     fireEvent.click(toggle);
     expect(localStorage.getItem('desktopDrawerOpen')).toBe('true');
-    expect(within(toggle).getByTestId('NavigateBeforeIcon')).toBeTruthy();
+    expect(within(toggle).getByTestId('NavigateBeforeRoundedIcon')).toBeTruthy();
 
     fireEvent.click(toggle);
     expect(localStorage.getItem('desktopDrawerOpen')).toBeNull();
@@ -208,7 +163,7 @@ describe('MapsPage', () => {
     renderPage();
 
     const toggle = document.getElementById('open-desktop-drawer') as HTMLElement;
-    expect(within(toggle).getByTestId('NavigateBeforeIcon')).toBeTruthy();
+    expect(within(toggle).getByTestId('NavigateBeforeRoundedIcon')).toBeTruthy();
     expect((await screen.findAllByText('ada@example.com')).length).toBeGreaterThan(0);
   });
 

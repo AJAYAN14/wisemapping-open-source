@@ -49,10 +49,12 @@ const setup = (initial: { filter: Filter; maps: MapInfo[] } = { filter: all, map
 const ids = (list: MapInfo[]) => list.map((m) => m.id);
 
 describe('useMapsListState', () => {
-  test('starts on the latest map first, ten to a page', () => {
+  test('starts on the latest map first, twenty to a page', () => {
     const { result } = setup();
 
-    expect(ids(result.current.pagedMaps)).toEqual([25, 24, 23, 22, 21, 20, 19, 18, 17, 16]);
+    expect(ids(result.current.pagedMaps)).toEqual([
+      25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6,
+    ]);
     expect(result.current.page).toBe(0);
     expect(result.current.filteredMaps).toHaveLength(25);
   });
@@ -82,14 +84,14 @@ describe('useMapsListState', () => {
 
   test('the page is always one that exists', () => {
     const { result, rerender } = setup();
-    act(() => result.current.changePage(2));
+    act(() => result.current.changePage(1));
     expect(result.current.pagedMaps).toHaveLength(5);
 
     // The five maps of the last page are deleted.
     rerender({ filter: all, maps: maps.slice(0, 20) });
 
-    expect(result.current.page).toBe(1);
-    expect(result.current.pagedMaps).toHaveLength(10);
+    expect(result.current.page).toBe(0);
+    expect(result.current.pagedMaps).toHaveLength(20);
   });
 
   test('a search narrows by title, clears the selection and goes back to the first page', () => {

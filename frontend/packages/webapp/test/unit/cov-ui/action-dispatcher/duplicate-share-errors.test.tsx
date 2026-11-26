@@ -24,8 +24,7 @@ jest.mock('../../../../src/classes/middleware', () => ({
 }));
 
 import DuplicateDialog from '../../../../src/components/maps-page/action-dispatcher/duplicate-dialog';
-import ShareDialog from '../../../../src/components/maps-page/action-dispatcher/share-dialog';
-import Client, { MapInfo, Permission } from '../../../../src/classes/client';
+import Client, { MapInfo } from '../../../../src/classes/client';
 import { renderWithProviders } from '../../helpers/render';
 
 const map = (title: string): MapInfo => ({
@@ -79,27 +78,5 @@ describe('DuplicateDialog errors', () => {
     fireEvent.change(title, { target: { value: 'Second copy' } });
 
     await waitFor(() => expect(screen.queryByText('Quota exceeded')).toBeNull());
-  });
-});
-
-describe('ShareDialog errors', () => {
-  test('shows why a collaborator could not be removed', async () => {
-    const permissions: Permission[] = [
-      { email: 'ana@wisemapping.com', name: 'Ana', role: 'owner' },
-      { email: 'sam@wisemapping.com', name: 'Sam', role: 'editor' },
-    ];
-    const deleteMapPermission = jest.fn(() => Promise.reject({ msg: 'Permission denied' }));
-    renderWithProviders(<ShareDialog mapId={4} onClose={jest.fn()} />, {
-      client: {
-        fetchMapPermissions: () => Promise.resolve(permissions),
-        deleteMapPermission,
-      } as unknown as Client,
-    });
-
-    const row = (await screen.findByText('Sam')).closest('li')!;
-    fireEvent.click(row.querySelector('button')!);
-
-    expect(await screen.findByText('Permission denied')).toBeTruthy();
-    expect(deleteMapPermission).toHaveBeenCalledWith(4, 'sam@wisemapping.com');
   });
 });

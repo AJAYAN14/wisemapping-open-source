@@ -17,7 +17,6 @@
  */
 
 import AppBar from '@mui/material/AppBar';
-import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
 import Drawer from '@mui/material/Drawer';
 import IconButton from '@mui/material/IconButton';
@@ -34,7 +33,7 @@ import {
 export const DRAWER_WIDTH_EXPANDED = 240;
 export const DRAWER_WIDTH_COLLAPSED = 68;
 
-export const drawerWidthOf = (expanded: boolean): number =>
+const drawerWidthOf = (expanded: boolean): number =>
   expanded ? DRAWER_WIDTH_EXPANDED : DRAWER_WIDTH_COLLAPSED;
 
 const notExpanded = (prop: PropertyKey): boolean => prop !== 'expanded';
@@ -45,7 +44,7 @@ type ExpandedProps = {
 };
 
 /** On phones a toolbar button shows only its icon. */
-export const mobileAppbarButton: CSSObject = {
+const mobileAppbarButton: CSSObject = {
   padding: 0,
   minWidth: '38px',
   width: '38px',
@@ -336,9 +335,6 @@ export const SecondaryToolbarButton = styled(Button)(({ theme }) => {
   };
 });
 
-/** Legacy export kept for compatibility if referenced elsewhere. */
-export const ToolbarButton = PrimaryToolbarButton;
-
 /** The theme and account menus, at the right of the toolbar. */
 export const RightButtonGroup = styled('div')(({ theme }) => ({
   marginLeft: 'auto',
@@ -397,17 +393,3 @@ export const ToolbarSpacer = styled('div')({
   justifyContent: 'flex-end',
   minHeight: 'calc(3.75rem + env(safe-area-inset-top, 0px))',
 });
-
-/** The help button, floating at the bottom right from tablets up. */
-export const HelpButtonBox = styled(Box)(({ theme }) => ({
-  position: 'fixed',
-  bottom: '24px',
-  right: '24px',
-  zIndex: 1000,
-  [theme.breakpoints.up('xs')]: {
-    display: 'none',
-  },
-  [theme.breakpoints.up('sm')]: {
-    display: 'block',
-  },
-}));

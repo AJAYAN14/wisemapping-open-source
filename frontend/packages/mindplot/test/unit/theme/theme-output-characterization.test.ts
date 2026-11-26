@@ -160,10 +160,7 @@ describe.each(THEME_TYPES.map((id) => [id]))('%s theme output', (id) => {
     const record: Record<string, string> = {
       canvas: [
         theme.getCanvasBackgroundColor(),
-        theme.getCanvasGridColor(),
         theme.getCanvasOpacity(),
-        theme.getCanvasShowGrid(),
-        theme.getCanvasGridPattern(),
       ]
         .map((value) => JSON.stringify(value))
         .join(' '),

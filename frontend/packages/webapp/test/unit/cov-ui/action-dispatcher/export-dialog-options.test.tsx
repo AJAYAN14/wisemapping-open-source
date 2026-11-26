@@ -66,7 +66,7 @@ describe('ExportDialog options', () => {
   });
 
   test('offers only XMind and Markdown options with XMind selected by default', () => {
-    renderWithProviders(<ExportDialog mapId={3} enableImgExport={false} onClose={jest.fn()} />, {
+    renderWithProviders(<ExportDialog mapId={3} onClose={jest.fn()} />, {
       client,
     });
 
@@ -91,7 +91,7 @@ describe('ExportDialog options', () => {
       downloads.push(`${this.download} ${this.href}`);
     });
     const onClose = jest.fn();
-    renderWithProviders(<ExportDialog mapId={3} enableImgExport={false} onClose={onClose} />, {
+    renderWithProviders(<ExportDialog mapId={3} onClose={onClose} />, {
       client,
     });
     await waitFor(() => expect(mockFetchMapMetadata).toHaveBeenCalledWith(3));
@@ -108,7 +108,7 @@ describe('ExportDialog options', () => {
 
   test('cancel closes without exporting', () => {
     const onClose = jest.fn();
-    renderWithProviders(<ExportDialog mapId={3} enableImgExport={false} onClose={onClose} />, {
+    renderWithProviders(<ExportDialog mapId={3} onClose={onClose} />, {
       client,
     });
 

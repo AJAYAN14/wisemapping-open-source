@@ -17,15 +17,17 @@
  */
 
 // Its own file: a module registry where no locale but English has been loaded yet.
-import { renderHook, waitFor } from '@testing-library/react';
+import { renderHook } from '@testing-library/react';
 import { useLocaleData } from '../../../src/classes/i18n-msg';
-import en from '../../../src/compiled-lang/en.json';
-import ja from '../../../src/compiled-lang/ja.json';
+import zh from '../../../src/compiled-lang/zh.json';
+import zhCn from '../../../src/compiled-lang/zh-CN.json';
 
-describe('useLocaleData before its locale is loaded', () => {
-  it('serves English, as English, then the locale once loaded', async () => {
-    const { result } = renderHook(() => useLocaleData('ja'));
-    expect(result.current).toEqual({ locale: 'en', messages: en });
-    await waitFor(() => expect(result.current).toEqual({ locale: 'ja', messages: ja }));
+describe('useLocaleData Chinese-only bundles', () => {
+  it('serves zh-CN synchronously and falls back to zh for unsupported locales', () => {
+    const { result: zhCnResult } = renderHook(() => useLocaleData('zh-CN'));
+    expect(zhCnResult.current).toEqual({ locale: 'zh-CN', messages: zhCn });
+
+    const { result: fallbackResult } = renderHook(() => useLocaleData('ja'));
+    expect(fallbackResult.current).toEqual({ locale: 'zh', messages: zh });
   });
 });

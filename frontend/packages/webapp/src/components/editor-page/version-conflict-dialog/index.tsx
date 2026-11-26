@@ -31,7 +31,7 @@ const VersionConflictDialog = ({ open }: { open: boolean }): React.ReactElement 
   };
 
   return (
-    <Dialog open={open} maxWidth="sm" fullWidth={true} disableEscapeKeyDown>
+    <Dialog open={open} maxWidth="sm" fullWidth={true}>
       <DialogTitle>
         <FormattedMessage id="editor.conflict.title" defaultMessage="Mindmap updated elsewhere" />
       </DialogTitle>

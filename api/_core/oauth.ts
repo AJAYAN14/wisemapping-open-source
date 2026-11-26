@@ -44,7 +44,7 @@ export interface OAuthHandlerDeps {
 
 const OAUTH_STATE_COOKIE = 'wm_oauth_state';
 
-export function parseRequestCookies(req: Request): Array<{ name: string; value: string }> {
+function parseRequestCookies(req: Request): Array<{ name: string; value: string }> {
   const cookieHeader = req.headers.get('cookie');
   if (!cookieHeader) {
     return [];
@@ -73,7 +73,7 @@ export function parseRequestCookies(req: Request): Array<{ name: string; value: 
   return cookies;
 }
 
-export function serializeCookie(
+function serializeCookie(
   name: string,
   value: string,
   options: CookieOptions & { secure: boolean },

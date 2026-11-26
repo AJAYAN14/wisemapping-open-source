@@ -70,11 +70,10 @@ const staleLines = (harness: Harness): number[] =>
     .map((topic) => topic.getId());
 
 describe('connection lines after a parent moves or resizes (BL5-126)', () => {
-  it.each(['mindmap', 'tree'] as const)('are all up to date (%s layout)', async (layout) => {
+  it('are all up to date (mindmap layout)', async () => {
     const harness = await buildDesigner();
     const { designer } = harness;
     const dispatcher = designer.getActionDispatcher();
-    designer.applyLayout(layout);
     expect(staleLines(harness)).toEqual([]);
 
     // A parent (A, 1) and the central topic get wider: their children move.
@@ -88,9 +87,7 @@ describe('connection lines after a parent moves or resizes (BL5-126)', () => {
     expect(staleLines(harness)).toEqual([]);
     dispatcher.shrinkBranch([1], false);
     expect(staleLines(harness)).toEqual([]);
-    if (layout === 'mindmap') {
-      expect(harness.topic(2).getPosition()).not.toEqual(hiddenChild);
-    }
+    expect(harness.topic(2).getPosition()).not.toEqual(hiddenChild);
 
     // Parents change shape, which moves the point their children connect to.
     (['line', 'none', 'elipse', 'rectangle'] as TopicShapeType[]).forEach((shape) => {

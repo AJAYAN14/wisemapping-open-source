@@ -16,7 +16,7 @@
  *   limitations under the License.
  */
 
-export type HttpErrorSummary = {
+type HttpErrorSummary = {
   message?: string | undefined;
   method?: string | undefined;
   url?: string | undefined;

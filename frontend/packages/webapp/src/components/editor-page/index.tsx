@@ -31,7 +31,6 @@ import { IntlProvider } from 'react-intl';
 import AppI18n, { Locales } from '../../classes/app-i18n';
 import { useLocaleMessages } from '../../classes/app-i18n/messages';
 import { useFetchAccount } from '../../classes/middleware';
-import { useTheme as useMuiTheme } from '@mui/material/styles';
 import MapInfoImpl from '../../classes/editor-map-info';
 import AppConfig from '../../classes/app-config';
 import JwtTokenConfig from '../../classes/jwt-token-config';
@@ -88,9 +87,7 @@ const buildPersistenceManagerForEditor = (
       });
     } else {
       result = new LocalStorageManager(
-        `${baseUrl}/api/restful/maps/{id}/${
-          hid ? `${hid}/` : ''
-        }document/xml${mode === 'showcase' || mode === 'viewonly-public' ? '-pub' : ''}`,
+        `${baseUrl}/api/restful/maps/{id}/${hid ? `${hid}/` : ''}document/xml`,
         true,
         token,
       );
@@ -148,13 +145,11 @@ const LoadedEditorPage = ({
   const account = useFetchAccount();
   const userLocale = AppI18n.getUserLocale(account?.locale);
   const intlLocale = useLocaleMessages(userLocale.code);
-  const theme = useMuiTheme(); // Get MUI theme object
   const client = use(ClientContext);
   const { hotkeyEnabled } = use(KeyboardContext);
 
-  // Parse query parameters for hideCreatorInfo and theme
+  // Parse query parameter for theme
   const [searchParams] = useSearchParams();
-  const hideCreatorInfoParam = searchParams.get('hideCreatorInfo');
   const themeParam = searchParams.get('theme');
 
   // If zoom has been define, overwrite the stored value.
@@ -219,7 +214,6 @@ const LoadedEditorPage = ({
     mode: editorMetadata.editorMode,
     enableAppBar: enableAppBar,
     zoom: editorMetadata.zoom,
-    hideCreatorInfo: hideCreatorInfoParam === 'true',
     ...(uploadTopicImage ? { uploadTopicImage } : {}),
     ...((themeParam === 'dark' || themeParam === 'light') && { initialThemeVariant: themeParam }),
     ...(editorMetadata.bootstrapXML !== undefined && { bootstrapXML: editorMetadata.bootstrapXML }),
@@ -282,10 +276,7 @@ const LoadedEditorPage = ({
   } else {
     existingMapInfo.updateMetadata({
       locked: editorMetadata.mapMetadata.isLocked,
-      lockedMsg: editorMetadata.mapMetadata.isLockedBy,
-      zoom: editorMetadata.zoom,
       starred: editorMetadata.mapMetadata.starred,
-      creatorFullName: editorMetadata.mapMetadata.creatorFullName,
     });
   }
   const mapInfo: MapInfo = mapInfoRef.current!;
@@ -314,9 +305,7 @@ const LoadedEditorPage = ({
       <Editor
         config={editorConfig}
         onAction={setActiveDialog}
-        theme={theme}
         themeVariantStorage={createThemeVariantStorage()}
-        initialSearchParams={searchParams}
       />
       {activeDialog && (
         <Suspense fallback={<></>}>
@@ -324,7 +313,6 @@ const LoadedEditorPage = ({
             action={activeDialog}
             onClose={() => setActiveDialog(undefined)}
             mapsId={[mapId]}
-            fromEditor
             pageMode={pageMode}
             designer={
               editorConfig.model?.isMapLoadded() ? editorConfig.model.getDesigner() : undefined

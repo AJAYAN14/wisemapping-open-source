@@ -336,10 +336,7 @@ describe('AppBar', () => {
     updateStarred: () => Promise.resolve(),
     getTitle: () => 'Develop Map Title',
     updateTitle: () => Promise.resolve(),
-    getCreatorFullName: () => 'The Creator',
     isLocked: () => false,
-    getLockedMessage: () => '',
-    getZoom: () => 1,
     getId: () => 'welcome',
   };
 
@@ -421,7 +418,6 @@ describe('AppBar', () => {
       fireEvent.click(moreButton);
       expect(screen.getByText('Changes History')).toBeDefined();
       expect(screen.getByText('Export')).toBeDefined();
-      expect(screen.getByText('Theme')).toBeDefined();
       expect(screen.getByText('Toggle Theme')).toBeDefined();
     } finally {
       window.matchMedia = originalMatchMedia;

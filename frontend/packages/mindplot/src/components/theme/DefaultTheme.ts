@@ -16,7 +16,7 @@
  *   limitations under the License.
  */
 
-import type { LineType } from '../ConnectionLine';
+import type { LineType } from '../BaseConnectionLine';
 import type { FontStyleType } from '../FontStyleType';
 import type { FontWeightType } from '../FontWeightType';
 import type { TopicShapeType } from '../model/INodeModel';
@@ -27,7 +27,6 @@ import type { TopicType, ThemeVariant } from './Theme';
 import type Theme from './Theme';
 import { $msg } from '../Messages';
 import type { ThemeStyle, TopicStyleType } from './ThemeStyle';
-import type { BackgroundPatternType } from '../model/CanvasStyleType';
 import ThemeResolutionCache from './ThemeResolutionCache';
 import pickByOrder from './pickByOrder';
 
@@ -100,24 +99,9 @@ class DefaultTheme implements Theme {
     return canvasStyle.backgroundColor;
   }
 
-  getCanvasGridColor(): string | undefined {
-    const canvasStyle = this._themeStyle.getCanvasStyle();
-    return canvasStyle.gridColor;
-  }
-
   getCanvasOpacity(): number {
     const canvasStyle = this._themeStyle.getCanvasStyle();
     return canvasStyle.opacity ?? 1;
-  }
-
-  getCanvasShowGrid(): boolean {
-    const canvasStyle = this._themeStyle.getCanvasStyle();
-    return canvasStyle.showGrid !== false; // Default to true if not specified
-  }
-
-  getCanvasGridPattern(): BackgroundPatternType {
-    const canvasStyle = this._themeStyle.getCanvasStyle();
-    return canvasStyle.gridPattern || 'grid';
   }
 
   /**
@@ -246,25 +230,6 @@ class DefaultTheme implements Theme {
       const colors = this.resolve('backgroundColor', topic);
       result = pickByOrder(colors, topic.getOrder());
     }
-    return result;
-  }
-
-  /**
-   * The fill set on the topic, else the one picked on its closest ancestor, else the theme
-   * palette entry of the topic order (Classic and Robot).
-   */
-  protected getInheritedBackgroundColor(topic: Topic): string {
-    const model = topic.getModel();
-    let result = model.getBackgroundColor();
-
-    // If topic has a custom background color, always use it
-    if (result) {
-      return result;
-    }
-
-    // Use theme colors from style system. Palettes are arrays, so use topic order to decide color ..
-    const colors = this.resolve('backgroundColor', topic);
-    result = pickByOrder(colors, topic.getOrder());
     return result;
   }
 

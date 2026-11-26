@@ -108,41 +108,6 @@ class TopicConnection extends BaseConnectionLine {
       return defaultControlPoints(parentPos, childPos);
     }
 
-    if (orientation === 'vertical') {
-      // Tree layout: vertical connections (parent above, child below)
-      const deltaY = (childPos.y - parentPos.y) / 3;
-
-      // For organic curved lines in vertical layout
-      if (this.getLineType() === LineType.THICK_CURVED_ORGANIC) {
-        const deltaX = (childPos.x - parentPos.x) / 2;
-
-        // Simple seed for consistent but unique curves
-        const seed = Math.abs(childPos.x + childPos.y + parentPos.x + parentPos.y);
-        const random1 = (Math.sin(seed * 0.1) + 1) / 2;
-        const random2 = (Math.sin(seed * 0.15 + 1) + 1) / 2;
-
-        // Create organic S-curve with subtle variations
-        const curveIntensity = 1.2 + random1 * 0.6; // 1.2 to 1.8
-        const asymmetry = (random2 - 0.5) * 0.4; // -0.2 to 0.2
-
-        return [
-          {
-            x: -deltaX * 1.3 + asymmetry * 0.3,
-            y: deltaY * curveIntensity + asymmetry * 0.5,
-          },
-          {
-            x: deltaX * 0.8 - asymmetry * 0.3,
-            y: deltaY * 0.4 * curveIntensity - asymmetry * 0.5,
-          },
-        ];
-      }
-
-      // Vertical control points for tree layout
-      return [
-        { x: 0, y: deltaY },
-        { x: 0, y: -deltaY },
-      ];
-    }
     // Mindmap layout: horizontal connections
     const deltaX = (childPos.x - parentPos.x) / 3;
 
@@ -276,7 +241,7 @@ class TopicConnection extends BaseConnectionLine {
     parentPosition: PositionType,
     parentConnectionPos: PositionType,
     childConnectionPos: PositionType,
-    orientation: 'horizontal' | 'vertical',
+    orientation: 'horizontal',
   ): number | undefined {
     if (!this._parentTopic.isCentralTopic() || orientation !== 'horizontal') {
       return undefined;
@@ -299,34 +264,23 @@ class TopicConnection extends BaseConnectionLine {
       return;
     }
 
-    // Get orientation from the parent topic
-    const orientation = parentTopic.getOrientation();
-
+    // Mindmap layout: connector on left or right side
     let y: number;
     let x: number;
-
-    if (orientation === 'vertical') {
-      // Tree layout: connector at bottom center of parent
-      x = parentTopicSize.width / 2 - offset; // centered horizontally (accounting for connector width)
-      y = parentTopicSize.height; // at bottom
-      connector.setPosition(x, y);
+    if (parentTopic.getShapeType() === 'line') {
+      y = parentTopicSize.height;
     } else {
-      // Mindmap layout: connector on left or right side
-      if (parentTopic.getShapeType() === 'line') {
-        y = parentTopicSize.height;
-      } else {
-        y = parentTopicSize.height / 2;
-      }
-      y -= offset;
-
-      // A parent at x === 0 lays its children out on the right, so the connector goes there too.
-      if (sideOf(parentPosition.x) > 0) {
-        x = parentTopicSize.width;
-      } else {
-        x = -TopicConfig.CONNECTOR_WIDTH;
-      }
-      connector.setPosition(x, y);
+      y = parentTopicSize.height / 2;
     }
+    y -= offset;
+
+    // A parent at x === 0 lays its children out on the right, so the connector goes there too.
+    if (sideOf(parentPosition.x) > 0) {
+      x = parentTopicSize.width;
+    } else {
+      x = -TopicConfig.CONNECTOR_WIDTH;
+    }
+    connector.setPosition(x, y);
   }
 
   override setStroke(color: string, style: StrokeStyle, opacity: number): void {

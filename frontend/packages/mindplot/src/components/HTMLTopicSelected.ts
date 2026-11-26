@@ -20,7 +20,6 @@ import type ScreenManager from './ScreenManager';
 import type Topic from './Topic';
 import type Designer from './Designer';
 import ColorUtil from './theme/ColorUtil';
-import type { OrientationType } from './layout/LayoutType';
 import { $msg } from './Messages';
 import type { LayoutEventPayloads } from './layout/LayoutEventBus';
 import type { LayoutEventBusType } from './LayoutEventBusType';
@@ -144,8 +143,6 @@ type OverlayGeometry = {
   topicBottom: number;
   topicCenterX: number;
   topicCenterY: number;
-  orientation: OrientationType;
-  isVertical: boolean;
   isOnLeft: boolean;
 };
 
@@ -507,8 +504,6 @@ class HTMLTopicSelected {
       return undefined;
     }
 
-    const orientation = topic.getOrientation();
-    const isVertical = orientation === 'vertical';
     const isOnLeft = this.isTopicOnLeftSide();
 
     // Use ScreenManager's getContainerPosition for consistency
@@ -539,8 +534,6 @@ class HTMLTopicSelected {
       topicBottom: top + height,
       topicCenterX: left + width / 2,
       topicCenterY: top + height / 2,
-      orientation,
-      isVertical,
       isOnLeft,
     };
   }
@@ -860,13 +853,7 @@ class HTMLTopicSelected {
 
     if (!this._rightPlus) {
       const rightPlus = this.createActionPill(() => {
-        const isVertical =
-          this.withTopic((topic) => topic.getOrientation() === 'vertical') ?? false;
-        if (isVertical) {
-          this._createSibling();
-        } else {
-          this._createChild();
-        }
+        this._createChild();
       });
       this._containerElement.appendChild(rightPlus);
       this._rightPlus = rightPlus;
@@ -876,13 +863,7 @@ class HTMLTopicSelected {
 
     if (!this._bottomPlus) {
       const bottomPlus = this.createActionPill(() => {
-        const isVertical =
-          this.withTopic((topic) => topic.getOrientation() === 'vertical') ?? false;
-        if (isVertical) {
-          this._createChild();
-        } else {
-          this._createSibling();
-        }
+        this._createSibling();
       });
       this._containerElement.appendChild(bottomPlus);
       this._bottomPlus = bottomPlus;
@@ -980,7 +961,6 @@ class HTMLTopicSelected {
    * Update tooltips and pill content based on orientation
    */
   private updatePlusButtonTooltips(): void {
-    const isVertical = this.withTopic((topic) => topic.getOrientation() === 'vertical') ?? false;
     const isTouch = isTouchOrMobileDevice();
 
     const syncPillContent = (
@@ -1006,18 +986,8 @@ class HTMLTopicSelected {
       pill.style.minHeight = isTouch ? '36px' : '26px';
     };
 
-    syncPillContent(
-      this._rightPlus,
-      isVertical ? $msg('PLUS_TOOLTIP_CREATE_SIBLING') : $msg('PLUS_TOOLTIP_CREATE_CHILD'),
-      isVertical ? '同级' : '子主题',
-      isVertical ? '↵' : 'Tab',
-    );
-    syncPillContent(
-      this._bottomPlus,
-      isVertical ? $msg('PLUS_TOOLTIP_CREATE_CHILD') : $msg('PLUS_TOOLTIP_CREATE_SIBLING'),
-      isVertical ? '子主题' : '同级',
-      isVertical ? 'Tab' : '↵',
-    );
+    syncPillContent(this._rightPlus, $msg('PLUS_TOOLTIP_CREATE_CHILD'), '子主题', 'Tab');
+    syncPillContent(this._bottomPlus, $msg('PLUS_TOOLTIP_CREATE_SIBLING'), '同级', '↵');
   }
 
   private updatePlusButtons(
@@ -1045,7 +1015,7 @@ class HTMLTopicSelected {
         this._rightPlus.style.flexDirection = 'row';
       }
       this._rightPlus.style.top = `${geometry.topicCenterY}px`;
-      const shouldDisplay = geometry.isVertical ? !isCentral : !hasChildren;
+      const shouldDisplay = !hasChildren;
 
       if (shouldDisplay) {
         this._rightPlus.style.display = 'inline-flex';
@@ -1062,7 +1032,7 @@ class HTMLTopicSelected {
       this._bottomPlus.style.top = `${geometry.topicBottom + bottomPillDistance}px`;
       this._bottomPlus.style.transform = `${scalePrefix}translate(-50%, 0)`;
       this._bottomPlus.style.flexDirection = 'row';
-      const shouldDisplay = geometry.isVertical ? !hasChildren : !isCentral;
+      const shouldDisplay = !isCentral;
 
       if (shouldDisplay) {
         this._bottomPlus.style.display = 'inline-flex';

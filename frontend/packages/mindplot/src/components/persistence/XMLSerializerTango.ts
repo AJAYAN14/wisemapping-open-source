@@ -29,7 +29,6 @@ import ModelCodeName from './ModelCodeName';
 import type FeatureModel from '../model/FeatureModel';
 import { legacyIconEmoji } from '../import/support/LegacyIconMap';
 import {
-  isBackgroundPatternType,
   isFontStyleType,
   isFontWeightType,
   isLineType,
@@ -37,7 +36,6 @@ import {
   isThemeType,
   isTopicShapeType,
 } from './TopicAttributeTypes';
-import type { CanvasStyleType } from '../model/CanvasStyleType';
 
 class XMLSerializerTango implements XMLMindmapSerializer {
   private static MAP_ROOT_NODE = 'map';
@@ -118,15 +116,6 @@ class XMLSerializerTango implements XMLMindmapSerializer {
     if (canvasStyle.backgroundColor !== undefined) {
       mapElem.setAttribute('backgroundColor', canvasStyle.backgroundColor);
     }
-    if (canvasStyle.backgroundPattern !== undefined) {
-      mapElem.setAttribute('backgroundPattern', canvasStyle.backgroundPattern);
-    }
-    if (canvasStyle.backgroundGridSize !== undefined) {
-      mapElem.setAttribute('backgroundGridSize', String(canvasStyle.backgroundGridSize));
-    }
-    if (canvasStyle.backgroundGridColor !== undefined) {
-      mapElem.setAttribute('backgroundGridColor', canvasStyle.backgroundGridColor);
-    }
   }
 
   /**
@@ -135,37 +124,8 @@ class XMLSerializerTango implements XMLMindmapSerializer {
    */
   private _loadCanvasStyle(rootElem: Element, mindmap: Mindmap): void {
     const backgroundColor = rootElem.getAttribute('backgroundColor');
-    const backgroundPatternAttr = rootElem.getAttribute('backgroundPattern');
-    const gridSizeAttr = rootElem.getAttribute('backgroundGridSize');
-    const gridColorAttr = rootElem.getAttribute('backgroundGridColor');
-
-    // Build canvas style only if at least one attribute is present
-    const canvasStyle: CanvasStyleType = {};
-
     if (backgroundColor !== null) {
-      canvasStyle.backgroundColor = backgroundColor;
-    }
-    if (backgroundPatternAttr !== null && backgroundPatternAttr !== 'none') {
-      // Ignore legacy 'none' value for backward compatibility
-      if (isBackgroundPatternType(backgroundPatternAttr)) {
-        canvasStyle.backgroundPattern = backgroundPatternAttr;
-      } else {
-        console.warn(`Unknown background pattern '${backgroundPatternAttr}', ignoring it.`);
-      }
-    }
-    if (gridSizeAttr !== null) {
-      const parsed = Number.parseInt(gridSizeAttr, 10);
-      if (Number.isFinite(parsed)) {
-        canvasStyle.backgroundGridSize = parsed;
-      }
-    }
-    if (gridColorAttr !== null) {
-      canvasStyle.backgroundGridColor = gridColorAttr;
-    }
-
-    // Only set if we have at least one property
-    if (Object.keys(canvasStyle).length > 0) {
-      mindmap.setCanvasStyle(canvasStyle);
+      mindmap.setCanvasStyle({ backgroundColor });
     }
   }
 

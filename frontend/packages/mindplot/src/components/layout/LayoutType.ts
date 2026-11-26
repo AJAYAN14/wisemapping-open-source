@@ -18,7 +18,7 @@
 
 export type LayoutType = 'mindmap';
 
-export type OrientationType = 'horizontal' | 'vertical';
+export type OrientationType = 'horizontal';
 
 export const LAYOUT_ORIENTATION: Record<LayoutType, OrientationType> = {
   mindmap: 'horizontal',

@@ -20,7 +20,7 @@
  * @jest-environment jsdom
  */
 import { render, screen, fireEvent, renderHook } from '@testing-library/react';
-import type { Designer, Topic, PersistenceManager } from '@wisemapping/mindplot';
+import type { PersistenceManager } from '@wisemapping/mindplot';
 import type MapInfo from '../../../src/classes/model/map-info';
 import type { EditorOptions } from '../../../src/hooks/useEditor';
 
@@ -64,28 +64,15 @@ jest.mock('../../../src/classes/action/capability', () => ({
 jest.mock('../../../src/utils/error-logger', () => ({ logCriticalError: jest.fn() }));
 
 import Input from '../../../src/components/action-widget/input';
-import FindInMapPanel from '../../../src/components/action-widget/pane/find-in-map';
+import TopicImagePicker from '../../../src/components/action-widget/pane/topic-image-picker';
 import { useEditor } from '../../../src/hooks/useEditor';
 
 const shortcutsPaused = (): boolean => keyboard.pauses > 0;
 
-const designer = (): Designer => {
-  const central = {
-    getId: () => 1,
-    getText: () => 'Central',
-    getModel: () => ({ getPlainText: () => 'Central' }),
-    getChildren: () => [],
-  } as unknown as Topic;
-  return {
-    getModel: () => ({ getCentralTopic: () => central }),
-    revealNode: jest.fn(),
-  } as unknown as Designer;
-};
-
 /** A pane that pauses the shortcuts while open, with a text field inside it. */
 const PaneWithInput = ({ showInput }: { showInput: boolean }) => (
   <>
-    <FindInMapPanel designer={designer()} closeModal={jest.fn()} />
+    <TopicImagePicker triggerClose={jest.fn()} />
     {showInput && <Input slotProps={{ htmlInput: { 'aria-label': 'nested field' } }} />}
   </>
 );
@@ -173,7 +160,7 @@ describe('useEditor keyboard pause (BL-36)', () => {
   });
 
   it('does not lift a pause already held when it mounts with keyboard events enabled', () => {
-    const { unmount } = render(<FindInMapPanel designer={designer()} closeModal={jest.fn()} />);
+    const { unmount } = render(<TopicImagePicker triggerClose={jest.fn()} />);
     renderHook(() => useEditor(props(true)));
 
     expect(shortcutsPaused()).toBe(true);
@@ -196,7 +183,7 @@ describe('useEditor keyboard pause (BL-36)', () => {
     const { rerender } = renderHook(({ enabled }) => useEditor(props(enabled)), {
       initialProps: { enabled: true },
     });
-    const pane = render(<FindInMapPanel designer={designer()} closeModal={jest.fn()} />);
+    const pane = render(<TopicImagePicker triggerClose={jest.fn()} />);
 
     rerender({ enabled: false });
     rerender({ enabled: true });

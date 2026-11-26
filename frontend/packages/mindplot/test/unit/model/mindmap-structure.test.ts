@@ -154,26 +154,12 @@ describe('Mindmap copy and inspection', () => {
 });
 
 describe('Mindmap canvas style', () => {
-  it('keeps a style with a background pattern as it is', () => {
+  it('stores and clears a solid background colour', () => {
     const mindmap = new Mindmap('m');
-    const style = {
-      backgroundColor: '#fff',
-      backgroundPattern: 'grid' as const,
-      backgroundGridSize: 10,
-      backgroundGridColor: '#eee',
-    };
+    const style = { backgroundColor: '#fff' };
     mindmap.setCanvasStyle(style);
     expect(mindmap.getCanvasStyle()).toEqual(style);
-  });
 
-  it('drops the background attributes of a style without a pattern', () => {
-    const mindmap = new Mindmap('m');
-    mindmap.setCanvasStyle({ backgroundColor: '#fff', backgroundGridSize: 10 });
-    expect(mindmap.getCanvasStyle()).toEqual({
-      backgroundColor: undefined,
-      backgroundGridSize: undefined,
-      backgroundGridColor: undefined,
-    });
     mindmap.setCanvasStyle(undefined);
     expect(mindmap.getCanvasStyle()).toBeUndefined();
   });

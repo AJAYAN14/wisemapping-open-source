@@ -28,15 +28,9 @@ jest.mock('../../../src/contexts/ThemeContext', () => ({
   useTheme: () => ({ initializeThemeFromSystem: jest.fn(), mode: 'light' }),
 }));
 jest.mock('../../../src/components/layout/header', () => () => null);
-jest.mock('../../../src/components/layout/footer', () => () => null);
-jest.mock('../../../src/utils/analytics', () => ({
-  trackPageView: jest.fn(),
-  setAnalyticsUserEmail: jest.fn(),
-}));
 
 import OAuthCallbackPage from '../../../src/components/oauth-callback';
 import Client from '../../../src/classes/client';
-import { trackPageView } from '../../../src/utils/analytics';
 import { renderWithProviders } from '../helpers/render';
 
 const client = {} as unknown as Client;
@@ -55,20 +49,18 @@ const renderPage = (): (() => void) => {
 
 describe('OAuthCallbackPage', () => {
   beforeEach(() => {
-    jest.mocked(trackPageView).mockClear();
     // A provider error keeps the page away from the client and makes it render twice on arrival.
     window.history.pushState({}, '', '/c/registration-google?error=server_error');
   });
 
-  test('tracks one page view however often the page re-renders', () => {
+  test('displays provider errors cleanly across re-renders', () => {
     const rerender = renderPage();
     expect(screen.getByText('OAuth error: server_error')).toBeTruthy();
 
     rerender();
     rerender();
 
-    expect(trackPageView).toHaveBeenCalledTimes(1);
-    expect(trackPageView).toHaveBeenCalledWith('/c/registration-google', 'Registration:Success');
+    expect(screen.getByText('OAuth error: server_error')).toBeTruthy();
   });
 
   test('sets the page title', () => {

@@ -16,15 +16,13 @@
  *   limitations under the License.
  */
 
-import { LineType } from '../ConnectionLine';
+import { LineType } from '../BaseConnectionLine';
 import type { FontStyleType } from '../FontStyleType';
 import type { FontWeightType } from '../FontWeightType';
 import type { TopicShapeType } from '../model/INodeModel';
 import type { TopicType, ThemeVariant } from './Theme';
-import type { BackgroundPatternType } from '../model/CanvasStyleType';
 import { isMsgKey, type MsgKey } from '../lang/zh';
 import {
-  isBackgroundPatternType,
   isFontStyleType,
   isFontWeightType,
   isTopicShapeType,
@@ -56,10 +54,7 @@ export type TopicStyleType = {
 
 export type CanvasStyleType = {
   backgroundColor: string;
-  gridColor?: string | undefined;
   opacity?: number;
-  showGrid?: boolean;
-  gridPattern?: BackgroundPatternType | undefined;
 };
 
 type JsonTopicStyleType = {
@@ -80,10 +75,7 @@ type JsonTopicStyleType = {
 
 type JsonCanvasStyleType = {
   backgroundColor?: string;
-  gridColor?: string;
   opacity?: number;
-  showGrid?: boolean;
-  gridPattern?: string;
 };
 
 type JsonThemeStyles = {
@@ -231,31 +223,13 @@ export class ThemeStyle {
       opacity = defaultCanvas.opacity;
     }
 
-    let showGrid = true;
-    if (variantCanvas.showGrid !== undefined) {
-      showGrid = variantCanvas.showGrid;
-    } else if (lightCanvas.showGrid !== undefined) {
-      showGrid = lightCanvas.showGrid;
-    } else if (defaultCanvas.showGrid !== undefined) {
-      showGrid = defaultCanvas.showGrid;
-    }
-
-    const gridPatternName =
-      variantCanvas.gridPattern || lightCanvas.gridPattern || defaultCanvas.gridPattern;
-    const gridPattern = gridPatternName
-      ? ThemeStyle.checked(gridPatternName, isBackgroundPatternType, 'grid pattern')
-      : undefined;
-
     const merged: CanvasStyleType = {
       backgroundColor:
         variantCanvas.backgroundColor ||
         lightCanvas.backgroundColor ||
         defaultCanvas.backgroundColor ||
         '#f2f2f2',
-      gridColor: variantCanvas.gridColor || lightCanvas.gridColor || defaultCanvas.gridColor,
       opacity,
-      showGrid,
-      gridPattern,
     };
 
     return merged;

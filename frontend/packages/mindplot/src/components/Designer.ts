@@ -55,21 +55,18 @@ import type RelationshipModel from './model/RelationshipModel';
 import Mindmap from './model/Mindmap';
 import NodeModel from './model/NodeModel';
 import type Topic from './Topic';
-import type { CanvasStyleType } from './model/CanvasStyleType';
 import type { DesignerOptions } from './DesignerOptionsBuilder';
 import type DragTopic from './DragTopic';
 import type CentralTopic from './CentralTopic';
 import type FeatureType from './model/FeatureType';
 import type WidgetBuilder from './WidgetBuilder';
 import type { TopicShapeType } from './model/INodeModel';
-import type { LineType } from './ConnectionLine';
+import type { LineType } from './BaseConnectionLine';
 import XMLSerializerFactory from './persistence/XMLSerializerFactory';
 import ImageExpoterFactory from './export/ImageExporterFactory';
 import type PositionType from './PositionType';
-import type ThemeType from './model/ThemeType';
 import ThemeFactory from './theme/ThemeFactory';
 import type { ThemeVariant } from './theme/Theme';
-import type Theme from './theme/Theme';
 import type ChangeEvent from './layout/ChangeEvent';
 import type { ModelUpdateEvent } from './DesignerUndoManager';
 import HTMLTopicSelected from './HTMLTopicSelected';
@@ -140,8 +137,6 @@ class Designer extends EventDispispatcher<DesignerEvents> {
   private _dragManager!: DragManager;
 
   private _relPivot: RelationshipPivot;
-
-  private _cleanScreen!: () => void;
 
   private _widgetManager: WidgetBuilder;
 
@@ -346,9 +341,6 @@ class Designer extends EventDispispatcher<DesignerEvents> {
     screenManager.addEvent('update', () => {
       // Topic must be set to his original state. All editors must be closed.
       me.closeNodeEditors();
-
-      // Clean some selected nodes on event ..
-      if (me._cleanScreen) me._cleanScreen();
     });
 
     // Deselect on a click on the background, unless the shortcut modifier is held, as on a topic:
@@ -1144,10 +1136,9 @@ class Designer extends EventDispispatcher<DesignerEvents> {
 
     // Init layout manager ...
     const size = { width: 25, height: 25 };
-    const layoutType = mindmap.getLayout();
     const centralModel = mindmap.getCentralTopic();
     $assert(centralModel, 'The map to load has no central topic');
-    const layoutManager = new LayoutManager(centralModel.getId(), size, layoutType);
+    const layoutManager = new LayoutManager(centralModel.getId(), size);
 
     layoutManager.addEvent('change', (event: ChangeEvent) => {
       const id = event.getId();
@@ -1391,35 +1382,6 @@ class Designer extends EventDispispatcher<DesignerEvents> {
     return result;
   }
 
-  changeTheme(id: ThemeType): void {
-    this._actionDispatcher.changeTheme(id);
-  }
-
-  /**
-   * Apply theme directly (internal use - no undo history)
-   * @param id - Theme ID
-   * @internal
-   */
-  applyTheme(id: ThemeType): void {
-    // Save theme to mindmap for persistence
-    const mindmap = this.getMindmap();
-    mindmap.setTheme(id);
-
-    // Re-render with new theme (preserves custom canvas style if it exists)
-    this.applyCanvasStyle();
-
-    // Every tree: the central topic's and the floating topics'.
-    this.redrawAllTopics();
-  }
-
-  /**
-   * Set canvas style through action dispatcher (undoable)
-   * @param style - Canvas style configuration
-   */
-  setCanvasStyle(style: CanvasStyleType | undefined): void {
-    this._actionDispatcher.changeCanvasStyle(style);
-  }
-
   /**
    * Apply canvas style directly (internal use - no undo history)
    * This method always reads from the model and merges with theme defaults for rendering.
@@ -1436,68 +1398,22 @@ class Designer extends EventDispispatcher<DesignerEvents> {
     // Get theme defaults
     const themeId = mindmap.getTheme();
     const theme = ThemeFactory.createById(themeId, this._themeVariant);
-    const themeStyle = this._convertThemeToCanvasStyle(theme);
+    const backgroundColor = customStyle?.backgroundColor ?? theme.getCanvasBackgroundColor();
 
-    // Merge custom style with theme defaults (same pattern as Topic.getBackgroundColor)
-    const resolved = {
-      backgroundColor: customStyle?.backgroundColor ?? themeStyle.backgroundColor,
-      backgroundPattern: customStyle?.backgroundPattern ?? themeStyle.backgroundPattern,
-      backgroundGridSize: customStyle?.backgroundGridSize ?? themeStyle.backgroundGridSize,
-      backgroundGridColor: customStyle?.backgroundGridColor ?? themeStyle.backgroundGridColor,
-    };
-
-    let cssStyle = `position: relative;
+    const cssStyle = `position: relative;
       left: 0;
       width: 100%;
       height: 100%;
       border: 0;
       overflow: hidden;
       opacity: 1;
-      background-color: ${resolved.backgroundColor};
+      background-color: ${backgroundColor};
       -webkit-user-select: none;
       -moz-user-select: none;
       -ms-user-select: none;
       user-select: none;`;
 
-    switch (resolved.backgroundPattern) {
-      case 'grid':
-        cssStyle += `
-          background-image: linear-gradient(${resolved.backgroundGridColor} 1px, transparent 1px),
-            linear-gradient(to right, ${resolved.backgroundGridColor} 1px, ${resolved.backgroundColor} 1px);
-          background-size: ${resolved.backgroundGridSize}px ${resolved.backgroundGridSize}px;`;
-        break;
-      case 'dots':
-        cssStyle += `
-          background-image: radial-gradient(circle, ${resolved.backgroundGridColor} 1px, transparent 1px);
-          background-size: ${resolved.backgroundGridSize}px ${resolved.backgroundGridSize}px;`;
-        break;
-      case 'solid':
-      default:
-        // Just solid background color, no additional styling needed
-        break;
-    }
-
     this._canvas.setBackgroundStyle(cssStyle);
-  }
-
-  /**
-   * Convert theme canvas style properties to Designer canvas style format
-   * @private
-   * @param theme - The theme instance
-   * @return Canvas style object for Designer
-   */
-  private _convertThemeToCanvasStyle(theme: Theme): CanvasStyleType {
-    const backgroundColor = theme.getCanvasBackgroundColor();
-    const gridColor = theme.getCanvasGridColor();
-    const showGrid = theme.getCanvasShowGrid();
-    const gridPattern = theme.getCanvasGridPattern();
-
-    return {
-      backgroundColor,
-      backgroundPattern: showGrid && gridColor ? gridPattern : 'solid',
-      backgroundGridSize: 20, // Default grid size
-      backgroundGridColor: gridColor || '#ebe9e7', // Default grid color
-    };
   }
 
   /**
@@ -2107,14 +2023,6 @@ class Designer extends EventDispispatcher<DesignerEvents> {
 
   getWorkSpace(): Canvas {
     return this._canvas;
-  }
-
-  public get cleanScreen(): () => void {
-    return this._cleanScreen;
-  }
-
-  public set cleanScreen(value: () => void) {
-    this._cleanScreen = value;
   }
 }
 

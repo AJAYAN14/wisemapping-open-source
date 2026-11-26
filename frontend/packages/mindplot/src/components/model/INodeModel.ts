@@ -16,7 +16,7 @@
  *   limitations under the License.
  */
 import { $assert } from '../util/assert';
-import type { LineType } from '../ConnectionLine';
+import type { LineType } from '../BaseConnectionLine';
 import type PositionType from '../PositionType';
 import type { FontWeightType } from '../FontWeightType';
 import type { FontStyleType } from '../FontStyleType';

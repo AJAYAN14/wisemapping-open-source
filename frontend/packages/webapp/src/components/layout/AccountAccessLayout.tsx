@@ -23,14 +23,12 @@ import { LayoutContent } from './styled';
 import { useTheme } from '@mui/material/styles';
 
 type AccountAccessLayoutProps = {
-  headerType: 'only-signin' | 'none';
   children: React.ReactNode;
   /** Less padding around the content, for the long sign-in and sign-up forms. */
   compact?: boolean;
 };
 
 const AccountAccessLayout = ({
-  headerType,
   children,
   compact = false,
 }: AccountAccessLayoutProps): React.ReactElement => {
@@ -52,7 +50,7 @@ const AccountAccessLayout = ({
         backgroundAttachment: 'fixed',
       }}
     >
-      <Header type={headerType} />
+      <Header />
       <LayoutContent compact={compact}>
         <Box
           sx={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}

@@ -28,7 +28,6 @@ import Capability from '../../../src/classes/action/capability';
 import type Model from '../../../src/classes/model/editor';
 import type MapInfo from '../../../src/classes/model/map-info';
 import type { EditorConfiguration, EditorOptions } from '../../../src/hooks/useEditor';
-import { useDeepLinkFocus } from '../../../src/hooks/useDeepLinkFocus';
 import { useCanvasViewportInsets } from '../../../src/hooks/useCanvasViewportInsets';
 import { createThemeStorage } from './helpers';
 
@@ -48,9 +47,7 @@ jest.mock('../../../src/components/app-bar', () => ({
 }));
 jest.mock('../../../src/components/editor-toolbar', () => ({
   __esModule: true,
-  default: ({ getDeepLink }: { getDeepLink?: (id: number) => string }) => (
-    <div>editor toolbar {getDeepLink ? getDeepLink(3) : 'no deep link'}</div>
-  ),
+  default: () => <div>editor toolbar</div>,
 }));
 jest.mock('../../../src/components/visualization-toolbar', () => ({
   __esModule: true,
@@ -66,7 +63,6 @@ jest.mock('../../../src/components/visualization-toolbar', () => ({
     );
   },
 }));
-jest.mock('../../../src/hooks/useDeepLinkFocus', () => ({ useDeepLinkFocus: jest.fn() }));
 jest.mock('../../../src/hooks/useCanvasViewportInsets', () => ({
   useCanvasViewportInsets: jest.fn(),
 }));
@@ -97,9 +93,7 @@ const createModel = (loaded = true) => {
 const mapInfo = (overrides: Partial<Record<keyof MapInfo, unknown>> = {}): MapInfo =>
   ({
     getTitle: () => 'Solar System',
-    getCreatorFullName: () => 'Ada',
     isLocked: () => false,
-    getLockedMessage: () => '',
     ...overrides,
   }) as unknown as MapInfo;
 
@@ -125,19 +119,13 @@ const renderEditor = (
   config: EditorConfiguration,
   extra: {
     storage?: ReturnType<typeof createThemeStorage>;
-    getDeepLink?: (id: number) => string;
     onAction?: jest.Mock;
   } = {},
 ) => {
   const storage = extra.storage ?? createThemeStorage();
   const onAction = extra.onAction ?? jest.fn();
   const view = render(
-    <Editor
-      config={config}
-      onAction={onAction}
-      themeVariantStorage={storage}
-      getDeepLink={extra.getDeepLink}
-    />,
+    <Editor config={config} onAction={onAction} themeVariantStorage={storage} />,
   );
   return { ...view, storage, onAction };
 };
@@ -150,14 +138,12 @@ afterEach(() => {
 describe('Editor', () => {
   it('shows the app bar, the toolbars and the canvas for a loaded map', () => {
     const { model } = createModel();
-    const { container, onAction } = renderEditor(configOf(model, { zoom: 1.5 }), {
-      getDeepLink: (id) => `https://example.com/node/${id}`,
-    });
+    const { container, onAction } = renderEditor(configOf(model, { zoom: 1.5 }));
 
     fireEvent.click(screen.getByRole('button', { name: 'app bar' }));
     expect(onAction).toHaveBeenCalledWith('share');
-    expect(screen.getByText('editor toolbar https://example.com/node/3')).toBeInTheDocument();
-    expect(screen.getByText('Zoom In')).toBeInTheDocument();
+    expect(screen.getByText('editor toolbar')).toBeInTheDocument();
+    expect(screen.getByText('放大')).toBeInTheDocument();
 
     const canvas = container.ownerDocument.querySelector('mindplot-component')!;
     expect(canvas).toHaveAttribute('id', 'mindmap-comp');
@@ -181,45 +167,17 @@ describe('Editor', () => {
     expect(document.querySelector('.MuiSkeleton-root')).toBeInTheDocument();
   });
 
-  it('shows the creator pane instead of the app bar when the app bar is off', () => {
+  it('renders the chrome in Chinese when requested', async () => {
     const { model } = createModel();
-    const { container } = renderEditor(configOf(model, { enableAppBar: false }));
-
-    expect(screen.queryByRole('button', { name: 'app bar' })).not.toBeInTheDocument();
-    expect(container).toHaveTextContent('Description: Solar System');
+    renderEditor(configOf(model, { locale: 'zh' }));
+    expect(await screen.findByText('放大')).toBeInTheDocument();
   });
 
-  it('hides the creator details when asked to', () => {
+  it('renders a preloaded Chinese locale from the first paint', async () => {
+    await I18nMsg.load('zh-CN');
     const { model } = createModel();
-    const { container } = renderEditor(
-      configOf(model, { enableAppBar: false, hideCreatorInfo: true }),
-    );
-    expect(container).not.toHaveTextContent('Solar System');
-  });
-
-  it('renders the chrome in the requested language once its messages load', async () => {
-    const { model } = createModel();
-    renderEditor(configOf(model, { locale: 'es' }));
-    expect(await screen.findByText('Acercar')).toBeInTheDocument();
-  });
-
-  it('renders a preloaded language from the first paint', async () => {
-    await I18nMsg.load('es');
-    const { model } = createModel();
-    renderEditor(configOf(model, { locale: 'es' }));
-    expect(screen.getByText('Acercar')).toBeInTheDocument();
-  });
-
-  it('warns that the map is locked', () => {
-    const { model } = createModel();
-    renderEditor(
-      configOf(
-        model,
-        {},
-        mapInfo({ isLocked: () => true, getLockedMessage: () => 'Locked by Grace' }),
-      ),
-    );
-    expect(screen.getByText('Locked by Grace')).toBeInTheDocument();
+    renderEditor(configOf(model, { locale: 'zh-CN' }));
+    expect(screen.getByText('放大')).toBeInTheDocument();
   });
 
   it('starts the designer in the stored theme variant and follows later changes', () => {
@@ -244,18 +202,15 @@ describe('Editor', () => {
 
   it('hands the designer widget manager to the popover, and the designer to the hooks', () => {
     const { model, designer, widgetManager } = createModel();
-    const search = new URLSearchParams('node=4');
     render(
       <Editor
         config={configOf(model)}
         onAction={jest.fn()}
         themeVariantStorage={createThemeStorage()}
-        initialSearchParams={search}
       />,
     );
 
     expect(widgetManager.addHander).toHaveBeenCalled();
-    expect(useDeepLinkFocus).toHaveBeenCalledWith(model, search);
     expect(useCanvasViewportInsets).toHaveBeenCalledWith(designer);
   });
 

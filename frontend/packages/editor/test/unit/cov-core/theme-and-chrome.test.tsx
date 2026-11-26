@@ -21,16 +21,11 @@
  */
 import { render, screen, fireEvent, renderHook, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import type { Designer, Topic, WidgetBuilder } from '@wisemapping/mindplot';
 import { EditorThemeProvider, useTheme } from '../../../src/contexts/ThemeContext';
 import { createEditorTheme } from '../../../src/theme';
-import ThemeToggle from '../../../src/components/common/theme-toggle';
-import CreatorInfoPane from '../../../src/components/creator-info-pane';
 import EditorLoadingSkeleton from '../../../src/components/editor-loading-skeleton';
-import WarningDialog from '../../../src/components/warning-dialog';
 import { WidgetPopover } from '../../../src/components/widgetPopover';
-import type Capability from '../../../src/classes/action/capability';
-import type MapInfo from '../../../src/classes/model/map-info';
+import type { Designer, Topic, WidgetBuilder } from '@wisemapping/mindplot';
 import { createThemeStorage, Providers } from './helpers';
 import { defined } from '../defined';
 
@@ -143,69 +138,6 @@ describe('createEditorTheme', () => {
   );
 });
 
-describe('ThemeToggle', () => {
-  it('toggles the theme from light to dark and back', () => {
-    const storage = createThemeStorage('light');
-    render(
-      <Providers storage={storage}>
-        <ThemeToggle />
-      </Providers>,
-    );
-
-    fireEvent.click(screen.getByRole('button', { name: 'toggle theme' }));
-    expect(storage.setThemeVariant).toHaveBeenLastCalledWith('dark');
-
-    fireEvent.click(screen.getByRole('button', { name: 'toggle theme' }));
-    expect(storage.setThemeVariant).toHaveBeenLastCalledWith('light');
-  });
-
-  it('offers the light mode while dark', async () => {
-    render(
-      <Providers storage={createThemeStorage('dark')}>
-        <ThemeToggle />
-      </Providers>,
-    );
-    fireEvent.mouseOver(screen.getByRole('button', { name: 'toggle theme' }));
-    expect(await screen.findByText('Switch to light mode')).toBeInTheDocument();
-  });
-});
-
-describe('CreatorInfoPane', () => {
-  const mapInfo = (title: string, creator: string): MapInfo =>
-    ({ getTitle: () => title, getCreatorFullName: () => creator }) as unknown as MapInfo;
-
-  it('shows the description and the creator', () => {
-    const { container } = render(
-      <Providers>
-        <CreatorInfoPane mapInfo={mapInfo('My map', 'Ada Lovelace')} />
-      </Providers>,
-    );
-    expect(container).toHaveTextContent('Description: My map');
-    expect(container).toHaveTextContent('Creator: Ada Lovelace');
-    expect(screen.getByRole('link')).toHaveAttribute('href', 'https://www.wisemapping.com/');
-  });
-
-  it('omits a blank title and an unknown creator', () => {
-    render(
-      <Providers>
-        <CreatorInfoPane mapInfo={mapInfo('   ', '')} />
-      </Providers>,
-    );
-    expect(screen.queryByText(/Description/)).not.toBeInTheDocument();
-    expect(screen.queryByText(/Creator/)).not.toBeInTheDocument();
-  });
-
-  it('shows only the logo when the info is hidden', () => {
-    const { container } = render(
-      <Providers storage={createThemeStorage('dark')}>
-        <CreatorInfoPane mapInfo={mapInfo('My map', 'Ada')} showInfo={false} />
-      </Providers>,
-    );
-    expect(container).not.toHaveTextContent('My map');
-    expect(screen.getByLabelText('WiseMappping')).toBeInTheDocument();
-  });
-});
-
 describe('EditorLoadingSkeleton', () => {
   it('renders placeholders for the chrome and the canvas', () => {
     const { container } = render(
@@ -214,74 +146,6 @@ describe('EditorLoadingSkeleton', () => {
       </Providers>,
     );
     expect(container.querySelectorAll('.MuiSkeleton-root').length).toBeGreaterThan(20);
-  });
-});
-
-describe('WarningDialog', () => {
-  const capability = (mode: string, isMobile: boolean): Capability =>
-    ({ mode, isMobile }) as unknown as Capability;
-
-  it('shows nothing on a desktop editor without a message', () => {
-    const { container } = render(
-      <Providers>
-        <WarningDialog capability={capability('edition-owner', false)} message="" />
-      </Providers>,
-    );
-    expect(container).toBeEmptyDOMElement();
-  });
-
-  it('shows the lock message and closes on request', () => {
-    render(
-      <Providers>
-        <WarningDialog
-          capability={capability('edition-owner', false)}
-          message="Locked by someone else"
-        />
-      </Providers>,
-    );
-    expect(screen.getByText('Locked by someone else')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
-
-    expect(screen.queryByText('Locked by someone else')).not.toBeInTheDocument();
-  });
-
-  it('warns mobile editors about the limited capabilities', () => {
-    render(
-      <Providers>
-        <WarningDialog capability={capability('edition-editor', true)} message="" />
-      </Providers>,
-    );
-    expect(screen.getByText(/Limited mindmap edition capabilities/)).toBeInTheDocument();
-  });
-
-  it('welcomes desktop visitors of the showcase', () => {
-    render(
-      <Providers>
-        <WarningDialog capability={capability('showcase', false)} message="" />
-      </Providers>,
-    );
-    expect(
-      screen.getByText(/showcases some of the mindmap editor capabilities! Sign Up/),
-    ).toBeInTheDocument();
-  });
-
-  it('welcomes mobile visitors of the showcase and mentions the limits', () => {
-    render(
-      <Providers>
-        <WarningDialog capability={capability('showcase', true)} message="" />
-      </Providers>,
-    );
-    expect(screen.getByText(/Limited mindmap edition capabilties/)).toBeInTheDocument();
-  });
-
-  it.each(['viewonly-public', 'viewonly-private'])('shows no mobile warning in %s mode', (mode) => {
-    const { container } = render(
-      <Providers>
-        <WarningDialog capability={capability(mode, true)} message="" />
-      </Providers>,
-    );
-    expect(container).toBeEmptyDOMElement();
   });
 });
 

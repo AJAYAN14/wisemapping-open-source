@@ -39,10 +39,6 @@ import ExploreOffRoundedIcon from '@mui/icons-material/ExploreOffRounded';
 import LockRoundedIcon from '@mui/icons-material/LockRounded';
 import WarningAmberRoundedIcon from '@mui/icons-material/WarningAmberRounded';
 
-export type ErrorPageType = {
-  isSecurity: boolean;
-};
-
 const isErrorInfo = (error: unknown): error is ErrorInfo =>
   typeof error === 'object' &&
   error !== null &&
@@ -208,7 +204,7 @@ const ErrorPage = (): React.ReactElement => {
 
   return (
     <ErrorCanvas>
-      <Header type="none" />
+      <Header />
 
       <ErrorBody>
         <ErrorContent>

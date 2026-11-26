@@ -116,10 +116,5 @@ describe('Layout of a whole map', () => {
     designer.redo();
     designer.redo();
     expect(layoutOf(designer)).toMatchSnapshot('all redone');
-
-    dispatcher.changeLayout('tree');
-    expect(layoutOf(designer)).toMatchSnapshot('tree layout');
-    dispatcher.changeLayout('mindmap');
-    expect(layoutOf(designer)).toMatchSnapshot('mindmap layout again');
   });
 });

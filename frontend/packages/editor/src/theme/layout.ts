@@ -41,17 +41,9 @@ export const EDITOR_LAYOUT = {
     top: '150px',
   },
   zoomToolbar: {
-    /** Clears the formatting toolbar sitting to its right. */
-    right: `${EDGE_INSET + FORMATTING_TOOLBAR_WIDTH}px`,
     /** No formatting toolbar to clear, so it can sit against the edge. */
     rightCompact: `${COMPACT_EDGE_INSET}px`,
-    top: 'calc(100% - 55px)',
     bottom: 'max(8px, env(safe-area-inset-bottom, 0px))',
-  },
-  creatorInfoPane: {
-    left: `${EDGE_INSET}px`,
-    top: `calc(100% - ${FORMATTING_TOOLBAR_WIDTH + EDGE_INSET}px)`,
-    height: `${FORMATTING_TOOLBAR_WIDTH}px`,
   },
 } as const;
 
@@ -77,5 +69,3 @@ export const EDITOR_Z_INDEX = {
   /** Popovers opened from a toolbar button. */
   submenu: 1500,
 } as const;
-
-export default EDITOR_LAYOUT;

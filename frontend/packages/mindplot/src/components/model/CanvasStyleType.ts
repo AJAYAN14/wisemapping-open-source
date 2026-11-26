@@ -16,13 +16,6 @@
  *   limitations under the License.
  */
 
-export const BACKGROUND_PATTERN_TYPES = ['solid', 'grid', 'dots'] as const;
-
-export type BackgroundPatternType = (typeof BACKGROUND_PATTERN_TYPES)[number];
-
 export type CanvasStyleType = {
   backgroundColor?: string | undefined;
-  backgroundPattern?: BackgroundPatternType | undefined;
-  backgroundGridSize?: number | undefined;
-  backgroundGridColor?: string | undefined;
 };

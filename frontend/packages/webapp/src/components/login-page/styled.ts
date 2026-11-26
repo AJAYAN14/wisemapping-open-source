@@ -102,7 +102,7 @@ export const TitleText = styled(Typography)(({ theme }) => {
     color: isDark ? '#F5F5F7' : '#1D1D1F',
     marginBottom: '8px',
   };
-});
+}) as typeof Typography;
 
 /** Apple-style secondary description. */
 export const SubtitleText = styled(Typography)(({ theme }) => {

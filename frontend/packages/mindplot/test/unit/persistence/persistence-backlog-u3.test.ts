@@ -20,7 +20,7 @@ import type NodeModel from '../../../src/components/model/NodeModel';
 import FeatureModelFactory from '../../../src/components/model/FeatureModelFactory';
 import type FeatureType from '../../../src/components/model/FeatureType';
 import XMLSerializerFactory from '../../../src/components/persistence/XMLSerializerFactory';
-import { LineType } from '../../../src/components/ConnectionLine';
+import { LineType } from '../../../src/components/BaseConnectionLine';
 
 const parse = (xml: string): Document => new DOMParser().parseFromString(xml, 'text/xml');
 

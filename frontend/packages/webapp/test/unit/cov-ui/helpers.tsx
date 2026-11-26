@@ -63,18 +63,8 @@ export const installMatchMedia = (
 };
 
 export type TestConfig = {
-  registrationEnabled?: boolean;
-  recaptcha2Enabled?: boolean;
-  // An undefined value is a config that lacks it.
-  recaptcha2SiteKey?: string | undefined;
   googleOauth2Enabled?: boolean;
   googleOauth2Url?: string | undefined;
-  facebookOauth2Enabled?: boolean;
-  facebookOauth2Url?: string | undefined;
-  oidcOauth2Enabled?: boolean;
-  oidcOauth2Url?: string | undefined;
-  oidcOauth2Label?: string;
-  localLoginEnabled?: boolean;
 };
 
 /** Loads a static application configuration, as the bootstrap script does. */
@@ -86,12 +76,8 @@ export const initAppConfig = async (config: TestConfig = {}): Promise<void> => {
       apiBaseUrl: 'http://localhost',
       clientType: 'rest',
       jwtExpirationMin: 10080,
-      registrationEnabled: true,
-      recaptcha2Enabled: false,
       googleOauth2Enabled: false,
       googleOauth2Url: '',
-      facebookOauth2Enabled: false,
-      facebookOauth2Url: '',
       ...config,
     },
   };
@@ -103,38 +89,11 @@ export const stubConfig = (config: TestConfig): void => {
   const spy = <K extends keyof typeof AppConfig>(key: K, value: unknown): void => {
     jest.spyOn(AppConfig, key as never).mockImplementation((() => value) as never);
   };
-  if (config.registrationEnabled !== undefined) {
-    spy('isRegistrationEnabled', config.registrationEnabled);
-  }
-  if (config.recaptcha2Enabled !== undefined) {
-    spy('isRecaptcha2Enabled', config.recaptcha2Enabled);
-  }
-  if ('recaptcha2SiteKey' in config) {
-    spy('getRecaptcha2SiteKey', config.recaptcha2SiteKey);
-  }
   if (config.googleOauth2Enabled !== undefined) {
     spy('isGoogleOauth2Enabled', config.googleOauth2Enabled);
   }
   if ('googleOauth2Url' in config) {
     spy('getGoogleOauth2Url', config.googleOauth2Url);
-  }
-  if (config.facebookOauth2Enabled !== undefined) {
-    spy('isFacebookOauth2Enabled', config.facebookOauth2Enabled);
-  }
-  if ('facebookOauth2Url' in config) {
-    spy('getFacebookOauth2Url', config.facebookOauth2Url);
-  }
-  if (config.oidcOauth2Enabled !== undefined) {
-    spy('isOidcOauth2Enabled', config.oidcOauth2Enabled);
-  }
-  if ('oidcOauth2Url' in config) {
-    spy('getOidcOauth2Url', config.oidcOauth2Url);
-  }
-  if (config.oidcOauth2Label !== undefined) {
-    spy('getOidcOauth2Label', config.oidcOauth2Label);
-  }
-  if (config.localLoginEnabled !== undefined) {
-    spy('isLocalLoginEnabled', config.localLoginEnabled);
   }
 };
 

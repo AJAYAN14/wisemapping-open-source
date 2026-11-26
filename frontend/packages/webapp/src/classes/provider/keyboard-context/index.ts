@@ -17,10 +17,6 @@
  */
 import { createContext, useCallback, useMemo, useState } from 'react';
 
-export type KetboardConfig = {
-  hotkeysEnabled: boolean;
-};
-
 type KeyboardContextType = {
   hotkeyEnabled: boolean;
   /**

@@ -29,9 +29,6 @@ import GenericFunctionCommand from './commands/GenericFunctionCommand';
 import GenericRelationshipFunctionCommand from './commands/GenericRelationshipFunctionCommand';
 import MoveControlPointCommand from './commands/MoveControlPointCommand';
 import ChangeFeatureToTopicCommand from './commands/ChangeFeatureToTopicCommand';
-import ChangeCanvasStyleCommand from './commands/ChangeCanvasStyleCommand';
-import ChangeThemeCommand from './commands/ChangeThemeCommand';
-import type { CanvasStyleType } from './model/CanvasStyleType';
 import type CommandContext from './CommandContext';
 import type { FeatureAttributes } from './model/FeatureModel';
 import type NodeModel from './model/NodeModel';
@@ -44,8 +41,7 @@ import type FeatureType from './model/FeatureType';
 import type PositionType from './PositionType';
 import type { PivotType } from './RelationshipControlPoints';
 import type { TopicShapeType } from './model/INodeModel';
-import type { LineType } from './ConnectionLine';
-import type ThemeType from './model/ThemeType';
+import type { LineType } from './BaseConnectionLine';
 import type { FontStyleType } from './FontStyleType';
 import type { FontWeightType } from './FontWeightType';
 
@@ -271,10 +267,10 @@ class StandaloneActionDispatcher extends ActionDispatcher implements ActionDispa
       const prevSize = topic.getImageSize();
       const prevValue: TopicImageValue | undefined = prevUrl
         ? {
-            url: prevUrl,
-            width: prevSize?.width ?? 130,
-            height: prevSize?.height ?? 90,
-          }
+          url: prevUrl,
+          width: prevSize?.width ?? 130,
+          height: prevSize?.height ?? 90,
+        }
         : undefined;
 
       if (nextImage) {
@@ -396,11 +392,6 @@ class StandaloneActionDispatcher extends ActionDispatcher implements ActionDispa
     this.execute(command);
   }
 
-  changeTheme(themeType: ThemeType): void {
-    const command = new ChangeThemeCommand(themeType);
-    this.execute(command);
-  }
-
   /** */
   shrinkBranch(topicsIds: number[], collapse: boolean) {
     $assert(topicsIds, 'topicsIds can not be null');
@@ -430,11 +421,6 @@ class StandaloneActionDispatcher extends ActionDispatcher implements ActionDispa
   /** */
   removeFeatureFromTopic(topicId: number, featureId: number) {
     const command = new RemoveFeatureFromTopicCommand(topicId, featureId);
-    this.execute(command);
-  }
-
-  changeCanvasStyle(style: CanvasStyleType | undefined): void {
-    const command = new ChangeCanvasStyleCommand(style);
     this.execute(command);
   }
 

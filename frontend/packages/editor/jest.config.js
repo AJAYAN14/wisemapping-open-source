@@ -35,7 +35,6 @@ const config = {
     ],
   },
   moduleNameMapper: {
-    '^react-ga4$': '<rootDir>/test/mocks/react-ga4.js',
     // The workspace sources, as tsconfig resolves them, rather than a dist built earlier: a test
     // must see the mindplot it is checked against.
     '^@wisemapping/mindplot$': '<rootDir>/../mindplot/src/index.ts',

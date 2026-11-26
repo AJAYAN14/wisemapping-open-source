@@ -41,8 +41,6 @@
     "outerBorderColor": "#38383A"
   },
   "Canvas": {
-    "backgroundColor": "#000000",
-    "gridColor": "#2C2C2E",
-    "showGrid": false
+    "backgroundColor": "#000000"
   }
 }

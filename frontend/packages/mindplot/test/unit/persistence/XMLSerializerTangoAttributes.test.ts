@@ -37,38 +37,29 @@ afterEach(() => {
 });
 
 describe('XMLSerializerTango canvas style', () => {
-  it('saves and loads a custom canvas', () => {
+  it('saves and loads a custom canvas background colour', () => {
     const mindmap = load(map(''));
     const style = {
       backgroundColor: '#123456',
-      backgroundPattern: 'dots' as const,
-      backgroundGridSize: 24,
-      backgroundGridColor: '#abcdef',
     };
     mindmap.setCanvasStyle(style);
 
     const element = save(mindmap);
     expect(element.getAttribute('backgroundColor')).toBe('#123456');
-    expect(element.getAttribute('backgroundPattern')).toBe('dots');
-    expect(element.getAttribute('backgroundGridSize')).toBe('24');
-    expect(element.getAttribute('backgroundGridColor')).toBe('#abcdef');
     expect(roundTrip(mindmap).getCanvasStyle()).toEqual(style);
   });
 
   it('writes no canvas attribute for the theme canvas', () => {
     const element = save(load(map('')));
-    ['backgroundColor', 'backgroundPattern', 'backgroundGridSize', 'backgroundGridColor'].forEach(
-      (name) => expect(element.hasAttribute(name)).toBe(false),
-    );
+    expect(element.hasAttribute('backgroundColor')).toBe(false);
     expect(load(map('')).getCanvasStyle()).toBeUndefined();
   });
 
-  it('ignores a grid size that is not a number', () => {
+  it('ignores legacy grid pattern attributes when loading', () => {
     const mindmap = load(
-      map('', ' backgroundPattern="grid" backgroundGridSize="big" backgroundColor="#fff"'),
+      map('', ' backgroundPattern="grid" backgroundGridSize="24" backgroundGridColor="#abcdef" backgroundColor="#fff"'),
     );
     expect(mindmap.getCanvasStyle()).toEqual({
-      backgroundPattern: 'grid',
       backgroundColor: '#fff',
     });
   });

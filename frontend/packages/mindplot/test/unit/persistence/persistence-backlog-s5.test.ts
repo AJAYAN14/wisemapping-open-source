@@ -51,24 +51,24 @@ afterEach(() => {
 });
 
 describe('map attributes validation (BL-06)', () => {
-  test('falls back to the defaults for an unknown theme, layout and background pattern', () => {
+  test('falls back to the defaults for an unknown theme and layout and ignores legacy pattern', () => {
     const mindmap = load(
       '<map version="tango" theme="bogus" layout="spiral" backgroundPattern="stripes">' +
         '<topic central="true" id="1" text="c"/></map>',
     );
     expect(mindmap.getTheme()).toBe('prism');
     expect(mindmap.getLayout()).toBe('mindmap');
-    expect(mindmap.getCanvasStyle()?.backgroundPattern).toBeUndefined();
+    expect(mindmap.getCanvasStyle()).toBeUndefined();
   });
 
-  test('keeps known values and still maps dark-prism to prism', () => {
+  test('keeps known values and maps dark-prism to prism and legacy tree to mindmap', () => {
     const mindmap = load(
       '<map version="tango" theme="dark-prism" layout="tree" backgroundPattern="grid">' +
         '<topic central="true" id="1" text="c"/></map>',
     );
     expect(mindmap.getTheme()).toBe('prism');
-    expect(mindmap.getLayout()).toBe('tree');
-    expect(mindmap.getCanvasStyle()?.backgroundPattern).toBe('grid');
+    expect(mindmap.getLayout()).toBe('mindmap');
+    expect(mindmap.getCanvasStyle()).toBeUndefined();
   });
 
   test.each(['classic', 'robot', 'sunrise', 'ocean', 'aurora', 'retro'])(

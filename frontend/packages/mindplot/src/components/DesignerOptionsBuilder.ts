@@ -16,7 +16,6 @@
  *   limitations under the License.
  */
 import { $assert } from './util/assert';
-import { AjaxUtils } from './util/AjaxUtils';
 import type EditorRenderMode from './EditorRenderMode';
 import type WidgetBuilder from './WidgetBuilder';
 import type PersistenceManager from './PersistenceManager';
@@ -44,16 +43,6 @@ class OptionsBuilder {
     };
 
     return { ...defaultOptions, ...options };
-  }
-
-  static async loadOptions(jsonConf: string, options: DesignerOptions): Promise<DesignerOptions> {
-    const result = await AjaxUtils.ajax({
-      url: jsonConf,
-      dataType: 'json',
-      method: 'GET',
-    });
-
-    return { ...(result as DesignerOptions), ...OptionsBuilder.buildOptions(options) };
   }
 }
 export default OptionsBuilder;

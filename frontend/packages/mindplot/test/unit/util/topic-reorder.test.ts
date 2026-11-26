@@ -44,7 +44,7 @@ type Stub = {
  */
 const node = (
   id: number,
-  options: { order?: number; central?: boolean; layout?: LayoutType } = {},
+  options: { order?: number; central?: boolean } = {},
 ): Stub => {
   const self: Stub = {
     id,
@@ -52,7 +52,7 @@ const node = (
     parent: undefined,
     children: [],
     central: options.central ?? false,
-    layout: options.layout ?? 'tree',
+    layout: 'mindmap',
     getId: () => self.id,
     getOrder: () => self.order,
     getParent: () => self.parent as unknown as Topic | undefined,
@@ -244,7 +244,7 @@ describe('resolveTopicMove', () => {
      *                   |          r2 (4)
      */
     const buildMindmap = () => {
-      const root = node(1, { central: true, layout: 'mindmap' });
+      const root = node(1, { central: true });
       const r0 = node(10, { order: 0 });
       const l0 = node(11, { order: 1 });
       const r1 = node(12, { order: 2 });

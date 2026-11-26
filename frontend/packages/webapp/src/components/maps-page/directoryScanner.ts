@@ -68,6 +68,32 @@ export const scanFileList = (files: FileList | File[]): ScannedMapFile[] => {
   return results;
 };
 
+interface FsEntryLike {
+  isFile: boolean;
+  isDirectory: boolean;
+  name: string;
+}
+
+interface FileEntryLike extends FsEntryLike {
+  file: (successCallback: (file: File) => void, errorCallback?: (err: unknown) => void) => void;
+}
+
+interface DirectoryReaderLike {
+  readEntries: (
+    successCallback: (entries: FsEntryLike[]) => void,
+    errorCallback?: (err: unknown) => void,
+  ) => void;
+}
+
+interface DirectoryEntryLike extends FsEntryLike {
+  createReader: () => DirectoryReaderLike;
+}
+
+type DataTransferItemWithEntry = DataTransferItem & {
+  webkitGetAsEntry?: () => FsEntryLike | null;
+  getAsEntry?: () => FsEntryLike | null;
+};
+
 /**
  * Recursively scans files and directories from DataTransferItemList during a drag-and-drop event.
  */
@@ -76,7 +102,7 @@ export const scanDataTransferItems = async (
 ): Promise<ScannedMapFile[]> => {
   const scanned: ScannedMapFile[] = [];
 
-  const traverseFileEntry = (entry: any, parentPath: string): Promise<void> => {
+  const traverseFileEntry = (entry: FileEntryLike, parentPath: string): Promise<void> => {
     return new Promise((resolve) => {
       entry.file(
         (file: File) => {
@@ -103,22 +129,25 @@ export const scanDataTransferItems = async (
     });
   };
 
-  const traverseDirectoryEntry = (dirEntry: any, currentPath: string): Promise<void> => {
+  const traverseDirectoryEntry = (
+    dirEntry: DirectoryEntryLike,
+    currentPath: string,
+  ): Promise<void> => {
     return new Promise((resolve) => {
       const dirReader = dirEntry.createReader();
       const readNextBatch = () => {
         dirReader.readEntries(
-          async (entries: any[]) => {
+          async (entries: FsEntryLike[]) => {
             if (!entries || entries.length === 0) {
               resolve();
               return;
             }
             for (const entry of entries) {
               if (entry.isFile) {
-                await traverseFileEntry(entry, currentPath);
+                await traverseFileEntry(entry as FileEntryLike, currentPath);
               } else if (entry.isDirectory) {
                 const subPath = currentPath ? `${currentPath}/${entry.name}` : entry.name;
-                await traverseDirectoryEntry(entry, subPath);
+                await traverseDirectoryEntry(entry as DirectoryEntryLike, subPath);
               }
             }
             readNextBatch();
@@ -132,18 +161,18 @@ export const scanDataTransferItems = async (
 
   const promises: Promise<void>[] = [];
   for (let i = 0; i < items.length; i++) {
-    const item = items[i];
-    if (item.kind !== 'file') continue;
-    const entry = (item as any).webkitGetAsEntry
-      ? (item as any).webkitGetAsEntry()
-      : (item as any).getAsEntry
-        ? (item as any).getAsEntry()
+    const item = items[i] as DataTransferItemWithEntry | undefined;
+    if (!item || item.kind !== 'file') continue;
+    const entry = item.webkitGetAsEntry
+      ? item.webkitGetAsEntry()
+      : item.getAsEntry
+        ? item.getAsEntry()
         : null;
     if (entry) {
       if (entry.isFile) {
-        promises.push(traverseFileEntry(entry, ''));
+        promises.push(traverseFileEntry(entry as FileEntryLike, ''));
       } else if (entry.isDirectory) {
-        promises.push(traverseDirectoryEntry(entry, entry.name));
+        promises.push(traverseDirectoryEntry(entry as DirectoryEntryLike, entry.name));
       }
     } else {
       const file = item.getAsFile();

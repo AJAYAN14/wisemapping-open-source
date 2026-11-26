@@ -19,9 +19,6 @@
 import AppConfig from '../../../src/classes/app-config';
 import RestClient from '../../../src/classes/client/rest-client';
 import MockClient from '../../../src/classes/client/mock-client';
-import AdminClient from '../../../src/classes/client/admin-client';
-import MockAdminClient from '../../../src/classes/client/mock-admin-client';
-import getMapNodeDeepLink from '../../../src/utils/map-urls';
 import { appLogger } from '../../../src/utils/logger';
 import { baseConfig, initAppConfig, resetAppConfig, setBootstrap } from './helpers/app-config';
 
@@ -121,21 +118,10 @@ describe('AppConfig.initialize', () => {
 
 describe('AppConfig settings', () => {
   it('exposes the configured flags and urls', async () => {
-    await initAppConfig({
-      recaptcha2Enabled: true,
-      recaptcha2SiteKey: 'site-key',
-      analyticsAccount: 'G-1',
-      registrationEnabled: false,
-    });
+    await initAppConfig();
 
-    expect(AppConfig.isRecaptcha2Enabled()).toBe(true);
-    expect(AppConfig.getRecaptcha2SiteKey()).toBe('site-key');
-    expect(AppConfig.getGoogleAnalyticsAccount()).toBe('G-1');
-    expect(AppConfig.isRegistrationEnabled()).toBe(false);
     expect(AppConfig.getGoogleOauth2Url()).toBe('http://google.test/auth');
-    expect(AppConfig.getFacebookOauth2Url()).toBe('http://facebook.test/auth');
     expect(AppConfig.isGoogleOauth2Enabled()).toBe(true);
-    expect(AppConfig.isFacebookOauth2Enabled()).toBe(false);
     expect(AppConfig.getJwtExpirationMin()).toBe(10080);
     expect(AppConfig.getUiBaseUrl()).toBe('http://ui.test');
   });
@@ -143,25 +129,9 @@ describe('AppConfig settings', () => {
   it('treats missing OAuth flags as disabled', async () => {
     await initAppConfig({
       googleOauth2Enabled: undefined,
-      facebookOauth2Enabled: undefined,
     });
 
     expect(AppConfig.isGoogleOauth2Enabled()).toBe(false);
-    expect(AppConfig.isFacebookOauth2Enabled()).toBe(false);
-  });
-
-  it('keeps local login on unless the backend turns it off', async () => {
-    await initAppConfig();
-    expect(AppConfig.isLocalLoginEnabled()).toBe(true);
-
-    await initAppConfig({ localLoginEnabled: false });
-    expect(AppConfig.isLocalLoginEnabled()).toBe(false);
-  });
-
-  it('closes registration while local login is off', async () => {
-    await initAppConfig({ registrationEnabled: true, localLoginEnabled: false });
-
-    expect(AppConfig.isRegistrationEnabled()).toBe(false);
   });
 
   it('requires the JWT expiration and the API base url', async () => {
@@ -200,7 +170,6 @@ describe('AppConfig clients', () => {
     // They are development-only: production must not download them.
     await initAppConfig();
     AppConfig.getClient();
-    AppConfig.getAdminClient();
     expect((AppConfig as unknown as { _mocks: unknown })._mocks).toBeUndefined();
   });
 
@@ -218,48 +187,5 @@ describe('AppConfig clients', () => {
       'Client could not be initialized.',
       expect.any(Error),
     );
-  });
-
-  it('builds one admin REST client for a rest config', async () => {
-    await initAppConfig();
-
-    const admin = AppConfig.getAdminClient();
-
-    expect(admin).toBeInstanceOf(AdminClient);
-    expect(AppConfig.getAdminClient()).toBe(admin);
-  });
-
-  it('uses the mock admin client in the mock environment', async () => {
-    await initAppConfig({ clientType: 'mock' });
-
-    const admin = AppConfig.getAdminClient();
-
-    expect(admin).toBeInstanceOf(MockAdminClient);
-    expect(AppConfig.getAdminClient()).toBe(admin);
-  });
-
-  it('falls back to the mock admin client when the API url is missing', async () => {
-    await initAppConfig({ apiBaseUrl: '' });
-
-    expect(AppConfig.getAdminClient()).toBeInstanceOf(MockAdminClient);
-    expect(appLogger.error).toHaveBeenCalledWith(
-      'Admin client could not be initialized.',
-      expect.any(Error),
-    );
-  });
-
-  it('falls back to the mock admin client for an unknown client type', async () => {
-    await initAppConfig({ clientType: 'other' as 'rest' });
-
-    expect(AppConfig.getAdminClient()).toBeInstanceOf(MockAdminClient);
-  });
-});
-
-describe('getMapNodeDeepLink', () => {
-  it('links to the map editor focused on one node, on the configured UI host', async () => {
-    await initAppConfig({ uiBaseUrl: 'https://app.example.com' });
-
-    expect(getMapNodeDeepLink(12, 34)).toBe('https://app.example.com/c/maps/12/edit?node=34');
-    expect(getMapNodeDeepLink('7', 1)).toBe('https://app.example.com/c/maps/7/edit?node=1');
   });
 });

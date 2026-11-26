@@ -44,8 +44,6 @@ const config = {
     // Asset imports carry no behaviour under jsdom.
     '\\.(svg|css|styl|less|sass|scss|png|jpg|jpeg|gif|ttf|woff|woff2|wxml)$':
       '<rootDir>/test/unit/mocks/asset-stub.js',
-    // react-ga4 touches window.gtag on import; stub it out.
-    '^react-ga4$': '<rootDir>/test/unit/mocks/react-ga4.js',
     // react-intl (and @formatjs below it) is ESM-only and cannot be required
     // without --experimental-vm-modules; render defaultMessage instead.
     '^react-intl$': '<rootDir>/test/unit/mocks/react-intl.tsx',

@@ -18,15 +18,7 @@
 
 import { fireEvent, screen } from '@testing-library/react';
 
-const mockUseFetchMapById = jest.fn();
-jest.mock('../../../../src/classes/middleware', () => ({
-  useFetchMapById: (id: number) => mockUseFetchMapById(id),
-}));
-jest.mock('../../../../src/utils/analytics', () => ({ trackMindmapListAction: jest.fn() }));
-
 import ActionChooser from '../../../../src/components/maps-page/action-chooser';
-import { Role } from '../../../../src/classes/client';
-import { trackMindmapListAction } from '../../../../src/utils/analytics';
 import { renderWithProviders } from '../../helpers/render';
 
 const ALL = [
@@ -34,21 +26,13 @@ const ALL = [
   'Duplicate',
   'Rename',
   'Add Label',
+  '移动到文件夹',
   'Delete',
   'Export',
-  'Print',
-  'Publish',
-  'Share',
-  'Info',
   'History',
 ];
 
-const setup = (role: Role | undefined, open = true) => {
-  mockUseFetchMapById.mockReturnValue({
-    isLoading: false,
-    error: undefined,
-    data: role ? { id: 9, role } : undefined,
-  });
+const setup = (open = true) => {
   const anchor = document.createElement('button');
   document.body.appendChild(anchor);
   const onClose = jest.fn();
@@ -61,26 +45,9 @@ const setup = (role: Role | undefined, open = true) => {
 const items = (): string[] => screen.getAllByRole('menuitem').map((item) => item.textContent ?? '');
 
 describe('ActionChooser', () => {
-  beforeEach(() => {
-    jest.mocked(trackMindmapListAction).mockClear();
-  });
-
-  test('the owner gets every action', () => {
-    setup('owner');
+  test('renders every available map action', () => {
+    setup();
     expect(items()).toEqual(ALL);
-    expect(mockUseFetchMapById).toHaveBeenCalledWith(9);
-  });
-
-  test('an editor can not rename, publish or share', () => {
-    setup('editor');
-    expect(items()).toEqual(ALL.filter((a) => !['Rename', 'Publish', 'Share'].includes(a)));
-  });
-
-  test('a viewer can not see the history either', () => {
-    setup('viewer');
-    expect(items()).toEqual(
-      ALL.filter((a) => !['Rename', 'Publish', 'Share', 'History'].includes(a)),
-    );
   });
 
   test.each([
@@ -88,33 +55,28 @@ describe('ActionChooser', () => {
     ['Duplicate', 'duplicate'],
     ['Rename', 'rename'],
     ['Add Label', 'label'],
+    ['移动到文件夹', 'move-folder'],
     ['Delete', 'delete'],
     ['Export', 'export'],
-    ['Print', 'print'],
-    ['Publish', 'publish'],
-    ['Share', 'share'],
-    ['Info', 'info'],
     ['History', 'history'],
   ])('choosing "%s" reports the %s action', (label, action) => {
-    const onClose = setup('owner');
+    const onClose = setup();
 
     fireEvent.click(screen.getByRole('menuitem', { name: label }));
 
     expect(onClose).toHaveBeenCalledWith(action);
-    expect(trackMindmapListAction).toHaveBeenCalledWith(action);
   });
 
-  test('dismissing the menu reports no action and tracks nothing', () => {
-    const onClose = setup('owner');
+  test('dismissing the menu reports no action', () => {
+    const onClose = setup();
 
     fireEvent.keyDown(screen.getByRole('menu'), { key: 'Escape' });
 
     expect(onClose).toHaveBeenCalledWith(undefined);
-    expect(trackMindmapListAction).not.toHaveBeenCalled();
   });
 
   test('without an anchor the menu is closed', () => {
-    setup('owner', false);
+    setup(false);
     expect(screen.queryByRole('menu')).toBeNull();
   });
 });

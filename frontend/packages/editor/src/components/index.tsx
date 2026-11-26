@@ -19,16 +19,15 @@
 import React, { ReactElement, useMemo, useRef, useState } from 'react';
 
 import { IntlProvider, FormattedMessage } from 'react-intl';
-import { $notify, DeleteConfirmEvent, Designer, ImagePreviewEvent } from '@wisemapping/mindplot';
+import { $notify, DeleteConfirmEvent, ImagePreviewEvent } from '@wisemapping/mindplot';
 import { blobToDataUrl, compressTopicImage } from '../utils/imageAssetUtils';
 import TopicImageLightbox from './topic-image-lightbox';
 import ConfirmDeleteDialog from './confirm-delete-dialog';
 
 import { useLocaleData } from '../classes/i18n-msg';
 
-import { Theme, ThemeProvider, StyledEngineProvider } from '@mui/material/styles';
+import { ThemeProvider, StyledEngineProvider, styled } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { Notifier } from './warning-dialog/styled';
 import AppBar from './app-bar';
 import { ToolbarActionType } from './toolbar/ToolbarActionType';
 import EditorToolbar from './editor-toolbar';
@@ -44,14 +43,32 @@ import { useCanvasViewportInsets } from '../hooks/useCanvasViewportInsets';
 
 const EMBED_READY_ATTRIBUTE = 'data-wisemapping-embed-loaded';
 
+const Notifier = styled('div')`
+  border: 1px solid
+    ${({ theme }) => (theme.palette.mode === 'dark' ? '#757575' : 'rgb(241, 163, 39)')};
+  background-color: ${({ theme }) =>
+    theme.palette.mode === 'dark' ? '#424242' : 'rgb(252, 235, 192)'};
+  border-radius: 3px;
+  position: fixed;
+  padding: 5px 9px;
+  color: ${({ theme }) => (theme.palette.mode === 'dark' ? '#E0E0E0' : 'black')};
+  max-width: calc(100dvw - 32px);
+  white-space: normal;
+  text-align: center;
+  margin-top: 5px;
+  display: none;
+  bottom: max(10px, env(safe-area-inset-bottom, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  font-family: 'Montserrat', Arial, Helvetica, sans-serif;
+`;
+
 type EditorProps = {
-  theme?: Theme;
   onAction: (action: ToolbarActionType) => void;
-  onLoad?: (designer: Designer) => void;
   config: EditorConfiguration;
   accountConfiguration?: React.ReactElement;
   themeVariantStorage: ThemeVariantStorage; // Theme variant storage for persistence (mandatory)
-  initialSearchParams?: URLSearchParams | undefined;
 };
 
 const EditorContent = ({

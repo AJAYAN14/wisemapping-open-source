@@ -136,11 +136,6 @@ const ActionConfigByRenderMode: Record<ActionType, CapabilitySupport> = {
       hidden: ['showcase', 'viewonly-private', 'viewonly-public', 'desktop'],
     },
   },
-  theme: {
-    desktop: {
-      hidden: ['viewonly-public', 'viewonly-private', 'edition-viewer'],
-    },
-  },
   rename: {
     desktop: {
       hidden: [

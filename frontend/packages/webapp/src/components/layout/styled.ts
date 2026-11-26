@@ -15,8 +15,6 @@
  *   limitations under the License.
  */
 
-import { Link as RouterLink } from 'react-router';
-import Typography from '@mui/material/Typography';
 import { styled } from '@mui/material/styles';
 
 /** The page content between the header and the footer, centred vertically. */
@@ -34,19 +32,4 @@ export const LayoutContent = styled('section', {
   [theme.breakpoints.up('md')]: {
     padding: compact ? '16px 16px' : '48px 16px',
   },
-}));
-
-/** A router link around a button: the button is the link, so no underline. */
-export const ButtonLink = styled(RouterLink)({
-  textDecoration: 'none',
-});
-
-/** "By continuing, you agree to our Terms...", in small print under the sign-in options. */
-export const TermsNotice = styled(Typography, {
-  shouldForwardProp: (prop) => prop !== 'gutter',
-})<{ gutter: number }>(({ theme, gutter }) => ({
-  fontSize: '12px',
-  marginTop: theme.spacing(gutter),
-  textAlign: 'center',
-  width: '100%',
 }));

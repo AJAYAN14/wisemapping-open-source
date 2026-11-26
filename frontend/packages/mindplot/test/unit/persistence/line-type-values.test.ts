@@ -16,7 +16,7 @@
  *   limitations under the License.
  */
 import { describe, expect, it } from '@jest/globals';
-import { LineType } from '../../../src/components/ConnectionLine';
+import { LineType } from '../../../src/components/BaseConnectionLine';
 import type Mindmap from '../../../src/components/model/Mindmap';
 import XMLSerializerTango from '../../../src/components/persistence/XMLSerializerTango';
 

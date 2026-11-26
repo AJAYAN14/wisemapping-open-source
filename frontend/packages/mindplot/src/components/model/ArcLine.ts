@@ -32,24 +32,15 @@ class ArcLine extends ArcLine2d {
 
   // Adjust the x/y position so there is not overlap with the connector.
   override setFrom(x: number, y: number): void {
-    const orientation = this._targetTopic.getOrientation();
-    let xOffset = x;
-    let yOffset = y;
+    let xOffset: number;
+    const yOffset = y;
 
-    if (orientation === 'vertical') {
-      // Tree layout: adjust Y position
-      if (this._targetTopic.isCentralTopic()) {
-        const sourceY = this._sourceTopic.getPosition().y;
-        yOffset = Math.sign(sourceY) * 10;
-      } else {
-        yOffset = y + 3 * Math.sign(y);
-      }
-    } else if (this._targetTopic.isCentralTopic()) {
-      // Mindmap layout: adjust X position for central topic
+    if (this._targetTopic.isCentralTopic()) {
+      // Adjust X position for central topic
       const sourceX = this._sourceTopic.getPosition().x;
       xOffset = Math.sign(sourceX) * 10;
     } else {
-      // Mindmap layout: adjust X position for non-central topic
+      // Adjust X position for non-central topic
       xOffset = x + 3 * Math.sign(x);
     }
 

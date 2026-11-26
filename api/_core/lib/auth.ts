@@ -179,7 +179,7 @@ export async function verifySessionJwt(token: string): Promise<SessionJwtUser> {
   }
 }
 
-export function extractBearerToken(req: Request): string | undefined {
+function extractBearerToken(req: Request): string | undefined {
   const authHeader = req.headers.get('authorization');
   if (!authHeader) {
     return undefined;

@@ -17,12 +17,10 @@
  */
 
 import { inspect } from 'util';
-import { waitFor } from '@testing-library/react';
-import ReactGA from 'react-ga4';
 import RestClient from '../../../src/classes/client/rest-client';
 import JwtTokenConfig from '../../../src/classes/jwt-token-config';
 import { appLogger } from '../../../src/utils/logger';
-import { stubBackend, flushPromises, installWebCrypto, Reply } from './helpers/axios-stub';
+import { stubBackend, installWebCrypto, Reply, flushPromises } from './helpers/axios-stub';
 import { defined } from '../defined';
 
 const API = 'http://api.test';
@@ -60,7 +58,7 @@ afterAll(() => {
 });
 
 describe('RestClient request headers', () => {
-  it('sends the stored JWT as a bearer token and the user locale', async () => {
+  it('sends the stored JWT as a bearer token and the default Chinese locale', async () => {
     JwtTokenConfig.storeToken('abc');
     localStorage.setItem('user.locale', 'es');
     const { client, calls } = newClient([{ data: { changes: [] } }]);
@@ -68,7 +66,7 @@ describe('RestClient request headers', () => {
     await client.fetchHistory(1);
 
     expect(defined(calls[0]).header('Authorization')).toBe('Bearer abc');
-    expect(defined(calls[0]).header('Accept-Language')).toBe('es');
+    expect(defined(calls[0]).header('Accept-Language')).toBe('zh');
   });
 
   it('omits the Authorization header when nobody is signed in', async () => {
@@ -170,6 +168,8 @@ describe('RestClient maps', () => {
         id: 1,
         starred: true,
         title: 'A',
+        folderId: null,
+        folderPath: undefined,
         labels: [],
         createdBy: 'me',
         creationTime: 'c',
@@ -180,14 +180,6 @@ describe('RestClient maps', () => {
         role: 'owner',
       },
     ]);
-  });
-
-  it('fetchMapInfo finds the map in the list, or fails when it is missing', async () => {
-    const reply = { data: { mindmapsInfo: [{ id: 5, title: 'Five' }] } };
-    const { client } = newClient([reply, reply]);
-
-    await expect(client.fetchMapInfo(5)).resolves.toMatchObject({ id: 5, title: 'Five' });
-    await expect(client.fetchMapInfo(6)).rejects.toThrow('Map with id 6 could not be found');
   });
 
   it('createMap posts title, description and the default theme and returns the new id', async () => {
@@ -298,19 +290,16 @@ describe('RestClient maps', () => {
     ]);
   });
 
-  it('updateStarred and updateMapToPublic send the new flags', async () => {
+  it('updateStarred sends the new flag', async () => {
     const { client, calls } = newClient();
 
     await client.updateStarred(3, true);
-    await client.updateMapToPublic(3, false);
 
     expect(calls[0]).toMatchObject({
       method: 'PUT',
       url: `${API}/api/restful/maps/3/starred`,
       data: 'true',
     });
-    expect(calls[1]).toMatchObject({ method: 'PUT', url: `${API}/api/restful/maps/3/publish` });
-    expect(JSON.parse(defined(calls[1]).data as string)).toEqual({ isPublic: false });
   });
 
   it('fetchHistory maps the change list and revertHistory posts to the revision', async () => {
@@ -327,47 +316,6 @@ describe('RestClient maps', () => {
       ['GET', `${API}/api/restful/maps/9/history/`],
       ['POST', `${API}/api/restful/maps/9/history/1`],
     ]);
-  });
-});
-
-describe('RestClient sharing', () => {
-  it('fetchMapPermissions maps the collaborations', async () => {
-    const { client, calls } = newClient([
-      {
-        data: {
-          collaborations: [{ id: 1, email: 'a@b.c', name: 'A', role: 'editor', extra: 'x' }],
-        },
-      },
-    ]);
-
-    await expect(client.fetchMapPermissions(3)).resolves.toEqual([
-      { id: 1, email: 'a@b.c', name: 'A', role: 'editor' },
-    ]);
-    expect(defined(calls[0]).url).toBe(`${API}/api/restful/maps/3/collabs`);
-  });
-
-  it('addMapPermissions puts the message and collaborations', async () => {
-    const { client, calls } = newClient();
-    const perms = [{ email: 'a@b.c', role: 'viewer' as const }];
-
-    await client.addMapPermissions(3, 'hello', perms);
-
-    expect(calls[0]).toMatchObject({ method: 'PUT', url: `${API}/api/restful/maps/3/collabs/` });
-    expect(JSON.parse(defined(calls[0]).data as string)).toEqual({
-      message: 'hello',
-      collaborations: perms,
-    });
-  });
-
-  it('deleteMapPermission url-encodes the email', async () => {
-    const { client, calls } = newClient();
-
-    await client.deleteMapPermission(3, 'a+b@c.d');
-
-    expect(calls[0]).toMatchObject({
-      method: 'DELETE',
-      url: `${API}/api/restful/maps/3/collabs?email=a%2Bb%40c.d`,
-    });
   });
 });
 
@@ -419,11 +367,11 @@ describe('RestClient account', () => {
           lastname: 'Li',
           email: 'a@b.c',
           locale: 'fr',
-          authenticationType: 'DATABASE',
+          authenticationType: 'GOOGLE_OAUTH2',
           isAdmin: true,
         },
       },
-      { data: { email: 'x@y.z', locale: null, authenticationType: 'LDAP', isAdmin: 'yes' } },
+      { data: { email: 'x@y.z', locale: null, authenticationType: 'GOOGLE_OAUTH2', isAdmin: 'yes' } },
     ]);
 
     const first = await client.fetchAccountInfo();
@@ -431,121 +379,38 @@ describe('RestClient account', () => {
       firstname: 'Ana',
       lastname: 'Li',
       email: 'a@b.c',
-      authenticationType: 'DATABASE',
+      authenticationType: 'GOOGLE_OAUTH2',
       isAdmin: true,
     });
-    expect(first.locale?.code).toBe('fr');
+    expect(first.locale?.code).toBe('zh');
 
     await expect(client.fetchAccountInfo()).resolves.toEqual({
       firstname: '',
       lastname: '',
+      fullName: '',
+      avatarUrl: undefined,
       email: 'x@y.z',
       locale: undefined,
-      authenticationType: 'LDAP',
+      authenticationType: 'GOOGLE_OAUTH2',
       isAdmin: false,
     });
   });
 
-  it('fetchAccountInfo falls back to English for a locale the frontend does not support', async () => {
+  it('fetchAccountInfo falls back to Chinese for a locale the frontend does not support', async () => {
     const { client } = newClient([{ data: { email: 'a@b.c', locale: 'xx' } }]);
 
     const account = await client.fetchAccountInfo();
 
     expect(account.email).toBe('a@b.c');
-    expect(account.locale?.code).toBe('en');
-    expect(appLogger.warn).toHaveBeenCalledWith("Unsupported account locale 'xx', using English");
-  });
-
-  it('updateAccountInfo puts the first name and then the last name', async () => {
-    const { client, calls } = newClient();
-
-    await client.updateAccountInfo('Ana', 'Li');
-
-    expect(calls.map((c) => [c.method, c.url, c.data])).toEqual([
-      ['PUT', `${API}/api/restful/account/firstname`, 'Ana'],
-      ['PUT', `${API}/api/restful/account/lastname`, 'Li'],
-    ]);
-  });
-
-  it('updateAccountPassword and deleteAccount hit the account endpoints', async () => {
-    const { client, calls } = newClient();
-
-    await client.updateAccountPassword('s3cret');
-    await client.deleteAccount();
-
-    expect(calls.map((c) => [c.method, c.url, c.data])).toEqual([
-      ['PUT', `${API}/api/restful/account/password`, 's3cret'],
-      ['DELETE', `${API}/api/restful/account`, undefined],
-    ]);
-  });
-
-  it('updateAccountLanguage puts the locale and adds it to the error message', async () => {
-    const { client, calls } = newClient([{}, { status: 400, data: { globalErrors: ['Nope'] } }]);
-
-    await client.updateAccountLanguage('de');
-    await expect(client.updateAccountLanguage('ja')).rejects.toMatchObject({
-      msg: 'Nope - Language: ja',
-    });
-
-    expect(calls[0]).toMatchObject({ url: `${API}/api/restful/account/locale`, data: 'de' });
-  });
-
-  it('registerNewUser posts the user as JSON', async () => {
-    const { client, calls } = newClient();
-    const user = {
-      email: 'a@b.c',
-      firstname: 'A',
-      lastname: 'B',
-      password: 'p',
-      recaptcha: '',
-      acceptedTerms: true,
-    };
-
-    await client.registerNewUser(user);
-
-    expect(calls[0]).toMatchObject({ method: 'POST', url: `${API}/api/restful/users/` });
-    expect(JSON.parse(defined(calls[0]).data as string)).toEqual(user);
-  });
-
-  it('activateAccount puts the activation code', async () => {
-    const { client, calls } = newClient();
-
-    await client.activateAccount('xyz');
-
-    expect(calls[0]).toMatchObject({
-      method: 'PUT',
-      url: `${API}/api/restful/users/activation?code=xyz`,
-    });
-  });
-
-  it('resetPassword returns the action the server took', async () => {
-    const { client, calls } = newClient([{ data: { action: 'OAUTH2_USER' } }]);
-
-    await expect(client.resetPassword('a+b@c.d')).resolves.toEqual({ action: 'OAUTH2_USER' });
-    expect(defined(calls[0]).url).toBe(`${API}/api/restful/users/resetPassword?email=a%2Bb%40c.d`);
-  });
-
-  it('resetPasswordFromToken posts the token and the new password', async () => {
-    const { client, calls } = newClient();
-
-    await client.resetPasswordFromToken('tok', 'newpass');
-
-    expect(defined(calls[0]).url).toBe(`${API}/api/restful/users/resetPasswordToken`);
-    expect(JSON.parse(defined(calls[0]).data as string)).toEqual({
-      token: 'tok',
-      password: 'newpass',
-    });
+    expect(account.locale?.code).toBe('zh');
   });
 });
 
 describe('RestClient login and logout', () => {
-  it('login stores the token and reports the account email to analytics', async () => {
-    const set = jest.spyOn(ReactGA, 'set');
-    const { client, calls } = newClient([{ data: 'jwt-123' }, { data: { email: 'me@x.y' } }]);
+  it('login stores the token without calling extra endpoints', async () => {
+    const { client, calls } = newClient([{ data: 'jwt-123' }]);
 
     await client.login({ email: 'me@x.y', password: 'p' });
-    await flushPromises();
-    await flushPromises();
 
     expect(calls[0]).toMatchObject({ method: 'POST', url: `${API}/api/restful/authenticate` });
     expect(JSON.parse(defined(calls[0]).data as string)).toEqual({
@@ -553,24 +418,7 @@ describe('RestClient login and logout', () => {
       password: 'p',
     });
     expect(JwtTokenConfig.retreiveToken()).toBe('jwt-123');
-    // The account info request already carries the new token.
-    expect(defined(calls[1]).header('Authorization')).toBe('Bearer jwt-123');
-    // The digest resolves on Node's thread pool, not in a microtask: wait for the call itself.
-    await waitFor(() =>
-      expect(set).toHaveBeenCalledWith({ userId: expect.stringMatching(/^[0-9a-f]{64}$/) }),
-    );
-  });
-
-  it('login still succeeds when the account info can not be fetched', async () => {
-    const { client } = newClient([{ data: 'jwt' }, 'network']);
-
-    await expect(client.login({ email: 'a', password: 'b' })).resolves.toBeUndefined();
-    await flushPromises();
-
-    expect(appLogger.warn).toHaveBeenCalledWith(
-      'Failed to set analytics user ID after login:',
-      expect.anything(),
-    );
+    expect(calls).toHaveLength(1);
   });
 
   it('login reports bad credentials with code 1 without expiring the session', async () => {
@@ -651,74 +499,58 @@ describe('RestClient login and logout', () => {
 describe('RestClient OAuth callbacks', () => {
   const oauthReply = { data: { email: 'o@x.y', oauthSync: true, syncCode: 'S', jwtToken: 'J' } };
 
-  it.each([
-    ['processGoogleCallback', 'googlecallback'],
-    ['processFacebookCallback', 'facebookcallback'],
-  ] as const)('%s returns the sync result and stores the token', async (method, path) => {
-    const { client, calls } = newClient([oauthReply, { data: { email: 'o@x.y' } }]);
+  it('processGoogleCallback returns the sync result and stores the token', async () => {
+    const { client, calls } = newClient([oauthReply]);
 
-    await expect(client[method]('the-code')).resolves.toEqual({
+    await expect(client.processGoogleCallback('the-code')).resolves.toEqual({
       email: 'o@x.y',
       oauthSync: true,
       syncCode: 'S',
     });
-    await flushPromises();
 
     expect(calls[0]).toMatchObject({
       method: 'POST',
-      url: `${API}/api/restful/oauth2/${path}?code=the-code`,
+      url: `${API}/api/restful/oauth2/googlecallback?code=the-code`,
     });
     expect(JwtTokenConfig.retreiveToken()).toBe('J');
-    expect(defined(calls[1]).url).toBe(`${API}/api/restful/account`);
+    expect(calls).toHaveLength(1);
   });
 
-  it.each(['processGoogleCallback', 'processFacebookCallback'] as const)(
-    '%s keeps no token when the server sends none, and tolerates account failures',
-    async (method) => {
-      const noToken = newClient([{ data: { email: 'o', oauthSync: false } }]);
-      await noToken.client[method]('c');
-      expect(noToken.calls).toHaveLength(1);
-      expect(JwtTokenConfig.retreiveToken()).toBeUndefined();
+  it('processGoogleCallback keeps no token when the server sends none', async () => {
+    const noToken = newClient([{ data: { email: 'o', oauthSync: false } }]);
+    await noToken.client.processGoogleCallback('c');
+    expect(noToken.calls).toHaveLength(1);
+    expect(JwtTokenConfig.retreiveToken()).toBeUndefined();
+  });
 
-      const failing = newClient([oauthReply, 'network']);
-      await failing.client[method]('c');
-      await flushPromises();
-      expect(appLogger.warn).toHaveBeenCalled();
-    },
-  );
+  it('processGoogleCallback rejects with the server error', async () => {
+    const { client } = newClient([{ status: 400, data: { globalErrors: ['Bad code'] } }]);
 
-  it.each(['processGoogleCallback', 'processFacebookCallback'] as const)(
-    '%s rejects with the server error',
-    async (method) => {
-      const { client } = newClient([{ status: 400, data: { globalErrors: ['Bad code'] } }]);
-
-      await expect(client[method]('c')).rejects.toMatchObject({ msg: 'Bad code', status: 400 });
-    },
-  );
+    await expect(client.processGoogleCallback('c')).rejects.toMatchObject({
+      msg: 'Bad code',
+      status: 400,
+    });
+  });
 
   // The code travels in the query string, so the body is a JSON null like confirmAccountSync's;
   // the request config used to be sent as the body (`{"headers":{"Content-Type":...}}`).
-  it.each(['processGoogleCallback', 'processFacebookCallback'] as const)(
-    '%s sends no payload, only the JSON content type',
-    async (method) => {
-      const { client, calls } = newClient([{ data: { email: 'o' } }]);
+  it('processGoogleCallback sends no payload, only the JSON content type', async () => {
+    const { client, calls } = newClient([{ data: { email: 'o' } }]);
 
-      await client[method]('c');
+    await client.processGoogleCallback('c');
 
-      expect(defined(calls[0]).data).toBe('null');
-      expect(defined(calls[0]).header('Content-Type')).toBe('application/json');
-    },
-  );
+    expect(defined(calls[0]).data).toBe('null');
+    expect(defined(calls[0]).header('Content-Type')).toBe('application/json');
+  });
 
   it('confirmAccountSync puts email, code and provider and stores the token', async () => {
-    const { client, calls } = newClient([oauthReply, { data: { email: 'o' } }]);
+    const { client, calls } = newClient([oauthReply]);
 
     await expect(client.confirmAccountSync('a@b.c', 'C1', 'google')).resolves.toEqual({
       email: 'o@x.y',
       oauthSync: true,
       syncCode: 'S',
     });
-    await flushPromises();
 
     expect(calls[0]).toMatchObject({
       method: 'PUT',
@@ -728,7 +560,7 @@ describe('RestClient OAuth callbacks', () => {
   });
 
   it('confirmAccountSync sends only the email when code and provider are missing', async () => {
-    const { client, calls } = newClient([{ data: { email: 'o' } }, 'network']);
+    const { client, calls } = newClient([{ data: { email: 'o' } }]);
 
     await client.confirmAccountSync('a@b.c');
 
@@ -737,15 +569,7 @@ describe('RestClient OAuth callbacks', () => {
     );
   });
 
-  it('confirmAccountSync tolerates account failures and rejects with server errors', async () => {
-    const ok = newClient([oauthReply, 'network']);
-    await ok.client.confirmAccountSync('a');
-    await flushPromises();
-    expect(appLogger.warn).toHaveBeenCalledWith(
-      'Failed to set analytics user ID after account sync:',
-      expect.anything(),
-    );
-
+  it('confirmAccountSync rejects with server errors', async () => {
     const ko = newClient([{ status: 409, data: { globalErrors: ['Conflict'] } }]);
     await expect(ko.client.confirmAccountSync('a')).rejects.toMatchObject({
       msg: 'Conflict',
@@ -921,24 +745,13 @@ describe('RestClient error handling', () => {
 
   it.each<[string, (c: RestClient) => Promise<unknown>]>([
     ['fetchMapMetadata', (c) => c.fetchMapMetadata(1)],
-    ['deleteMapPermission', (c) => c.deleteMapPermission(1, 'a')],
-    ['addMapPermissions', (c) => c.addMapPermissions(1, 'm', [])],
-    ['fetchMapPermissions', (c) => c.fetchMapPermissions(1)],
-    ['deleteAccount', (c) => c.deleteAccount()],
-    ['updateAccountInfo', (c) => c.updateAccountInfo('a', 'b')],
-    ['updateAccountPassword', (c) => c.updateAccountPassword('p')],
     ['importMap', (c) => c.importMap({ title: 't' })],
     ['fetchAccountInfo', (c) => c.fetchAccountInfo()],
     ['deleteMaps', (c) => c.deleteMaps([1])],
-    ['updateMapToPublic', (c) => c.updateMapToPublic(1, true)],
     ['revertHistory', (c) => c.revertHistory(1, 2)],
     ['fetchHistory', (c) => c.fetchHistory(1)],
     ['createMap', (c) => c.createMap({ title: 't' })],
     ['fetchAllMaps', (c) => c.fetchAllMaps()],
-    ['registerNewUser', (c) => c.registerNewUser({} as never)],
-    ['activateAccount', (c) => c.activateAccount('x')],
-    ['resetPassword', (c) => c.resetPassword('e')],
-    ['resetPasswordFromToken', (c) => c.resetPasswordFromToken('t', 'p')],
     ['duplicateMap', (c) => c.duplicateMap(1, { title: 't' })],
     ['updateStarred', (c) => c.updateStarred(1, true)],
     ['fetchLabels', (c) => c.fetchLabels()],

@@ -328,13 +328,8 @@ class ShirinkConnector {
    */
   setPosition(x: number, y: number): void {
     const halfWidth = TopicConfig.CONNECTOR_WIDTH / 2;
-    const orientation = this._topic.getOrientation();
 
-    if (orientation === 'vertical') {
-      this._direction = 'down';
-      this._anchorX = x + halfWidth;
-      this._anchorY = y;
-    } else if (x < 0) {
+    if (x < 0) {
       this._direction = 'left';
       this._anchorX = 0;
       this._anchorY = y + halfWidth;

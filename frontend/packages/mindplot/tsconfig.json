@@ -13,7 +13,7 @@
     "resolveJsonModule": true,
     "declaration": true,
     "rootDirs": ["src", "../web2d/src"],
-    "types": ["vite/client", "jest", "node", "react", "react-dom"],
+    "types": ["vite/client", "jest", "node", "react"],
     "paths": {
       "@wisemapping/web2d": ["../web2d/src/index.ts"],
       "@wisemapping/web2d/*": ["../web2d/src/*"]

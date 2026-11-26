@@ -20,37 +20,15 @@
  * @jest-environment jsdom
  */
 import type { ReactElement } from 'react';
-import ReactGA from 'react-ga4';
 import { renderHook } from '@testing-library/react';
 import type { PersistenceManager, Topic } from '@wisemapping/mindplot';
 import BootstrapPersistenceManager from '../../../src/classes/persistence/BootstrapPersistenceManager';
 import DefaultWidgetBuilder from '../../../src/classes/default-widget-manager';
 import I18nMsg, { useLocaleData } from '../../../src/classes/i18n-msg';
 import type NodeProperty from '../../../src/classes/model/node-property';
-import {
-  trackAppBarAction,
-  trackCanvasAction,
-  trackConnectionStyleAction,
-  trackEditorInteraction,
-  trackEditorPanelAction,
-  trackFontFormatAction,
-  trackRelationshipAction,
-  trackTopicStyleAction,
-} from '../../../src/utils/analytics';
 import { logCriticalError } from '../../../src/utils/error-logger';
-import en from '../../../src/compiled-lang/en.json';
-import es from '../../../src/compiled-lang/es.json';
-import fr from '../../../src/compiled-lang/fr.json';
-import de from '../../../src/compiled-lang/de.json';
-import ru from '../../../src/compiled-lang/ru.json';
-import uk from '../../../src/compiled-lang/uk.json';
 import zh from '../../../src/compiled-lang/zh.json';
 import zhCN from '../../../src/compiled-lang/zh-CN.json';
-import ja from '../../../src/compiled-lang/ja.json';
-import pt from '../../../src/compiled-lang/pt.json';
-import it_ from '../../../src/compiled-lang/it.json';
-import hi from '../../../src/compiled-lang/hi.json';
-import ar from '../../../src/compiled-lang/ar.json';
 
 jest.mock('@wisemapping/mindplot', () => ({
   PersistenceManager: class {},
@@ -186,126 +164,53 @@ describe('DefaultWidgetBuilder', () => {
 
 describe('I18nMsg', () => {
   it.each([
-    ['en', en],
-    ['es', es],
-    ['fr', fr],
-    ['de', de],
-    ['ru', ru],
-    ['uk', uk],
     ['zh', zh],
     ['zh-CN', zhCN],
-    ['ja', ja],
-    ['pt', pt],
-    ['it', it_],
-    ['hi', hi],
-    ['ar', ar],
   ])('loads the %s messages', async (locale, messages) => {
     await expect(I18nMsg.load(locale)).resolves.toEqual(messages);
     expect(I18nMsg.getLoaded(locale)).toEqual(messages);
   });
 
-  it.each(['xx', '', 'en-US', 'pt-BR'])('falls back to English for %p', async (locale) => {
-    await expect(I18nMsg.load(locale)).resolves.toEqual(en);
-    expect(I18nMsg.getLoaded(locale)).toEqual(en);
+  it.each(['xx', '', 'en-US', 'pt-BR'])('falls back to Chinese for %p', async (locale) => {
+    await expect(I18nMsg.load(locale)).resolves.toEqual(zh);
+    expect(I18nMsg.getLoaded(locale)).toEqual(zh);
   });
 
   it('loads a locale once', async () => {
-    expect(await I18nMsg.load('de')).toBe(await I18nMsg.load('de'));
-  });
-
-  it('serves distinct translations per locale', async () => {
-    expect(await I18nMsg.load('es')).not.toEqual(await I18nMsg.load('en'));
+    expect(await I18nMsg.load('zh')).toBe(await I18nMsg.load('zh'));
   });
 });
 
 describe('useLocaleData', () => {
   it('serves a loaded locale from the first render', async () => {
-    await I18nMsg.load('it');
-    const { result } = renderHook(() => useLocaleData('it'));
-    expect(result.current).toEqual({ locale: 'it', messages: it_ });
+    await I18nMsg.load('zh-CN');
+    const { result } = renderHook(() => useLocaleData('zh-CN'));
+    expect(result.current).toEqual({ locale: 'zh-CN', messages: zhCN });
   });
 
   it('switches to another loaded locale in the same render', async () => {
-    await I18nMsg.load('fr');
+    await I18nMsg.load('zh-CN');
     const { result, rerender } = renderHook(({ locale }) => useLocaleData(locale), {
-      initialProps: { locale: 'en' },
+      initialProps: { locale: 'zh' },
     });
-    rerender({ locale: 'fr' });
-    expect(result.current).toEqual({ locale: 'fr', messages: fr });
-  });
-});
-
-describe('analytics', () => {
-  let eventSpy: jest.SpyInstance;
-  beforeEach(() => {
-    eventSpy = jest.spyOn(ReactGA, 'event').mockImplementation(() => undefined);
-  });
-  afterEach(() => {
-    eventSpy.mockRestore();
-  });
-
-  it.each([
-    [trackAppBarAction, 'app_bar'],
-    [trackTopicStyleAction, 'topic_style'],
-    [trackConnectionStyleAction, 'connection_style'],
-    [trackFontFormatAction, 'font_format'],
-    [trackRelationshipAction, 'relationship'],
-    [trackCanvasAction, 'canvas_style'],
-    [trackEditorPanelAction, 'editor_panel'],
-    [trackEditorInteraction, 'editor_interaction'],
-  ])('sends an interactive event in the %# category', (track, category) => {
-    track('do_something', 'with-label');
-
-    expect(eventSpy).toHaveBeenCalledWith({
-      category,
-      action: 'do_something',
-      label: 'with-label',
-      nonInteraction: false,
-    });
-  });
-
-  it('sends no label when none is given', () => {
-    trackAppBarAction('save');
-    expect(eventSpy).toHaveBeenCalledWith({
-      category: 'app_bar',
-      action: 'save',
-      nonInteraction: false,
-    });
-    expect(eventSpy.mock.lastCall?.[0]).not.toHaveProperty('label');
-  });
-
-  it('logs rather than throws when analytics fails', () => {
-    const error = jest.spyOn(console, 'error').mockImplementation(() => undefined);
-    eventSpy.mockImplementation(() => {
-      throw new Error('blocked');
-    });
-
-    expect(() => trackAppBarAction('save')).not.toThrow();
-    expect(error).toHaveBeenCalledWith('Failed to track editor action save:', expect.any(Error));
-    error.mockRestore();
+    rerender({ locale: 'zh-CN' });
+    expect(result.current).toEqual({ locale: 'zh-CN', messages: zhCN });
   });
 });
 
 describe('logCriticalError', () => {
-  afterEach(() => {
-    delete (window as unknown as { newrelic?: unknown }).newrelic;
-  });
-
-  it('reports the error to New Relic and the console', () => {
+  it('logs the formatted message and cause to the console', () => {
     const error = jest.spyOn(console, 'error').mockImplementation(() => undefined);
-    const noticeError = jest.fn();
-    window.newrelic = { noticeError };
     const cause = new Error('kaput');
 
     logCriticalError('Loading failed', cause);
 
-    expect(noticeError).toHaveBeenCalledWith('Loading failed. Exception: Error: kaput');
     expect(error).toHaveBeenCalledWith('Loading failed. Exception: Error: kaput');
     expect(error).toHaveBeenCalledWith(cause);
     error.mockRestore();
   });
 
-  it('still logs to the console without New Relic', () => {
+  it('logs non-Error causes to the console', () => {
     const error = jest.spyOn(console, 'error').mockImplementation(() => undefined);
 
     expect(() => logCriticalError('Saving failed', 'timeout')).not.toThrow();

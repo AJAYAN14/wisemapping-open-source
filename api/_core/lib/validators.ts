@@ -1,12 +1,12 @@
 export const MAX_SUPPORTED_NODES = 4000;
-export const MAX_MAP_TITLE_LENGTH = 512;
-export const MAX_MAP_DESCRIPTION_LENGTH = 512;
-export const MAX_LABEL_TITLE_LENGTH = 30;
-export const MAX_LABEL_COLOR_LENGTH = 7;
-export const MAX_FOLDER_NAME_LENGTH = 100;
+const MAX_MAP_TITLE_LENGTH = 512;
+const MAX_MAP_DESCRIPTION_LENGTH = 512;
+const MAX_LABEL_TITLE_LENGTH = 30;
+const MAX_LABEL_COLOR_LENGTH = 7;
+const MAX_FOLDER_NAME_LENGTH = 100;
 export const MAX_NOTE_LENGTH = 10000;
 
-export type XmlValidationResult =
+type XmlValidationResult =
   | { valid: true; trimmed: string; topicCount: number }
   | { valid: false; message: string; errorCode: string };
 
@@ -208,7 +208,7 @@ export function validateNoteContent(note: string): NoteValidationResponse {
   };
 }
 
-export function escapeXmlAttr(value: string): string {
+function escapeXmlAttr(value: string): string {
   return value
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')

@@ -34,19 +34,7 @@ const mockStub = (name: string) => ({
   },
 });
 
-jest.mock('../../../src/components/forgot-password-success-page', () =>
-  mockStub('forgot-password-success-page'),
-);
-jest.mock('../../../src/components/reset-password-page', () => mockStub('reset-password-page'));
-jest.mock('../../../src/components/registration-page', () => mockStub('registration-page'));
 jest.mock('../../../src/components/login-page', () => mockStub('login-page'));
-jest.mock('../../../src/components/forgot-password-page', () => ({
-  ForgotPasswordPage: () => 'forgot-password-page',
-}));
-jest.mock('../../../src/components/registration-success-page', () =>
-  mockStub('registration-success-page'),
-);
-jest.mock('../../../src/components/activation-page', () => mockStub('activation-page'));
 jest.mock('../../../src/components/oauth-callback', () => mockStub('oauth-callback-page'));
 jest.mock('../../../src/components/error-page', () => mockStub('error-page'));
 jest.mock('../../../src/components/loading-fallback', () => mockStub('loading-fallback'));
@@ -56,7 +44,10 @@ jest.mock('../../../src/components/maps-page/maps-list/MapsListSkeleton', () => 
 jest.mock('../../../src/components/maps-page/MapsPageErrorFallback', () =>
   mockStub('maps-page-error-fallback'),
 );
-jest.mock('@wisemapping/editor', () => ({ EditorLoadingSkeleton: () => 'editor-loading' }));
+jest.mock('@wisemapping/editor/components/editor-loading-skeleton', () => ({
+  __esModule: true,
+  default: () => 'editor-loading',
+}));
 jest.mock('../../../src/components/editor-page/loader', () => ({
   loader: (mode: string, bootstrap: boolean) => `map-loader:${mode}:${bootstrap}`,
 }));
@@ -84,25 +75,6 @@ jest.mock('../../../src/components/editor-page', () => ({
   default: (props: Record<string, unknown>) => `editor-page:${JSON.stringify(props)}`,
 }));
 jest.mock('../../../src/components/maps-page', () => mockStub('maps-page'));
-jest.mock('../../../src/components/admin-console', () => mockStub('admin-console'));
-jest.mock('../../../src/components/admin-console/layout', () => {
-  const { Outlet } = jest.requireActual('./mock-router');
-  const ReactActual = jest.requireActual<typeof React>('react');
-  return {
-    __esModule: true,
-    default: () =>
-      ReactActual.createElement(
-        'div',
-        { 'data-testid': 'admin-layout' },
-        ReactActual.createElement(Outlet),
-      ),
-  };
-});
-jest.mock('../../../src/components/admin-console/accounts-page', () =>
-  mockStub('admin-accounts-page'),
-);
-jest.mock('../../../src/components/admin-console/maps-page', () => mockStub('admin-maps-page'));
-jest.mock('../../../src/components/admin-console/system-page', () => mockStub('admin-system-page'));
 jest.mock('../../../src/contexts/ThemeContext', () => ({
   AppThemeProvider: ({ children }: { children: React.ReactNode }) => children,
   useTheme: () => ({ mode: 'light' }),
@@ -119,10 +91,8 @@ const client = {
   onSessionExpired: jest.fn(),
 };
 
-const renderAt = (url: string, { registration = true, localLogin = true } = {}) => {
+const renderAt = (url: string) => {
   window.history.pushState({}, '', url);
-  jest.spyOn(AppConfig, 'isRegistrationEnabled').mockReturnValue(registration);
-  jest.spyOn(AppConfig, 'isLocalLoginEnabled').mockReturnValue(localLogin);
   jest.spyOn(AppConfig, 'getClient').mockReturnValue(client as unknown as Client);
   jest.spyOn(AppConfig, 'initialize').mockResolvedValue({} as never);
   return render(<App />);
@@ -162,7 +132,7 @@ describe('App', () => {
 
   test('ignores a configuration result that arrives after unmounting', async () => {
     let resolve: () => void = () => undefined;
-    const buildSpy = jest.spyOn(AppConfig, 'isRegistrationEnabled');
+    const buildSpy = jest.spyOn(AppConfig, 'getClient');
     jest.spyOn(AppConfig, 'initialize').mockReturnValue(
       new Promise((r) => {
         resolve = () => r({} as never);
@@ -173,17 +143,13 @@ describe('App', () => {
     resolve();
     await Promise.resolve();
 
-    // The router (and its registration routes) is never built.
     expect(buildSpy).not.toHaveBeenCalled();
   });
 
-  test('"/" redirects to the login page, and every route change refreshes the ads', async () => {
-    const ads = window as unknown as { adsbygoogle?: unknown[] };
-    ads.adsbygoogle = [];
+  test('"/" redirects to the login page', async () => {
     renderAt('/');
 
     expect(await screen.findByText('redirect:/c/login')).toBeTruthy();
-    expect(ads.adsbygoogle.length).toBeGreaterThan(0);
     // Every page sits below the configuration loader.
     expect(defined(lastMatch.current?.chain[1]).loader).toBe('config-loader');
     expect(errorElementName(defined(lastMatch.current?.chain[1]))).toBe('error-page');
@@ -191,55 +157,12 @@ describe('App', () => {
 
   test.each([
     ['/c/login', 'login-page'],
-    ['/es/c/login', 'login-page'],
-    ['/fr/c/registration', 'registration-page'],
-    ['/c/forgot-password', 'forgot-password-page'],
-    ['/de/c/forgot-password', 'forgot-password-page'],
-    ['/c/forgot-password-success', 'forgot-password-success-page'],
-    ['/c/reset-password', 'reset-password-page'],
-    ['/c/registration', 'registration-page'],
     ['/c/registration-google', 'oauth-callback-page'],
-    ['/c/registration-facebook', 'oauth-callback-page'],
     ['/c/oauth-callback', 'oauth-callback-page'],
-    ['/c/registration-success', 'registration-success-page'],
-    ['/c/activation', 'activation-page'],
     ['/c/no-such-page', 'error-page'],
   ])('%s renders the %s', async (url, page) => {
     renderAt(url);
     expect(await screen.findByText(page)).toBeTruthy();
-  });
-
-  test.each(['/c/registration', '/c/registration-success', '/c/activation'])(
-    '%s is not served when registration is disabled',
-    async (url) => {
-      renderAt(url, { registration: false });
-      expect(await screen.findByText('error-page')).toBeTruthy();
-    },
-  );
-
-  // "Sign in with Google/Facebook" is offered whatever the registration setting, and the
-  // provider comes back to these pages: without them a closed registration broke OAuth sign-in.
-  test.each(['/c/oauth-callback', '/c/registration-google', '/c/registration-facebook'])(
-    '%s is served when registration is disabled',
-    async (url) => {
-      renderAt(url, { registration: false });
-      expect(await screen.findByText('oauth-callback-page')).toBeTruthy();
-    },
-  );
-
-  test('the localized registration page redirects to login when registration is disabled', async () => {
-    renderAt('/es/c/registration', { registration: false });
-    expect(await screen.findByText('redirect:/c/login')).toBeTruthy();
-  });
-
-  test.each([
-    '/c/forgot-password',
-    '/de/c/forgot-password',
-    '/c/forgot-password-success',
-    '/c/reset-password',
-  ])('%s redirects to login when local login is disabled', async (url) => {
-    renderAt(url, { localLogin: false });
-    expect(await screen.findByText('redirect:/c/login')).toBeTruthy();
   });
 
   test('the maps list is a lazy page inside the common page, with its own error fallback', async () => {
@@ -252,32 +175,10 @@ describe('App', () => {
     expect(leaf().loader).toBe('maps-loader');
   });
 
-  test('/c/admin is the admin console entry', async () => {
-    renderAt('/c/admin');
-    expect(await screen.findByText('admin-console')).toBeTruthy();
-    expect(screen.queryByTestId('admin-layout')).toBeNull();
-  });
-
-  test.each([
-    ['/c/admin/accounts', 'admin-accounts-page'],
-    ['/c/admin/maps', 'admin-maps-page'],
-    ['/c/admin/system', 'admin-system-page'],
-  ])('%s renders the %s inside the admin layout', async (url, page) => {
-    renderAt(url);
-
-    expect(await screen.findByText(page)).toBeTruthy();
-    expect(screen.getByTestId('admin-layout').textContent).toBe(page);
-    expect(screen.getByTestId('common-page')).toBeTruthy();
-  });
-
   test.each([
     ['/c/maps/12/edit', 'edit', { pageMode: 'edit', mapId: 12 }],
     ['/c/maps/12/edit?zoom=1.5', 'edit', { pageMode: 'edit', mapId: 12, zoom: 1.5 }],
-    ['/c/maps/12/print', 'view-private', { pageMode: 'view-private', mapId: 12 }],
     ['/c/maps/12/7/view', 'view-private', { pageMode: 'view-private', mapId: 12, hid: 7 }],
-    ['/c/maps/12/public', 'view-public', { pageMode: 'view-public', mapId: 12 }],
-    ['/c/maps/12/embed', 'view-public', { pageMode: 'view-public', mapId: 12 }],
-    ['/c/maps/12/try', 'try', { pageMode: 'try', mapId: 12 }],
   ])('%s opens the editor in %s mode', async (url, mode, props) => {
     renderAt(url);
 

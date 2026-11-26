@@ -73,19 +73,4 @@ describe('ThemeStyle requires every style key (BL5-203)', () => {
       'Unknown message key: NO_SUCH_MESSAGE',
     );
   });
-
-  // BL5-209: the grid pattern of a theme JSON is checked instead of cast to its type.
-  it('fails on an unknown grid pattern', () => {
-    const ThemeStyleClass = loadWithPrismDefault((json) => {
-      json['Canvas']!['gridPattern'] = 'stripes';
-    });
-    expect(() => new ThemeStyleClass('prism', 'light')).toThrow('Unknown grid pattern: stripes');
-  });
-
-  it('reads the grid pattern a theme sets', () => {
-    const ThemeStyleClass = loadWithPrismDefault((json) => {
-      json['Canvas']!['gridPattern'] = 'dots';
-    });
-    expect(new ThemeStyleClass('prism', 'dark').getCanvasStyle().gridPattern).toBe('dots');
-  });
 });

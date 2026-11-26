@@ -26,13 +26,8 @@ import type {
 } from '@wisemapping/mindplot';
 import type Capability from '../../../src/classes/action/capability';
 import Editor from '../../../src/classes/model/editor';
-import { trackEditorInteraction } from '../../../src/utils/analytics';
 
 jest.mock('@wisemapping/mindplot', () => ({}));
-
-jest.mock('../../../src/utils/analytics', () => ({
-  trackEditorInteraction: jest.fn(),
-}));
 
 type Handler = (payload?: unknown) => void;
 
@@ -153,7 +148,6 @@ describe('Editor.registerEvents', () => {
     fire('featureEdit', { event, topic });
 
     expect(widgets.fireEvent).toHaveBeenCalledWith(event, topic);
-    expect(trackEditorInteraction).toHaveBeenCalledWith(`${event}_editor_open`);
     expect(canvasUpdate).toHaveBeenCalledTimes(1);
   });
 

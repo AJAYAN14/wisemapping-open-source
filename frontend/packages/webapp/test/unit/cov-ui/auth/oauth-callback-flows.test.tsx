@@ -19,10 +19,6 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react';
 
 jest.mock('react-router', () => jest.requireActual('../router-mock'));
-jest.mock('../../../../src/utils/analytics', () => ({
-  trackPageView: jest.fn(),
-  setAnalyticsUserEmail: jest.fn(),
-}));
 jest.mock('../../../../src/utils/redirect', () => ({
   ...jest.requireActual('../../../../src/utils/redirect'),
   leaveTo: jest.fn(),
@@ -36,16 +32,14 @@ import OAuthCallbackPage from '../../../../src/components/oauth-callback';
 import Client, { Oauth2CallbackResult } from '../../../../src/classes/client';
 import JwtTokenConfig from '../../../../src/classes/jwt-token-config';
 import { logCriticalError } from '../../../../src/utils';
-import { setAnalyticsUserEmail } from '../../../../src/utils/analytics';
 import { leaveTo } from '../../../../src/utils/redirect';
 import { startOAuthFlow } from '../../../../src/utils/oauth-flow';
-import { installMatchMedia, renderPage, stubConfig } from '../helpers';
+import { installMatchMedia, renderPage } from '../helpers';
 import { resetRouter, routerState, setLocation } from '../router-mock';
 import { defined } from '../../defined';
 
 type CallbackClient = {
   processGoogleCallback: jest.Mock<Promise<Oauth2CallbackResult>, [string]>;
-  processFacebookCallback: jest.Mock<Promise<Oauth2CallbackResult>, [string]>;
   confirmAccountSync: jest.Mock<Promise<void>, [string, string | undefined, string]>;
 };
 
@@ -53,8 +47,6 @@ const setup = (
   url: string,
   result?: Oauth2CallbackResult,
   overrides: Partial<CallbackClient> = {},
-  // A sign-in started from this tab, as the login and registration pages do; false for a link
-  // that arrives from elsewhere.
   startedHere: boolean | { redirect: string } = true,
 ): CallbackClient => {
   if (startedHere) {
@@ -66,9 +58,6 @@ const setup = (
   setLocation(url);
   const client: CallbackClient = {
     processGoogleCallback: jest.fn<Promise<Oauth2CallbackResult>, [string]>(() =>
-      Promise.resolve(result!),
-    ),
-    processFacebookCallback: jest.fn<Promise<Oauth2CallbackResult>, [string]>(() =>
       Promise.resolve(result!),
     ),
     confirmAccountSync: jest.fn<Promise<void>, [string, string | undefined, string]>(() =>
@@ -100,7 +89,6 @@ describe('OAuthCallbackPage flows', () => {
     sessionStorage.clear();
     jest.mocked(leaveTo).mockClear();
     jest.mocked(logCriticalError).mockClear();
-    jest.mocked(setAnalyticsUserEmail).mockClear();
   });
 
   test('a cancelled sign-in goes back to login', () => {
@@ -108,11 +96,6 @@ describe('OAuthCallbackPage flows', () => {
 
     expect(routerState.navigate).toHaveBeenCalledWith('/c/login');
     expect(client.processGoogleCallback).not.toHaveBeenCalled();
-  });
-
-  test('a user who denied Facebook goes back to login', () => {
-    setup('/c/registration-facebook?error=other&error_reason=user_denied');
-    expect(routerState.navigate).toHaveBeenCalledWith('/c/login');
   });
 
   test('shows the provider error description', () => {
@@ -137,9 +120,7 @@ describe('OAuthCallbackPage flows', () => {
     setup(`/c/registration-google?jwtToken=${ANA}&email=ana%40wisemapping.com&oauthSync=true`);
 
     expect(store).toHaveBeenCalledWith(ANA);
-    expect(setAnalyticsUserEmail).toHaveBeenCalledWith('ana@wisemapping.com');
     expect(localStorage.getItem('themeMode')).toBe('dark');
-    // The waiting screen the login page shows next (AuthProgress).
     expect(screen.getByRole('status').textContent).toBe(
       'Please wait while we validate your identity',
     );
@@ -148,11 +129,11 @@ describe('OAuthCallbackPage flows', () => {
   test('a token callback for an account not linked yet asks to link it', async () => {
     jest.spyOn(JwtTokenConfig, 'storeToken').mockImplementation(() => undefined);
     const client = setup(
-      `/c/registration-facebook?jwtToken=${ANA}&email=ana%40wisemapping.com&oauthSync=false&syncCode=code-9`,
+      `/c/oauth-callback?jwtToken=${ANA}&email=ana%40wisemapping.com&oauthSync=false&syncCode=code-9`,
     );
 
     expect(await screen.findByText('Confirm')).toBeTruthy();
-    expect(screen.getByText(/link your Facebook account/)).toBeTruthy();
+    expect(screen.getByText(/link your Google account/)).toBeTruthy();
 
     fireEvent.click(screen.getByRole('button', { name: 'Sync account' }));
 
@@ -160,30 +141,10 @@ describe('OAuthCallbackPage flows', () => {
       expect(client.confirmAccountSync).toHaveBeenCalledWith(
         'ana@wisemapping.com',
         'code-9',
-        'facebook',
+        'google',
       ),
     );
     await waitFor(() => expect(localStorage.getItem('themeMode')).toBe('dark'));
-  });
-
-  test('an account link is confirmed for the provider named by the backend', async () => {
-    jest.spyOn(JwtTokenConfig, 'storeToken').mockImplementation(() => undefined);
-    stubConfig({ oidcOauth2Label: 'Authentik' });
-    const client = setup(
-      `/c/oauth-callback?jwtToken=${ANA}&email=ana%40wisemapping.com&oauthSync=false&syncCode=code-9&provider=oidc`,
-    );
-
-    expect(await screen.findByText(/link your Authentik account/)).toBeTruthy();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Sync account' }));
-
-    await waitFor(() =>
-      expect(client.confirmAccountSync).toHaveBeenCalledWith(
-        'ana@wisemapping.com',
-        'code-9',
-        'oidc',
-      ),
-    );
   });
 
   test('a Google code is exchanged with the Google callback', async () => {
@@ -193,16 +154,7 @@ describe('OAuthCallbackPage flows', () => {
     });
 
     await waitFor(() => expect(client.processGoogleCallback).toHaveBeenCalledWith('g-code'));
-    expect(client.processFacebookCallback).not.toHaveBeenCalled();
     await waitFor(() => expect(localStorage.getItem('themeMode')).toBe('dark'));
-  });
-
-  test('a Facebook code for an account to link offers to sync it', async () => {
-    const client = setup('/c/registration-facebook?code=f-code&state=%2Fc%2Fmaps%2F4', pending);
-
-    expect(await screen.findByRole('button', { name: 'Sync account' })).toBeTruthy();
-    expect(client.processFacebookCallback).toHaveBeenCalledWith('f-code');
-    expect(screen.getByRole('link', { name: 'Back to login' })).toBeTruthy();
   });
 
   test('a failed code exchange is shown and logged', async () => {
@@ -255,6 +207,7 @@ describe('OAuthCallbackPage flows', () => {
       context: { redirectTarget: '/c/maps/', path: '/c/registration-google' },
     });
   });
+
   test('a synced sign-in goes on to the map list through the login page', () => {
     jest.spyOn(JwtTokenConfig, 'storeToken').mockImplementation(() => undefined);
 
@@ -294,10 +247,10 @@ describe('OAuthCallbackPage flows', () => {
     jest.spyOn(JwtTokenConfig, 'storeToken').mockImplementation(() => undefined);
 
     setup(
-      `/c/registration-facebook?jwtToken=${ANA}&email=ana%40wisemapping.com&oauthSync=false&syncCode=code-9&state=x`,
+      `/c/registration-google?jwtToken=${ANA}&email=ana%40wisemapping.com&oauthSync=false&syncCode=code-9&state=x`,
     );
 
-    expect(window.location.pathname).toBe('/c/registration-facebook');
+    expect(window.location.pathname).toBe('/c/registration-google');
     expect(window.location.search).toBe('?state=x');
   });
 
@@ -314,7 +267,6 @@ describe('OAuthCallbackPage flows', () => {
     expect(screen.getByText('Continue signing in?')).toBeTruthy();
     expect(screen.getByText(/with Google as mallory@example.com/)).toBeTruthy();
     expect(store).not.toHaveBeenCalled();
-    expect(setAnalyticsUserEmail).not.toHaveBeenCalled();
     expect(leaveTo).not.toHaveBeenCalled();
     expect(screen.getByRole('link', { name: 'Back to login' }).getAttribute('href')).toBe(
       '/c/login',
@@ -328,18 +280,18 @@ describe('OAuthCallbackPage flows', () => {
 
   test('a code that was not started in this tab is exchanged only after confirming', async () => {
     const client = setup(
-      '/c/registration-facebook?code=f-code',
+      '/c/registration-google?code=g-code',
       { email: 'ana@wisemapping.com', oauthSync: true },
       {},
       false,
     );
 
-    expect(screen.getByText(/sign in to WiseMapping with Facebook\. Continue only/)).toBeTruthy();
-    expect(client.processFacebookCallback).not.toHaveBeenCalled();
+    expect(screen.getByText(/sign in to WiseMapping with Google\. Continue only/)).toBeTruthy();
+    expect(client.processGoogleCallback).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
 
-    await waitFor(() => expect(client.processFacebookCallback).toHaveBeenCalledWith('f-code'));
+    await waitFor(() => expect(client.processGoogleCallback).toHaveBeenCalledWith('g-code'));
   });
 
   test('a started sign-in is good for one callback only', () => {
@@ -356,9 +308,8 @@ describe('OAuthCallbackPage flows', () => {
 
     expect(store).toHaveBeenCalledTimes(1);
   });
+
   test("the account shown is the token's, whatever the email parameter says", () => {
-    // An attacker's token with the victim's own address in the link: the confirmation would
-    // read "as <victim>" and the victim would continue into the attacker's account.
     const store = jest.spyOn(JwtTokenConfig, 'storeToken').mockImplementation(() => undefined);
 
     setup(
@@ -371,7 +322,6 @@ describe('OAuthCallbackPage flows', () => {
     expect(screen.getByText('This sign-in link is not valid. Please sign in again.')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Continue' })).toBeNull();
     expect(store).not.toHaveBeenCalled();
-    expect(setAnalyticsUserEmail).not.toHaveBeenCalled();
   });
 
   test('a token that is not a JWT is refused', () => {
@@ -381,13 +331,5 @@ describe('OAuthCallbackPage flows', () => {
 
     expect(screen.getByText('This sign-in link is not valid. Please sign in again.')).toBeTruthy();
     expect(store).not.toHaveBeenCalled();
-  });
-
-  test('the analytics email comes from the token', () => {
-    jest.spyOn(JwtTokenConfig, 'storeToken').mockImplementation(() => undefined);
-
-    setup(`/c/registration-google?jwtToken=${ANA}&oauthSync=true`);
-
-    expect(setAnalyticsUserEmail).toHaveBeenCalledWith('ana@wisemapping.com');
   });
 });

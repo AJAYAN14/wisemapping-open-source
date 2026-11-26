@@ -40,10 +40,4 @@ describe('OAuth Callback Page', () => {
     cy.waitForPageLoaded();
     cy.contains('Missing OAuth code or token').should('be.visible');
   });
-
-  it('displays Facebook OAuth callback error state', () => {
-    cy.visit('/c/registration-facebook');
-    cy.waitForPageLoaded();
-    cy.contains('Missing OAuth code or token').should('be.visible');
-  });
 });

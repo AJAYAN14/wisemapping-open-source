@@ -93,9 +93,7 @@
     "outerBorderColor": "#C6C6C8"
   },
   "Canvas": {
-    "backgroundColor": "#F2F2F7",
-    "gridColor": "#E5E5EA",
-    "opacity": 1,
-    "showGrid": false
+    "backgroundColor": "#FAFAFC",
+    "opacity": 1
   }
 }

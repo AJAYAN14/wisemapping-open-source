@@ -85,20 +85,6 @@ describe('Selection plus buttons on a mind map', () => {
   });
 });
 
-describe('Selection plus buttons on vertical orientation', () => {
-  it('adds a sibling with the right button and a child with the bottom one', async () => {
-    const { harness, right, bottom } = await open();
-    harness.topic(1).setOrientation('vertical');
-    right.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    expect(childrenOf(harness, 0)).toBe(3);
-
-    harness.designer.deselectAll();
-    harness.topic(1).setOnFocus(true);
-    bottom.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-    expect(childrenOf(harness, 1)).toBe(2);
-  });
-});
-
 describe('Selection plus buttons on a touch screen', () => {
   it('adds one topic for a tap, ignoring the click the browser sends after it', async () => {
     const { harness, right } = await open();

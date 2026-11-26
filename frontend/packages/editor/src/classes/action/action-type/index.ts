@@ -27,7 +27,6 @@ type ActionType =
   | 'starred'
   | 'appbar-title'
   | 'keyboard-shortcuts'
-  | 'theme'
   | 'rename'
   | 'outline-view';
 

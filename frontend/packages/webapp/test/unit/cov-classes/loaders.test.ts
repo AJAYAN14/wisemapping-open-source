@@ -17,18 +17,17 @@
  */
 
 import type { LoaderFunctionArgs } from 'react-router';
-import ReactGA from 'react-ga4';
 import AppConfig from '../../../src/classes/app-config';
 import Client, { MapMetadata } from '../../../src/classes/client';
 import JwtTokenConfig from '../../../src/classes/jwt-token-config';
 import queryClient from '../../../src/queryClient';
 import { loader as rootLoader } from '../../../src/loader';
 import { loader as editorLoader, PageModeType } from '../../../src/components/editor-page/loader';
-import { analyticsLogger, appLogger } from '../../../src/utils/logger';
+import { appLogger } from '../../../src/utils/logger';
 import { getLoadedMessages } from '../../../src/classes/app-i18n/messages';
 import I18nMsg from '@wisemapping/editor/classes/i18n-msg';
 import { initAppConfig, resetAppConfig } from './helpers/app-config';
-import { flushPromises, installWebCrypto } from './helpers/axios-stub';
+import { installWebCrypto } from './helpers/axios-stub';
 
 const metadata = (overrides: Partial<MapMetadata> = {}): MapMetadata => ({
   id: 5,
@@ -74,86 +73,16 @@ beforeEach(async () => {
   queryClient.clear();
   JwtTokenConfig.removeToken();
   jest.spyOn(appLogger, 'warn').mockImplementation(() => undefined);
-  jest.spyOn(analyticsLogger, 'warn').mockImplementation(() => undefined);
   jest.spyOn(console, 'warn').mockImplementation(() => undefined);
   await initAppConfig();
 });
 
 describe('root loader', () => {
-  it('initializes the config and does not start analytics without an account', async () => {
-    const initialize = jest.spyOn(ReactGA, 'initialize');
-
+  it('initializes the config and loads Chinese messages', async () => {
     const response = await rootLoader();
 
     await expect(response.json()).resolves.toBe('Load success');
-    expect(initialize).not.toHaveBeenCalled();
-  });
-
-  it("loads the user's messages before the first paint", async () => {
-    localStorage.setItem('user.locale', 'pt');
-    try {
-      await rootLoader();
-      expect(getLoadedMessages('pt')).toBeDefined();
-    } finally {
-      localStorage.removeItem('user.locale');
-    }
-  });
-
-  it('starts analytics with the configured account', async () => {
-    await initAppConfig({ analyticsAccount: 'G-XYZ' });
-    const initialize = jest.spyOn(ReactGA, 'initialize');
-    const getClient = jest.spyOn(AppConfig, 'getClient');
-
-    await rootLoader();
-
-    expect(initialize).toHaveBeenCalledWith([{ trackingId: 'G-XYZ' }]);
-    // Nobody is signed in, so the account is not looked up.
-    expect(getClient).not.toHaveBeenCalled();
-  });
-
-  it('identifies a signed-in user to analytics', async () => {
-    await initAppConfig({ analyticsAccount: 'G-XYZ' });
-    JwtTokenConfig.storeToken('tok');
-    const fetchAccountInfo = jest.fn().mockResolvedValue({ email: 'me@x.y' });
-    jest.spyOn(AppConfig, 'getClient').mockReturnValue(fakeClient(jest.fn(), fetchAccountInfo));
-    const set = jest.spyOn(ReactGA, 'set');
-
-    await rootLoader();
-    await flushPromises();
-    await flushPromises();
-
-    expect(fetchAccountInfo).toHaveBeenCalled();
-    expect(set).toHaveBeenCalledWith({ userId: expect.stringMatching(/^[0-9a-f]{64}$/) });
-  });
-
-  it('shares the account it fetched with the account query', async () => {
-    // The page asked for the account again right after the loader had: two /account requests
-    // on every load.
-    await initAppConfig({ analyticsAccount: 'G-XYZ' });
-    JwtTokenConfig.storeToken('tok');
-    const fetchAccountInfo = jest.fn().mockResolvedValue({ email: 'me@x.y' });
-    jest.spyOn(AppConfig, 'getClient').mockReturnValue(fakeClient(jest.fn(), fetchAccountInfo));
-
-    await rootLoader();
-    await flushPromises();
-    await queryClient.fetchQuery({ queryKey: ['account'], queryFn: fetchAccountInfo });
-
-    expect(fetchAccountInfo).toHaveBeenCalledTimes(1);
-  });
-
-  it('still loads when the account can not be fetched', async () => {
-    await initAppConfig({ analyticsAccount: 'G-XYZ' });
-    JwtTokenConfig.storeToken('tok');
-    const fetchAccountInfo = jest.fn().mockRejectedValue({ msg: 'down' });
-    jest.spyOn(AppConfig, 'getClient').mockReturnValue(fakeClient(jest.fn(), fetchAccountInfo));
-
-    const response = await rootLoader();
-    await flushPromises();
-
-    expect(response.status).toBe(200);
-    expect(appLogger.warn).toHaveBeenCalledWith('Failed to set analytics user ID on app load:', {
-      msg: 'down',
-    });
+    expect(getLoadedMessages('zh')).toBeDefined();
   });
 });
 
@@ -170,16 +99,10 @@ describe('editor page loader', () => {
     await expect(response.text()).resolves.toBe('Map ID is required');
   });
 
-  it("loads the editor's messages with the map", async () => {
-    stubClient(jest.fn());
-    localStorage.setItem('user.locale', 'hi');
-    try {
-      await runLoader('try', '3');
-      expect(I18nMsg.getLoaded('hi')).toBeDefined();
-      expect(I18nMsg.getLoaded('hi')).not.toBe(I18nMsg.getLoaded('en'));
-    } finally {
-      localStorage.removeItem('user.locale');
-    }
+  it("loads the editor's Chinese messages with the map", async () => {
+    stubClient(jest.fn().mockResolvedValue(metadata()));
+    await runLoader('edit', '3');
+    expect(I18nMsg.getLoaded('zh')).toBeDefined();
   });
 
   it('rejects a non-numeric map id with a 400', async () => {
@@ -189,20 +112,6 @@ describe('editor page loader', () => {
 
     expect(response.status).toBe(400);
     await expect(response.text()).resolves.toBe('Invalid map ID');
-  });
-
-  it('serves the showcase map for the try page without calling the backend', async () => {
-    const fetchMapMetadata = jest.fn();
-    stubClient(fetchMapMetadata);
-
-    const response = await runLoader('try', '3');
-
-    await expect(response.json()).resolves.toMatchObject({
-      editorMode: 'showcase',
-      zoom: 0.8,
-      mapMetadata: { id: 3, title: 'What is WiseMapping ?' },
-    });
-    expect(fetchMapMetadata).not.toHaveBeenCalled();
   });
 
   it('opens an editable map with the role-based mode and the saved zoom', async () => {
@@ -237,26 +146,23 @@ describe('editor page loader', () => {
     await expect(response.json()).resolves.toMatchObject({ editorMode: 'viewonly-private' });
   });
 
-  it('opens a map read-only for a user who is no collaborator', async () => {
-    // A public map opened at /edit by someone it is not shared with: the backend says role
-    // "none". An editable canvas would save to a read-only store and silently drop every edit.
+  it('opens a map in edition-owner mode when metadata role is none', async () => {
     stubClient(jest.fn().mockResolvedValue(metadata({ role: 'none' })));
 
     const response = await runLoader('edit', '5');
 
-    await expect(response.json()).resolves.toMatchObject({ editorMode: 'viewonly-public' });
+    await expect(response.json()).resolves.toMatchObject({ editorMode: 'edition-owner' });
   });
 
-  it('opens a locked map of somebody else read-only through the public view', async () => {
+  it('opens a locked map read-only even when metadata role is none', async () => {
     stubClient(jest.fn().mockResolvedValue(metadata({ role: 'none', isLocked: true })));
 
     const response = await runLoader('edit', '5');
 
-    await expect(response.json()).resolves.toMatchObject({ editorMode: 'viewonly-public' });
+    await expect(response.json()).resolves.toMatchObject({ editorMode: 'viewonly-private' });
   });
 
-  it("opens a revision of somebody else's map through the private history endpoint", async () => {
-    // There is no public history endpoint ({id}/{hid}/document/xml-pub does not exist).
+  it("opens a revision through the private history endpoint", async () => {
     stubClient(jest.fn().mockResolvedValue(metadata({ role: 'none' })));
 
     const response = await runLoader('view-private', '5', true, '55');
@@ -334,47 +240,6 @@ describe('editor page loader', () => {
     stubClient(jest.fn().mockRejectedValue(error));
 
     await expect(runLoader('view-private', '5')).rejects.toEqual(error);
-  });
-
-  it('opens a public map read-only with the default zoom', async () => {
-    stubClient(jest.fn().mockResolvedValue(metadata({ xml: '<map/>' })));
-
-    const plain = await (await runLoader('view-public', '5')).json();
-    expect(plain).toMatchObject({ editorMode: 'viewonly-public', zoom: 0.8 });
-    expect(plain.bootstrapXML).toBeUndefined();
-
-    queryClient.clear();
-    const boot = await (await runLoader('view-public', '5', true)).json();
-    expect(boot.bootstrapXML).toBe('<map/>');
-  });
-
-  it('answers a removed public map with a 410 response', async () => {
-    stubClient(jest.fn().mockRejectedValue({ status: 410, msg: 'Flagged as spam' }));
-
-    const thrown = await runLoader('view-public', '5').catch((e: unknown) => e);
-
-    expect(thrown).toBeInstanceOf(Response);
-    expect((thrown as Response).status).toBe(410);
-    await expect((thrown as Response).text()).resolves.toBe('Flagged as spam');
-  });
-
-  it('uses a default message for a removed public map without one', async () => {
-    stubClient(jest.fn().mockRejectedValue({ status: 410 }));
-
-    const thrown = (await runLoader('view-public', '5').catch((e: unknown) => e)) as Response;
-
-    await expect(thrown.text()).resolves.toBe(
-      'The map you are looking for is no longer available.',
-    );
-  });
-
-  it('rethrows other errors of the public page', async () => {
-    const plainError = new Error('boom');
-    stubClient(jest.fn().mockRejectedValueOnce({ status: 500 }).mockRejectedValueOnce(plainError));
-
-    await expect(runLoader('view-public', '5')).rejects.toEqual({ status: 500 });
-    queryClient.clear();
-    await expect(runLoader('view-public', '5')).rejects.toBe(plainError);
   });
 
   it('fails on an unknown page mode', async () => {

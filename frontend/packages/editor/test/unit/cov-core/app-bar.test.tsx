@@ -28,20 +28,13 @@ import AppBar from '../../../src/components/app-bar';
 import Capability from '../../../src/classes/action/capability';
 import type Editor from '../../../src/classes/model/editor';
 import type MapInfo from '../../../src/classes/model/map-info';
-import { trackAppBarAction } from '../../../src/utils/analytics';
 import { createThemeStorage, Providers } from './helpers';
 import { BURST_TEXT, typeInBurst } from '../burst-typing';
 
 jest.mock('@wisemapping/mindplot', () => ({
   $notify: jest.fn(),
   isMacPlatform: () => false,
-}));
-
-jest.mock('../../../src/utils/analytics', () => ({
-  trackAppBarAction: jest.fn(),
-  trackEditorInteraction: jest.fn(),
-  trackEditorPanelAction: jest.fn(),
-  trackCanvasAction: jest.fn(),
+  DesignerKeyboard: { isDisabled: () => false },
 }));
 
 type Listener = (event?: unknown) => void;
@@ -58,10 +51,11 @@ const createModel = (options: { loaded?: boolean; designerThrows?: boolean } = {
     removeEvent: jest.fn((type: string, l: Listener) => {
       listeners[type] = (listeners[type] ?? []).filter((x) => x !== l);
     }),
-    getMindmap: () => ({ getTheme: () => 'prism' }),
-    getLayout: () => 'mindmap',
-    changeTheme: jest.fn(),
-    changeLayout: jest.fn(),
+    getModel: () => ({
+      filterSelectedTopics: () => [],
+      filterSelectedRelationships: () => [],
+      isTopicSelected: () => false,
+    }),
   };
   const model = {
     isMapLoadded: () => state.loaded,
@@ -85,10 +79,7 @@ const createMapInfo = (overrides: Partial<Record<keyof MapInfo, unknown>> = {}) 
     isStarred: jest.fn(() => new Promise<boolean>(() => undefined)),
     updateStarred: jest.fn(() => Promise.resolve()),
     updateTitle: jest.fn(() => Promise.resolve()),
-    getCreatorFullName: () => 'Ada',
     isLocked: () => false,
-    getLockedMessage: () => '',
-    getZoom: () => 1,
     getId: () => '1',
     ...overrides,
   }) as unknown as MapInfo & {
@@ -136,21 +127,16 @@ afterEach(() => {
 
 describe('AppBar actions', () => {
   it.each([
-    ['Back to maps list', 'back', 'back_to_maps_list'],
-    ['Information', 'info', 'info'],
-    ['Changes History', 'history', 'history'],
-    ['Print', 'print', 'print'],
-    ['Export', 'export', 'export'],
-    ['Publish', 'publish', 'publish'],
-    ['Share', 'share', 'share'],
-  ])('dispatches %s to the host as %p', async (label, action, tracked) => {
+    ['Back to maps list', 'back'],
+    ['Changes History', 'history'],
+    ['Export', 'export'],
+  ])('dispatches %s to the host as %p', async (label, action) => {
     const { onAction } = renderAppBar();
     await waitFor(() => expect(button(new RegExp(`^${label}`))).toBeEnabled());
 
     fireEvent.click(button(new RegExp(`^${label}`)));
 
     expect(onAction).toHaveBeenCalledWith(action);
-    expect(trackAppBarAction).toHaveBeenCalledWith(tracked);
   });
 
   it('undoes and redoes through the designer', () => {
@@ -163,8 +149,6 @@ describe('AppBar actions', () => {
 
     expect(designer.undo).toHaveBeenCalledTimes(1);
     expect(designer.redo).toHaveBeenCalledTimes(1);
-    expect(trackAppBarAction).toHaveBeenCalledWith('undo');
-    expect(trackAppBarAction).toHaveBeenCalledWith('redo');
   });
 
   it('saves with a history entry right away, and coalesces quick repeats', () => {
@@ -206,50 +190,27 @@ describe('AppBar actions', () => {
     fireEvent.click(button('Toggle Theme'));
 
     expect(storage.setThemeVariant).toHaveBeenCalledWith('dark');
-    expect(trackAppBarAction).toHaveBeenCalledWith('theme_toggle');
   });
 
   it('renders the host account configuration', () => {
     renderAppBar({ accountConfig: <span>Account menu</span> });
     expect(screen.getByText('Account menu')).toBeInTheDocument();
   });
-
-  it('opens the theme picker', async () => {
-    renderAppBar();
-    await waitFor(() => expect(button('Theme')).toBeEnabled());
-
-    fireEvent.click(button('Theme'));
-
-    expect(await screen.findByText('Summer')).toBeInTheDocument();
-  });
-
-  it('opens the layout picker', async () => {
-    renderAppBar();
-    await waitFor(() => expect(button('Change Layout')).toBeEnabled());
-
-    fireEvent.click(button('Change Layout'));
-
-    expect(await screen.findByText('Tree')).toBeInTheDocument();
-  });
 });
 
 describe('AppBar per capability', () => {
-  it('shows the owner every editing action but sign-up', () => {
+  it('shows the owner every editing action', () => {
     renderAppBar({ mode: 'edition-owner' });
     [
       'Undo (Ctrl+Z)',
       'Save (Ctrl+S)',
-      'Information',
       'Changes History',
       'Starred',
-      'Theme',
-      'Change Layout',
-      'Print',
+      'Find in Map',
+      'Outline View',
       'Export',
-      'Publish',
-      'Share for Collaboration',
+      'Toggle Theme',
     ].forEach((name) => expect(button(name)).toBeInTheDocument());
-    expect(queryButton('Sign Up')).not.toBeInTheDocument();
   });
 
   it('hides the editing actions in a public view-only map', () => {
@@ -260,38 +221,28 @@ describe('AppBar per capability', () => {
       'Save (Ctrl+S)',
       'Changes History',
       'Starred',
-      'Theme',
-      'Change Layout',
-      'Publish',
-      'Share for Collaboration',
     ].forEach((name) => expect(queryButton(name)).not.toBeInTheDocument());
     expect(button('Export')).toBeInTheDocument();
   });
 
-  it('offers sign-up in the showcase', () => {
+  it('hides saving, history, starred, and outline view in the showcase', () => {
     renderAppBar({ mode: 'showcase' });
 
-    const signUp = button('Sign Up');
     expect(queryButton('Save (Ctrl+S)')).not.toBeInTheDocument();
-    expect(queryButton('Print')).not.toBeInTheDocument();
-
-    const error = jest.spyOn(console, 'error').mockImplementation(() => undefined);
-    fireEvent.click(signUp);
-    error.mockRestore();
-    expect(trackAppBarAction).toHaveBeenCalledWith('sign_up');
+    expect(queryButton('Changes History')).not.toBeInTheDocument();
+    expect(queryButton('Outline View')).not.toBeInTheDocument();
+    expect(button('Export')).toBeInTheDocument();
   });
 
-  it('hides saving and publishing on a locked map', () => {
+  it('hides saving and undo on a locked map', () => {
     renderAppBar({ mode: 'edition-owner', locked: true });
     expect(queryButton('Save (Ctrl+S)')).not.toBeInTheDocument();
-    expect(queryButton('Publish')).not.toBeInTheDocument();
     expect(queryButton('Undo (Ctrl+Z)')).not.toBeInTheDocument();
   });
 
   it('disables map actions until there is a loaded map', () => {
     renderAppBar({ model: undefined });
     expect(button('Save (Ctrl+S)')).toBeDisabled();
-    expect(button('Theme')).toBeDisabled();
     expect(button('Export')).toBeDisabled();
   });
 
@@ -325,7 +276,6 @@ describe('AppBar starred', () => {
     fireEvent.click(button('Starred'));
 
     expect(mapInfo.updateStarred).toHaveBeenCalledWith(false);
-    expect(trackAppBarAction).toHaveBeenCalledWith('starred', 'unstar');
     await act(async () => undefined);
 
     fireEvent.click(button('Starred'));
@@ -373,7 +323,6 @@ describe('AppBar title', () => {
     expect(mapInfo.updateTitle).toHaveBeenCalledWith('Renamed');
     expect(document.title).toBe('Renamed | WiseMapping');
     expect($notify).toHaveBeenCalledWith('Mindmap renamed');
-    expect(trackAppBarAction).toHaveBeenCalledWith('rename_map');
   });
 
   it('takes 200 characters typed in one burst into the title, as Cypress types them', async () => {
@@ -461,7 +410,6 @@ describe('AppBar title', () => {
     fireEvent.click(screen.getByTestId('app-bar-title'));
 
     expect(titleField()).toHaveAttribute('readonly');
-    expect(trackAppBarAction).not.toHaveBeenCalledWith('rename_map');
   });
 
   it('stops editing when renaming is no longer allowed', () => {

@@ -70,12 +70,6 @@ export const mapsFilter =
       case 'starred':
         result = mapInfo.starred;
         break;
-      case 'owned':
-        result = mapInfo.role == 'owner';
-        break;
-      case 'shared':
-        result = mapInfo.role != 'owner';
-        break;
       case 'label':
         result =
           !mapInfo.labels ||
@@ -86,9 +80,6 @@ export const mapsFilter =
         break;
       case 'uncategorized':
         result = (mapInfo.folderId ?? null) === null;
-        break;
-      case 'public':
-        result = mapInfo.public;
         break;
       default:
         result = false;

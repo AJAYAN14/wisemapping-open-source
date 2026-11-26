@@ -47,3 +47,6 @@ Thumbs.db
 .cursor
 .agents
 .gemini
+
+# Local reference directory (keep untracked & untouched)
+参考项目/

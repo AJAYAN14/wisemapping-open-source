@@ -21,29 +21,18 @@ import AppConfig from '../../../../src/classes/app-config';
 export type TestConfig = {
   uiBaseUrl: string;
   apiBaseUrl: string;
-  analyticsAccount?: string;
-  recaptcha2Enabled: boolean;
-  registrationEnabled: boolean;
-  recaptcha2SiteKey?: string;
   clientType: 'mock' | 'rest';
   googleOauth2Url: string;
   googleOauth2Enabled: boolean;
-  facebookOauth2Url: string;
-  facebookOauth2Enabled: boolean;
-  localLoginEnabled?: boolean;
   jwtExpirationMin: number;
 };
 
 export const baseConfig: TestConfig = {
   uiBaseUrl: 'http://ui.test',
   apiBaseUrl: 'http://api.test',
-  recaptcha2Enabled: false,
-  registrationEnabled: true,
   clientType: 'rest',
   googleOauth2Url: 'http://google.test/auth',
   googleOauth2Enabled: true,
-  facebookOauth2Url: 'http://facebook.test/auth',
-  facebookOauth2Enabled: false,
   jwtExpirationMin: 10080,
 };
 
@@ -70,7 +59,6 @@ export const resetAppConfig = (): void => {
   Object.assign(AppConfig as unknown as Record<string, unknown>, {
     _config: undefined,
     _client: undefined,
-    _adminClient: undefined,
     _mocks: undefined,
     _initializationPromise: undefined,
   });

@@ -59,23 +59,6 @@ describe('NodePropertyBuilder with an empty selection', () => {
     expect(designer.changeFontSize).not.toHaveBeenCalled();
   });
 
-  it('reports no background colour instead of throwing', () => {
-    const { designer } = emptySelectionDesigner();
-    const builder = new NodePropertyBuilder(designer);
-
-    expect(() => builder.getSelectedTopicColorModel().getValue()).not.toThrow();
-    expect(builder.getSelectedTopicColorModel().getValue()).toBeUndefined();
-  });
-
-  it('keeps the background colour setter wired to the designer', () => {
-    const { designer, changeBackgroundColor } = emptySelectionDesigner();
-    const builder = new NodePropertyBuilder(designer);
-
-    builder.getSelectedTopicColorModel().setValue!('#ff0000');
-
-    expect(changeBackgroundColor).toHaveBeenCalledWith('#ff0000');
-  });
-
   it('reports an empty link instead of throwing', () => {
     const { designer } = emptySelectionDesigner();
     const builder = new NodePropertyBuilder(designer);

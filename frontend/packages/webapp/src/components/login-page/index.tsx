@@ -102,7 +102,7 @@ const LoginPage = (): React.ReactElement => {
   }
 
   return (
-    <AccountAccessLayout headerType="none" compact>
+    <AccountAccessLayout compact>
       <AppleLoginCard
         role="region"
         aria-label={intl.formatMessage({ id: 'login.page-title', defaultMessage: 'Login' })}

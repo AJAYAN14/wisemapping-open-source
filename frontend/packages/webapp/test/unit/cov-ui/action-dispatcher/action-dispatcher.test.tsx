@@ -25,14 +25,13 @@ import { QueryClient } from '@tanstack/react-query';
 type MarkerProps = {
   mapId?: number;
   mapsId?: number[];
-  enableImgExport?: boolean;
   onClose: (success?: boolean) => void;
 };
 const mockMarker = (name: string) =>
-  function Marker({ mapId, mapsId, enableImgExport, onClose }: MarkerProps): React.ReactElement {
+  function Marker({ mapId, mapsId, onClose }: MarkerProps): React.ReactElement {
     return (
       <button type="button" onClick={() => onClose(true)}>
-        {`${name} ${JSON.stringify({ mapId, mapsId, enableImgExport })}`}
+        {`${name} ${JSON.stringify({ mapId, mapsId })}`}
       </button>
     );
   };
@@ -54,37 +53,26 @@ jest.mock('../../../../src/components/maps-page/action-dispatcher/duplicate-dial
 jest.mock('../../../../src/components/maps-page/action-dispatcher/history-dialog', () =>
   mockMarker('history'),
 );
-jest.mock('../../../../src/components/maps-page/action-dispatcher/import-dialog', () =>
-  mockMarker('import'),
-);
-jest.mock('../../../../src/components/maps-page/action-dispatcher/publish-dialog', () =>
-  mockMarker('publish'),
-);
-jest.mock('../../../../src/components/maps-page/action-dispatcher/info-dialog', () =>
-  mockMarker('info'),
-);
 jest.mock('../../../../src/components/maps-page/action-dispatcher/export-dialog', () =>
   mockMarker('export'),
-);
-jest.mock('../../../../src/components/maps-page/action-dispatcher/share-dialog', () =>
-  mockMarker('share'),
 );
 jest.mock('../../../../src/components/maps-page/action-dispatcher/label-dialog', () =>
   mockMarker('label'),
 );
-jest.mock('../../../../src/utils/analytics', () => ({ trackMindmapListAction: jest.fn() }));
+jest.mock('../../../../src/components/maps-page/action-dispatcher/move-folder-dialog', () =>
+  mockMarker('move-folder'),
+);
 
 import ActionDispatcher, {
   handleOnMutationSuccess,
 } from '../../../../src/components/maps-page/action-dispatcher';
 import { ActionType } from '../../../../src/components/maps-page/action-chooser';
-import { trackMindmapListAction } from '../../../../src/utils/analytics';
 import { renderWithProviders } from '../../helpers/render';
 
 const dispatch = (
   action: ActionType,
   mapsId: number[] = [5],
-  extra: { fromEditor?: boolean; pageMode?: 'try' | 'edit' } = {},
+  extra: { pageMode?: 'edit' | 'view-private' } = {},
 ) => {
   const onClose = jest.fn();
   const view = renderWithProviders(
@@ -92,7 +80,6 @@ const dispatch = (
       action={action}
       mapsId={mapsId}
       onClose={onClose}
-      fromEditor={extra.fromEditor ?? false}
       {...(extra.pageMode !== undefined && { pageMode: extra.pageMode })}
     />,
   );
@@ -100,43 +87,21 @@ const dispatch = (
 };
 
 describe('ActionDispatcher', () => {
-  beforeEach(() => {
-    jest.mocked(trackMindmapListAction).mockClear();
-  });
-
   test.each([
     ['create', [5], 'create {}'],
     ['rename', [5], 'rename {"mapId":5}'],
     ['duplicate', [5], 'duplicate {"mapId":5}'],
     ['history', [5], 'history {"mapId":5}'],
-    ['import', [5], 'import {}'],
-    ['publish', [5], 'publish {"mapId":5}'],
-    ['info', [5], 'info {"mapId":5}'],
-    ['share', [5], 'share {"mapId":5}'],
+    ['export', [5], 'export {"mapId":5}'],
     ['label', [5, 6], 'label {"mapsId":[5,6]}'],
+    ['move-folder', [5, 6], 'move-folder {"mapsId":[5,6]}'],
     ['delete', [5], 'delete {"mapId":5}'],
     ['delete', [5, 6], 'delete-multi {"mapsId":[5,6]}'],
   ] as [ActionType, number[], string][])('"%s" on %j opens %s', async (action, mapsId, marker) => {
     dispatch(action, mapsId);
 
-    // Import and export are loaded when opened (they bring the editor), the others are there.
     expect((await screen.findByRole('button')).textContent).toBe(marker);
     expect(screen.getAllByRole('button')).toHaveLength(1);
-    expect(trackMindmapListAction).toHaveBeenCalledWith(action, 'map_metadata');
-  });
-
-  test('export allows images only from the editor', async () => {
-    dispatch('export', [5]);
-    expect((await screen.findByRole('button')).textContent).toBe(
-      'export {"mapId":5,"enableImgExport":false}',
-    );
-  });
-
-  test('export from the editor enables image formats', async () => {
-    dispatch('export', [5], { fromEditor: true });
-    expect((await screen.findByRole('button')).textContent).toBe(
-      'export {"mapId":5,"enableImgExport":true}',
-    );
   });
 
   test("a dialog's result is passed on to onClose", () => {
@@ -145,11 +110,10 @@ describe('ActionDispatcher', () => {
     expect(onClose).toHaveBeenCalledWith(true);
   });
 
-  test('no action renders nothing and tracks nothing', () => {
+  test('no action renders nothing', () => {
     const { onClose, view } = dispatch(undefined);
     expect(view.container.textContent).toBe('');
     expect(onClose).not.toHaveBeenCalled();
-    expect(trackMindmapListAction).not.toHaveBeenCalled();
   });
 
   test('open goes to the editor at once, without a dialog', () => {
@@ -158,32 +122,8 @@ describe('ActionDispatcher', () => {
     expect(view.container.textContent).toBe('');
   });
 
-  test('print opens the print view of the map in its own window', () => {
-    const open = jest.spyOn(window, 'open').mockImplementation(() => null);
-    const { onClose } = dispatch('print', [5]);
-
-    expect(open).toHaveBeenCalledWith('/c/maps/5/print', 'print');
-    expect(onClose).toHaveBeenCalledWith(true);
-  });
-
-  test('back in try mode goes back in the browser history', () => {
-    const back = jest.spyOn(window.history, 'back').mockImplementation(() => undefined);
-    const { onClose } = dispatch('back', [5], { pageMode: 'try' });
-
-    expect(back).toHaveBeenCalledTimes(1);
-    expect(onClose).toHaveBeenCalledWith(true);
-  });
-
-  test('back from the editor returns to the map list, not the browser history', () => {
-    const back = jest.spyOn(window.history, 'back').mockImplementation(() => undefined);
-    const { onClose } = dispatch('back', [5], { pageMode: 'edit' });
-
-    expect(back).not.toHaveBeenCalled();
-    expect(onClose).toHaveBeenCalledWith(true);
-  });
-
-  test('theme is handled by the editor: the dispatcher only closes', () => {
-    const { onClose, view } = dispatch('theme', [5]);
+  test('back closes cleanly without a dialog', () => {
+    const { onClose, view } = dispatch('back', [5], { pageMode: 'edit' });
     expect(onClose).toHaveBeenCalledWith(true);
     expect(view.container.textContent).toBe('');
   });

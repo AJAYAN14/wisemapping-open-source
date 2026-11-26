@@ -35,11 +35,6 @@ jest.mock('../../../../src/components/error-page', () => ({
   default: () => <div>generic-error-page</div>,
 }));
 
-const mockTrackPageView = jest.fn();
-jest.mock('../../../../src/utils/analytics', () => ({
-  trackPageView: (...args: unknown[]) => mockTrackPageView(...args),
-}));
-
 import MapsPageErrorFallback from '../../../../src/components/maps-page/MapsPageErrorFallback';
 import { renderWithWrapper } from '../providers';
 
@@ -52,7 +47,6 @@ const routeError = (status: number, statusText = ''): RouteErrorResponse => ({
 describe('MapsPageErrorFallback', () => {
   beforeEach(() => {
     mockNavigate.mockClear();
-    mockTrackPageView.mockClear();
     document.title = '';
   });
 
@@ -67,7 +61,6 @@ describe('MapsPageErrorFallback', () => {
 
     expect(screen.getByText('generic-error-page')).toBeTruthy();
     expect(screen.queryByText('Sign in to access your maps')).toBeNull();
-    expect(mockTrackPageView).not.toHaveBeenCalled();
   });
 
   test.each<[string, unknown]>([
@@ -82,10 +75,6 @@ describe('MapsPageErrorFallback', () => {
     expect(screen.getByRole('heading', { name: 'Sign in to access your maps' })).toBeTruthy();
     expect(screen.getByText('You need to sign in to view your maps.')).toBeTruthy();
     expect(document.title).toBe('Sign In Required | WiseMapping');
-    expect(mockTrackPageView).toHaveBeenCalledWith(
-      window.location.pathname,
-      'MapsPageAuthRequired',
-    );
   });
 
   test('shows the server message of an auth ErrorInfo', () => {

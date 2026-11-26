@@ -68,11 +68,11 @@ type Step = {
   nodes: string[];
 };
 
-const buildScenario = (file: string, layoutType: 'mindmap' | 'tree') => {
+const buildScenario = (file: string, _layoutType: 'mindmap') => {
   const tree = readTree(file);
   const ids: number[] = [];
   const parentOf = new Map<number, number>();
-  const manager = new LayoutManager(tree.id, sizeOf(tree), layoutType);
+  const manager = new LayoutManager(tree.id, sizeOf(tree));
   ids.push(tree.id);
 
   const add = (parent: TreeNode, child: TreeNode, order: number) => {
@@ -148,7 +148,7 @@ const buildScenario = (file: string, layoutType: 'mindmap' | 'tree') => {
   return { manager, tree, steps, record, remove, childrenOf, reconnect, ids, parentOf };
 };
 
-const run = (file: string, layoutType: 'mindmap' | 'tree'): Step[] => {
+const run = (file: string, layoutType: 'mindmap'): Step[] => {
   const scenario = buildScenario(file, layoutType);
   const { manager, tree, record, remove, childrenOf, reconnect, parentOf } = scenario;
   const resize = (id: number, dw: number, dh: number) => {
@@ -219,25 +219,11 @@ const run = (file: string, layoutType: 'mindmap' | 'tree'): Step[] => {
   resize(tree.id, 20, 10);
   record('the central topic grows');
 
-  manager.setLayoutType(layoutType === 'mindmap' ? 'tree' : 'mindmap');
-  record('layout switched');
-  resize(leaf!, 25, 0);
-  record('a leaf gets wider after the switch');
-  resize(subBranch!, 0, 12);
-  record('a node gets taller after the switch');
-  manager.setLayoutType(layoutType);
-  record('layout switched back');
-  record('layout again at the end');
-
   return scenario.steps;
 };
 
 describe.each(['complex.wxml', 'bug3.wxml'])('layout golden positions (%s)', (file) => {
   it('mind map: every node lands where it did before the layout was incremental', () => {
     expect(run(file, 'mindmap')).toMatchSnapshot();
-  });
-
-  it('tree: every node lands where it did before the layout was incremental', () => {
-    expect(run(file, 'tree')).toMatchSnapshot();
   });
 });

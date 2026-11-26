@@ -17,7 +17,6 @@
  */
 
 const ZH = {
-  LOADING: '加载......',
   SAVING: '保存......',
   SAVE_COMPLETE: '保存完成',
   ZOOM_IN_ERROR: '放大比例过高。',
@@ -36,10 +35,7 @@ const ZH = {
   RELATIONSHIP_COULD_NOT_BE_CREATED: '无法创建关系。必须先选择要建立关系的主题。',
   SESSION_EXPIRED: '您的会话已过期，请重新登录。',
   SAVE_CONFLICT: '此思维导图已在其他地方修改，请刷新页面以加载最新版本。',
-  CENTRAL_TOPIC_CONNECTION_STYLE_CAN_NOT_BE_CHANGED: '无法更改中心主题的连接样式。',
   CENTRAL_TOPIC_STYLE_CAN_NOT_BE_CHANGED: '无法将中心主题更改为线条样式。',
-  TAB_TO_CREATE_CHILD: '创建子主题',
-  ENTER_TO_CREATE_SIBLING: '创建同级主题',
   PLUS_TOOLTIP_CREATE_CHILD: '创建子主题',
   PLUS_TOOLTIP_CREATE_SIBLING: '创建同级主题',
   LINK: '链接',

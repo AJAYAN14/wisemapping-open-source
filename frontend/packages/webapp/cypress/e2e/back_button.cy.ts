@@ -17,22 +17,3 @@ describe('Editor Back Button', () => {
     cy.location('pathname').should('match', /\/c\/maps\/?$/);
   });
 });
-
-describe('Try Mode Back Button', () => {
-  it('should navigate back to maps list when back button is clicked', () => {
-    // 1. Visit the try mode URL directly
-    cy.visit('/c/maps/1/try');
-    cy.waitForEditorLoaded();
-
-    // 2. Mock the history.back method to verify it is called
-    cy.window().then((win) => {
-      cy.spy(win.history, 'back').as('historyBack');
-    });
-
-    // 3. Click the back button
-    cy.get('[data-testid="app-bar-back-button"]').click();
-
-    // 4. Verify history.back was called
-    cy.get('@historyBack').should('have.been.calledOnce');
-  });
-});

@@ -59,20 +59,13 @@ describe('CSRF helpers', () => {
 
 describe('logCriticalError', () => {
   let logged: jest.SpyInstance;
-  const noticeError = jest.fn();
 
   beforeEach(() => {
     logged = jest.spyOn(appLogger, 'error').mockImplementation(() => undefined);
-    noticeError.mockReset();
-    window.newrelic = { noticeError };
   });
 
-  afterAll(() => {
-    delete (window as unknown as { newrelic?: unknown }).newrelic;
-  });
-
-  /** The single message reported to New Relic. */
-  const reported = (): string => noticeError.mock.calls[0][0] as string;
+  /** The single message logged to appLogger. */
+  const reported = (): string => logged.mock.calls[0][0] as string;
   /** The JSON part of the reported message. */
   const reportedJson = (): Record<string, unknown> =>
     JSON.parse(defined(reported().split('. Exception: ')[1]));
@@ -178,17 +171,9 @@ describe('logCriticalError', () => {
     logCriticalError('Odd', 'just text');
     logCriticalError('Odd', null);
 
-    expect(noticeError.mock.calls.map((c) => c[0])).toEqual([
+    expect(logged.mock.calls.filter((_, i) => i % 2 === 0).map((c) => c[0])).toEqual([
       'Odd. Exception: just text',
       'Odd. Exception: null',
     ]);
-  });
-
-  it('still logs when New Relic is not loaded', () => {
-    delete (window as unknown as { newrelic?: unknown }).newrelic;
-
-    logCriticalError('Offline', 'x');
-
-    expect(logged).toHaveBeenCalledWith('Offline. Exception: x');
   });
 });

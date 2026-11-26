@@ -31,7 +31,6 @@ declare global {
     | 'Add Link'
     | 'Add Note'
     | 'Add Topic Image'
-    | 'Theme'
     | 'Connection Style'
     | 'Relationship Style'
     | 'Font Style'
@@ -72,9 +71,6 @@ const snapshotDefaults = {
   // 0.01 (the jest-image-snapshot default) flags a darker shade of the same hue; 0.1 does not.
   customDiffConfig: { threshold: 0.01 },
   capture: 'fullPage' as const,
-  // The emoji-picker-react grid (third-party) lands on a different sub-pixel scroll offset
-  // after a pick from run to run; black it out instead of comparing it.
-  blackout: ['.epr-body'],
   // Full-page captures of the largest maps (huge2) take a while.
   timeout: 180000,
 };

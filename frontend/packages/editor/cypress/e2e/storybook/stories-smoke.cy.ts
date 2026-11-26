@@ -256,7 +256,6 @@ describe('Storybook Editor Components - Tests', () => {
       'editor-colorpicker--default',
       'editor-iconpicker--default',
       'editor-topicimagepicker--default',
-      'editor-canvasstyleeditor--default',
       'editor-relationshipstyleeditor--default',
       'editor-keyboardshortcuthelp--default',
     ];

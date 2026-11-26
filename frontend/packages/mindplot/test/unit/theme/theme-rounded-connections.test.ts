@@ -16,7 +16,7 @@
  *   limitations under the License.
  */
 import { describe, expect, it } from '@jest/globals';
-import { LineType } from '../../../src/components/ConnectionLine';
+import { LineType } from '../../../src/components/BaseConnectionLine';
 import { THEME_TYPES } from '../../../src/components/model/ThemeType';
 import ThemeFactory from '../../../src/components/theme/ThemeFactory';
 import type { ThemeVariant } from '../../../src/components/theme/Theme';

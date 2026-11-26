@@ -11,9 +11,6 @@
   "appbar.back-to-map-list": {
     "defaultMessage": "返回思维导图列表"
   },
-  "appbar.button-signup": {
-    "defaultMessage": "注册"
-  },
   "appbar.error-saving-title": {
     "defaultMessage": "保存错误"
   },
@@ -23,29 +20,14 @@
   "appbar.more-actions": {
     "defaultMessage": "更多操作"
   },
-  "appbar.shared-button": {
-    "defaultMessage": "分享"
-  },
   "appbar.title-renamed": {
     "defaultMessage": "思维导图已重命名"
-  },
-  "appbar.tooltip-change-layout": {
-    "defaultMessage": "更改布局"
   },
   "appbar.tooltip-export": {
     "defaultMessage": "导出"
   },
   "appbar.tooltip-history": {
     "defaultMessage": "更改历史"
-  },
-  "appbar.tooltip-info": {
-    "defaultMessage": "信息"
-  },
-  "appbar.tooltip-print": {
-    "defaultMessage": "打印"
-  },
-  "appbar.tooltip-publish": {
-    "defaultMessage": "发布"
   },
   "appbar.tooltip-redo": {
     "defaultMessage": "重做"
@@ -56,17 +38,8 @@
   "appbar.tooltip-save": {
     "defaultMessage": "保存"
   },
-  "appbar.tooltip-shared": {
-    "defaultMessage": "协作分享"
-  },
-  "appbar.tooltip-signup": {
-    "defaultMessage": "注册"
-  },
   "appbar.tooltip-starred": {
     "defaultMessage": "收藏"
-  },
-  "appbar.tooltip-theme": {
-    "defaultMessage": "主题"
   },
   "appbar.tooltip-theme-toggle": {
     "defaultMessage": "切换主题"
@@ -82,18 +55,6 @@
   },
   "common.close": {
     "defaultMessage": "关闭"
-  },
-  "creator-info-pane.creator": {
-    "defaultMessage": "创建者"
-  },
-  "creator-info-pane.description": {
-    "defaultMessage": "描述"
-  },
-  "editor-panel.deeplink-copied": {
-    "defaultMessage": "已将主题链接复制到剪贴板"
-  },
-  "editor-panel.deeplink-copy-failed": {
-    "defaultMessage": "无法将链接复制到剪贴板"
   },
   "editor-panel.link-panel-title": {
     "defaultMessage": "链接"
@@ -113,9 +74,6 @@
   "editor-panel.tooltip-add-topic-image": {
     "defaultMessage": "添加主题图像"
   },
-  "editor-panel.tooltip-copy-node-link": {
-    "defaultMessage": "复制主题链接"
-  },
   "editor-panel.tooltip-delete-selected": {
     "defaultMessage": "删除"
   },
@@ -127,21 +85,6 @@
   },
   "editor-panel.tooltip-topic-font-style": {
     "defaultMessage": "字体样式"
-  },
-  "editor.edit-description-mobile": {
-    "defaultMessage": "移动设备支持有限的思维导图编辑功能。 使用桌面浏览器获得完整的编辑器功能。"
-  },
-  "editor.try-welcome": {
-    "defaultMessage": "这个编辑区域展示了一些思维导图编辑器的功能！"
-  },
-  "editor.try-welcome-description": {
-    "defaultMessage": "注册后可以免费创建、分享和发布无限数量的思维导图。"
-  },
-  "editor.try-welcome-description-mobile": {
-    "defaultMessage": "注册以开始免费创建、共享和发布无限数量的思维导图。 移动设备支持有限的思维导图编辑功能。 使用桌面浏览器获得完整的编辑器功能。"
-  },
-  "editor.try-welcome-mobile": {
-    "defaultMessage": "这个版本空间展示了一些思维导图功能！"
   },
   "find-in-map.clear": {
     "defaultMessage": "清除搜索"
@@ -163,30 +106,6 @@
   },
   "find-in-map.previous": {
     "defaultMessage": "上一个匹配"
-  },
-  "layout-selector.accept": {
-    "defaultMessage": "确认"
-  },
-  "layout-selector.cancel": {
-    "defaultMessage": "取消"
-  },
-  "layout-selector.description": {
-    "defaultMessage": "选择布局样式"
-  },
-  "layout-selector.title": {
-    "defaultMessage": "选择布局"
-  },
-  "layout.mindmap.description": {
-    "defaultMessage": "两侧具有均衡分支的水平布局。最适合传统心智图和头脑风暴。"
-  },
-  "layout.mindmap.name": {
-    "defaultMessage": "心智图"
-  },
-  "layout.tree.description": {
-    "defaultMessage": "从上到下的垂直层次结构。非常适合组织架构图和层次结构。"
-  },
-  "layout.tree.name": {
-    "defaultMessage": "树形"
   },
   "link.help_text": {
     "defaultMessage": "地址无效"
@@ -445,12 +364,6 @@
   },
   "shortcut-help-pane.zoom-wheel": {
     "defaultMessage": "用滚轮放大或缩小"
-  },
-  "theme.switch-to-dark": {
-    "defaultMessage": "切换到深色模式"
-  },
-  "theme.switch-to-light": {
-    "defaultMessage": "切换到浅色模式"
   },
   "topic-font-editor.active": {
     "defaultMessage": "活动"

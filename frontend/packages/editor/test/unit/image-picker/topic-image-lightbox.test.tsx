@@ -25,7 +25,6 @@ import {
   compressTopicImage,
   MAX_TOPIC_IMAGE_UPLOAD_BYTES,
   scaleTopicImageCardSize,
-  scaleTopicImageUploadSize,
 } from '../../../src/utils/imageAssetUtils';
 
 const ensureBrowserPolyfills = () => {
@@ -70,15 +69,13 @@ const mockRect = (el: HTMLElement, left = 0, top = 0, width = 1000, height = 700
     }) as DOMRect;
 };
 
-describe('scaleTopicImageUploadSize & TopicImageLightbox', () => {
+describe('TopicImageLightbox', () => {
   beforeAll(() => {
     ensureBrowserPolyfills();
   });
 
-  it('keeps card thumbnails compact while preserving up to 1280px for upload preview', () => {
+  it('keeps card thumbnails compact', () => {
     expect(scaleTopicImageCardSize(2560, 1440)).toEqual({ width: 150, height: 84 });
-    expect(scaleTopicImageUploadSize(2560, 1440)).toEqual({ width: 1280, height: 720 });
-    expect(scaleTopicImageUploadSize(800, 600)).toEqual({ width: 800, height: 600 });
   });
 
   it('computes fit and initial scales cleanly including rotated bounds', () => {

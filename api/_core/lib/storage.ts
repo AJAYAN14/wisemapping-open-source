@@ -2,8 +2,8 @@ import { StorageClient } from '@supabase/storage-js';
 import { getSupabaseServiceRoleConfig } from './env.js';
 
 export const MAP_ASSETS_BUCKET = 'map-assets';
-export const MAX_ASSET_BYTES = 20 * 1024 * 1024;
-export const MAX_UPLOAD_BATCH = 100;
+const MAX_ASSET_BYTES = 20 * 1024 * 1024;
+const MAX_UPLOAD_BATCH = 100;
 
 const SHA256_HEX_REGEX = /^[a-f0-9]{64}$/i;
 
@@ -21,7 +21,7 @@ export interface UploadUrlRequestItem {
   size?: number;
 }
 
-export interface IssuedUploadUrlItem {
+interface IssuedUploadUrlItem {
   sha256: string;
   objectPath: string;
   publicUrl: string;
@@ -30,7 +30,7 @@ export interface IssuedUploadUrlItem {
   token?: string;
 }
 
-export interface StorageUsageSummary {
+interface StorageUsageSummary {
   bucket: string;
   objectCount: number;
   totalBytes: number;
@@ -39,7 +39,7 @@ export interface StorageUsageSummary {
   orphanBytes?: number;
 }
 
-export interface CleanupOrphansResult {
+interface CleanupOrphansResult {
   scannedCount: number;
   deletedCount: number;
   freedBytes: number;

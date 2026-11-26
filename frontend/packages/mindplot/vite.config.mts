@@ -41,8 +41,6 @@ export default defineConfig({
     rollupOptions: {
       external: [
         'react',
-        'react-dom',
-        'jquery',
         '@wisemapping/web2d',
         'jspdf',
         'xml-formatter',
@@ -52,8 +50,6 @@ export default defineConfig({
       output: {
         globals: {
           react: 'React',
-          'react-dom': 'ReactDOM',
-          jquery: '$',
           '@wisemapping/web2d': 'web2d',
         },
       },

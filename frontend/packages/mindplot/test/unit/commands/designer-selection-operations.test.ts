@@ -16,7 +16,7 @@
  *   limitations under the License.
  */
 
-import { LineType } from '../../../src/components/ConnectionLine';
+import { LineType } from '../../../src/components/BaseConnectionLine';
 import type Designer from '../../../src/components/Designer';
 import { $msg } from '../../../src/components/Messages';
 import ToolbarNotifier from '../../../src/components/model/ToolbarNotifier';

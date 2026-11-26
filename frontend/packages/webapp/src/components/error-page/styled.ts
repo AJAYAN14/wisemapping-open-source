@@ -112,7 +112,7 @@ export const ApplePrimaryButton = styled(Button)(() => ({
   '&:active': {
     transform: 'scale(0.97)',
   },
-}));
+})) as typeof Button;
 
 export const AppleSecondaryButton = styled(Button)(({ theme }) => ({
   borderRadius: 14,

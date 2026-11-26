@@ -43,19 +43,12 @@ const ACTIONS: ActionType[] = [
   'redo-changes',
   'history',
   'save',
-  'print',
   'export',
-  'publish',
-  'share',
-  'info',
   'account',
   'edition-toolbar',
-  'sign-up',
   'starred',
   'appbar-title',
   'keyboard-shortcuts',
-  'theme',
-  'layout',
   'rename',
   'outline-view',
 ];
@@ -65,7 +58,6 @@ const LOCKED_SUPPRESSED: ActionType[] = [
   'save',
   'keyboard-shortcuts',
   'edition-toolbar',
-  'publish',
   'redo-changes',
   'undo-changes',
 ];
@@ -118,26 +110,16 @@ describe('Capability.isHidden', () => {
       'undo-changes',
       'redo-changes',
       'save',
-      'print',
       'export',
-      'publish',
-      'share',
-      'info',
       'account',
       'edition-toolbar',
       'starred',
       'keyboard-shortcuts',
       'history',
-      'theme',
-      'layout',
       'rename',
       'outline-view',
     ] as ActionType[])('shows %s', (action) => {
       expect(visible(action)).toBe(true);
-    });
-
-    it('hides sign-up (the user is already signed in)', () => {
-      expect(visible('sign-up')).toBe(false);
     });
   });
 
@@ -149,32 +131,21 @@ describe('Capability.isHidden', () => {
       'undo-changes',
       'redo-changes',
       'save',
-      'publish',
-      'share',
       'edition-toolbar',
       'keyboard-shortcuts',
       'history',
-      'theme',
       'rename',
       'starred',
-      'layout',
     ] as ActionType[])('hides %s', (action) => {
       expect(hidden(action)).toBe(true);
     });
 
-    it.each(['print', 'export', 'info', 'account', 'outline-view'] as ActionType[])(
+    it.each(['export', 'account', 'outline-view'] as ActionType[])(
       'still shows %s',
       (action) => {
         expect(hidden(action)).toBe(false);
       },
     );
-
-    it('hides sign-up here too', () => {
-      // 'sign-up' is listed hidden for every mode except 'showcase', so the
-      // app bar's sign-up button is reachable in showcase mode alone. Public
-      // viewers -- the one audience it is for -- never see it.
-      expect(hidden('sign-up')).toBe(true);
-    });
   });
 
   describe('locked map', () => {
@@ -210,38 +181,11 @@ describe('Capability.isHidden', () => {
       'redo-changes': ['viewonly-public', 'viewonly-private', 'edition-viewer'],
       'undo-changes': ['viewonly-public', 'viewonly-private', 'edition-viewer'],
       save: ['showcase', 'viewonly-public', 'viewonly-private', 'edition-viewer'],
-      print: ['showcase', 'desktop'],
-      publish: [
-        'showcase',
-        'viewonly-public',
-        'viewonly-private',
-        'edition-viewer',
-        'edition-editor',
-        'desktop',
-      ],
-      share: [
-        'showcase',
-        'viewonly-public',
-        'viewonly-private',
-        'edition-viewer',
-        'edition-editor',
-        'desktop',
-      ],
-      info: ['showcase', 'desktop'],
       account: ['showcase', 'desktop'],
       'edition-toolbar': ['viewonly-public', 'viewonly-private', 'edition-viewer'],
       'keyboard-shortcuts': ['viewonly-public', 'viewonly-private', 'edition-viewer'],
       history: ['viewonly-public', 'viewonly-private', 'edition-viewer', 'showcase', 'desktop'],
-      'sign-up': [
-        'viewonly-public',
-        'viewonly-private',
-        'edition-viewer',
-        'edition-editor',
-        'edition-owner',
-        'desktop',
-      ],
       starred: ['showcase', 'viewonly-private', 'viewonly-public', 'desktop'],
-      theme: ['viewonly-public', 'viewonly-private', 'edition-viewer'],
       rename: [
         'showcase',
         'viewonly-public',
@@ -250,46 +194,9 @@ describe('Capability.isHidden', () => {
         'edition-editor',
       ],
       'outline-view': ['showcase'],
-      layout: ['showcase', 'viewonly-public', 'viewonly-private', 'edition-viewer', 'desktop'],
     };
 
     const HIDDEN_MOBILE_EXTRA: Partial<Record<ActionType, EditorRenderMode[]>> = {
-      print: [
-        'viewonly-public',
-        'viewonly-private',
-        'showcase',
-        'edition-viewer',
-        'edition-editor',
-        'edition-owner',
-        'desktop',
-      ],
-      publish: [
-        'viewonly-public',
-        'viewonly-private',
-        'showcase',
-        'edition-viewer',
-        'edition-editor',
-        'edition-owner',
-        'desktop',
-      ],
-      share: [
-        'viewonly-public',
-        'viewonly-private',
-        'showcase',
-        'edition-viewer',
-        'edition-editor',
-        'edition-owner',
-        'desktop',
-      ],
-      info: [
-        'viewonly-public',
-        'viewonly-private',
-        'showcase',
-        'edition-viewer',
-        'edition-editor',
-        'edition-owner',
-        'desktop',
-      ],
       'keyboard-shortcuts': ['edition-editor', 'edition-owner', 'showcase'],
     };
 

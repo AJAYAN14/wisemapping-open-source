@@ -15,7 +15,7 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-import type { LineType } from '../../../src/components/ConnectionLine';
+import type { LineType } from '../../../src/components/BaseConnectionLine';
 import type { FontStyleType } from '../../../src/components/FontStyleType';
 import type { TopicShapeType } from '../../../src/components/model/INodeModel';
 import { THEME_TYPES } from '../../../src/components/model/ThemeType';

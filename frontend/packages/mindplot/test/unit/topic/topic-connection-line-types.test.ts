@@ -16,7 +16,7 @@
  *   limitations under the License.
  */
 import type { CurvedLine } from '@wisemapping/web2d';
-import { LineType } from '../../../src/components/ConnectionLine';
+import { LineType } from '../../../src/components/BaseConnectionLine';
 import type TopicConnection from '../../../src/components/TopicConnection';
 import type { Harness } from '../commands/designer-harness';
 import { buildDesigner } from '../commands/designer-harness';

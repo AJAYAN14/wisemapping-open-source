@@ -16,7 +16,7 @@
  *   limitations under the License.
  */
 
-import type { LineType } from '../ConnectionLine';
+import type { LineType } from '../BaseConnectionLine';
 import type { FontStyleType } from '../FontStyleType';
 import type { FontWeightType } from '../FontWeightType';
 import type { TopicShapeType } from '../model/INodeModel';
@@ -46,10 +46,7 @@ interface Theme {
 
   // Individual canvas style properties for Designer integration
   getCanvasBackgroundColor(): string;
-  getCanvasGridColor(): string | undefined;
   getCanvasOpacity(): number;
-  getCanvasShowGrid(): boolean;
-  getCanvasGridPattern(): 'solid' | 'grid' | 'dots';
 
   getFontColor(topic: Topic): string;
 

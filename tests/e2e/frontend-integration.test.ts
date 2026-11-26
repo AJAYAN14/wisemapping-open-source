@@ -324,7 +324,8 @@ describe('F2/F3/F4 — Frontend Integration, Auth Entry Guards & R4 Conflict UX 
       const dialogSrc = parseSourceAst(
         'packages/webapp/src/components/editor-page/version-conflict-dialog/index.tsx',
       ).getText();
-      expect(dialogSrc).toContain('disableEscapeKeyDown');
+      expect(dialogSrc).toContain('<Dialog open={open}');
+      expect(dialogSrc).not.toContain('onClose');
       expect(dialogSrc).toContain('window.location.reload()');
       expect(dialogSrc).toContain('editor.conflict.title');
 
@@ -372,21 +373,20 @@ describe('F2/F3/F4 — Frontend Integration, Auth Entry Guards & R4 Conflict UX 
       expect(editorPageSrc).toContain('<VersionConflictDialog open={versionConflict} />');
     });
 
-    it('T2-F04-05: German and Spanish editor.conflict.* and SAVE_CONFLICT messages use informal address', () => {
-      const formalDe = /\b(Sie|Ihnen|Ihr|Ihre|Ihren|Ihrem|Ihrer|Ihres)\b/;
-      const formalEs = /\b(usted|ustedes|Ingrese|Introduzca|Seleccione|Haga|Inténtelo|Regístrese|Revise|Vuelva|Recargue)\b/;
+    it('T2-F04-05: Simplified Chinese editor.conflict.* and SAVE_CONFLICT messages are present and consistent', () => {
+      const zhRaw = JSON.parse(readFrontendText('packages/webapp/lang/zh.json')) as Record<string, { defaultMessage: string }>;
+      const zhCnRaw = JSON.parse(readFrontendText('packages/webapp/lang/zh-CN.json')) as Record<string, { defaultMessage: string }>;
 
       for (const key of ['editor.conflict.title', 'editor.conflict.description', 'editor.conflict.refresh']) {
-        const deRaw = JSON.parse(readFrontendText('packages/webapp/lang/de.json')) as Record<string, { defaultMessage: string }>;
-        const esRaw = JSON.parse(readFrontendText('packages/webapp/lang/es.json')) as Record<string, { defaultMessage: string }>;
-        expect(formalDe.test(deRaw[key]?.defaultMessage ?? ''), `de ${key}`).toBe(false);
-        expect(formalEs.test(esRaw[key]?.defaultMessage ?? ''), `es ${key}`).toBe(false);
+        const zhMsg = zhRaw[key]?.defaultMessage ?? '';
+        const zhCnMsg = zhCnRaw[key]?.defaultMessage ?? '';
+        expect(zhMsg, `zh ${key}`).toMatch(/[\u4e00-\u9fff]/);
+        expect(zhCnMsg, `zh-CN ${key}`).toBe(zhMsg);
       }
 
-      const mindplotEs = readFrontendText('packages/mindplot/src/components/lang/es.ts');
-      const saveConflictLine = /SAVE_CONFLICT:\s*['"`]([^'"`]+)['"`]/.exec(mindplotEs)?.[1] ?? '';
-      expect(saveConflictLine.length).toBeGreaterThan(0);
-      expect(formalEs.test(saveConflictLine)).toBe(false);
+      const mindplotZh = readFrontendText('packages/mindplot/src/components/lang/zh.ts');
+      const saveConflictLine = /SAVE_CONFLICT:\s*['"`]([^'"`]+)['"`]/.exec(mindplotZh)?.[1] ?? '';
+      expect(saveConflictLine).toMatch(/[\u4e00-\u9fff]/);
     });
   });
 

@@ -19,36 +19,13 @@
 import { StyledNav, StyledDiv, Logo } from './styled';
 
 import React from 'react';
-import { FormattedMessage, useIntl } from 'react-intl';
+import { useIntl } from 'react-intl';
 import { Link } from 'react-router';
-import Button from '@mui/material/Button';
 import { useTheme } from '@mui/material/styles';
 
-import { JSX } from '@emotion/react/jsx-runtime';
-
-interface HeaderProps {
-  type: 'only-signin' | 'none';
-}
-
-export const Header = ({ type }: HeaderProps): React.ReactElement => {
+export const Header = (): React.ReactElement => {
   const intl = useIntl();
   const theme = useTheme();
-  let text: string | JSX.Element | undefined;
-  let actionButton: string | JSX.Element | undefined;
-
-  if (type === 'only-signin') {
-    text = (
-      <span className="header-area-content-span">
-        <span>
-          <FormattedMessage id="header.haveaccount" defaultMessage="Already have an account?" />
-        </span>
-      </span>
-    );
-    actionButton = <SignInButton className="header-area-right2" />;
-  } else {
-    text = '';
-    actionButton = '';
-  }
 
   return (
     <StyledNav>
@@ -61,24 +38,8 @@ export const Header = ({ type }: HeaderProps): React.ReactElement => {
             />
           </Link>
         </Logo>
-        {text}
-        {actionButton}
       </StyledDiv>
     </StyledNav>
-  );
-};
-
-interface ButtonProps {
-  className?: string;
-}
-
-export const SignInButton = (props: ButtonProps): React.ReactElement => {
-  return (
-    <span className={`${props.className}`}>
-      <Button color="primary" size="medium" variant="outlined" component={Link} to="/c/login">
-        <FormattedMessage id="login.signin" defaultMessage="Sign In" />
-      </Button>
-    </span>
   );
 };
 

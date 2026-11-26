@@ -37,21 +37,21 @@ export interface ImportProgressDialogProps {
   open: boolean;
   fileName: string;
   stage: ImportStage;
-  error?: string | null;
-  progressPercent?: number; // 0-100 or undefined for indeterminate
-  detailText?: string;
-  isBatch?: boolean;
-  totalCount?: number;
-  currentCount?: number;
-  currentPath?: string;
-  successCount?: number;
-  skippedCount?: number;
+  error?: string | null | undefined;
+  progressPercent?: number | undefined; // 0-100 or undefined for indeterminate
+  detailText?: string | undefined;
+  isBatch?: boolean | undefined;
+  totalCount?: number | undefined;
+  currentCount?: number | undefined;
+  currentPath?: string | undefined;
+  successCount?: number | undefined;
+  skippedCount?: number | undefined;
   onClose: () => void;
-  onRetry?: () => void;
-  onOpenMap?: () => void;
-  onImportMore?: () => void;
-  onOverwrite?: () => void;
-  onSkipDuplicate?: () => void;
+  onRetry?: (() => void) | undefined;
+  onOpenMap?: (() => void) | undefined;
+  onImportMore?: (() => void) | undefined;
+  onOverwrite?: (() => void) | undefined;
+  onSkipDuplicate?: (() => void) | undefined;
 }
 
 const STAGE_TITLES: Record<ImportStage, string> = {

@@ -98,21 +98,10 @@ class DragPivot implements CanvasElement {
     const targetPosition = targetTopic!.getPosition();
     const line = this._getConnectionLine();
 
-    // Update Line position based on orientation
+    // Connect from left or right side
     const orientation = targetTopic!.getOrientation();
-    let pivotPoint: PositionType;
-
-    if (orientation === 'vertical') {
-      // Tree layout: connect from top center of pivot (going up to parent)
-      pivotPoint = {
-        x: position.x,
-        y: position.y - size.height / 2,
-      };
-    } else {
-      // Mindmap layout: connect from left or right side
-      const isAtRight = Shape.isAtRight(targetPosition, position);
-      pivotPoint = Shape.calculateRectConnectionPoint(position, size, isAtRight);
-    }
+    const isAtRight = Shape.isAtRight(targetPosition, position);
+    const pivotPoint = Shape.calculateRectConnectionPoint(position, size, isAtRight);
 
     line?.setFrom(pivotPoint.x, pivotPoint.y);
 
@@ -126,7 +115,7 @@ class DragPivot implements CanvasElement {
     const targetPoint = targetTopic!.workoutIncomingConnectionPoint(pivotPoint);
     line?.setTo(targetPoint.x, targetPoint.y);
 
-    // Set control points based on orientation
+    // Set control points based on horizontal orientation
     if (line) {
       // Ends at (almost) the same height, as TopicConnection draws it: control points on the
       // chord, so the line is straight.
@@ -142,13 +131,7 @@ class DragPivot implements CanvasElement {
         const [src, dest] = defaultControlPoints(pivotPoint, targetPoint);
         line.setSrcControlPoint(new Point(src.x, src.y));
         line.setDestControlPoint(new Point(dest.x, dest.y));
-      } else if (orientation === 'vertical') {
-        // Vertical orientation: control points based on Y distance
-        const deltaY = (targetPoint.y - pivotPoint.y) / 3;
-        line.setSrcControlPoint(new Point(0, deltaY));
-        line.setDestControlPoint(new Point(0, -deltaY));
       } else {
-        // Horizontal orientation: control points based on X distance
         const deltaX = (targetPoint.x - pivotPoint.x) / 3;
         line.setSrcControlPoint(new Point(deltaX, 0));
         line.setDestControlPoint(new Point(-deltaX, 0));

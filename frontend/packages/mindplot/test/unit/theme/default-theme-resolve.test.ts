@@ -15,7 +15,7 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-import { LineType } from '../../../src/components/ConnectionLine';
+import { LineType } from '../../../src/components/BaseConnectionLine';
 import PrismTheme from '../../../src/components/theme/PrismTheme';
 import DefaultTheme from '../../../src/components/theme/DefaultTheme';
 import type { ThemeStyle } from '../../../src/components/theme/ThemeStyle';

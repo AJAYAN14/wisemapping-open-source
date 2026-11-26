@@ -44,7 +44,7 @@ import type { AccountInfo } from '../../../src/classes/client';
 
 const filterButtons: ToolbarButtonInfo[] = [
   { filter: { type: 'all' }, label: 'All', icon: <span>all-icon</span> },
-  { filter: { type: 'owned' }, label: 'My Maps', icon: <span>owned-icon</span> },
+  { filter: { type: 'starred' }, label: 'Starred', icon: <span>starred-icon</span> },
   {
     filter: { type: 'label', label: { id: 7, title: 'Research', color: '#fff' } },
     label: 'Research',
@@ -87,7 +87,7 @@ describe('DrawerNav', () => {
     const nav = screen.getByRole('navigation');
     expect(nav).toBeDefined();
     expect(screen.getByText('All')).toBeDefined();
-    expect(screen.getByText('My Maps')).toBeDefined();
+    expect(screen.getByText('Starred')).toBeDefined();
     expect(screen.getByText('Research')).toBeDefined();
   });
 
@@ -129,8 +129,8 @@ describe('DrawerNav', () => {
   test('clicking an entry reports that entry’s filter', () => {
     const onFilterClick = jest.fn();
     renderNav({ onFilterClick });
-    fireEvent.click(screen.getByText('My Maps'));
-    expect(onFilterClick).toHaveBeenCalledWith({ type: 'owned' });
+    fireEvent.click(screen.getByText('Starred'));
+    expect(onFilterClick).toHaveBeenCalledWith({ type: 'starred' });
   });
 
   test('deleting a label entry reports the label id', () => {

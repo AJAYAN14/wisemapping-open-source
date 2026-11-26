@@ -1,4 +1,4 @@
-export type RestSeverity = 'INFO' | 'WARNING' | 'SEVERE';
+type RestSeverity = 'INFO' | 'WARNING' | 'SEVERE';
 
 export interface RestErrors {
   globalErrors: string[];
@@ -122,7 +122,7 @@ export function buildCorsHeaders(req: Request): Headers {
   return headers;
 }
 
-export type HeaderInitLike = Headers | Record<string, string> | Array<[string, string]>;
+type HeaderInitLike = Headers | Record<string, string> | Array<[string, string]>;
 
 function mergeHeaders(req: Request, extraHeaders?: HeaderInitLike): Headers {
   const headers = buildCorsHeaders(req);

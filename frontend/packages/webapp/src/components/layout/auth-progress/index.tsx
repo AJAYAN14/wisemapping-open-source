@@ -28,7 +28,7 @@ import { ProgressMessage, ProgressStack } from './styled';
  * so that signing in reads as one screen instead of a run of different pages and texts.
  */
 const AuthProgress = (): React.ReactElement => (
-  <AccountAccessLayout headerType="none">
+  <AccountAccessLayout>
     <ProgressStack role="status" aria-live="polite">
       <CircularProgress size={48} />
       <ProgressMessage variant="h6">

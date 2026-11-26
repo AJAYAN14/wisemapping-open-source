@@ -15,7 +15,7 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-import { LineType } from '../ConnectionLine';
+import { LineType } from '../BaseConnectionLine';
 import type { FontWeightType } from '../FontWeightType';
 import { FONT_WEIGHT_TYPES } from '../FontWeightType';
 import type { FontStyleType } from '../FontStyleType';
@@ -24,10 +24,7 @@ import type { TopicShapeType } from '../model/INodeModel';
 import { TOPIC_SHAPE_TYPES } from '../model/INodeModel';
 import type ThemeType from '../model/ThemeType';
 import { THEME_TYPES } from '../model/ThemeType';
-import type { BackgroundPatternType } from '../model/CanvasStyleType';
-import { BACKGROUND_PATTERN_TYPES } from '../model/CanvasStyleType';
 import { StrokeStyle } from '../model/RelationshipModel';
-import { LAYOUT_ORIENTATION, type LayoutType } from '../layout/LayoutType';
 
 // Type guards for the attributes read from the map XML, which can hold any value. Each union is
 // derived from its `as const` list, so a value can not be added to one and not the other.
@@ -44,13 +41,6 @@ export const isTopicShapeType = (value: string): value is TopicShapeType =>
   isOneOf(TOPIC_SHAPE_TYPES, value);
 
 export const isThemeType = (value: string): value is ThemeType => isOneOf(THEME_TYPES, value);
-
-export const isBackgroundPatternType = (value: string): value is BackgroundPatternType =>
-  isOneOf(BACKGROUND_PATTERN_TYPES, value);
-
-// Keyed by the union, so the compiler reports a layout without orientation.
-export const isLayoutType = (value: string): value is LayoutType =>
-  Object.prototype.hasOwnProperty.call(LAYOUT_ORIENTATION, value);
 
 export const isStrokeStyle = (value: string): value is StrokeStyle =>
   isOneOf(Object.values(StrokeStyle), value);

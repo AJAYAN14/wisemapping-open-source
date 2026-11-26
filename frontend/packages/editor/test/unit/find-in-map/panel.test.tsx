@@ -22,15 +22,6 @@
 import { render, screen, fireEvent } from '@testing-library/react';
 import type { Designer, Topic } from '@wisemapping/mindplot';
 
-const pause = jest.fn();
-const resume = jest.fn();
-jest.mock('@wisemapping/mindplot', () => ({
-  DesignerKeyboard: {
-    pause: () => pause(),
-    resume: () => resume(),
-  },
-}));
-
 // react-intl ships ESM only and this package's jest config does not transform
 // node_modules, so the panel's transitive imports need a stand-in.
 jest.mock('react-intl', () => ({
@@ -79,12 +70,7 @@ const search = (term: string): void => {
 };
 
 describe('FindInMapPanel results', () => {
-  beforeEach(() => {
-    pause.mockClear();
-    resume.mockClear();
-  });
-
-  it('closes the panel when a result is clicked', () => {
+  it('keeps the panel open when a result is clicked', () => {
     const { designer, closeModal, revealNode } = harness();
     render(<FindInMapPanel designer={designer} closeModal={closeModal} />);
 
@@ -94,7 +80,7 @@ describe('FindInMapPanel results', () => {
     fireEvent.click(screen.getByText('Beta', { exact: false }));
 
     expect(revealNode).toHaveBeenCalled();
-    expect(closeModal).toHaveBeenCalledTimes(1);
+    expect(closeModal).not.toHaveBeenCalled();
   });
 
   it('reveals the clicked node, not merely the first match', () => {
@@ -138,15 +124,6 @@ describe('FindInMapPanel results', () => {
     fireEvent.click(screen.getByLabelText('Previous match'));
 
     expect(closeModal).not.toHaveBeenCalled();
-  });
-
-  it('hands the map keyboard back when it unmounts', () => {
-    const { designer, closeModal } = harness();
-    const { unmount } = render(<FindInMapPanel designer={designer} closeModal={closeModal} />);
-
-    expect(pause).toHaveBeenCalledTimes(1);
-    unmount();
-    expect(resume).toHaveBeenCalledTimes(1);
   });
 });
 

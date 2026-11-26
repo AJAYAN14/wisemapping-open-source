@@ -17,7 +17,6 @@
  */
 import { $assert } from './util/assert';
 import type CommandContext from './CommandContext';
-import type { CanvasStyleType } from './model/CanvasStyleType';
 import type { PivotType } from './RelationshipControlPoints';
 import EventDispispatcher from './EventDispatcher';
 import type NodeModel from './model/NodeModel';
@@ -30,8 +29,7 @@ import type { ModelUpdateEvent } from './DesignerUndoManager';
 import type { FeatureAttributes } from './model/FeatureModel';
 import type FeatureType from './model/FeatureType';
 import type { TopicShapeType } from './model/INodeModel';
-import type { LineType } from './ConnectionLine';
-import type ThemeType from './model/ThemeType';
+import type { LineType } from './BaseConnectionLine';
 
 export type TopicImageValue = {
   url: string;
@@ -83,8 +81,6 @@ export interface ActionDispatcherCommands {
   changeRelationshipStrokeStyle: (relationships: Relationship[], strokeStyle: StrokeStyle) => void;
   changeRelationshipEndArrow: (relationships: Relationship[], value: boolean) => void;
   changeRelationshipStartArrow: (relationships: Relationship[], value: boolean) => void;
-  changeCanvasStyle: (style: CanvasStyleType | undefined) => void;
-  changeTheme: (themeType: ThemeType) => void;
   shrinkBranch: (topicsIds: number[], collapse: boolean) => void;
   addFeatureToTopic: (
     topicIds: number[],

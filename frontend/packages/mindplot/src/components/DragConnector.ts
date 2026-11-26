@@ -30,9 +30,9 @@ type Candidate = { topic: Topic; index: number; border: number };
 /**
  * The topics a drag may connect to, read once per drag: not of the dragged branch, not collapsed
  * nor in a collapsed branch. Each list is sorted by one border, the one the reach test measures
- * from: the right one (topics left of the mouse), the left one (right of it), the top one (tree).
+ * from: the right one (topics left of the mouse), the left one (right of it).
  */
-type DragCandidates = { right: Candidate[]; left: Candidate[]; top: Candidate[] };
+type DragCandidates = { right: Candidate[]; left: Candidate[] };
 
 /** Index of the first candidate whose border is at least `value` (the list is sorted by it). */
 const lowerBound = (list: Candidate[], value: number): number => {
@@ -88,39 +88,19 @@ class DragConnector {
   }
 
   private _searchConnectionCandidates(dragTopic: DragTopic): Topic[] {
-    const draggedNode = dragTopic.getDraggedTopic();
-    // Get orientation from topic - it should be updated when layout changes
-    const orientation = draggedNode.getOrientation();
-
     const sPos = dragTopic.getPosition();
 
-    // Filter based on layout orientation first: it is the cheap test, and it leaves few topics.
-    let inReach: (topic: Topic) => boolean;
-    if (orientation === 'vertical') {
-      // Tree layout: filter by vertical position (Y axis)
-      // Only consider topics that are above the dragged topic
-      inReach = (topic: Topic) => {
-        const tpos = topic.getPosition();
-        const tborder = tpos.y - topic.getSize().height / 2;
-        const distance = sPos.y - tborder;
-        return distance > 0 && distance < DragConnector.MAX_VERTICAL_CONNECTION_TOLERANCE;
-      };
-    } else {
-      // Mindmap layout: filter by horizontal position (X axis)
-      // Filter all the nodes that are outside the horizontal boundary:
-      //  * The node is to out of the x scope
-      //  * The x distance greater the tolerated distance
-      // Not Math.sign: at x === 0 it zeroed the distance and left no candidates.
-      const side = sideOf(sPos.x);
-      inReach = (topic: Topic) => {
-        const tpos = topic.getPosition();
-        // Center topic has different alignment than the rest of the nodes.
-        // That's why i need to divide it by two...
-        const txborder = tpos.x + (topic.getSize().width / 2) * side;
-        const distance = (sPos.x - txborder) * side;
-        return distance > 0 && distance < DragConnector.MAX_VERTICAL_CONNECTION_TOLERANCE;
-      };
-    }
+    // Filter by horizontal position (X axis):
+    //  * The node is out of the x scope
+    //  * The x distance greater than the tolerated distance
+    // Not Math.sign: at x === 0 it zeroed the distance and left no candidates.
+    const side = sideOf(sPos.x);
+    const inReach = (topic: Topic) => {
+      const tpos = topic.getPosition();
+      const txborder = tpos.x + (topic.getSize().width / 2) * side;
+      const distance = (sPos.x - txborder) * side;
+      return distance > 0 && distance < DragConnector.MAX_VERTICAL_CONNECTION_TOLERANCE;
+    };
 
     // Only the topics whose border is within reach of the mouse along the axis are looked at:
     // they are found in the list sorted by that border, read once per drag.
@@ -128,10 +108,7 @@ class DragConnector {
     let list: Candidate[];
     let from: number;
     let to: number;
-    if (orientation === 'vertical') {
-      list = candidates.top;
-      [from, to] = [sPos.y - DragConnector.MAX_VERTICAL_CONNECTION_TOLERANCE, sPos.y];
-    } else if (sideOf(sPos.x) > 0) {
+    if (sideOf(sPos.x) > 0) {
       list = candidates.right;
       [from, to] = [sPos.x - DragConnector.MAX_VERTICAL_CONNECTION_TOLERANCE, sPos.x];
     } else {
@@ -154,7 +131,7 @@ class DragConnector {
 
     // Assign a priority based on the distance:
     // - Alignment with the targetNode
-    // - Vertical/Horizontal distance (depending on orientation)
+    // - Vertical alignment (Y axis)
     // - Proximity
     // - It's already connected.
     // Weighed once per topic, not on each comparison. The sort is stable, so ties keep their order.
@@ -163,7 +140,7 @@ class DragConnector {
       .map((topic) => ({
         topic,
         weight: this._proximityWeight(
-          this._isAligned(topic.getSize(), topic.getPosition(), sPos, orientation),
+          this._isAligned(topic.getSize(), topic.getPosition(), sPos),
           topic,
           sPos,
           currentConnection!,
@@ -184,20 +161,18 @@ class DragConnector {
       const branch = this._getDraggedBranch(dragTopic);
       const right: Candidate[] = [];
       const left: Candidate[] = [];
-      const top: Candidate[] = [];
       this._designerModel.getTopics().forEach((topic, index) => {
         if (branch.has(topic.getId()) || topic.areChildrenShrunken() || topic.isCollapsed()) {
           return;
         }
-        const { x, y } = topic.getPosition();
-        const { width, height } = topic.getSize();
+        const { x } = topic.getPosition();
+        const { width } = topic.getSize();
         // As inReach works them out, x + (width / 2) * side, for either side.
         right.push({ topic, index, border: x + width / 2 });
         left.push({ topic, index, border: x - width / 2 });
-        top.push({ topic, index, border: y - height / 2 });
       });
       const byBorder = (a: Candidate, b: Candidate) => a.border - b.border;
-      result = { right: right.sort(byBorder), left: left.sort(byBorder), top: top.sort(byBorder) };
+      result = { right: right.sort(byBorder), left: left.sort(byBorder) };
       this._dragCandidates.set(dragTopic, result);
     }
     return result;
@@ -243,13 +218,8 @@ class DragConnector {
     targetSize: SizeType,
     targetPosition: PositionType,
     sourcePosition: PositionType,
-    orientation: 'horizontal' | 'vertical',
   ): boolean {
-    if (orientation === 'vertical') {
-      // Tree layout: check horizontal alignment (X axis)
-      return Math.abs(sourcePosition.x - targetPosition.x) < targetSize.width / 2;
-    }
-    // Mindmap layout: check vertical alignment (Y axis)
+    // Check vertical alignment (Y axis)
     return Math.abs(sourcePosition.y - targetPosition.y) < targetSize.height / 2;
   }
 

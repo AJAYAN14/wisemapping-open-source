@@ -339,10 +339,7 @@ class DesignerKeyboard extends Keyboard {
       return;
     }
 
-    const isVerticalLayout = node.getOrientation() === 'vertical';
-    const handled = isVerticalLayout
-      ? this._handleVerticalLayoutMove(designer, node, direction)
-      : this._handleHorizontalLayoutMove(designer, node, direction);
+    const handled = this._handleHorizontalLayoutMove(designer, node, direction);
 
     if (handled) {
       return;
@@ -380,39 +377,6 @@ class DesignerKeyboard extends Keyboard {
         return (
           this._goToSibling(designer, node, 'y', 'DOWN', true) ||
           this._goToAlignedTopic(designer, node, 'y', 'DOWN', 'x')
-        );
-      default:
-        return false;
-    }
-  }
-
-  private _handleVerticalLayoutMove(
-    designer: Designer,
-    node: Topic,
-    direction: 'LEFT' | 'RIGHT' | 'UP' | 'DOWN',
-  ): boolean {
-    switch (direction) {
-      case 'UP':
-        return (
-          this._goToParent(designer, node) || this._goToAlignedTopic(designer, node, 'y', 'UP', 'x')
-        );
-      case 'DOWN':
-        if (node.getChildren().length > 0) {
-          if (!this._ensureChildrenExpanded(designer, node)) {
-            return false;
-          }
-          return this._goToChild(designer, node);
-        }
-        return this._goToAlignedTopic(designer, node, 'y', 'DOWN', 'x');
-      case 'LEFT':
-        return (
-          this._goToSibling(designer, node, 'x', 'LEFT', false) ||
-          this._goToAlignedTopic(designer, node, 'x', 'LEFT', 'y')
-        );
-      case 'RIGHT':
-        return (
-          this._goToSibling(designer, node, 'x', 'RIGHT', false) ||
-          this._goToAlignedTopic(designer, node, 'x', 'RIGHT', 'y')
         );
       default:
         return false;
@@ -571,22 +535,16 @@ class DesignerKeyboard extends Keyboard {
       }
     }
 
-    const orientation = node.getOrientation();
-    const useHorizontalDistance = orientation === 'vertical';
     // Empty only when the node has no children.
     let [target] = candidates;
     if (!target) {
       return false;
     }
-    let minDistance = Math.abs(
-      (useHorizontalDistance ? target.getPosition().x : target.getPosition().y) -
-        (useHorizontalDistance ? node.getPosition().x : node.getPosition().y),
-    );
+    const nodeY = node.getPosition().y;
+    let minDistance = Math.abs(target.getPosition().y - nodeY);
 
     candidates.forEach((child) => {
-      const childCoord = useHorizontalDistance ? child.getPosition().x : child.getPosition().y;
-      const nodeCoord = useHorizontalDistance ? node.getPosition().x : node.getPosition().y;
-      const distance = Math.abs(childCoord - nodeCoord);
+      const distance = Math.abs(child.getPosition().y - nodeY);
       if (distance < minDistance) {
         minDistance = distance;
         target = child;

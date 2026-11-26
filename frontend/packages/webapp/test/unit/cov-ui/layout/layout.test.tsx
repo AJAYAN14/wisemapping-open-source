@@ -16,7 +16,7 @@
  *   limitations under the License.
  */
 
-import { fireEvent, screen } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import { ThemeProvider } from '@mui/material/styles';
 
 jest.mock('react-router', () => jest.requireActual('../router-mock'));
@@ -25,85 +25,36 @@ jest.mock('@wisemapping/editor/components/editor-loading-skeleton', () => ({
   default: () => <div>editor skeleton</div>,
 }));
 
-import Header, { SignInButton } from '../../../../src/components/layout/header';
-import Footer from '../../../../src/components/layout/footer';
+import Header from '../../../../src/components/layout/header';
 import LoadingFallback from '../../../../src/components/loading-fallback';
 import { createAppTheme } from '../../../../src/theme';
 import { renderWithProviders } from '../../helpers/render';
-import { installMatchMedia, renderPage } from '../helpers';
+import { renderPage, installMatchMedia } from '../helpers';
 import { setLocation } from '../router-mock';
+
+beforeEach(() => {
+  installMatchMedia();
+});
 
 const hrefs = (name: string): (string | null)[] =>
   screen.queryAllByRole('link', { name }).map((link) => link.getAttribute('href'));
 
 describe('Header', () => {
-  test('"only-signup" invites to sign up', () => {
-    renderWithProviders(<Header type="only-signup" />);
-    expect(screen.getByText("Don't have an account ?")).toBeTruthy();
-    expect(hrefs('Sign Up')).toEqual(['/c/registration']);
-    expect(hrefs('Sign In')).toEqual([]);
-  });
-
-  test('"only-signin" invites to sign in', () => {
-    renderWithProviders(<Header type="only-signin" />);
-    expect(screen.getByText('Already have an account?')).toBeTruthy();
-    expect(hrefs('Sign In')).toEqual(['/c/login']);
-    expect(hrefs('Sign Up')).toEqual([]);
-  });
-
-  test('"none" shows only the logo, linking to login', () => {
-    renderWithProviders(<Header type="none" />);
+  test('shows only the logo linking to login', () => {
+    renderWithProviders(<Header />);
     expect(hrefs('WiseMapping logo')).toEqual(['/c/login']);
     expect(hrefs('Sign In')).toEqual([]);
     expect(hrefs('Sign Up')).toEqual([]);
-  });
-
-  test('an unknown type offers both buttons', () => {
-    renderWithProviders(<Header type={'both' as 'none'} />);
-    expect(hrefs('Sign In')).toEqual(['/c/login']);
-    expect(hrefs('Sign Up')).toEqual(['/c/registration']);
   });
 
   test('renders the logo, linking to login, on the dark theme too', () => {
     // Asset imports are stubbed, so which of the two logos is used can not be told apart here.
     renderWithProviders(
       <ThemeProvider theme={createAppTheme('dark')}>
-        <Header type="none" />
+        <Header />
       </ThemeProvider>,
     );
     expect(hrefs('WiseMapping logo')).toEqual(['/c/login']);
-  });
-
-  test('SignInButton links to login', () => {
-    renderWithProviders(<SignInButton className="x" />);
-    expect(hrefs('Sign In')).toEqual(['/c/login']);
-  });
-});
-
-describe('Footer', () => {
-  beforeEach(() => {
-    installMatchMedia(false);
-    localStorage.clear();
-  });
-
-  test('shows the copyright of the current year and the support links', () => {
-    renderPage(<Footer />);
-
-    expect(screen.getByText(`© ${new Date().getFullYear()} WiseMapping LLC`)).toBeTruthy();
-    expect(hrefs('Contact Us')).toEqual(['mailto:team@wisemapping.com']);
-    expect(hrefs('Privacy Policy')).toEqual(['https://www.wisemapping.com/privacy']);
-    expect(hrefs('Donate')).toEqual([
-      'https://www.paypal.com/donate/?hosted_button_id=CF7GJ7T6E4RS4',
-    ]);
-  });
-
-  test('carries the theme switch', () => {
-    renderPage(<Footer />);
-
-    fireEvent.click(screen.getByRole('switch'));
-
-    expect(localStorage.getItem('themeMode')).toBe('dark');
-    expect(screen.getByText('Dark')).toBeTruthy();
   });
 });
 

@@ -52,6 +52,8 @@ const isTypeOnly = (clause: string | undefined): boolean => {
   return names !== undefined && names.split(',').every((name) => /^\s*(type\s|$)/.test(name));
 };
 
+const relativePosix = (file: string): string => path.relative(ROOT, file).replace(/\\/g, '/');
+
 export const findStaticImportChain = (entry: string, forbidden: string[]): string[] | undefined => {
   const seen = new Set<string>();
   const walk = (file: string, chain: string[]): string[] | undefined => {
@@ -62,15 +64,15 @@ export const findStaticImportChain = (entry: string, forbidden: string[]): strin
       if (specifier === undefined || isTypeOnly(clause)) continue;
       if (forbidden.includes(specifier)) return [...chain, specifier];
       const next = resolveImport(file, specifier);
-      if (next && forbidden.includes(path.relative(ROOT, next))) {
-        return [...chain, path.relative(ROOT, next)];
+      if (next && forbidden.includes(relativePosix(next))) {
+        return [...chain, relativePosix(next)];
       }
-      const found = next && walk(next, [...chain, path.relative(ROOT, next)]);
+      const found = next && walk(next, [...chain, relativePosix(next)]);
       if (found) return found;
     }
     return undefined;
   };
-  return walk(entry, [path.relative(ROOT, entry)]);
+  return walk(entry, [relativePosix(entry)]);
 };
 
 // The editor and mindplot barrels can not be tree-shaken: a value import of either, from any
@@ -85,11 +87,10 @@ describe('the editor stays out of the pages that do not show a map', () => {
     expect(findStaticImportChain(path.resolve(ROOT, entry), BARRELS)).toBeUndefined();
   });
 
-  test('the entry does not reach the mock clients, which only development uses', () => {
+  test('the entry does not reach the mock client, which only development uses', () => {
     expect(
       findStaticImportChain(path.resolve(ROOT, 'src/index.tsx'), [
         'src/classes/client/mock-client/index.ts',
-        'src/classes/client/mock-admin-client/index.ts',
       ]),
     ).toBeUndefined();
   });

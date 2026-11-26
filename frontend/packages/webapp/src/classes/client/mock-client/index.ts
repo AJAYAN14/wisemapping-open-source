@@ -24,10 +24,7 @@ import Client, {
   Label,
   Folder,
   MapInfo,
-  NewUser,
-  Permission,
   Oauth2CallbackResult,
-  ForgotPasswordResult,
   JwtAuth,
   MapMetadata,
 } from '..';
@@ -42,7 +39,6 @@ const MOCK_SEQ_KEY = 'wisemapping.mock.seq';
 const MOCK_XML_PREFIX = 'wisemapping.mock.xml.';
 const MOCK_PROPS_PREFIX = 'wisemapping.mock.props.';
 const MOCK_HISTORY_PREFIX = 'wisemapping.mock.history.';
-const MOCK_ACCOUNT_KEY = 'wisemapping.mock.account';
 const LEGACY_XML_KEY = (id: number): string => `mock-map-${id}-xml`;
 const DEFAULT_MOCK_EMAIL = 'owner@wisemapping.local';
 
@@ -51,11 +47,6 @@ type MockHistoryEntry = {
   xml: string;
   lastModificationBy: string;
   lastModificationTime: string;
-};
-
-type StoredMockAccount = {
-  firstname?: string;
-  lastname?: string;
 };
 
 const getStorage = (): Storage | undefined => {
@@ -256,21 +247,6 @@ const saveMockProps = (id: number, props: string): void => {
 const loadMockHistory = (id: number): MockHistoryEntry[] =>
   readJsonArray<MockHistoryEntry>(`${MOCK_HISTORY_PREFIX}${id}`);
 
-const getStoredAccount = (): StoredMockAccount => {
-  try {
-    const raw = getStorage()?.getItem(MOCK_ACCOUNT_KEY);
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (parsed && typeof parsed === 'object') {
-        return parsed as StoredMockAccount;
-      }
-    }
-  } catch {
-    // ignore storage errors
-  }
-  return {};
-};
-
 const getCurrentUserIdentity = (): {
   email: string;
   firstname: string;
@@ -280,25 +256,14 @@ const getCurrentUserIdentity = (): {
   const token = JwtTokenConfig.retreiveToken();
   const subject = token ? JwtTokenConfig.getSubject(token) : undefined;
   const email = subject ?? (token && token.includes('@') ? token : DEFAULT_MOCK_EMAIL);
-  const stored = getStoredAccount();
   const localPart = email.split('@')[0] || 'Owner';
-  const firstname = stored.firstname ?? localPart;
-  const lastname = stored.lastname ?? '';
-  const displayName = firstname && lastname ? `${firstname} ${lastname}` : email;
+  const firstname = localPart;
+  const lastname = '';
+  const displayName = email;
   return { email, firstname, lastname, displayName };
 };
 
 class MockClient implements Client {
-  private permissionsByMap: Map<number, Permission[]> = new Map();
-
-  fetchMapInfo(id: number): Promise<MapInfo> {
-    const map = loadMockMaps().find((m) => m.id === id);
-    if (!map) {
-      return Promise.reject(new Error(`Map could not be found ${id}`));
-    }
-    return Promise.resolve(map);
-  }
-
   fetchMapMetadata(id: number, includeXml = false): Promise<MapMetadata> {
     const map = loadMockMaps().find((m) => m.id === id);
     if (!map) {
@@ -347,60 +312,6 @@ class MockClient implements Client {
 
   onSessionExpired(callback?: () => void): (() => void) | undefined {
     return callback;
-  }
-
-  deleteMapPermission(id: number, email: string): Promise<void> {
-    let perm = this.permissionsByMap.get(id) || [];
-    perm = perm.filter((p) => p.email !== email);
-    this.permissionsByMap.set(id, perm);
-    return Promise.resolve();
-  }
-
-  addMapPermissions(id: number, _message: string, permissions: Permission[]): Promise<void> {
-    let perm = this.permissionsByMap.get(id) || [];
-    perm = perm.concat(permissions);
-    this.permissionsByMap.set(id, perm);
-    return Promise.resolve();
-  }
-
-  fetchMapPermissions(id: number): Promise<Permission[]> {
-    let perm = this.permissionsByMap.get(id);
-    if (!perm) {
-      const { displayName, email } = getCurrentUserIdentity();
-      perm = [
-        {
-          name: displayName,
-          email,
-          role: 'owner',
-        },
-      ];
-      this.permissionsByMap.set(id, perm);
-    }
-    return Promise.resolve(perm);
-  }
-
-  deleteAccount(): Promise<void> {
-    return Promise.resolve();
-  }
-
-  updateAccountInfo(firstname: string, lastname: string): Promise<void> {
-    log.debug('firstname:' + firstname, lastname);
-    writeJson(MOCK_ACCOUNT_KEY, { firstname, lastname });
-    return Promise.resolve();
-  }
-
-  updateAccountPassword(pasword: string): Promise<void> {
-    log.debug('password:' + pasword);
-    return Promise.resolve();
-  }
-
-  updateAccountLanguage(locale: LocaleCode): Promise<void> {
-    try {
-      getStorage()?.setItem('locale', locale);
-    } catch {
-      // ignore storage errors
-    }
-    return Promise.resolve();
   }
 
   importMap(model: ImportMapInfo): Promise<number> {
@@ -603,16 +514,6 @@ class MockClient implements Client {
   fetchLabels(): Promise<Label[]> {
     log.debug('Fetching  labels from server');
     return Promise.resolve(loadMockLabels());
-  }
-
-  updateMapToPublic(id: number, isPublic: boolean): Promise<void> {
-    const maps = loadMockMaps();
-    const mapInfo = maps.find((m) => m.id === id);
-    if (mapInfo) {
-      mapInfo.public = isPublic;
-      saveMockMaps(maps);
-    }
-    return Promise.resolve();
   }
 
   updateStarred(id: number, starred: boolean): Promise<void> {
@@ -980,7 +881,6 @@ class MockClient implements Client {
   }
 
   private cleanupMapStorage(id: number): void {
-    this.permissionsByMap.delete(id);
     try {
       const storage = getStorage();
       storage?.removeItem(`${MOCK_XML_PREFIX}${id}`);
@@ -992,44 +892,12 @@ class MockClient implements Client {
     }
   }
 
-  registerNewUser(user: NewUser): Promise<void> {
-    if (user.email === 'error@example.com') {
-      return Promise.reject({ msg: 'Unexpected error' });
-    }
-    return Promise.resolve();
-  }
-
   fetchAllMaps(): Promise<MapInfo[]> {
     log.debug('Fetching  maps from server');
     return Promise.resolve(loadMockMaps());
   }
 
-  resetPassword(_email: string): Promise<ForgotPasswordResult> {
-    return Promise.resolve({ action: 'EMAIL_SENT' });
-  }
-
-  resetPasswordFromToken(_token: string, _newPassword: string): Promise<void> {
-    return Promise.resolve();
-  }
-
-  activateAccount(code: string): Promise<void> {
-    log.debug('Activating account with code:' + code);
-    if (code === '999999999') {
-      return Promise.reject({
-        msg: 'Invalid activation code. The link may be incorrect or expired.',
-      });
-    }
-    return Promise.resolve();
-  }
-
   processGoogleCallback(): Promise<Oauth2CallbackResult> {
-    return Promise.resolve({
-      email: getCurrentUserIdentity().email,
-      oauthSync: true,
-    });
-  }
-
-  processFacebookCallback(): Promise<Oauth2CallbackResult> {
     return Promise.resolve({
       email: getCurrentUserIdentity().email,
       oauthSync: true,

@@ -66,10 +66,10 @@ describe('StyleListItem', () => {
   test('marks the item selected when the active filter matches its own type', () => {
     const { container } = render(
       <StyleListItem
-        icon={<span>owned-icon</span>}
-        label="My Maps"
-        filter={{ type: 'owned' }}
-        active={{ type: 'owned' }}
+        icon={<span>starred-icon</span>}
+        label="Starred"
+        filter={{ type: 'starred' }}
+        active={{ type: 'starred' }}
         onClick={jest.fn()}
       />,
     );
@@ -79,9 +79,9 @@ describe('StyleListItem', () => {
   test('does not mark the item selected when the active filter is a different type', () => {
     const { container } = render(
       <StyleListItem
-        icon={<span>owned-icon</span>}
-        label="My Maps"
-        filter={{ type: 'owned' }}
+        icon={<span>starred-icon</span>}
+        label="Starred"
+        filter={{ type: 'starred' }}
         active={{ type: 'all' }}
         onClick={jest.fn()}
       />,

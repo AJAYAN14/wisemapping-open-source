@@ -40,8 +40,6 @@ type ExportFormat = 'xmind' | 'md';
 
 type ExportDialogProps = {
   mapId: number;
-  enableImgExport?: boolean;
-  svgXml?: string;
   /** The designer of the editor the dialog was opened from; none from the map list. */
   designer?: Designer | undefined;
   onClose: (success?: boolean) => void;

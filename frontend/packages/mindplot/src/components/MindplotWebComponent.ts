@@ -101,11 +101,8 @@ class MindplotWebComponent extends HTMLElementBase {
     const theme = ThemeFactory.createById('prism', 'light'); // Default theme for web component - will be updated by theme variant
     const backgroundColor = theme.getCanvasBackgroundColor();
     const opacity = theme.getCanvasOpacity();
-    const showGrid = theme.getCanvasShowGrid();
-    const gridColor = theme.getCanvasGridColor();
-    const gridPattern = theme.getCanvasGridPattern();
 
-    let style = `position: relative;
+    const style = `position: relative;
       left: 0;
       width: 100%;
       height: 100%;
@@ -117,20 +114,6 @@ class MindplotWebComponent extends HTMLElementBase {
       -moz-user-select: none;
       -ms-user-select: none;
       user-select: none;`;
-
-    // Add grid if enabled
-    if (showGrid && gridColor) {
-      if (gridPattern === 'dots') {
-        style += `
-        background-image: radial-gradient(circle, ${gridColor} 1px, transparent 1px);
-        background-size: 20px 20px;`;
-      } else {
-        style += `
-        background-image: linear-gradient(${gridColor} 1px, transparent 1px),
-          linear-gradient(to right, ${gridColor} 1px, ${backgroundColor} 1px);
-        background-size: 20px 20px;`;
-      }
-    }
 
     wrapper.setAttribute('style', style);
 

@@ -81,20 +81,11 @@ type PageUnderTest = {
 
 const PAGES: PageUnderTest[] = [
   { name: 'Login', path: '/c/login', unauthenticated: true },
-  { name: 'Registration', path: '/c/registration', unauthenticated: true },
-  { name: 'Forgot password', path: '/c/forgot-password', unauthenticated: true },
   {
     name: 'Maps',
     path: '/c/maps',
     waitUntilReady: () => {
       cy.get('.MuiCard-root').should('have.length', 10);
-    },
-  },
-  {
-    name: 'Admin accounts',
-    path: '/c/admin/accounts',
-    waitUntilReady: () => {
-      cy.get('.MuiTableBody-root', { timeout: 10000 }).should('be.visible');
     },
   },
 ];

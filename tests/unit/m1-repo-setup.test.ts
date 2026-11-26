@@ -115,7 +115,7 @@ describe('M1 repository restructuring, backup, frontend R1 & R4 integration', ()
     const persistenceManager = readText('frontend/packages/mindplot/src/components/PersistenceManager.ts');
     expect(persistenceManager).toContain("'conflict'");
 
-    const mindplotLocales = ['en', 'es', 'de', 'fr', 'ru', 'zh', 'ja', 'pt', 'it', 'hi'];
+    const mindplotLocales = ['zh'];
     for (const locale of mindplotLocales) {
       const content = readText(`frontend/packages/mindplot/src/components/lang/${locale}.ts`);
       expect(content).toContain('SAVE_CONFLICT:');

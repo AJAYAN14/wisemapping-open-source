@@ -62,21 +62,19 @@ afterEach(() => {
 });
 
 describe.each(['tango', 'pela'])('%s map attributes', (version) => {
-  test('an unknown theme falls back to classic', () => {
-    expect(loadMap(version, 'theme="bogus"').getTheme()).toBe('classic');
-    expect(loadMap(version, 'theme="robot"').getTheme()).toBe('robot');
+  test('an unknown or removed theme falls back to prism', () => {
+    expect(loadMap(version, 'theme="bogus"').getTheme()).toBe('prism');
+    expect(loadMap(version, 'theme="robot"').getTheme()).toBe('prism');
   });
 
-  test('an unknown layout falls back to mindmap', () => {
+  test('an unknown or removed layout falls back to mindmap', () => {
     expect(loadMap(version, 'layout="spiral"').getLayout()).toBe('mindmap');
-    expect(loadMap(version, 'layout="tree"').getLayout()).toBe('tree');
+    expect(loadMap(version, 'layout="tree"').getLayout()).toBe('mindmap');
   });
 
-  test('an unknown background pattern is ignored', () => {
+  test('legacy background pattern attributes are ignored', () => {
     expect(loadMap(version, 'backgroundPattern="stripes"').getCanvasStyle()).toBeUndefined();
-    expect(loadMap(version, 'backgroundPattern="dots"').getCanvasStyle()).toEqual({
-      backgroundPattern: 'dots',
-    });
+    expect(loadMap(version, 'backgroundPattern="dots"').getCanvasStyle()).toBeUndefined();
   });
 
   test('an unknown relationship stroke style falls back to dashed', () => {

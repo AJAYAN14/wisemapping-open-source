@@ -42,8 +42,6 @@ export type EditorOptions = {
   zoom?: number;
   enableKeyboardEvents: boolean;
   enableAppBar?: boolean;
-  saveOnLoad?: boolean;
-  hideCreatorInfo?: boolean; // Hide creator info pane in embedded/public view
   initialThemeVariant?: 'light' | 'dark'; // Set initial theme variant via query parameter
   bootstrapXML?: string; // Bootstrap XML to use instead of fetching from server
   uploadTopicImage?: UploadTopicImageFn;

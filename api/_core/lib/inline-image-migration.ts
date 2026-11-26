@@ -1,7 +1,7 @@
 import crypto from 'node:crypto';
 import { extensionForImageMime } from './storage.js';
 
-export interface ParsedDataImage {
+interface ParsedDataImage {
   mimeType: string;
   ext: string;
   bytes: Uint8Array;
@@ -11,7 +11,7 @@ export interface ParsedDataImage {
 const DATA_IMAGE_ATTR_REGEX =
   /(\bimage\s*=\s*)(["'])([^"']*?)(data:image\/[a-z0-9.+-]+(?:;[^"']*?)?,[^"']+)\2/gi;
 
-export function parseDataImageUri(rawUri: string): ParsedDataImage | undefined {
+function parseDataImageUri(rawUri: string): ParsedDataImage | undefined {
   const commaIdx = rawUri.indexOf(',');
   if (commaIdx === -1 || !rawUri.startsWith('data:image/')) {
     return undefined;

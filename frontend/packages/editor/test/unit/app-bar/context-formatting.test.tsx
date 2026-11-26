@@ -99,10 +99,7 @@ const createMapInfo = (): MapInfo =>
     isStarred: jest.fn(() => new Promise<boolean>(() => undefined)),
     updateStarred: jest.fn(() => Promise.resolve()),
     updateTitle: jest.fn(() => Promise.resolve()),
-    getCreatorFullName: () => 'Ada',
     isLocked: () => false,
-    getLockedMessage: () => '',
-    getZoom: () => 1,
     getId: () => '1',
   }) as unknown as MapInfo;
 

@@ -92,7 +92,7 @@ import { readStorage, writeStorage, removeStorage } from '../../utils/storage';
 export type Filter = GenericFilter | LabelFilter | FolderFilter;
 
 export interface GenericFilter {
-  type: 'public' | 'all' | 'starred' | 'uncategorized' | 'shared' | 'label' | 'owned';
+  type: 'all' | 'starred' | 'uncategorized' | 'label';
 }
 
 export interface LabelFilter {
@@ -163,7 +163,8 @@ const MapsPage = (): ReactElement => {
     const e = err as { errorCode?: unknown; msg?: unknown; fields?: Record<string, unknown> };
     return (
       e.errorCode === 'DUPLICATE_MAP_TITLE' ||
-      (typeof e.fields?.title === 'string' && e.fields.title.toLowerCase().includes('same name')) ||
+      (typeof e.fields?.['title'] === 'string' &&
+        e.fields['title'].toLowerCase().includes('same name')) ||
       (typeof e.msg === 'string' && e.msg.toLowerCase().includes('same name'))
     );
   };
@@ -182,16 +183,16 @@ const MapsPage = (): ReactElement => {
     open: boolean;
     fileName: string;
     stage: ImportStage;
-    error?: string | null;
-    progress?: number;
-    detailText?: string;
-    createdMapId?: number;
-    isBatch?: boolean;
-    totalCount?: number;
-    currentCount?: number;
-    currentPath?: string;
-    successCount?: number;
-    skippedCount?: number;
+    error?: string | null | undefined;
+    progress?: number | undefined;
+    detailText?: string | undefined;
+    createdMapId?: number | undefined;
+    isBatch?: boolean | undefined;
+    totalCount?: number | undefined;
+    currentCount?: number | undefined;
+    currentPath?: string | undefined;
+    successCount?: number | undefined;
+    skippedCount?: number | undefined;
   }>({
     open: false,
     fileName: '',
@@ -241,8 +242,8 @@ const MapsPage = (): ReactElement => {
     }
 
     // Single flat file without folder path -> fast direct edit flow
-    if (scannedFiles.length === 1 && !scannedFiles[0].folderPath) {
-      const single = scannedFiles[0];
+    const single = scannedFiles[0];
+    if (scannedFiles.length === 1 && single && !single.folderPath) {
       setImportState({
         open: true,
         fileName: single.file.name,
@@ -400,16 +401,17 @@ const MapsPage = (): ReactElement => {
 
     // Batch / Folder Import Flow
     const total = scannedFiles.length;
+    const firstFile = scannedFiles[0]!;
     setImportState({
       open: true,
-      fileName: scannedFiles[0].relativePath,
+      fileName: firstFile.relativePath,
       stage: 'reading',
       progress: 5,
       detailText: '正在检查是否存在同名导图...',
       isBatch: true,
       totalCount: total,
       currentCount: 0,
-      currentPath: scannedFiles[0].relativePath,
+      currentPath: firstFile.relativePath,
       successCount: 0,
       skippedCount: 0,
       error: null,
@@ -478,6 +480,7 @@ const MapsPage = (): ReactElement => {
       while (currentIndex < filesToImport.length) {
         const idx = currentIndex++;
         const item = filesToImport[idx];
+        if (!item) continue;
         setImportState((prev) => ({
           ...prev,
           totalCount: activeTotal,
@@ -969,7 +972,7 @@ const MapsPage = (): ReactElement => {
                 </ListItemIcon>
                 <ListItemText
                   primary="导入文件"
-                  primaryTypographyProps={{ fontSize: '13.5px', fontWeight: 500 }}
+                  slotProps={{ primary: { sx: { fontSize: '13.5px', fontWeight: 500 } } }}
                 />
               </MenuItem>
               <MenuItem
@@ -984,7 +987,7 @@ const MapsPage = (): ReactElement => {
                 </ListItemIcon>
                 <ListItemText
                   primary="导入文件夹 (含子目录)"
-                  primaryTypographyProps={{ fontSize: '13.5px', fontWeight: 500 }}
+                  slotProps={{ primary: { sx: { fontSize: '13.5px', fontWeight: 500 } } }}
                 />
               </MenuItem>
             </Menu>
@@ -999,7 +1002,13 @@ const MapsPage = (): ReactElement => {
             <input
               type="file"
               ref={folderInputRef}
-              {...({ webkitdirectory: '', directory: '' } as any)}
+              {...({
+                webkitdirectory: '',
+                directory: '',
+              } as React.InputHTMLAttributes<HTMLInputElement> & {
+                webkitdirectory?: string;
+                directory?: string;
+              })}
               multiple
               style={{ display: 'none' }}
               onChange={handleFilesSelected}
@@ -1009,7 +1018,6 @@ const MapsPage = (): ReactElement => {
               folderId={activeFolderId}
               onClose={() => setActiveDialog(undefined)}
               mapsId={[]}
-              fromEditor
             />
 
             <RightButtonGroup>

@@ -97,17 +97,3 @@ export const useFetchAccount = (): AccountInfo | undefined => {
   });
   return data;
 };
-
-export const useFetchAccountWithState = (): {
-  data: AccountInfo | undefined;
-  isLoading: boolean;
-  error: ErrorInfo | undefined;
-} => {
-  const client = use(ClientContext);
-  const { data, isLoading, error } = useQuery<AccountInfo, ErrorInfo>({
-    queryKey: ['account'],
-    queryFn: () => client.fetchAccountInfo(),
-    enabled: !AppI18n.isPublicPage(),
-  });
-  return { data, isLoading, error: error ?? undefined };
-};

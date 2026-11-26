@@ -26,10 +26,6 @@ import { defined } from '../defined';
 
 jest.mock('@wisemapping/mindplot', () => ({}));
 
-jest.mock('../../../src/utils/analytics', () => ({
-  trackEditorInteraction: jest.fn(),
-}));
-
 type Handler = () => void;
 
 // MindplotWebComponent.save(saveHistory): true records a history entry (an

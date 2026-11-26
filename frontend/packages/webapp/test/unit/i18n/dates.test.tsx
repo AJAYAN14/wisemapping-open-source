@@ -30,31 +30,19 @@ const dateIn = (locale: LocaleCode) => {
 };
 
 afterEach(() => {
-  intl.locale = 'en';
+  intl.locale = 'zh';
 });
 
 describe('useDate', () => {
-  test('formats in the locale the page is shown in, once its messages are loaded', async () => {
-    await loadMessages('es');
-    expect(dateIn('es')('2020-01-15T10:00:00').format('LLL')).toMatch(/enero/);
-    expect(dateIn('es')(dayjs().subtract(2, 'day')).fromNow()).toBe('hace 2 días');
+  test('formats zh and zh-CN in Simplified Chinese', async () => {
+    await loadMessages('zh');
+    expect(dateIn('zh')('2020-01-15T10:00:00').format('LL')).toBe('2020年1月15日');
+    expect(dateIn('zh-CN')(dayjs().subtract(2, 'day')).fromNow()).toBe('2 天前');
   });
 
-  test('formats zh-CN in Mandarin', async () => {
+  test('leaves the global dayjs locale alone', async () => {
     await loadMessages('zh-CN');
-    expect(dateIn('zh-CN')('2020-01-15T10:00:00').format('LL')).toBe('2020年1月15日');
-  });
-
-  test('formats in English, and leaves the global dayjs locale alone', async () => {
-    await loadMessages('fr');
-    expect(dateIn('en')('2020-01-15T10:00:00').format('LL')).toBe('January 15, 2020');
-    dateIn('fr')('2020-01-15T10:00:00');
+    dateIn('zh-CN')('2020-01-15T10:00:00');
     expect(dayjs.locale()).toBe('en');
-  });
-
-  test('loading a locale registers its dayjs locale', async () => {
-    expect(dayjs.Ls['ja']).toBeUndefined();
-    await loadMessages('ja');
-    expect(dayjs.Ls['ja']).toBeDefined();
   });
 });

@@ -48,30 +48,20 @@ const reference = (
   sPos: PositionType,
   currentConnection: Topic | undefined,
 ): Topic[] => {
-  const orientation = draggedNode.getOrientation();
   let topics = allTopics.filter((topic) => {
     let result = draggedNode !== topic;
     result = result && !topic.areChildrenShrunken() && !topic.isCollapsed();
     result = result && !draggedNode.isChildTopic(topic);
     return result;
   });
-  if (orientation === 'vertical') {
-    topics = topics.filter((topic) => {
-      const distance = sPos.y - (topic.getPosition().y - topic.getSize().height / 2);
-      return distance > 0 && distance < TOLERANCE;
-    });
-  } else {
-    const side = sideOf(sPos.x);
-    topics = topics.filter((topic) => {
-      const txborder = topic.getPosition().x + (topic.getSize().width / 2) * side;
-      const distance = (sPos.x - txborder) * side;
-      return distance > 0 && distance < TOLERANCE;
-    });
-  }
+  const side = sideOf(sPos.x);
+  topics = topics.filter((topic) => {
+    const txborder = topic.getPosition().x + (topic.getSize().width / 2) * side;
+    const distance = (sPos.x - txborder) * side;
+    return distance > 0 && distance < TOLERANCE;
+  });
   const isAligned = (size: SizeType, tPos: PositionType) =>
-    orientation === 'vertical'
-      ? Math.abs(sPos.x - tPos.x) < size.width / 2
-      : Math.abs(sPos.y - tPos.y) < size.height / 2;
+    Math.abs(sPos.y - tPos.y) < size.height / 2;
   const weight = (topic: Topic) => {
     const tPos = topic.getPosition();
     return (
@@ -125,53 +115,48 @@ afterEach(() => {
 });
 
 describe('DragConnector candidates (bug3.wxml)', () => {
-  it.each(['mindmap', 'tree'])(
-    '%s: the same candidates, in the same order',
-    async (layout) => {
-      const { designer } = await load();
-      if (layout === 'tree') {
-        designer.changeLayout('tree');
-      }
-      const topics = designer.getModel().getTopics();
-      const central = designer.getModel().getCentralTopic();
-      // A main topic with a big branch, one deep in a branch, and a leaf.
-      const main = central.getChildren().reduce((a, b) => (branchSize(a) >= branchSize(b) ? a : b));
-      const deep = main.getChildren().find((child) => child.getChildren().length > 0)!;
-      const leaf = topics.find((topic) => topic.getChildren().length === 0 && topic !== central)!;
-      // Collapse a branch: its topics are no candidates.
-      const collapsed = central
-        .getChildren()
-        .find((t) => t !== main && t.getChildren().length > 0)!;
-      collapsed.getModel().setChildrenShrunken(true);
+  it('mindmap: the same candidates, in the same order', async () => {
+    const { designer } = await load();
+    const topics = designer.getModel().getTopics();
+    const central = designer.getModel().getCentralTopic();
+    // A main topic with a big branch, one deep in a branch, and a leaf.
+    const main = central.getChildren().reduce((a, b) => (branchSize(a) >= branchSize(b) ? a : b));
+    const deep = main.getChildren().find((child) => child.getChildren().length > 0)!;
+    const leaf = topics.find((topic) => topic.getChildren().length === 0 && topic !== central)!;
+    // Collapse a branch: its topics are no candidates.
+    const collapsed = central
+      .getChildren()
+      .find((t) => t !== main && t.getChildren().length > 0)!;
+    collapsed.getModel().setChildrenShrunken(true);
 
-      const connector = new DragConnector(designer.getModel(), {} as Canvas) as unknown as Searcher;
-      let compared = 0;
-      let nonEmpty = 0;
-      [main, deep, leaf].forEach((dragged) => {
-        [undefined, main.getParent()].forEach((connectedTo) => {
-          let mouse: PositionType = { x: 0, y: 0 };
-          const dragTopic = dragTopicFor(
-            dragged,
-            () => mouse,
-            () => connectedTo,
+    const connector = new DragConnector(designer.getModel(), {} as Canvas) as unknown as Searcher;
+    let compared = 0;
+    let nonEmpty = 0;
+    [main, deep, leaf].forEach((dragged) => {
+      [undefined, main.getParent()].forEach((connectedTo) => {
+        let mouse: PositionType = { x: 0, y: 0 };
+        const dragTopic = dragTopicFor(
+          dragged,
+          () => mouse,
+          () => connectedTo,
+        );
+        positionsAround(topics).forEach((position) => {
+          mouse = position;
+          const actual = connector._searchConnectionCandidates(dragTopic).map((t) => t.getId());
+          const expected = reference(topics, dragged, position, connectedTo).map((t) =>
+            t.getId(),
           );
-          positionsAround(topics).forEach((position) => {
-            mouse = position;
-            const actual = connector._searchConnectionCandidates(dragTopic).map((t) => t.getId());
-            const expected = reference(topics, dragged, position, connectedTo).map((t) =>
-              t.getId(),
-            );
-            expect(actual).toEqual(expected);
-            compared += 1;
-            nonEmpty += expected.length > 0 ? 1 : 0;
-          });
+          expect(actual).toEqual(expected);
+          compared += 1;
+          nonEmpty += expected.length > 0 ? 1 : 0;
         });
       });
-      expect(compared).toBeGreaterThan(1000);
-      expect(nonEmpty).toBeGreaterThan(compared / 4);
-      // The reference walks the dragged branch for every topic: it is the slow part.
-    },
-    60000,
+    });
+    expect(compared).toBeGreaterThan(1000);
+    expect(nonEmpty).toBeGreaterThan(compared / 4);
+    // The reference walks the dragged branch for every topic: it is the slow part.
+  },
+  60000,
   );
 
   it('walks the dragged branch once per drag, and only looks closer at topics in reach', async () => {

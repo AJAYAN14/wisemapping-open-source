@@ -19,7 +19,6 @@
 import { fireEvent, screen } from '@testing-library/react';
 
 jest.mock('react-router', () => jest.requireActual('../router-mock'));
-jest.mock('../../../../src/utils/analytics', () => ({ trackPageView: jest.fn() }));
 jest.mock('../../../../src/utils', () => ({
   ...jest.requireActual('../../../../src/utils'),
   logCriticalError: jest.fn(),
@@ -27,11 +26,10 @@ jest.mock('../../../../src/utils', () => ({
 
 import ErrorPage from '../../../../src/components/error-page';
 import { logCriticalError } from '../../../../src/utils';
-import { trackPageView } from '../../../../src/utils/analytics';
 import { renderWithProviders } from '../../helpers/render';
 import { resetRouter, routeErrorResponse, routerState, setLocation } from '../router-mock';
 import { defined } from '../../defined';
-import { initAppConfig, stubConfig } from '../helpers';
+import { initAppConfig } from '../helpers';
 
 const showError = (error: unknown) => {
   routerState.routeError = error;
@@ -49,7 +47,6 @@ describe('ErrorPage', () => {
     resetRouter();
     setLocation('/c/broken');
     jest.mocked(logCriticalError).mockClear();
-    jest.mocked(trackPageView).mockClear();
   });
 
   test('an unknown route is a page not found, with home and back buttons', () => {
@@ -59,24 +56,11 @@ describe('ErrorPage', () => {
     expect(screen.getByText(/might have been removed/)).toBeTruthy();
     expect(logCriticalError).toHaveBeenCalledWith('Page not found error (catch-all route).', '404');
     expect(document.title).toBe('Unexpected Error | WiseMapping');
-    expect(trackPageView).toHaveBeenCalledWith('/c/broken', 'ErrorPage');
 
     fireEvent.click(screen.getByRole('button', { name: 'Go to Home' }));
     expect(routerState.navigate).toHaveBeenLastCalledWith('/c/maps/');
     fireEvent.click(screen.getByRole('button', { name: 'Go Back' }));
     expect(routerState.navigate).toHaveBeenLastCalledWith(-1);
-  });
-
-  test('offers sign-up in the header only while registration is open', () => {
-    const { unmount } = showError(undefined);
-    expect(screen.getByRole('link', { name: 'Sign Up' }).getAttribute('href')).toBe(
-      '/c/registration',
-    );
-    unmount();
-
-    stubConfig({ localLoginEnabled: false });
-    showError(undefined);
-    expect(screen.queryByRole('link', { name: 'Sign Up' })).toBeNull();
   });
 
   test('a 404 response is a page not found', () => {
@@ -92,7 +76,7 @@ describe('ErrorPage', () => {
     showError(routeErrorResponse(410, 'Gone', 'gone'));
 
     expect(heading()).toBe('This mindmap is not available for public display.');
-    expect(screen.getByText(/violates our site policies/)).toBeTruthy();
+    expect(screen.getByText('该思维导图当前不可公开查看。')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Go to Home' })).toBeTruthy();
   });
 
@@ -100,7 +84,7 @@ describe('ErrorPage', () => {
     showError(routeErrorResponse(status, ''));
 
     expect(heading()).toBe("You don't have access to this page.");
-    expect(screen.getByText(/contact your administrator/)).toBeTruthy();
+    expect(screen.getByText('请先使用 Google 账号登录后再试。')).toBeTruthy();
     // Signing in comes back here: a private map's link would otherwise end on the map list.
     expect(screen.getByRole('link', { name: 'Sign In' }).getAttribute('href')).toBe(
       `/c/login?redirect=${encodeURIComponent('/c/broken')}`,
@@ -141,21 +125,10 @@ describe('ErrorPage', () => {
     expect(routerState.navigate).toHaveBeenCalledWith('/c/maps/');
   });
 
-  test('an error coming from reCAPTCHA is tagged as such', () => {
-    const error = new Error('script failed');
-    error.stack = 'Error: script failed\n    at https://www.gstatic.com/recaptcha/releases/x.js';
-    showError(error);
-
-    expect(logCriticalError).toHaveBeenCalledWith(
-      'Handling ErrorPage redirect error (reCAPTCHA origin)',
-      expect.any(String),
-    );
-  });
-
   test('a thrown value without a message falls back to the generic text', () => {
     showError({ code: 42 });
 
-    expect(screen.getByText(/Please try again later or contact support/)).toBeTruthy();
+    expect(screen.getByText('请返回首页或刷新页面重试。')).toBeTruthy();
     expect(logCriticalError).toHaveBeenCalledWith(
       'Handling ErrorPage redirect error',
       '{"code":42}',
@@ -167,7 +140,7 @@ describe('ErrorPage', () => {
     cyclic.self = cyclic;
     showError(cyclic);
 
-    expect(screen.getByText(/Please try again later or contact support/)).toBeTruthy();
+    expect(screen.getByText('请返回首页或刷新页面重试。')).toBeTruthy();
     expect(logCriticalError).toHaveBeenCalledWith(
       'Handling ErrorPage redirect error',
       '[object Object]',

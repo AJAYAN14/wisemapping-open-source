@@ -53,7 +53,7 @@ import WidgetBuilder, { type WidgetEventType } from './components/WidgetBuilder'
 import { buildDesigner } from './components/DesignerBuilder';
 import { $notify } from './components/model/ToolbarNotifier';
 import XMLSerializerFactory from './components/persistence/XMLSerializerFactory';
-import type { CanvasStyleType, BackgroundPatternType } from './components/model/CanvasStyleType';
+import type { CanvasStyleType } from './components/model/CanvasStyleType';
 
 // Registers <mindplot-component>. Skipped without a DOM (a server render or a worker), and when
 // another copy of mindplot on the page already registered it.
@@ -66,7 +66,6 @@ export type {
   MindplotWebComponentInterface,
   WidgetEventType,
   CanvasStyleType,
-  BackgroundPatternType,
 };
 
 export type { default as LayoutEventBusType, LayoutEvents } from './components/LayoutEventBusType';
@@ -122,7 +121,7 @@ export {
 export type { TopicShapeType } from './components/model/INodeModel';
 export type { TopicImageValue } from './components/ActionDispatcher';
 export { StrokeStyle } from './components/model/RelationshipModel';
-export { LineType } from './components/ConnectionLine';
+export { LineType } from './components/BaseConnectionLine';
 export { ContentType } from './components/ContentType';
 export { default as HtmlSanitizer } from './components/security/HtmlSanitizer';
 export { default as INodeModel } from './components/model/INodeModel';

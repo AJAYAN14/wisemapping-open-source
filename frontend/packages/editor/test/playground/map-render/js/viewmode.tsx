@@ -17,33 +17,11 @@
  */
 
 import '../css/viewmode.css';
-import { LocalStorageManager, Designer } from '@wisemapping/mindplot';
+import { LocalStorageManager } from '@wisemapping/mindplot';
 import MapInfoImpl from './MapInfoImpl';
 import { createRoot } from 'react-dom/client';
 import Editor, { EditorOptions, useEditor } from '../../../../src';
 import { createMockThemeVariantStorage } from './MockThemeVariantStorage';
-
-const initialization = (designer: Designer) => {
-  designer.addEvent('loadSuccess', () => {
-    const elem = document.getElementById('mindmap-comp');
-    if (elem) {
-      elem.classList.add('ready');
-    }
-
-    // Code for selector of map.
-    const mapSelectElem = document.getElementById('map-select') as HTMLSelectElement;
-    if (mapSelectElem) {
-      mapSelectElem.addEventListener('change', () => {
-        const selectMap = mapSelectElem.value;
-        window.location.href = `${window.location.pathname}?id=${selectMap}`;
-      });
-
-      Array.from(mapSelectElem.options).forEach((option) => {
-        option.selected = option.value === mapId;
-      });
-    }
-  });
-};
 
 // Obtain map id from query param
 const params = new URLSearchParams(window.location.search.substring(1));
@@ -69,7 +47,6 @@ const Playground = () => {
     <Editor
       config={editor}
       onAction={(action) => console.log('action called:', action)}
-      onLoad={initialization}
       themeVariantStorage={themeVariantStorage}
     />
   );

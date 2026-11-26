@@ -27,7 +27,7 @@ import type PositionType from '../PositionType';
 import type LayoutEventType from './LayoutEventType';
 import type { SorterPrediction } from './ChildrenSorterStrategy';
 
-import type { LayoutType, OrientationType } from './LayoutType';
+import type { OrientationType } from './LayoutType';
 
 /** The events of the layout manager: 'change' sends each node the layout moved. */
 type LayoutManagerEvents = Record<LayoutEventType, ChangeEvent>;
@@ -57,8 +57,6 @@ class LayoutManager extends EventDispispatcher<LayoutManagerEvents> {
 
   private _mindmapLayout: OriginalLayout;
 
-  private _layoutType: LayoutType;
-
   private _events: ChangeEvent[];
 
   // The pending change of each node in _events: a layout that is not flushed leaves its changes
@@ -70,16 +68,15 @@ class LayoutManager extends EventDispispatcher<LayoutManagerEvents> {
   // change it would move nothing (see needsLayout).
   private _changedSinceLayout = true;
 
-  constructor(rootNodeId: number, rootSize: SizeType, _layoutType: LayoutType = 'mindmap') {
+  constructor(rootNodeId: number, rootSize: SizeType) {
     super();
     $assert(typeof rootNodeId === 'number', 'rootNodeId can not be null');
     $assert(rootSize, 'rootSize can not be null');
 
     this._treeSet = new RootedTreeSet();
     this._mindmapLayout = new OriginalLayout(this._treeSet);
-    this._layoutType = 'mindmap';
 
-    const rootNode = this._getCurrentLayout().createNode(
+    const rootNode = this._mindmapLayout.createNode(
       rootNodeId,
       rootSize,
       { x: 0, y: 0 },
@@ -88,10 +85,6 @@ class LayoutManager extends EventDispispatcher<LayoutManagerEvents> {
     this._treeSet.setRoot(rootNode);
     this._events = [];
     this._eventsById = new Map();
-  }
-
-  private _getCurrentLayout(): OriginalLayout {
-    return this._mindmapLayout;
   }
 
   updateNodeSize(id: number, size: SizeType): void {
@@ -145,7 +138,7 @@ class LayoutManager extends EventDispispatcher<LayoutManagerEvents> {
   }
 
   connectNode(parentId: number, childId: number, order: number) {
-    this._getCurrentLayout().connectNode(parentId, childId, order);
+    this._mindmapLayout.connectNode(parentId, childId, order);
     this._changedSinceLayout = true;
 
     return this;
@@ -153,7 +146,7 @@ class LayoutManager extends EventDispispatcher<LayoutManagerEvents> {
 
   disconnectNode(id: number): void {
     $assert(typeof id === 'number', 'id can not be null');
-    this._getCurrentLayout().disconnectNode(id);
+    this._mindmapLayout.disconnectNode(id);
     this._changedSinceLayout = true;
   }
 
@@ -171,7 +164,7 @@ class LayoutManager extends EventDispispatcher<LayoutManagerEvents> {
       position !== undefined && Number.isFinite(position.x) && Number.isFinite(position.y),
       'position must have finite x and y',
     );
-    const result = this._getCurrentLayout().createNode(id, size, position, 'topic');
+    const result = this._mindmapLayout.createNode(id, size, position, 'topic');
     this._treeSet.add(result);
     this._changedSinceLayout = true;
 
@@ -260,7 +253,7 @@ class LayoutManager extends EventDispispatcher<LayoutManagerEvents> {
 
   layout(flush?: boolean): LayoutManager {
     // File repositioning ...
-    this._getCurrentLayout().layout();
+    this._mindmapLayout.layout();
     this._changedSinceLayout = false;
 
     // Collect changes ...
@@ -273,16 +266,8 @@ class LayoutManager extends EventDispispatcher<LayoutManagerEvents> {
     return this;
   }
 
-  setLayoutType(_layoutType: LayoutType): void {
-    this._layoutType = 'mindmap';
-  }
-
-  getLayoutType(): LayoutType {
-    return this._layoutType;
-  }
-
   getOrientation(): OrientationType {
-    return this._getCurrentLayout().getOrientation();
+    return this._mindmapLayout.getOrientation();
   }
 
   private _flushEvents() {

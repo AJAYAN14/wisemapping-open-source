@@ -2,7 +2,7 @@
 
 exports[`prism theme output dark variant 1`] = `
 {
-  "canvas": ""#000000" "#2C2C2E" 1 false "grid"",
+  "canvas": ""#000000" 1",
   "central": "text="中心主题" shape="rounded rectangle" line=2 font="-apple-system, BlinkMacSystemFont, 'SF Pro Rounded', 'SF Pro Text', system-ui, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" size=13.5 style="normal" weight="bold" fontColor="#FFFFFF" bg="#0077ED" border="#389BFF" connection="#0A84FF" outerBg="#46bdff" outerBgFocus="#46bdff" outerBorder="#7ee1ff" padding=9.600000000000001 emoji=12",
   "central:picked": "text="中心主题" shape="rounded rectangle" line=2 font="-apple-system, BlinkMacSystemFont, 'SF Pro Rounded', 'SF Pro Text', system-ui, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" size=13.5 style="normal" weight="bold" fontColor="#000000" bg="#fedcba" border="#010203" connection="#0A84FF" outerBg="#ffffff" outerBgFocus="#ffffff" outerBorder="#474849" padding=9.600000000000001 emoji=12",
   "floating": "text="独立主题" shape="rounded rectangle" line=2 font="-apple-system, BlinkMacSystemFont, 'SF Pro Rounded', 'SF Pro Text', system-ui, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" size=10.5 style="normal" weight="normal" fontColor="#F5F5F7" bg="#1C1C1E" border="#474749" connection="#78889f" outerBg="#626264" outerBgFocus="#626264" outerBorder="#8d8d8f" padding=9.600000000000001 emoji=8.399999999999999",
@@ -47,7 +47,7 @@ exports[`prism theme output dark variant 1`] = `
 
 exports[`prism theme output light variant 1`] = `
 {
-  "canvas": ""#F2F2F7" "#E5E5EA" 1 false "grid"",
+  "canvas": ""#FAFAFC" 1",
   "central": "text="中心主题" shape="rounded rectangle" line=2 font="-apple-system, BlinkMacSystemFont, 'SF Pro Rounded', 'SF Pro Text', system-ui, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" size=13.5 style="normal" weight="bold" fontColor="#FFFFFF" bg="#0071E3" border="#0071E3" connection="#0071E3" outerBg="#46b7ff" outerBgFocus="#46b7ff" outerBorder="#46b7ff" padding=9.600000000000001 emoji=12",
   "central:picked": "text="中心主题" shape="rounded rectangle" line=2 font="-apple-system, BlinkMacSystemFont, 'SF Pro Rounded', 'SF Pro Text', system-ui, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" size=13.5 style="normal" weight="bold" fontColor="#000000" bg="#fedcba" border="#010203" connection="#0071E3" outerBg="#ffffff" outerBgFocus="#ffffff" outerBorder="#474849" padding=9.600000000000001 emoji=12",
   "floating": "text="独立主题" shape="rounded rectangle" line=2 font="-apple-system, BlinkMacSystemFont, 'SF Pro Rounded', 'SF Pro Text', system-ui, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif" size=10.5 style="normal" weight="normal" fontColor="#1D1D1F" bg="#FFFFFF" border="#C6C6C8" connection="#94A3B8" outerBg="#ffffff" outerBgFocus="#ffffff" outerBorder="#ffffff" padding=9.600000000000001 emoji=8.399999999999999",

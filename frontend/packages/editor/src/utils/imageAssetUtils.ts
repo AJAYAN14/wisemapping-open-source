@@ -24,9 +24,7 @@ export const ALLOWED_TOPIC_IMAGE_TYPES = new Set<string>([
   'image/svg+xml',
 ]);
 
-export const MAX_TOPIC_IMAGE_INPUT_BYTES = 20 * 1024 * 1024;
 export const MAX_TOPIC_IMAGE_UPLOAD_BYTES = 20 * 1024 * 1024;
-export const MAX_TOPIC_IMAGE_UPLOAD_EDGE = 1280;
 
 export interface CompressedTopicImage {
   blob: Blob;
@@ -47,20 +45,6 @@ export const scaleTopicImageCardSize = (
   return {
     width: Math.max(Math.round(safeW * scale), 80),
     height: Math.max(Math.round(safeH * scale), 50),
-  };
-};
-
-export const scaleTopicImageUploadSize = (
-  origW: number,
-  origH: number,
-  maxEdge = MAX_TOPIC_IMAGE_UPLOAD_EDGE,
-): { width: number; height: number } => {
-  const safeW = Number.isFinite(origW) && origW > 0 ? origW : 130;
-  const safeH = Number.isFinite(origH) && origH > 0 ? origH : 90;
-  const scale = Math.min(maxEdge / safeW, maxEdge / safeH, 1.0);
-  return {
-    width: Math.max(Math.round(safeW * scale), 1),
-    height: Math.max(Math.round(safeH * scale), 1),
   };
 };
 

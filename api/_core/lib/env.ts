@@ -1,6 +1,6 @@
 export const DEFAULT_ALLOWED_EMAIL = 'a.jian0629@gmail.com';
 
-export interface EnvRecord {
+interface EnvRecord {
   DATABASE_URL?: string;
   SUPABASE_URL?: string;
   SUPABASE_ANON_KEY?: string;

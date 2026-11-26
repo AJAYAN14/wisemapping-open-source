@@ -102,7 +102,7 @@ describe('ExportDialog', () => {
     const own = fakeDesigner('own map', 'classic');
     const onClose = jest.fn();
     renderWithProviders(
-      <ExportDialog mapId={1} enableImgExport={true} designer={own.designer} onClose={onClose} />,
+      <ExportDialog mapId={1} designer={own.designer} onClose={onClose} />,
       { client },
     );
 
@@ -126,7 +126,7 @@ describe('ExportDialog', () => {
       downloads.push(this.download);
     });
 
-    renderWithProviders(<ExportDialog mapId={7} enableImgExport={false} onClose={jest.fn()} />, {
+    renderWithProviders(<ExportDialog mapId={7} onClose={jest.fn()} />, {
       client,
     });
     await waitFor(() => expect(mockFetchMapMetadata).toHaveBeenCalledWith(7));
@@ -154,7 +154,7 @@ describe('ExportDialog', () => {
       downloads.push(this.download);
     });
 
-    renderWithProviders(<ExportDialog mapId={7} enableImgExport={false} onClose={jest.fn()} />, {
+    renderWithProviders(<ExportDialog mapId={7} onClose={jest.fn()} />, {
       client,
     });
     await waitFor(() => expect(mockFetchMapMetadata).toHaveBeenCalledWith(7));
@@ -175,7 +175,7 @@ describe('ExportDialog', () => {
     mockExportFile.mockRejectedValueOnce(new Error('图片下载失败 (HTTP 404)'));
 
     renderWithProviders(
-      <ExportDialog mapId={1} enableImgExport={true} designer={own.designer} onClose={onClose} />,
+      <ExportDialog mapId={1} designer={own.designer} onClose={onClose} />,
       { client },
     );
 

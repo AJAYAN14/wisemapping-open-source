@@ -16,7 +16,7 @@
  *   limitations under the License.
  */
 import { afterEach, describe, expect, it, jest } from '@jest/globals';
-import { LineType } from '../../../src/components/ConnectionLine';
+import { LineType } from '../../../src/components/BaseConnectionLine';
 import ColorUtil from '../../../src/components/theme/ColorUtil';
 import DefaultTheme from '../../../src/components/theme/DefaultTheme';
 import PrismTheme from '../../../src/components/theme/PrismTheme';
@@ -99,7 +99,6 @@ describe('ThemeStyle', () => {
       const canvas = style.getCanvasStyle();
       expect(ColorUtil.parse(canvas.backgroundColor)).toBeDefined();
       expect(canvas.opacity).toBeGreaterThan(0);
-      expect(typeof canvas.showGrid).toBe('boolean');
     });
   });
 
@@ -109,18 +108,12 @@ describe('ThemeStyle', () => {
     // prism-light.json has no canvas: the default one applies.
     expect(light.getCanvasStyle()).toEqual({
       backgroundColor: prismDefault.Canvas.backgroundColor,
-      gridColor: prismDefault.Canvas.gridColor,
       opacity: 1,
-      showGrid: false,
-      gridPattern: undefined,
     });
-    // prism-dark.json overrides the colour, grid colour and showGrid, and keeps the rest.
+    // prism-dark.json overrides the colour, and keeps the rest.
     expect(dark.getCanvasStyle()).toEqual({
       backgroundColor: prismDark.Canvas.backgroundColor,
-      gridColor: prismDark.Canvas.gridColor,
       opacity: 1,
-      showGrid: false,
-      gridPattern: undefined,
     });
     // Keys the dark file does not set come from the light and default files.
     expect(dark.getStyles('MainTopic').fontFamily).toBe(light.getStyles('MainTopic').fontFamily);

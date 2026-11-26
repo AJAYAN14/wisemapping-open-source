@@ -59,13 +59,6 @@ describe('redraw render snapshot of a medium map', () => {
     expect(renderSnapshot(harness.designer)).toMatchSnapshot();
   });
 
-  it('renders the same after switching to the tree layout and back', () => {
-    harness.designer.applyLayout('tree');
-    expect(renderSnapshot(harness.designer)).toMatchSnapshot('tree');
-    harness.designer.applyLayout('mindmap');
-    expect(renderSnapshot(harness.designer)).toMatchSnapshot('mindmap');
-  });
-
   it('renders the same after toggling the theme variant', () => {
     harness.designer.setThemeVariant('dark');
     expect(renderSnapshot(harness.designer)).toMatchSnapshot('dark');
@@ -114,12 +107,5 @@ describe('redraw render snapshot of a medium map', () => {
     dispatcher.changeImageEmojiCharToTopic([11], '🙂');
     dispatcher.changeImageGalleryIconNameToTopic([15], 'favorite');
     expect(renderSnapshot(harness.designer)).toMatchSnapshot('styled');
-  });
-
-  it('renders the same after changing the theme', () => {
-    harness.designer.applyTheme('prism');
-    expect(renderSnapshot(harness.designer)).toMatchSnapshot('prism');
-    harness.designer.setThemeVariant('dark');
-    expect(renderSnapshot(harness.designer)).toMatchSnapshot('prism dark');
   });
 });

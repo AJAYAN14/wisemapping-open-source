@@ -23,12 +23,11 @@ class MapInfoImpl implements MapInfo {
   private locked: boolean;
   private starred: boolean;
   private lockedMsg: string | undefined;
-  private creatorFullName: string;
 
   constructor(
     id: string,
     title: string,
-    creatorFullName: string,
+    _creatorFullName: string,
     locked: boolean,
     lockedMsg?: string,
   ) {
@@ -37,11 +36,6 @@ class MapInfoImpl implements MapInfo {
     this.locked = locked;
     this.lockedMsg = lockedMsg;
     this.starred = true;
-    this.creatorFullName = creatorFullName;
-  }
-
-  getCreatorFullName(): string {
-    return this.creatorFullName;
   }
 
   isStarred(): Promise<boolean> {
@@ -68,14 +62,6 @@ class MapInfoImpl implements MapInfo {
 
   isLocked(): boolean {
     return this.locked;
-  }
-
-  getLockedMessage(): string {
-    return 'Map Is Locked !';
-  }
-
-  getZoom(): number {
-    return 0.8;
   }
 
   getId(): string {

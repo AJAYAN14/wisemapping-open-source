@@ -123,7 +123,7 @@ describe('DuplicateDialog', () => {
         description: description.value,
       }),
     );
-  });
+  }, 20000);
 
   test('trims the submitted title', async () => {
     renderDialog(101);

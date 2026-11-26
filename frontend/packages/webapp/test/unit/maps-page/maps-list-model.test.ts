@@ -80,20 +80,25 @@ describe('getComparator and stableSort', () => {
 });
 
 describe('mapsFilter', () => {
-  const owned = map({ id: 1, title: 'Owned plan', role: 'owner' });
-  const shared = map({ id: 2, title: 'Shared plan', role: 'editor', public: true });
-  const starred = map({ id: 3, title: 'Starred', starred: true });
+  const uncategorized = map({ id: 1, title: 'Owned plan', role: 'owner' });
+  const inFolder = map({
+    id: 2,
+    title: 'Shared plan',
+    role: 'editor',
+    folderId: 10,
+    folderPath: 'Work/Projects/',
+  });
+  const starred = map({ id: 3, title: 'Starred', starred: true, folderId: 10 });
   const tagged = map({ id: 4, title: 'Tagged', labels: [label(7)] });
-  const maps = [owned, shared, starred, tagged];
+  const maps = [uncategorized, inFolder, starred, tagged];
   const ids = (filter: Parameters<typeof mapsFilter>[0], search = '') =>
     maps.filter(mapsFilter(filter, search)).map((m) => m.id);
 
   test.each([
     ['all', { type: 'all' as const }, [1, 2, 3, 4]],
-    ['owned', { type: 'owned' as const }, [1, 3, 4]],
-    ['shared', { type: 'shared' as const }, [2]],
+    ['uncategorized', { type: 'uncategorized' as const }, [1, 4]],
     ['starred', { type: 'starred' as const }, [3]],
-    ['public', { type: 'public' as const }, [2]],
+    ['folder', { type: 'folder' as const, folderId: 10 }, [2, 3]],
   ])('the %s entry', (_name, filter, expected) => {
     expect(ids(filter)).toEqual(expected);
   });
@@ -107,9 +112,9 @@ describe('mapsFilter', () => {
     expect(ids({ type: 'bogus' } as never)).toEqual([]);
   });
 
-  test('the search narrows the entry by title, ignoring case', () => {
+  test('the search narrows the entry by title or folder path, ignoring case', () => {
     expect(ids({ type: 'all' }, 'PLAN')).toEqual([1, 2]);
-    expect(ids({ type: 'shared' }, 'plan')).toEqual([2]);
+    expect(ids({ type: 'folder', folderId: 10 }, 'work')).toEqual([2]);
     expect(ids({ type: 'all' }, 'nothing like this')).toEqual([]);
   });
 

@@ -43,7 +43,6 @@ type ActionDialogProps = {
   mapsId: number[];
   folderId?: number | null | undefined;
   onClose: (success?: boolean) => void;
-  fromEditor?: boolean;
   pageMode?: PageModeType;
   /** The designer of the editor the action comes from, if any. */
   designer?: Designer | undefined;
@@ -56,7 +55,6 @@ const ActionDispatcher = ({
   action,
   folderId,
   onClose,
-  fromEditor = false,
   designer,
   beforeRevert,
 }: ActionDialogProps): React.ReactElement => {
@@ -100,12 +98,7 @@ const ActionDispatcher = ({
         <HistoryDialog onClose={handleOnClose} mapId={mapId} beforeRevert={beforeRevert} />
       )}
       {action === 'export' && singleMap && (
-        <ExportDialog
-          onClose={handleOnClose}
-          mapId={mapId}
-          enableImgExport={fromEditor}
-          designer={designer}
-        />
+        <ExportDialog onClose={handleOnClose} mapId={mapId} designer={designer} />
       )}
       {action === 'label' && <LabelDialog onClose={handleOnClose} mapsId={mapsId} />}
       {action === 'move-folder' && <MoveFolderDialog onClose={handleOnClose} mapsId={mapsId} />}

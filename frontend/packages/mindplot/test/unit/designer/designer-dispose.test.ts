@@ -317,25 +317,6 @@ describe('Designer dispose (BL-48)', () => {
   });
 });
 
-describe('Designer drag pivot (BL-47)', () => {
-  afterEach(() => {
-    jest.restoreAllMocks();
-  });
-
-  it('resets its own drag pivot on a layout change, not the last one built', async () => {
-    const first = await buildHarness();
-    const second = await buildHarness();
-
-    const firstReset = jest.spyOn(internals(first.designer)._dragManager.getDragPivot(), 'reset');
-    const secondReset = jest.spyOn(internals(second.designer)._dragManager.getDragPivot(), 'reset');
-
-    first.designer.applyLayout('tree');
-
-    expect(firstReset).toHaveBeenCalled();
-    expect(secondReset).not.toHaveBeenCalled();
-  });
-});
-
 describe('Designer enddragging (BL-49)', () => {
   it('does not apply a cancelled drag', async () => {
     const { designer } = await buildHarness();

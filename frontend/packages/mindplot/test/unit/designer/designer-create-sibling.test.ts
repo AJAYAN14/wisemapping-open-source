@@ -75,11 +75,8 @@ const pos = (manager: LayoutManager, id: number) => manager.find(id).getPosition
 const byY = (manager: LayoutManager, ids: number[]): number[] =>
   [...ids].sort((a, b) => pos(manager, a).y - pos(manager, b).y);
 
-const byX = (manager: LayoutManager, ids: number[]): number[] =>
-  [...ids].sort((a, b) => pos(manager, a).x - pos(manager, b).x);
-
-const build = (layout: LayoutType, rootChildren: number): LayoutManager => {
-  const manager = new LayoutManager(0, ROOT_NODE_SIZE, layout);
+const build = (_layout: LayoutType, rootChildren: number): LayoutManager => {
+  const manager = new LayoutManager(0, ROOT_NODE_SIZE);
   for (let order = 0; order < rootChildren; order++) {
     manager.addNode(order + 1, NODE_SIZE, ORIGIN).connectNode(0, order + 1, order);
   }
@@ -131,14 +128,5 @@ describe('Designer.createSiblingForSelectedNode', () => {
 
     expect(order).toBe(1);
     expect(byY(manager, [10, 11, 12, NEW_ID])).toEqual([10, NEW_ID, 11, 12]);
-  });
-
-  it('inserts right after a first-level topic in the tree layout', () => {
-    const manager = build('tree', 3);
-
-    const order = createSibling(manager, 1, 0);
-
-    expect(order).toBe(1);
-    expect(byX(manager, [1, 2, 3, NEW_ID])).toEqual([1, NEW_ID, 2, 3]);
   });
 });

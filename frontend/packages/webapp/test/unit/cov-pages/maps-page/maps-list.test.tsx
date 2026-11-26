@@ -174,8 +174,7 @@ describe('MapsList', () => {
       'href',
       expect.stringContaining('/c/maps/1/edit'),
     );
-    // The creator column and the labels column are shown.
-    expect(within(rowFor('Alpha plan')).getByText('zed@wisemapping.com')).toBeTruthy();
+    // The labels column is shown.
     expect(within(rowFor('Alpha plan')).getByText('Research')).toBeTruthy();
   });
 
@@ -233,10 +232,8 @@ describe('MapsList', () => {
   });
 
   test.each<[string, Filter, string[]]>([
-    ['owned', { type: 'owned' }, ['Gamma ideas', 'Alpha plan']],
-    ['shared', { type: 'shared' }, ['Beta notes']],
     ['starred', { type: 'starred' }, ['Alpha plan']],
-    ['public', { type: 'public' }, ['Beta notes']],
+    ['uncategorized', { type: 'uncategorized' }, ['Beta notes', 'Gamma ideas', 'Alpha plan']],
     ['label', { type: 'label', label: travel }, ['Gamma ideas']],
   ])('the %s filter only lists the matching maps', async (_name, filter, expected) => {
     renderList(filter);
@@ -322,8 +319,8 @@ describe('MapsList', () => {
     expect(tableTitles()).toEqual(['Gamma ideas', 'Beta notes', 'Alpha plan']);
     expect(screen.getByText('sorted descending')).toBeTruthy();
 
-    fireEvent.click(screen.getByRole('button', { name: 'Creator' }));
-    expect(tableTitles()).toEqual(['Beta notes', 'Gamma ideas', 'Alpha plan']);
+    fireEvent.click(screen.getByRole('button', { name: 'Last Update' }));
+    expect(tableTitles()).toEqual(['Alpha plan', 'Gamma ideas', 'Beta notes']);
 
     // The labels column has no visible header, but its sort control is named.
     expect(screen.getByRole('button', { name: 'Labels' })).toBeTruthy();
@@ -383,7 +380,7 @@ describe('MapsList', () => {
   });
 
   test('a search from a later page shows its matches from the first page', async () => {
-    const many = Array.from({ length: 12 }, (_, i) =>
+    const many = Array.from({ length: 22 }, (_, i) =>
       makeMap({
         id: i + 1,
         title: `Map ${String(i + 1).padStart(2, '0')}`,
@@ -391,17 +388,17 @@ describe('MapsList', () => {
       }),
     );
     renderList({ type: 'all' }, buildClient(many));
-    await screen.findAllByText('Map 12');
+    await screen.findAllByText('Map 22');
     fireEvent.click(
       defined(screen.getAllByRole('button', { name: 'Go to next page', hidden: true })[0]),
     );
     expect(tableTitles()).toEqual(['Map 02', 'Map 01']);
 
     fireEvent.change(screen.getByRole('textbox', { name: 'Search maps' }), {
-      target: { value: 'Map 1' },
+      target: { value: 'Map 2' },
     });
 
-    expect(tableTitles()).toEqual(['Map 12', 'Map 11', 'Map 10']);
+    expect(tableTitles()).toEqual(['Map 22', 'Map 21', 'Map 20']);
   });
 
   test('clicking a selected row again unselects it, whatever its position', async () => {
@@ -432,7 +429,7 @@ describe('MapsList', () => {
   });
 
   test('"Select all" selects every listed map and toggles back to none', async () => {
-    renderList({ type: 'owned' });
+    renderList({ type: 'all' });
     await screen.findAllByText('Alpha plan');
 
     const selectAll = screen.getByRole('checkbox', { name: 'Select all' }) as HTMLInputElement;
@@ -440,7 +437,7 @@ describe('MapsList', () => {
     expect(selectAll.checked).toBe(true);
 
     fireEvent.click(screen.getByRole('button', { name: 'Delete selected' }));
-    expect(screen.getByTestId('dispatcher-maps').textContent).toBe('1,3');
+    expect(screen.getByTestId('dispatcher-maps').textContent).toBe('1,2,3');
     fireEvent.click(screen.getByText('dispatcher-cancel'));
 
     fireEvent.click(selectAll);
@@ -552,7 +549,7 @@ describe('MapsList', () => {
   });
 
   test('more maps than a page are paginated', async () => {
-    const many = Array.from({ length: 12 }, (_, i) =>
+    const many = Array.from({ length: 22 }, (_, i) =>
       makeMap({
         id: i + 1,
         title: `Map ${String(i + 1).padStart(2, '0')}`,
@@ -560,11 +557,11 @@ describe('MapsList', () => {
       }),
     );
     renderList({ type: 'all' }, buildClient(many));
-    await screen.findAllByText('Map 12');
+    await screen.findAllByText('Map 22');
 
-    expect(tableTitles()).toHaveLength(10);
-    expect(tableTitles()[0]).toBe('Map 12');
-    expect(screen.getAllByText('1–10 of 12').length).toBeGreaterThan(0);
+    expect(tableTitles()).toHaveLength(20);
+    expect(tableTitles()[0]).toBe('Map 22');
+    expect(screen.getAllByText('1–20 of 22').length).toBeGreaterThan(0);
 
     // One pagination: in the toolbar on a wide screen.
     expect(screen.getAllByRole('button', { name: 'Go to next page' })).toHaveLength(1);
@@ -572,12 +569,12 @@ describe('MapsList', () => {
     expect(tableTitles()).toEqual(['Map 02', 'Map 01']);
 
     fireEvent.click(screen.getByRole('button', { name: 'Go to previous page' }));
-    expect(tableTitles()).toHaveLength(10);
+    expect(tableTitles()).toHaveLength(20);
   });
 
   test('on a narrow screen the cards are paginated below the list', async () => {
     setNarrowScreen(true);
-    const many = Array.from({ length: 12 }, (_, i) =>
+    const many = Array.from({ length: 22 }, (_, i) =>
       makeMap({
         id: i + 1,
         title: `Map ${String(i + 1).padStart(2, '0')}`,
@@ -585,13 +582,13 @@ describe('MapsList', () => {
       }),
     );
     renderList({ type: 'all' }, buildClient(many));
-    await screen.findAllByText('Map 12');
+    await screen.findAllByText('Map 22');
 
     const cardTitles = () =>
       within(screen.getByTestId('maps-cards'))
         .getAllByRole('link')
         .map((link) => link.querySelector('.MuiCardHeader-title')?.textContent);
-    expect(cardTitles()).toHaveLength(10);
+    expect(cardTitles()).toHaveLength(20);
 
     expect(screen.getAllByRole('button', { name: 'Go to next page' })).toHaveLength(1);
     fireEvent.click(screen.getByRole('button', { name: 'Go to next page' }));

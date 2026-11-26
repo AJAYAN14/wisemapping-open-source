@@ -32,16 +32,7 @@ describe('MapInfoImpl', () => {
 
     expect(info.getId()).toBe('4');
     expect(info.getTitle()).toBe('Title');
-    expect(info.getCreatorFullName()).toBe('Ana Li');
     expect(info.isLocked()).toBe(true);
-    expect(info.getLockedMessage()).toBe('Locked by Bo');
-    expect(info.getZoom()).toBe(1.5);
-  });
-
-  it('reports no locked message when there is none', () => {
-    const info = new MapInfoImpl(1, {} as Client, 't', 'c', false, undefined, 1);
-
-    expect(info.getLockedMessage()).toBe('');
   });
 
   it('isStarred answers the known value, or false when unknown', async () => {
@@ -100,20 +91,13 @@ describe('MapInfoImpl', () => {
 
     info.updateMetadata({});
     expect(info.isLocked()).toBe(true);
-    expect(info.getZoom()).toBe(1.5);
 
     info.updateMetadata({
       locked: false,
-      lockedMsg: '',
-      zoom: 0.5,
       starred: true,
-      creatorFullName: 'Bo',
     });
 
     expect(info.isLocked()).toBe(false);
-    expect(info.getLockedMessage()).toBe('');
-    expect(info.getZoom()).toBe(0.5);
-    expect(info.getCreatorFullName()).toBe('Bo');
     await expect(info.isStarred()).resolves.toBe(true);
   });
 });

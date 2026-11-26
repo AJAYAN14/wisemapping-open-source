@@ -24,13 +24,7 @@ interface MapInfo {
 
   updateTitle(title: string): Promise<void>;
 
-  getCreatorFullName(): string;
-
   isLocked(): boolean;
-
-  getLockedMessage(): string;
-
-  getZoom(): number;
 
   getId(): string;
 }

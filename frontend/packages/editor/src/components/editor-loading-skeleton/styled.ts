@@ -64,30 +64,6 @@ export const AppBarRight = styled('div')(({ theme }) => ({
   gap: theme.spacing(1),
 }));
 
-export const FormattingToolbarSkeleton = styled('div')(({ theme }) => ({
-  position: 'absolute',
-  right: `max(${EDITOR_LAYOUT.formattingToolbar.right}, env(safe-area-inset-right, 0px))`,
-  top: EDITOR_LAYOUT.formattingToolbar.top,
-  maxHeight:
-    'calc(100dvh - 120px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))',
-  overflowY: 'hidden',
-  display: 'flex',
-  flexDirection: 'column',
-  width: EDITOR_LAYOUT.formattingToolbar.width,
-  gap: theme.spacing(0.5),
-  alignItems: 'center',
-  justifyContent: 'center',
-  backgroundColor: theme.palette.background.default,
-  borderRadius: '8px',
-  padding: theme.spacing(1),
-  boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
-  zIndex: EDITOR_Z_INDEX.formattingToolbar,
-  [theme.breakpoints.down('sm')]: {
-    top: 'calc(56px + env(safe-area-inset-top, 0px))',
-  },
-  ...theme.applyStyles('dark', { boxShadow: '0 2px 8px rgba(255,255,255,0.15)' }),
-}));
-
 export const ZoomToolbarSkeleton = styled('div')(({ theme }) => ({
   position: 'absolute',
   top: 'auto',

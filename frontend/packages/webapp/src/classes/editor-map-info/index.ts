@@ -22,29 +22,23 @@ class MapInfoImpl implements MapInfo {
   private client: Client;
   private id: number;
   private title: string;
-  private zoom: number;
   private locked: boolean;
-  private lockedMsg: string | undefined;
-  private creatorFullName: string;
   private starred: boolean | undefined;
 
   constructor(
     id: number,
     client: Client,
     title: string,
-    creatorFullName: string,
+    _creatorFullName: string,
     locked: boolean,
-    lockedMsg: string | undefined,
-    zoom: number,
+    _lockedMsg: string | undefined,
+    _zoom: number,
     starred?: boolean,
   ) {
     this.id = id;
     this.client = client;
     this.title = title;
-    this.zoom = zoom;
     this.locked = locked;
-    this.lockedMsg = lockedMsg;
-    this.creatorFullName = creatorFullName;
     this.starred = starred;
   }
 
@@ -65,10 +59,6 @@ class MapInfoImpl implements MapInfo {
       this.starred = previous;
       throw error;
     });
-  }
-
-  getCreatorFullName(): string {
-    return this.creatorFullName;
   }
 
   getTitle(): string {
@@ -95,39 +85,19 @@ class MapInfoImpl implements MapInfo {
     return this.locked;
   }
 
-  getLockedMessage(): string {
-    return this.lockedMsg ? this.lockedMsg : '';
-  }
-
-  getZoom(): number {
-    return this.zoom;
-  }
-
   getId(): string {
     return String(this.id);
   }
 
   updateMetadata(metadata: {
     locked?: boolean | undefined;
-    lockedMsg?: string | undefined;
-    zoom?: number | undefined;
     starred?: boolean | undefined;
-    creatorFullName?: string | undefined;
   }): void {
     if (metadata.locked !== undefined) {
       this.locked = metadata.locked;
     }
-    if (metadata.lockedMsg !== undefined) {
-      this.lockedMsg = metadata.lockedMsg;
-    }
-    if (metadata.zoom !== undefined) {
-      this.zoom = metadata.zoom;
-    }
     if (metadata.starred !== undefined) {
       this.starred = metadata.starred;
-    }
-    if (metadata.creatorFullName !== undefined) {
-      this.creatorFullName = metadata.creatorFullName;
     }
   }
 }

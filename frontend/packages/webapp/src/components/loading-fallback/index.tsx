@@ -42,7 +42,7 @@ const isMapListRoute = () =>
 // page: they load in the waiting screen they show, so the steps read as one screen.
 const isSignInRoute = () =>
   typeof window !== 'undefined' &&
-  /^(\/[a-z]{2}(-[A-Z]{2})?)?\/c\/(login|oauth-callback|registration-google|registration-facebook)\/?$/.test(
+  /^(\/[a-z]{2}(-[A-Z]{2})?)?\/c\/(login|oauth-callback|registration-google)\/?$/.test(
     window.location.pathname,
   );
 

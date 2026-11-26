@@ -97,62 +97,6 @@ class OriginalLayout {
   }
 
   /**
-   * Migrates node ordering from TreeLayout's continuous ordering
-   * to OriginalLayout's balanced ordering (even/odd for the central topic's children).
-   * The other tree roots, floating topics, get the sorter of a topic, as createNode gives them.
-   */
-  migrateFromLayout(centralId: number): void {
-    const roots = this._treeSet.getTreeRoots();
-    roots.forEach((node) => {
-      this._migrateNodeOrdering(node, node.getId() === centralId);
-    });
-  }
-
-  private _migrateNodeOrdering(node: Node, isRoot: boolean): void {
-    // Update sorter strategy based on node type, also for a node without children yet: it would
-    // otherwise keep the sorter of the other layout for the children it gets.
-    node.setSorter(isRoot ? OriginalLayout.BALANCED_SORTER : OriginalLayout.SYMMETRIC_SORTER);
-
-    const children = this._treeSet.getChildren(node);
-    if (children.length === 0) {
-      return;
-    }
-
-    if (isRoot) {
-      // Sort children by current order
-      const sortedChildren = [...children].sort(
-        (a, b) => (a.getOrder() ?? 0) - (b.getOrder() ?? 0),
-      );
-
-      // Redistribute: first half to right (even), second half to left (odd)
-      const midpoint = Math.ceil(sortedChildren.length / 2);
-
-      sortedChildren.forEach((child, index) => {
-        if (index < midpoint) {
-          // Right side: 0, 2, 4, 6...
-          child.setOrder(index * 2);
-        } else {
-          // Left side: 1, 3, 5, 7...
-          child.setOrder((index - midpoint) * 2 + 1);
-        }
-      });
-    } else {
-      // For non-root nodes, ensure continuous ordering
-      const sortedChildren = [...children].sort(
-        (a, b) => (a.getOrder() ?? 0) - (b.getOrder() ?? 0),
-      );
-      sortedChildren.forEach((child, index) => {
-        child.setOrder(index);
-      });
-    }
-
-    // Recursively fix all descendants
-    children.forEach((child) => {
-      this._migrateNodeOrdering(child, false);
-    });
-  }
-
-  /**
    * Places the children of `node` around it, then their own children, down the tree. Every
    * parent is laid out on every pass: where its children go depends on their sizes, orders and
    * branches, on its own size, position and side, and on the shape of the tree, which is more

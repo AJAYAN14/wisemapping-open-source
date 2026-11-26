@@ -20,15 +20,11 @@ import { act, fireEvent, screen } from '@testing-library/react';
 
 jest.mock('react-router', () => jest.requireActual('../router-mock'));
 
-import CommonAuthPage from '../../../../src/components/common-auth-page';
 import CommonPage from '../../../../src/components/common-page';
 import Client from '../../../../src/classes/client';
 import { renderWithProviders } from '../../helpers/render';
 
-describe.each([
-  ['common-auth-page', CommonAuthPage],
-  ['common-page', CommonPage],
-])('%s', (_name, Page) => {
+describe.each([['common-page', CommonPage]])('%s', (_name, Page) => {
   const setup = () => {
     let expire: () => void = () => undefined;
     const client = {

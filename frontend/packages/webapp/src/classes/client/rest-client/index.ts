@@ -20,15 +20,12 @@ import Client, {
   ErrorInfo,
   MapInfo,
   BasicMapInfo,
-  NewUser,
   Label,
   Folder,
   ChangeHistory,
   AccountInfo,
   ImportMapInfo,
-  Permission,
   Oauth2CallbackResult,
-  ForgotPasswordResult,
   JwtAuth,
   MapMetadata,
   LoginErrorInfo,
@@ -199,157 +196,6 @@ export default class RestClient implements Client {
     }
   }
 
-  deleteMapPermission(id: number, email: string): Promise<void> {
-    const handler = (success: () => void, reject: (error: ErrorInfo) => void) => {
-      this.axios
-        .delete(
-          `${this.baseUrl}/api/restful/maps/${id}/collabs?email=${encodeURIComponent(email)}`,
-          {
-            headers: { 'Content-Type': 'text/plain' },
-          },
-        )
-        .then(() => {
-          success();
-        })
-        .catch((error) => {
-          const errorInfo = this.parseResponseOnError(error.response);
-          reject(errorInfo);
-        });
-    };
-    return new Promise(handler);
-  }
-
-  addMapPermissions(id: number, message: string, permissions: Permission[]): Promise<void> {
-    const handler = (success: () => void, reject: (error: ErrorInfo) => void) => {
-      this.axios
-        .put(
-          `${this.baseUrl}/api/restful/maps/${id}/collabs/`,
-          {
-            message: message,
-            collaborations: permissions,
-          },
-          { headers: { 'Content-Type': 'application/json' } },
-        )
-        .then(() => {
-          // All was ok, let's sent to success page ...;
-          success();
-        })
-        .catch((error) => {
-          const errorInfo = this.parseResponseOnError(error.response);
-          reject(errorInfo);
-        });
-    };
-    return new Promise(handler);
-  }
-
-  fetchMapPermissions(id: number): Promise<Permission[]> {
-    const handler = (
-      success: (labels: Permission[]) => void,
-      reject: (error: ErrorInfo) => void,
-    ) => {
-      this.axios
-        .get(`${this.baseUrl}/api/restful/maps/${id}/collabs`, {
-          headers: { 'Content-Type': 'text/plain' },
-        })
-        .then((response) => {
-          const data = response.data;
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const perms: Permission[] = (data.collaborations as any[]).map((p) => {
-            return {
-              id: p.id,
-              email: p.email,
-              name: p.name,
-              role: p.role,
-            };
-          });
-          success(perms);
-        })
-        .catch((error) => {
-          const errorInfo = this.parseResponseOnError(error.response);
-          reject(errorInfo);
-        });
-    };
-    return new Promise(handler);
-  }
-
-  deleteAccount(): Promise<void> {
-    const handler = (success: () => void, reject: (error: ErrorInfo) => void) => {
-      this.axios
-        .delete(`${this.baseUrl}/api/restful/account`, {
-          headers: { 'Content-Type': 'text/plain' },
-        })
-        .then(() => {
-          success();
-        })
-        .catch((error) => {
-          const errorInfo = this.parseResponseOnError(error.response);
-          reject(errorInfo);
-        });
-    };
-    return new Promise(handler);
-  }
-
-  updateAccountInfo(firstname: string, lastname: string): Promise<void> {
-    const handler = (success: () => void, reject: (error: ErrorInfo) => void) => {
-      this.axios
-        .put(`${this.baseUrl}/api/restful/account/firstname`, firstname, {
-          headers: { 'Content-Type': 'text/plain' },
-        })
-        .then(() => {
-          return this.axios.put(`${this.baseUrl}/api/restful/account/lastname`, lastname, {
-            headers: { 'Content-Type': 'text/plain' },
-          });
-        })
-        .then(() => {
-          // All was ok, let's sent to success page ...;
-          success();
-        })
-        .catch((error) => {
-          const errorInfo = this.parseResponseOnError(error.response);
-          reject(errorInfo);
-        });
-    };
-    return new Promise(handler);
-  }
-
-  updateAccountPassword(pasword: string): Promise<void> {
-    const handler = (success: () => void, reject: (error: ErrorInfo) => void) => {
-      this.axios
-        .put(`${this.baseUrl}/api/restful/account/password`, pasword, {
-          headers: { 'Content-Type': 'text/plain' },
-        })
-        .then(() => {
-          success();
-        })
-        .catch((error) => {
-          const errorInfo = this.parseResponseOnError(error.response);
-          reject(errorInfo);
-        });
-    };
-    return new Promise(handler);
-  }
-
-  updateAccountLanguage(locale: LocaleCode): Promise<void> {
-    const handler = (success: () => void, reject: (error: ErrorInfo) => void) => {
-      this.axios
-        .put(`${this.baseUrl}/api/restful/account/locale`, locale, {
-          headers: { 'Content-Type': 'text/plain' },
-        })
-        .then(() => {
-          // All was ok, let's sent to success page ...;
-          success();
-        })
-        .catch((error) => {
-          const errorInfo = this.parseResponseOnError(error.response);
-
-          // Enrich with language ...
-          errorInfo.msg = `${errorInfo.msg} - Language: ${locale}`;
-          reject(errorInfo);
-        });
-    };
-    return new Promise(handler);
-  }
-
   importMap(model: ImportMapInfo): Promise<number> {
     const handler = (success: (mapId: number) => void, reject: (error: ErrorInfo) => void) => {
       const folderIdParam =
@@ -433,27 +279,6 @@ export default class RestClient implements Client {
         .catch((error) => {
           const response = error.response;
           const errorInfo = this.parseResponseOnError(response);
-          reject(errorInfo);
-        });
-    };
-    return new Promise(handler);
-  }
-
-  updateMapToPublic(id: number, isPublic: boolean): Promise<void> {
-    const handler = (success: () => void, reject: (error: ErrorInfo) => void) => {
-      this.axios
-        .put(
-          `${this.baseUrl}/api/restful/maps/${id}/publish`,
-          { isPublic },
-          {
-            headers: { 'Content-Type': 'application/json' },
-          },
-        )
-        .then(() => {
-          success();
-        })
-        .catch((error) => {
-          const errorInfo = this.parseResponseOnError(error.response);
           reject(errorInfo);
         });
     };
@@ -601,16 +426,6 @@ export default class RestClient implements Client {
     return new Promise(handler);
   }
 
-  fetchMapInfo(id: number): Promise<MapInfo> {
-    return this.fetchAllMaps().then((mapsInfo: MapInfo[]) => {
-      const result = mapsInfo.find((m) => m.id == id);
-      if (!result) {
-        throw Error(`Map with id ${id} could not be found. Please, reflesh the page.`);
-      }
-      return result;
-    });
-  }
-
   fetchAllMaps(): Promise<MapInfo[]> {
     const handler = (
       success: (mapsInfo: MapInfo[]) => void,
@@ -650,41 +465,6 @@ export default class RestClient implements Client {
     return new Promise(handler);
   }
 
-  registerNewUser(user: NewUser): Promise<void> {
-    const handler = (success: () => void, reject: (error: ErrorInfo) => void) => {
-      this.axios
-        .post(`${this.baseUrl}/api/restful/users/`, JSON.stringify(user), {
-          headers: { 'Content-Type': 'application/json' },
-        })
-        .then(() => {
-          // All was ok, let's sent to success page ...;
-          success();
-        })
-        .catch((error) => {
-          const errorInfo = this.parseResponseOnError(error.response);
-          reject(errorInfo);
-        });
-    };
-    return new Promise(handler);
-  }
-
-  activateAccount(code: string): Promise<void> {
-    const handler = (success: () => void, reject: (error: ErrorInfo) => void) => {
-      this.axios
-        .put(`${this.baseUrl}/api/restful/users/activation?code=${code}`, null, {
-          headers: { 'Content-Type': 'application/json' },
-        })
-        .then(() => {
-          success();
-        })
-        .catch((error) => {
-          const errorInfo = this.parseResponseOnError(error.response);
-          reject(errorInfo);
-        });
-    };
-    return new Promise(handler);
-  }
-
   deleteMap(id: number): Promise<void> {
     const handler = (success: () => void, reject: (error: ErrorInfo) => void) => {
       this.axios
@@ -694,49 +474,6 @@ export default class RestClient implements Client {
         .then(() => {
           success();
         })
-        .catch((error) => {
-          const errorInfo = this.parseResponseOnError(error.response);
-          reject(errorInfo);
-        });
-    };
-    return new Promise(handler);
-  }
-
-  resetPassword(email: string): Promise<ForgotPasswordResult> {
-    const handler = (
-      success: (result: ForgotPasswordResult) => void,
-      reject: (error: ErrorInfo) => void,
-    ) => {
-      this.axios
-        .put(
-          `${this.baseUrl}/api/restful/users/resetPassword?email=${encodeURIComponent(email)}`,
-          null,
-          {
-            headers: { 'Content-Type': 'application/json' },
-          },
-        )
-        .then((response) => {
-          // All was ok, lets return if an email was sent or the user should login with oauth
-          success({ action: response.data.action });
-        })
-        .catch((error) => {
-          const response = error.response;
-          const errorInfo = this.parseResponseOnError(response);
-          reject(errorInfo);
-        });
-    };
-    return new Promise(handler);
-  }
-
-  resetPasswordFromToken(token: string, newPassword: string): Promise<void> {
-    const handler = (success: () => void, reject: (error: ErrorInfo) => void) => {
-      this.axios
-        .post(
-          `${this.baseUrl}/api/restful/users/resetPasswordToken`,
-          { token, password: newPassword },
-          { headers: { 'Content-Type': 'application/json' } },
-        )
-        .then(() => success())
         .catch((error) => {
           const errorInfo = this.parseResponseOnError(error.response);
           reject(errorInfo);
@@ -959,36 +696,6 @@ export default class RestClient implements Client {
     ) => {
       this.axios
         .post(`${this.baseUrl}/api/restful/oauth2/googlecallback?code=${code}`, null, {
-          headers: { 'Content-Type': 'application/json' },
-        })
-        .then((response) => {
-          success({
-            email: response.data.email,
-            oauthSync: response.data.oauthSync,
-            syncCode: response.data.syncCode,
-          });
-
-          // Store jwt cookie ...
-          const token = response.data.jwtToken;
-          if (token) {
-            JwtTokenConfig.storeToken(token);
-          }
-        })
-        .catch((error) => {
-          const errorInfo = this.parseResponseOnError(error.response);
-          reject(errorInfo);
-        });
-    };
-    return new Promise(handler);
-  }
-
-  processFacebookCallback(code: string): Promise<Oauth2CallbackResult> {
-    const handler = (
-      success: (result: Oauth2CallbackResult) => void,
-      reject: (error: ErrorInfo) => void,
-    ) => {
-      this.axios
-        .post(`${this.baseUrl}/api/restful/oauth2/facebookcallback?code=${code}`, null, {
           headers: { 'Content-Type': 'application/json' },
         })
         .then((response) => {
