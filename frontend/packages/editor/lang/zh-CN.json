@@ -405,13 +405,13 @@
     "defaultMessage": "点击选择图片，或拖拽图片到此处"
   },
   "topic-image.paste-hint": {
-    "defaultMessage": "支持选中节点后直接 Ctrl+V 粘贴截图 · 原图直传不压缩（单张上限 20 MB）"
+    "defaultMessage": "支持选中节点后 Ctrl+V 粘贴截图 · ≥150 KB 或 GIF 自动转静态高画质 AVIF"
   },
   "topic-image.remove": {
     "defaultMessage": "移除图片"
   },
   "topic-image.uploading": {
-    "defaultMessage": "正在上传至云端存储..."
+    "defaultMessage": "正在处理并上传至云端存储..."
   },
   "visualization-toolbar.tooltip-add-child": {
     "defaultMessage": "添加子主题"

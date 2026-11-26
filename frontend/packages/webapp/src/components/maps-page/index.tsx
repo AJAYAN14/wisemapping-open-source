@@ -78,12 +78,7 @@ import {
 } from './folder-dialogs';
 import { MAP_IDS_DRAG_MIME, getFolderPathString } from './folderTree';
 import DrawerNav, { ToolbarButtonInfo } from './drawer-nav';
-import {
-  APPLE_FONT_STACK,
-  appleColors,
-  glassMaterialMixin,
-  isDarkTheme,
-} from './appleDesign';
+import { APPLE_FONT_STACK, appleColors, glassMaterialMixin, isDarkTheme } from './appleDesign';
 import { useSpringValue } from './useSpringValue';
 import { ClientContext } from '../../classes/provider/client-context';
 import { ScannedMapFile, scanFileList, scanDataTransferItems } from './directoryScanner';
@@ -264,9 +259,8 @@ const MapsPage = (): ReactElement => {
           detailText: '正在解析思维导图结构与图文素材...',
         }));
 
-        const { default: TextImporterFactory } = await import(
-          '@wisemapping/mindplot/components/import/TextImporterFactory'
-        );
+        const { default: TextImporterFactory } =
+          await import('@wisemapping/mindplot/components/import/TextImporterFactory');
         const importer = TextImporterFactory.create(single.extension, fileContent);
         const importedXml = await importer.import(single.title, '');
 
@@ -297,15 +291,25 @@ const MapsPage = (): ReactElement => {
         }));
 
         const content = await externalizeXmlInlineImages(importedXml, client, (p) => {
-          if (p.phase === 'signing') {
+          if (p.phase === 'converting') {
+            const total = p.convertTotal ?? p.totalImages;
+            const done = p.convertedCount ?? 0;
+            const ratio = total > 0 ? done / total : 1;
+            const progress = 55 + Math.round(ratio * 10);
             setImportState((prev) => ({
               ...prev,
-              progress: 58,
+              progress,
+              detailText: `正在将大图无损感转码为 AVIF (${done}/${total} 张)...`,
+            }));
+          } else if (p.phase === 'signing') {
+            setImportState((prev) => ({
+              ...prev,
+              progress: 66,
               detailText: `发现 ${p.totalImages} 张图片，正在向云端申请上传凭证...`,
             }));
           } else if (p.phase === 'uploading') {
             const ratio = p.uploadTotal > 0 ? p.uploadedCount / p.uploadTotal : 1;
-            const progress = 62 + Math.round(ratio * 30);
+            const progress = 68 + Math.round(ratio * 24);
             const detailText =
               p.reusedCount > 0
                 ? `已秒传复用 ${p.reusedCount} 张，正在上传图片 (${p.uploadedCount}/${p.uploadTotal} 张)...`
@@ -463,9 +467,8 @@ const MapsPage = (): ReactElement => {
       return;
     }
 
-    const { default: TextImporterFactory } = await import(
-      '@wisemapping/mindplot/components/import/TextImporterFactory'
-    );
+    const { default: TextImporterFactory } =
+      await import('@wisemapping/mindplot/components/import/TextImporterFactory');
 
     let successCount = 0;
     let skippedCount = preSkippedCount;
@@ -917,7 +920,9 @@ const MapsPage = (): ReactElement => {
                 type="button"
                 disableElevation={true}
                 startIcon={<CloudUploadRoundedIcon />}
-                endIcon={<KeyboardArrowDownRoundedIcon sx={{ fontSize: 18, ml: -0.5, opacity: 0.7 }} />}
+                endIcon={
+                  <KeyboardArrowDownRoundedIcon sx={{ fontSize: 18, ml: -0.5, opacity: 0.7 }} />
+                }
                 onClick={(e) => setImportMenuAnchor(e.currentTarget)}
               >
                 <span className="message">

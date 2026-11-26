@@ -26,11 +26,13 @@ describe('Storage asset validation, deduplication, and XML migration', () => {
       { sha256: hashA.toUpperCase(), mimeType: 'image/webp', size: 1200 },
       { sha256: hashA, mimeType: 'image/webp', size: 1200 },
       { sha256: hashB, mimeType: 'image/png', size: 2048 },
+      { sha256: hashA, mimeType: 'image/avif', size: 1024 },
     ]);
 
     expect(items).toEqual([
       { sha256: hashA, mimeType: 'image/webp', ext: 'webp' },
       { sha256: hashB, mimeType: 'image/png', ext: 'png' },
+      { sha256: hashA, mimeType: 'image/avif', ext: 'avif' },
     ]);
 
     expect(() => validateUploadRequestItems([])).toThrow(StorageValidationError);
@@ -41,10 +43,13 @@ describe('Storage asset validation, deduplication, and XML migration', () => {
       validateUploadRequestItems([{ sha256: hashA, mimeType: 'application/pdf' }]),
     ).toThrow(StorageValidationError);
     expect(() =>
-      validateUploadRequestItems([{ sha256: hashA, mimeType: 'image/png', size: 20 * 1024 * 1024 }]),
+      validateUploadRequestItems([{ sha256: hashA, mimeType: 'image/svg+xml' }]),
+    ).toThrow(StorageValidationError);
+    expect(() =>
+      validateUploadRequestItems([{ sha256: hashA, mimeType: 'image/png', size: 50 * 1024 * 1024 }]),
     ).not.toThrow();
     expect(() =>
-      validateUploadRequestItems([{ sha256: hashA, mimeType: 'image/png', size: 21 * 1024 * 1024 }]),
+      validateUploadRequestItems([{ sha256: hashA, mimeType: 'image/png', size: 51 * 1024 * 1024 }]),
     ).toThrow(StorageValidationError);
   });
 

@@ -374,4 +374,36 @@ describe('XMindImporter resource image preservation', () => {
     expect(diagramNode.getImageSize()).toEqual({ width: 150, height: 84 });
     expect(diagramNode.getImageUrl()).toBe(`data:image/png;base64,${expectedBase64}`);
   });
+
+  it('abandons SVG resource images in XMind archives without attaching them', async () => {
+    const xmindSheet = [
+      {
+        id: 'sheet1',
+        class: 'sheet',
+        rootTopic: {
+          id: 'root',
+          title: 'Root',
+          children: {
+            attached: [
+              {
+                id: 'svg-node',
+                title: 'Vector',
+                image: { src: 'xap:resources/logo.svg' },
+              },
+            ],
+          },
+        },
+      },
+    ];
+
+    const archive = zipSync({
+      'content.json': strToU8(JSON.stringify(xmindSheet)),
+      'resources/logo.svg': strToU8('<svg xmlns="http://www.w3.org/2000/svg"></svg>'),
+    });
+
+    const xml = await new XMindImporter(archive).import('test');
+    const mindmap = loadMindmap(xml);
+    const vectorNode = findByText(mindmap, 'Vector');
+    expect(vectorNode.getImageUrl()).toBeUndefined();
+  });
 });

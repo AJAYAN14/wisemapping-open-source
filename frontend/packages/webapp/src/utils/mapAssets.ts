@@ -15,6 +15,10 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
+import {
+  convertBlobToAvifIfEligible,
+  shouldConvertBlobToAvif,
+} from '@wisemapping/editor/utils/imageAssetUtils';
 import Client, { AssetUploadUrlItem, AssetUploadUrlRequest } from '../classes/client';
 
 const DATA_IMAGE_ATTR_REGEX =
@@ -24,19 +28,21 @@ const SUPPORTED_MIMES = new Set([
   'image/png',
   'image/jpeg',
   'image/webp',
+  'image/avif',
   'image/gif',
-  'image/svg+xml',
 ]);
 
 const UPLOAD_BATCH_SIZE = 100;
 const UPLOAD_CONCURRENCY = 8;
 
 export type ExternalizeImageProgress = {
-  phase: 'signing' | 'uploading' | 'done';
+  phase: 'converting' | 'signing' | 'uploading' | 'done';
   totalImages: number;
   uploadTotal: number;
   uploadedCount: number;
   reusedCount: number;
+  convertTotal?: number;
+  convertedCount?: number;
 };
 
 const normalizeMime = (rawMime: string): string => {
@@ -44,9 +50,28 @@ const normalizeMime = (rawMime: string): string => {
   return lower === 'image/jpg' ? 'image/jpeg' : lower;
 };
 
+const readBlobBytes = async (blob: Blob): Promise<Uint8Array> => {
+  if (typeof blob.arrayBuffer === 'function') {
+    return new Uint8Array(await blob.arrayBuffer());
+  }
+  const buffer = await new Promise<ArrayBuffer>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (reader.result instanceof ArrayBuffer) {
+        resolve(reader.result);
+      } else {
+        reject(new Error('Failed to read image bytes'));
+      }
+    };
+    reader.onerror = () => reject(reader.error ?? new Error('Failed to read image bytes'));
+    reader.readAsArrayBuffer(blob);
+  });
+  return new Uint8Array(buffer);
+};
+
 const decodeDataImageUri = (
   rawUri: string,
-): { mimeType: string; bytes: Uint8Array } | undefined => {
+): { mimeType: string; bytes: Uint8Array; abandonSvg?: boolean } | undefined => {
   const commaIdx = rawUri.indexOf(',');
   if (commaIdx === -1 || !rawUri.startsWith('data:image/')) {
     return undefined;
@@ -55,6 +80,9 @@ const decodeDataImageUri = (
   const payload = rawUri.slice(commaIdx + 1);
   const parts = header.split(';');
   const mimeType = normalizeMime(parts[0] ?? '');
+  if (mimeType === 'image/svg+xml') {
+    return { mimeType, bytes: new Uint8Array(0), abandonSvg: true };
+  }
   if (!SUPPORTED_MIMES.has(mimeType)) {
     return undefined;
   }
@@ -104,7 +132,9 @@ const uploadBlobToSignedUrl = async (
 
   if (!response.ok) {
     const errText = await response.text().catch(() => '');
-    throw new Error(`上传图片到云端存储失败 (${response.status}): ${errText || response.statusText}`);
+    throw new Error(
+      `上传图片到云端存储失败 (${response.status}): ${errText || response.statusText}`,
+    );
   }
 };
 
@@ -116,10 +146,13 @@ export const uploadBlobToMapAssets = async (
     return undefined;
   }
   const mimeType = normalizeMime(blob.type || 'image/png');
-  if (!SUPPORTED_MIMES.has(mimeType)) {
-    throw new Error('仅支持 PNG、JPG、WebP、GIF 或 SVG 图片格式。');
+  if (mimeType === 'image/svg+xml') {
+    throw new Error('不支持 SVG 格式图片，已放弃上传。');
   }
-  const bytes = new Uint8Array(await blob.arrayBuffer());
+  if (!SUPPORTED_MIMES.has(mimeType)) {
+    throw new Error('仅支持 PNG、JPG、WebP、AVIF 或 GIF 图片格式。');
+  }
+  const bytes = await readBlobBytes(blob);
   const sha256 = await sha256Hex(bytes);
   if (!sha256) {
     return undefined;
@@ -138,8 +171,9 @@ export const uploadBlobToMapAssets = async (
 
 /**
  * Extracts inline `data:image/...` attributes from an imported mindmap XML string,
- * uploads unique blobs directly to Supabase Storage (`map-assets`), and rewrites
- * the XML attributes to short public CDN URLs before saving to PostgreSQL.
+ * abandons inline SVG images without uploading, converts GIFs (static) and >= 150 KB
+ * raster images to AVIF, uploads unique blobs directly to Supabase Storage (`map-assets`),
+ * and rewrites the XML attributes to CDN URLs.
  */
 export const externalizeXmlInlineImages = async (
   xml: string,
@@ -156,139 +190,196 @@ export const externalizeXmlInlineImages = async (
     bytes: Uint8Array;
   };
 
-  const assetsByKey = new Map<string, ExtractedEntry>();
-  const dataUriToKey = new Map<string, string>();
+  const rawByDataUri = new Map<string, { mimeType: string; bytes: Uint8Array }>();
+  const abandonedSvgUris = new Set<string>();
 
   DATA_IMAGE_ATTR_REGEX.lastIndex = 0;
   let match: RegExpExecArray | null;
   while ((match = DATA_IMAGE_ATTR_REGEX.exec(xml)) !== null) {
     const dataUri = match[4];
-    if (!dataUri || dataUriToKey.has(dataUri)) {
+    if (!dataUri || rawByDataUri.has(dataUri) || abandonedSvgUris.has(dataUri)) {
       continue;
     }
     const decoded = decodeDataImageUri(dataUri);
     if (!decoded) {
       continue;
     }
-    const sha256 = await sha256Hex(decoded.bytes);
-    if (!sha256) {
-      return xml;
+    if (decoded.abandonSvg) {
+      abandonedSvgUris.add(dataUri);
+      continue;
     }
-    const key = `${sha256}:${decoded.mimeType}`;
-    dataUriToKey.set(dataUri, key);
-    if (!assetsByKey.has(key)) {
-      assetsByKey.set(key, {
-        sha256,
-        mimeType: decoded.mimeType,
-        bytes: decoded.bytes,
+    rawByDataUri.set(dataUri, { mimeType: decoded.mimeType, bytes: decoded.bytes });
+  }
+
+  if (rawByDataUri.size === 0 && abandonedSvgUris.size === 0) {
+    return xml;
+  }
+
+  const convertibleUris = Array.from(rawByDataUri.entries()).filter(([, item]) =>
+    shouldConvertBlobToAvif(item.mimeType, item.bytes.length),
+  );
+
+  if (convertibleUris.length > 0) {
+    let convertedCount = 0;
+    onProgress?.({
+      phase: 'converting',
+      totalImages: rawByDataUri.size,
+      uploadTotal: rawByDataUri.size,
+      uploadedCount: 0,
+      reusedCount: 0,
+      convertTotal: convertibleUris.length,
+      convertedCount: 0,
+    });
+
+    for (const [dataUri, item] of convertibleUris) {
+      const bufCopy = new Uint8Array(item.bytes.byteLength);
+      bufCopy.set(item.bytes);
+      const sourceBlob = new Blob([bufCopy.buffer], { type: item.mimeType });
+      const result = await convertBlobToAvifIfEligible(sourceBlob);
+      if (result.converted) {
+        const nextBytes = await readBlobBytes(result.blob);
+        rawByDataUri.set(dataUri, {
+          mimeType: result.mimeType,
+          bytes: nextBytes,
+        });
+      }
+      convertedCount += 1;
+      onProgress?.({
+        phase: 'converting',
+        totalImages: rawByDataUri.size,
+        uploadTotal: rawByDataUri.size,
+        uploadedCount: 0,
+        reusedCount: 0,
+        convertTotal: convertibleUris.length,
+        convertedCount,
       });
     }
   }
 
-  if (assetsByKey.size === 0) {
-    return xml;
+  const assetsByKey = new Map<string, ExtractedEntry>();
+  const dataUriToKey = new Map<string, string>();
+
+  for (const [dataUri, item] of rawByDataUri.entries()) {
+    const sha256 = await sha256Hex(item.bytes);
+    if (!sha256) {
+      return xml;
+    }
+    const key = `${sha256}:${item.mimeType}`;
+    dataUriToKey.set(dataUri, key);
+    if (!assetsByKey.has(key)) {
+      assetsByKey.set(key, {
+        sha256,
+        mimeType: item.mimeType,
+        bytes: item.bytes,
+      });
+    }
   }
 
   const entries = Array.from(assetsByKey.entries());
   const resolvedByKey = new Map<string, AssetUploadUrlItem>();
 
-  try {
-    onProgress?.({
-      phase: 'signing',
-      totalImages: entries.length,
-      uploadTotal: entries.length,
-      uploadedCount: 0,
-      reusedCount: 0,
-    });
+  if (entries.length > 0) {
+    try {
+      onProgress?.({
+        phase: 'signing',
+        totalImages: entries.length,
+        uploadTotal: entries.length,
+        uploadedCount: 0,
+        reusedCount: 0,
+      });
 
-    for (let i = 0; i < entries.length; i += UPLOAD_BATCH_SIZE) {
-      const slice = entries.slice(i, i + UPLOAD_BATCH_SIZE);
-      const reqItems: AssetUploadUrlRequest[] = slice.map(([, entry]) => ({
-        sha256: entry.sha256,
-        mimeType: entry.mimeType,
-        size: entry.bytes.length,
-      }));
-      const issued = await client.requestAssetUploadUrls(reqItems);
-      const issuedByHash = new Map(issued.map((item) => [item.sha256, item]));
-      for (const [key, entry] of slice) {
-        const item = issuedByHash.get(entry.sha256);
-        if (item) {
-          resolvedByKey.set(key, item);
+      for (let i = 0; i < entries.length; i += UPLOAD_BATCH_SIZE) {
+        const slice = entries.slice(i, i + UPLOAD_BATCH_SIZE);
+        const reqItems: AssetUploadUrlRequest[] = slice.map(([, entry]) => ({
+          sha256: entry.sha256,
+          mimeType: entry.mimeType,
+          size: entry.bytes.length,
+        }));
+        const issued = await client.requestAssetUploadUrls(reqItems);
+        const issuedByHash = new Map(issued.map((item) => [item.sha256, item]));
+        for (const [key, entry] of slice) {
+          const item = issuedByHash.get(entry.sha256);
+          if (item) {
+            resolvedByKey.set(key, item);
+          }
         }
       }
-    }
 
-    const toUpload = entries.filter(([key]) => {
-      const item = resolvedByKey.get(key);
-      return item && !item.exists && item.signedUrl;
-    });
-    const reusedCount = entries.length - toUpload.length;
-    let uploadedCount = 0;
-
-    if (toUpload.length > 0) {
-      onProgress?.({
-        phase: 'uploading',
-        totalImages: entries.length,
-        uploadTotal: toUpload.length,
-        uploadedCount: 0,
-        reusedCount,
-      });
-    }
-
-    let cursor = 0;
-    const worker = async (): Promise<void> => {
-      while (cursor < toUpload.length) {
-        const idx = cursor++;
-        const pair = toUpload[idx];
-        if (!pair) {
-          continue;
-        }
-        const [key, entry] = pair;
+      const toUpload = entries.filter(([key]) => {
         const item = resolvedByKey.get(key);
-        if (!item?.signedUrl) {
-          continue;
-        }
-        const bufCopy = new Uint8Array(entry.bytes.byteLength);
-        bufCopy.set(entry.bytes);
-        const blob = new Blob([bufCopy.buffer], { type: entry.mimeType });
-        await uploadBlobToSignedUrl(item.signedUrl, blob, entry.mimeType);
-        uploadedCount += 1;
+        return item && !item.exists && item.signedUrl;
+      });
+      const reusedCount = entries.length - toUpload.length;
+      let uploadedCount = 0;
+
+      if (toUpload.length > 0) {
         onProgress?.({
           phase: 'uploading',
           totalImages: entries.length,
           uploadTotal: toUpload.length,
-          uploadedCount,
+          uploadedCount: 0,
           reusedCount,
         });
       }
-    };
 
-    const workers = Array.from({ length: Math.min(UPLOAD_CONCURRENCY, toUpload.length) }, () =>
-      worker(),
-    );
-    await Promise.all(workers);
+      let cursor = 0;
+      const worker = async (): Promise<void> => {
+        while (cursor < toUpload.length) {
+          const idx = cursor++;
+          const pair = toUpload[idx];
+          if (!pair) {
+            continue;
+          }
+          const [key, entry] = pair;
+          const item = resolvedByKey.get(key);
+          if (!item?.signedUrl) {
+            continue;
+          }
+          const bufCopy = new Uint8Array(entry.bytes.byteLength);
+          bufCopy.set(entry.bytes);
+          const blob = new Blob([bufCopy.buffer], { type: entry.mimeType });
+          await uploadBlobToSignedUrl(item.signedUrl, blob, entry.mimeType);
+          uploadedCount += 1;
+          onProgress?.({
+            phase: 'uploading',
+            totalImages: entries.length,
+            uploadTotal: toUpload.length,
+            uploadedCount,
+            reusedCount,
+          });
+        }
+      };
 
-    onProgress?.({
-      phase: 'done',
-      totalImages: entries.length,
-      uploadTotal: toUpload.length,
-      uploadedCount: toUpload.length,
-      reusedCount,
-    });
-  } catch (err) {
-    const status = (err as { status?: number })?.status;
-    // If Storage service key is not configured yet on backend, degrade gracefully rather than blocking import
-    if (status === 503) {
-      console.warn('Storage not configured on backend; keeping inline images:', err);
-      return xml;
+      const workers = Array.from({ length: Math.min(UPLOAD_CONCURRENCY, toUpload.length) }, () =>
+        worker(),
+      );
+      await Promise.all(workers);
+
+      onProgress?.({
+        phase: 'done',
+        totalImages: entries.length,
+        uploadTotal: toUpload.length,
+        uploadedCount: toUpload.length,
+        reusedCount,
+      });
+    } catch (err) {
+      const status = (err as { status?: number })?.status;
+      // If Storage service key is not configured yet on backend, degrade gracefully rather than blocking import
+      if (status === 503) {
+        console.warn('Storage not configured on backend; keeping inline images:', err);
+        return xml;
+      }
+      throw err;
     }
-    throw err;
   }
 
   DATA_IMAGE_ATTR_REGEX.lastIndex = 0;
   return xml.replace(
     DATA_IMAGE_ATTR_REGEX,
     (fullMatch, attrPrefix: string, quote: string, sizePrefix: string, dataUri: string) => {
+      if (abandonedSvgUris.has(dataUri)) {
+        return '';
+      }
       const key = dataUriToKey.get(dataUri);
       if (!key) {
         return fullMatch;

@@ -36,6 +36,7 @@ const MIME_TO_EXTENSION: Readonly<Record<string, string>> = {
   'image/jpeg': 'jpg',
   'image/jpg': 'jpg',
   'image/webp': 'webp',
+  'image/avif': 'avif',
   'image/gif': 'gif',
   'image/svg+xml': 'svg',
   'image/bmp': 'bmp',
@@ -48,6 +49,7 @@ const EXTENSION_TO_MIME: Readonly<Record<string, string>> = {
   jpg: 'image/jpeg',
   jpeg: 'image/jpeg',
   webp: 'image/webp',
+  avif: 'image/avif',
   gif: 'image/gif',
   svg: 'image/svg+xml',
   bmp: 'image/bmp',
@@ -104,6 +106,19 @@ const detectImageFormatFromBytes = (
   ) {
     return { mimeType: 'image/webp', extension: 'webp' };
   }
+  if (
+    bytes.length >= 12 &&
+    bytes[4] === 0x66 &&
+    bytes[5] === 0x74 &&
+    bytes[6] === 0x79 &&
+    bytes[7] === 0x70 &&
+    bytes[8] === 0x61 &&
+    bytes[9] === 0x76 &&
+    bytes[10] === 0x69 &&
+    (bytes[11] === 0x66 || bytes[11] === 0x73)
+  ) {
+    return { mimeType: 'image/avif', extension: 'avif' };
+  }
   // Check for SVG XML prefix in ASCII
   if (bytes.length >= 4) {
     const head = (tryDecodeUtf8(bytes.subarray(0, Math.min(bytes.length, 256))) ?? '')
@@ -123,7 +138,9 @@ const extensionFromUrlPath = (url: string): string | undefined => {
   return ext && EXTENSION_TO_MIME[ext] ? ext : undefined;
 };
 
-const parseDataUrl = (dataUrl: string): { mimeType: string; extension: string; bytes: Uint8Array } => {
+const parseDataUrl = (
+  dataUrl: string,
+): { mimeType: string; extension: string; bytes: Uint8Array } => {
   const commaIndex = dataUrl.indexOf(',');
   if (!dataUrl.startsWith('data:') || commaIndex === -1) {
     throw new Error('无效的 Data URL 图片数据');
@@ -134,8 +151,9 @@ const parseDataUrl = (dataUrl: string): { mimeType: string; extension: string; b
   const metaParts = meta.split(';').filter(Boolean);
   const isBase64 = metaParts.some((part) => part.toLowerCase() === 'base64');
   const rawMime =
-    metaParts.find((part) => !part.includes('=') && part.toLowerCase() !== 'base64')?.toLowerCase() ??
-    '';
+    metaParts
+      .find((part) => !part.includes('=') && part.toLowerCase() !== 'base64')
+      ?.toLowerCase() ?? '';
 
   if (rawMime && !rawMime.startsWith('image/')) {
     throw new Error(`不支持的图片类型: ${rawMime}`);
@@ -173,10 +191,7 @@ const fetchRemoteImage = async (
   const isExternalHttp = url.startsWith('https://') || url.startsWith('http://');
   let response: Response;
   try {
-    response = await fetch(
-      url,
-      isExternalHttp ? { mode: 'cors', credentials: 'omit' } : undefined,
-    );
+    response = await fetch(url, isExternalHttp ? { mode: 'cors', credentials: 'omit' } : undefined);
   } catch (error) {
     throw new Error(`图片下载失败 (${url}): ${(error as Error).message}`, { cause: error });
   }
@@ -191,7 +206,10 @@ const fetchRemoteImage = async (
     throw new Error(`下载的图片内容为空: ${url}`);
   }
 
-  const headerMime = (response.headers.get('content-type') ?? '').split(';', 1)[0]?.trim().toLowerCase();
+  const headerMime = (response.headers.get('content-type') ?? '')
+    .split(';', 1)[0]
+    ?.trim()
+    .toLowerCase();
   const detected = detectImageFormatFromBytes(bytes);
 
   // Reject HTML/JSON error pages returned with 200 OK when bytes are not a valid image signature
@@ -210,8 +228,7 @@ const fetchRemoteImage = async (
     detected?.mimeType ||
     (urlExt ? EXTENSION_TO_MIME[urlExt] : undefined) ||
     'image/png';
-  const extension =
-    MIME_TO_EXTENSION[mimeType] || detected?.extension || urlExt || 'png';
+  const extension = MIME_TO_EXTENSION[mimeType] || detected?.extension || urlExt || 'png';
 
   return { mimeType, extension, bytes };
 };
@@ -279,7 +296,10 @@ export const collectMindmapImages = async (
 };
 
 /** Sanitizes a map title for safe file and ZIP entry naming across OSes. */
-export const sanitizeExportFileName = (rawName: string | undefined, fallback = 'mindmap'): string => {
+export const sanitizeExportFileName = (
+  rawName: string | undefined,
+  fallback = 'mindmap',
+): string => {
   const trimmed = (rawName ?? '').trim();
   const withoutControls = Array.from(trimmed)
     .filter((ch) => ch.charCodeAt(0) >= 0x20 && ch.charCodeAt(0) !== 0x7f)

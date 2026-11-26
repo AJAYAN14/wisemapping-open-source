@@ -974,7 +974,7 @@
   "topic-image.paste-hint": [
     {
       "type": 0,
-      "value": "支持选中节点后直接 Ctrl+V 粘贴截图 · 原图直传不压缩（单张上限 20 MB）"
+      "value": "支持选中节点后 Ctrl+V 粘贴截图 · ≥150 KB 或 GIF 自动转静态高画质 AVIF"
     }
   ],
   "topic-image.remove": [
@@ -986,7 +986,7 @@
   "topic-image.uploading": [
     {
       "type": 0,
-      "value": "正在上传至云端存储..."
+      "value": "正在处理并上传至云端存储..."
     }
   ],
   "visualization-toolbar.tooltip-add-child": [

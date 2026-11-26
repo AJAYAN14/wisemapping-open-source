@@ -22,10 +22,16 @@ import TopicImageLightbox, {
   computeInitialScale,
 } from '../../../src/components/topic-image-lightbox';
 import {
+  AVIF_CONVERT_MIN_BYTES,
   compressTopicImage,
+  convertBlobToAvifIfEligible,
+  isAvifConvertibleMime,
   MAX_TOPIC_IMAGE_UPLOAD_BYTES,
+  replaceFilenameExtension,
   scaleTopicImageCardSize,
+  shouldConvertBlobToAvif,
 } from '../../../src/utils/imageAssetUtils';
+import { encodeImageDataToAvif, resetAvifWorkerForTests } from '../../../src/utils/avifEncoder';
 
 const ensureBrowserPolyfills = () => {
   if (!HTMLDialogElement.prototype.showModal) {
@@ -159,12 +165,7 @@ describe('TopicImageLightbox', () => {
 
   it('supports wheel zoom, double-click zoom, drag pan, keyboard shortcuts, and stage light-dismiss', () => {
     const onClose = jest.fn();
-    render(
-      <TopicImageLightbox
-        preview={{ url: 'data:image/png;base64,AAA' }}
-        onClose={onClose}
-      />,
-    );
+    render(<TopicImageLightbox preview={{ url: 'data:image/png;base64,AAA' }} onClose={onClose} />);
 
     expect(screen.queryByRole('link', { name: '新标签页打开' })).toBeNull();
     const img = screen.getByAltText('主题配图预览') as HTMLImageElement;
@@ -268,14 +269,24 @@ describe('TopicImageLightbox', () => {
     }
   });
 
-  it('preserves original blob without compression and enforces 20 MB limit', async () => {
-    const rawBlob = new Blob([new Uint8Array(200 * 1024)], { type: 'image/png' });
+  it('skips < 150 KB static images, converts GIF to static AVIF, rejects SVG, and checks 50 MB ceiling post-transcode', async () => {
+    const smallBlob = new Blob([new Uint8Array(100 * 1024)], { type: 'image/png' });
+    const smallGifBlob = new Blob([new Uint8Array(12 * 1024)], { type: 'image/gif' });
+    const largeBlob = new Blob([new Uint8Array(200 * 1024)], { type: 'image/png' });
+    const hugeInputBlob = {
+      size: 60 * 1024 * 1024,
+      type: 'image/png',
+    } as Blob;
+    const svgBlob = new Blob([new Uint8Array(1024)], { type: 'image/svg+xml' });
     const prevCreateObjectUrl = URL.createObjectURL;
     const prevRevokeObjectUrl = URL.revokeObjectURL;
     const prevImage = globalThis.Image;
+    const prevWorker = globalThis.Worker;
+    const prevCreateElement = document.createElement.bind(document);
 
     URL.createObjectURL = jest.fn(() => 'blob:mock-image');
     URL.revokeObjectURL = jest.fn();
+
     class MockImage {
       naturalWidth = 2560;
       naturalHeight = 1440;
@@ -287,29 +298,137 @@ describe('TopicImageLightbox', () => {
     }
     globalThis.Image = MockImage as unknown as typeof Image;
 
+    jest.spyOn(document, 'createElement').mockImplementation(((tagName: string) => {
+      const el = prevCreateElement(tagName);
+      if (tagName.toLowerCase() === 'canvas') {
+        (el as HTMLCanvasElement).getContext = jest.fn(() => ({
+          drawImage: jest.fn(),
+          getImageData: jest.fn((_x: number, _y: number, w: number, h: number) => ({
+            width: w,
+            height: h,
+            data: new Uint8ClampedArray(16),
+          })),
+        })) as unknown as HTMLCanvasElement['getContext'];
+      }
+      return el;
+    }) as typeof document.createElement);
+
+    let nextAvifBytes = new Uint8Array(40 * 1024);
+    let nextWorkerError: string | undefined;
+    let triggerWorkerCrash = false;
+
+    class MockWorker {
+      private listeners = new Map<string, Array<(event: unknown) => void>>();
+
+      addEventListener(type: string, cb: (event: unknown) => void) {
+        const list = this.listeners.get(type) ?? [];
+        list.push(cb);
+        this.listeners.set(type, list);
+      }
+
+      postMessage(data: { id: number }) {
+        queueMicrotask(() => {
+          if (triggerWorkerCrash) {
+            for (const cb of this.listeners.get('error') ?? []) {
+              cb({ message: 'wasm OOM' });
+            }
+            return;
+          }
+          for (const cb of this.listeners.get('message') ?? []) {
+            if (nextWorkerError) {
+              cb({ data: { id: data.id, error: nextWorkerError } });
+            } else {
+              cb({ data: { id: data.id, buffer: nextAvifBytes.slice().buffer } });
+            }
+          }
+        });
+      }
+
+      terminate = jest.fn();
+    }
+    globalThis.Worker = MockWorker as unknown as typeof Worker;
+
     try {
-      const prepared = await compressTopicImage(rawBlob);
-      expect(prepared.blob).toBe(rawBlob);
-      expect(prepared.mimeType).toBe('image/png');
-      expect(prepared.width).toBe(150);
-      expect(prepared.height).toBe(84);
+      expect(AVIF_CONVERT_MIN_BYTES).toBe(150 * 1024);
+      expect(MAX_TOPIC_IMAGE_UPLOAD_BYTES).toBe(50 * 1024 * 1024);
+      expect(isAvifConvertibleMime('image/jpg')).toBe(true);
+      expect(isAvifConvertibleMime('image/gif')).toBe(true);
+      expect(isAvifConvertibleMime('image/svg+xml')).toBe(false);
+      expect(shouldConvertBlobToAvif('image/gif', 1024)).toBe(true);
+      expect(shouldConvertBlobToAvif('image/png', 100 * 1024)).toBe(false);
+      expect(replaceFilenameExtension('screenshot.png', 'avif')).toBe('screenshot.avif');
+      expect(replaceFilenameExtension(undefined, 'avif', 'pasted')).toBe('pasted.avif');
 
-      const atLimit = {
-        size: MAX_TOPIC_IMAGE_UPLOAD_BYTES,
-        type: 'image/png',
-      } as Blob;
-      const preparedAtLimit = await compressTopicImage(atLimit);
-      expect(preparedAtLimit.blob).toBe(atLimit);
+      // 1. Small PNG (< 150 KB) stays untouched
+      const preparedSmall = await compressTopicImage(smallBlob);
+      expect(preparedSmall.blob).toBe(smallBlob);
+      expect(preparedSmall.mimeType).toBe('image/png');
+      expect(preparedSmall.width).toBe(150);
+      expect(preparedSmall.height).toBe(84);
 
-      const oversized = {
+      // 2. SVG is rejected and never uploaded
+      await expect(compressTopicImage(svgBlob)).rejects.toThrow(/SVG/);
+      await expect(convertBlobToAvifIfEligible(svgBlob)).rejects.toThrow(/SVG/);
+
+      // 3. GIF (even < 150 KB and even when static AVIF > GIF size) is always converted to static AVIF
+      const preparedGif = await compressTopicImage(smallGifBlob);
+      expect(preparedGif.mimeType).toBe('image/avif');
+      expect(preparedGif.blob.size).toBe(40 * 1024);
+
+      // 4. Large PNG (>= 150 KB) converts to AVIF when smaller
+      const preparedLarge = await compressTopicImage(largeBlob);
+      expect(preparedLarge.mimeType).toBe('image/avif');
+      expect(preparedLarge.blob.size).toBe(40 * 1024);
+      expect(preparedLarge.width).toBe(150);
+      expect(preparedLarge.height).toBe(84);
+
+      // 5. Over-20MB (even 60MB) input is NOT blocked upfront if AVIF output fits within 50 MB
+      const preparedHuge = await compressTopicImage(hugeInputBlob);
+      expect(preparedHuge.mimeType).toBe('image/avif');
+      expect(preparedHuge.blob.size).toBe(40 * 1024);
+
+      // 6. If AVIF output is larger or equal (for non-GIF), keep original blob
+      nextAvifBytes = new Uint8Array(220 * 1024);
+      const keptOriginal = await convertBlobToAvifIfEligible(largeBlob);
+      expect(keptOriginal.converted).toBe(false);
+      expect(keptOriginal.blob).toBe(largeBlob);
+      expect(keptOriginal.mimeType).toBe('image/png');
+
+      // 7. Worker encoding errors abort strictly instead of silently falling back
+      nextWorkerError = 'encode failed';
+      await expect(compressTopicImage(largeBlob)).rejects.toThrow(/AVIF 图片转码失败/);
+      nextWorkerError = undefined;
+
+      // 8. Worker crash rejects all pending encodings
+      triggerWorkerCrash = true;
+      await expect(
+        encodeImageDataToAvif({ data: new Uint8ClampedArray(16), width: 2, height: 2 }),
+      ).rejects.toThrow(/AVIF 转码工作线程异常/);
+      triggerWorkerCrash = false;
+
+      // 9. Missing Worker rejects strictly for >= 150 KB images
+      resetAvifWorkerForTests();
+      Object.defineProperty(globalThis, 'Worker', {
+        value: undefined,
+        configurable: true,
+        writable: true,
+      });
+      await expect(compressTopicImage(largeBlob)).rejects.toThrow(/Web Worker/);
+
+      // 10. Post-fallback original > 50 MB storage ceiling still fails cleanly
+      nextAvifBytes = new Uint8Array(40 * 1024);
+      const oversizedAvif = {
         size: MAX_TOPIC_IMAGE_UPLOAD_BYTES + 1,
-        type: 'image/png',
+        type: 'image/avif',
       } as Blob;
-      await expect(compressTopicImage(oversized)).rejects.toThrow(/20 MB/);
+      await expect(compressTopicImage(oversizedAvif)).rejects.toThrow(/50 MB/);
     } finally {
+      resetAvifWorkerForTests();
+      jest.restoreAllMocks();
       URL.createObjectURL = prevCreateObjectUrl;
       URL.revokeObjectURL = prevRevokeObjectUrl;
       globalThis.Image = prevImage;
+      globalThis.Worker = prevWorker;
     }
   });
 });

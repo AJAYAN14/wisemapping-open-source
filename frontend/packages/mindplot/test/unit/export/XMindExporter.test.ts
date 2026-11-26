@@ -103,7 +103,9 @@ describe('XMindExporter', () => {
   });
 
   it('creates a valid XMind Zen ZIP archive with deduplicated resources and round-trips via XMindImporter', async () => {
-    const fakeWebp = new Uint8Array([0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50]);
+    const fakeWebp = new Uint8Array([
+      0x52, 0x49, 0x46, 0x46, 0x00, 0x00, 0x00, 0x00, 0x57, 0x45, 0x42, 0x50,
+    ]);
     globalThis.fetch = jest.fn(async () => ({
       ok: true,
       status: 200,
@@ -192,7 +194,10 @@ describe('XMindExporter', () => {
     // Round-trip through XMindImporter
     const importedXml = await new XMindImporter(zipBytes).import('Root Project');
     const doc = new DOMParser().parseFromString(importedXml, 'text/xml');
-    const importedMap = XMLSerializerFactory.createFromDocument(doc).loadFromDom(doc, 'Root Project');
+    const importedMap = XMLSerializerFactory.createFromDocument(doc).loadFromDom(
+      doc,
+      'Root Project',
+    );
     expect(importedMap.getBranches()).toHaveLength(2); // Central + 1 floating
     expect(importedMap.getRelationships()).toHaveLength(1);
     const importedSpec = importedMap.getCentralTopic()!.getChildren()[0] as NodeModel;
@@ -248,5 +253,22 @@ describe('XMindExporter', () => {
     const result = await TextExporterFactory.create('xmind', mindmap, 'png-map').exportFile();
     const entries = unzipSync(await readBlobBytes(result.blob));
     expect(entries['resources/image-1.png']).toEqual(TINY_PNG_BYTES);
+  });
+
+  it('detects and preserves AVIF image bytes inside exported XMind resources', async () => {
+    const avifBytes = new Uint8Array([
+      0x00, 0x00, 0x00, 0x1c, 0x66, 0x74, 0x79, 0x70, 0x61, 0x76, 0x69, 0x66, 0x00, 0x00, 0x00,
+      0x00,
+    ]);
+    const base64 = btoa(String.fromCharCode(...avifBytes));
+    const mindmap = Mindmap.buildEmpty('avif-map');
+    const topic = mindmap.createNode('MainTopic', 1);
+    topic.setText('AVIF');
+    topic.setImageUrl(`data:image/avif;base64,${base64}`);
+    mindmap.getCentralTopic()!.append(topic);
+
+    const result = await TextExporterFactory.create('xmind', mindmap, 'avif-map').exportFile();
+    const entries = unzipSync(await readBlobBytes(result.blob));
+    expect(entries['resources/image-1.avif']).toEqual(avifBytes);
   });
 });

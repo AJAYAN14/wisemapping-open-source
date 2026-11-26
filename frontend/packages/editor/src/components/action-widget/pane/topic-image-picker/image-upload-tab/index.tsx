@@ -26,7 +26,11 @@ import { FormattedMessage } from 'react-intl';
 import type { TopicImageValue } from '@wisemapping/mindplot';
 import NodeProperty from '../../../../../classes/model/node-property';
 import type { UploadTopicImageFn } from '../../../../../hooks/useEditor';
-import { blobToDataUrl, compressTopicImage } from '../../../../../utils/imageAssetUtils';
+import {
+  blobToDataUrl,
+  compressTopicImage,
+  replaceFilenameExtension,
+} from '../../../../../utils/imageAssetUtils';
 import TopicImageLightbox from '../../../../topic-image-lightbox';
 import ConfirmDeleteDialog from '../../../../confirm-delete-dialog';
 
@@ -59,9 +63,13 @@ const ImageUploadTab = ({
     setUploading(true);
     try {
       const compressed = await compressTopicImage(file);
+      const targetFilename =
+        compressed.mimeType === 'image/avif'
+          ? replaceFilenameExtension(filename, 'avif', 'image')
+          : filename;
       let nextImage: TopicImageValue;
       if (onUploadTopicImage) {
-        nextImage = await onUploadTopicImage(compressed.blob, filename, {
+        nextImage = await onUploadTopicImage(compressed.blob, targetFilename, {
           width: compressed.width,
           height: compressed.height,
         });
@@ -141,7 +149,7 @@ const ImageUploadTab = ({
       <input
         ref={inputRef}
         type="file"
-        accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml"
+        accept="image/png,image/jpeg,image/webp,image/avif,image/gif"
         hidden
         onChange={handleInputChange}
       />
@@ -168,9 +176,7 @@ const ImageUploadTab = ({
           minHeight: 140,
           borderRadius: '12px',
           border: `1.5px dashed ${isDragging ? theme.palette.primary.main : theme.palette.divider}`,
-          backgroundColor: isDragging
-            ? theme.palette.action.selected
-            : theme.palette.action.hover,
+          backgroundColor: isDragging ? theme.palette.action.selected : theme.palette.action.hover,
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -188,7 +194,7 @@ const ImageUploadTab = ({
             <Typography variant="body2" color="text.secondary">
               <FormattedMessage
                 id="topic-image.uploading"
-                defaultMessage="正在上传至云端存储..."
+                defaultMessage="正在处理并上传至云端存储..."
               />
             </Typography>
           </>
@@ -204,7 +210,7 @@ const ImageUploadTab = ({
             <Typography variant="caption" color="text.secondary">
               <FormattedMessage
                 id="topic-image.paste-hint"
-                defaultMessage="支持选中节点后直接 Ctrl+V 粘贴截图 · 原图直传不压缩（单张上限 20 MB）"
+                defaultMessage="支持选中节点后 Ctrl+V 粘贴截图 · ≥150 KB 或 GIF 自动转静态高画质 AVIF"
               />
             </Typography>
           </>

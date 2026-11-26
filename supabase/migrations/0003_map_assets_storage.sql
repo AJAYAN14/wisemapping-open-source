@@ -16,8 +16,8 @@ VALUES (
   'map-assets',
   'map-assets',
   TRUE,
-  20971520,
-  ARRAY['image/png', 'image/jpeg', 'image/webp', 'image/gif', 'image/svg+xml']
+  52428800,
+  ARRAY['image/png', 'image/jpeg', 'image/webp', 'image/avif', 'image/gif']
 )
 ON CONFLICT (id) DO UPDATE
 SET

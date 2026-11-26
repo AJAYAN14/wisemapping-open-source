@@ -131,7 +131,7 @@ const XLINK_NAMESPACE = 'http://www.w3.org/1999/xlink';
 const MAX_XMIND_CONTENT_BYTES = 50 * 1024 * 1024;
 
 const isXMindResourceImage = (name: string): boolean =>
-  /(?:^|\/)resources\/.+\.(png|jpe?g|gif|webp|svg)$/i.test(name);
+  /(?:^|\/)resources\/.+\.(png|jpe?g|gif|webp|avif)$/i.test(name);
 
 // Read content entries and embedded resource images from the XMind archive.
 const isXMindContentEntry = (name: string): boolean =>
@@ -148,6 +148,7 @@ const mimeFromFilename = (filename: string): string => {
   if (lower.endsWith('.jpg') || lower.endsWith('.jpeg')) return 'image/jpeg';
   if (lower.endsWith('.gif')) return 'image/gif';
   if (lower.endsWith('.webp')) return 'image/webp';
+  if (lower.endsWith('.avif')) return 'image/avif';
   if (lower.endsWith('.svg')) return 'image/svg+xml';
   return 'image/png';
 };

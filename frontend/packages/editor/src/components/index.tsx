@@ -20,7 +20,11 @@ import React, { ReactElement, useMemo, useRef, useState } from 'react';
 
 import { IntlProvider, FormattedMessage } from 'react-intl';
 import { $notify, DeleteConfirmEvent, ImagePreviewEvent } from '@wisemapping/mindplot';
-import { blobToDataUrl, compressTopicImage } from '../utils/imageAssetUtils';
+import {
+  blobToDataUrl,
+  compressTopicImage,
+  replaceFilenameExtension,
+} from '../utils/imageAssetUtils';
 import TopicImageLightbox from './topic-image-lightbox';
 import ConfirmDeleteDialog from './confirm-delete-dialog';
 
@@ -234,10 +238,14 @@ const EditorContent = ({
       event.preventDefault();
       void (async () => {
         try {
-          $notify('正在上传图片...');
+          $notify('正在处理并上传图片...');
           const compressed = await compressTopicImage(imageFile);
+          const targetFilename =
+            compressed.mimeType === 'image/avif'
+              ? replaceFilenameExtension(imageFile.name, 'avif', 'pasted-image')
+              : imageFile.name || 'pasted-image.png';
           const nextImage = uploadTopicImage
-            ? await uploadTopicImage(compressed.blob, imageFile.name || 'pasted-image.png', {
+            ? await uploadTopicImage(compressed.blob, targetFilename, {
                 width: compressed.width,
                 height: compressed.height,
               })
@@ -311,7 +319,9 @@ const EditorContent = ({
           <ConfirmDeleteDialog
             open={Boolean(pendingDelete)}
             title={
-              pendingDelete && pendingDelete.topicCount === 0 && pendingDelete.relationshipCount > 0 ? (
+              pendingDelete &&
+              pendingDelete.topicCount === 0 &&
+              pendingDelete.relationshipCount > 0 ? (
                 <FormattedMessage
                   id="confirm-delete.relationship-title"
                   defaultMessage="Delete relationship?"

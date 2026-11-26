@@ -2,7 +2,7 @@ import { StorageClient } from '@supabase/storage-js';
 import { getSupabaseServiceRoleConfig } from './env.js';
 
 export const MAP_ASSETS_BUCKET = 'map-assets';
-const MAX_ASSET_BYTES = 20 * 1024 * 1024;
+const MAX_ASSET_BYTES = 50 * 1024 * 1024;
 const MAX_UPLOAD_BATCH = 100;
 
 const SHA256_HEX_REGEX = /^[a-f0-9]{64}$/i;
@@ -11,8 +11,8 @@ const MIME_EXTENSION_MAP: ReadonlyMap<string, string> = new Map([
   ['image/png', 'png'],
   ['image/jpeg', 'jpg'],
   ['image/webp', 'webp'],
+  ['image/avif', 'avif'],
   ['image/gif', 'gif'],
-  ['image/svg+xml', 'svg'],
 ]);
 
 export interface UploadUrlRequestItem {
