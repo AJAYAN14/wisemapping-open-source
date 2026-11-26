@@ -17,83 +17,214 @@
  */
 
 import React from 'react';
+import Box from '@mui/material/Box';
+import { useTheme } from '@mui/material/styles';
 import {
-  AppBarCenter,
+  AppBarDivider,
+  AppBarIconSkeleton,
   AppBarLeft,
+  AppBarLogoSkeleton,
   AppBarRight,
   AppBarSkeleton,
-  ButtonSkeleton,
+  AppBarTitleSkeleton,
+  AppBarToolbar,
+  BranchGroup,
+  BranchSide,
   CanvasSkeleton,
   CentralNodeSkeleton,
-  LeftNodes,
+  CompactOnlyGroup,
+  ConnectorsSvg,
+  DesktopOnlyGroup,
+  DockButtonSkeleton,
+  DockDivider,
+  DockZoomPillSkeleton,
   LoadingContainer,
-  RightNodes,
-  SideNodes,
-  SkeletonBlock,
-  ToolbarActionSkeleton,
+  MainNodeSkeleton,
+  MindmapStage,
+  SubNodeSkeleton,
+  SubNodesColumn,
   ZoomToolbarSkeleton,
 } from './styled';
 
 /**
- * Loading skeleton that mimics the editor layout for smooth transition
+ * Loading skeleton that mirrors the Apple-design editor chrome (frosted AppBar,
+ * Prism-tinted mindmap silhouette, and pill-shaped bottom visualization dock).
  */
 const EditorLoadingSkeleton: React.FC = () => {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+  const primaryBranchStroke = isDark ? 'rgba(64, 156, 255, 0.24)' : 'rgba(0, 122, 255, 0.18)';
+  const secondaryBranchStroke = isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.10)';
+
   return (
-    <LoadingContainer>
-      {/* Top AppBar Header Skeleton */}
+    <LoadingContainer aria-busy="true">
+      {/* Floating Frosted Top AppBar */}
       <AppBarSkeleton>
-        {/* Left side - Back button, Logo, Title */}
-        <AppBarLeft>
-          <SkeletonBlock animation="wave" variant="circular" width={32} height={32} />
-          <ButtonSkeleton animation="wave" variant="rectangular" width={120} height={32} />
-          <SkeletonBlock animation="wave" variant="text" width={180} height={28} />
-        </AppBarLeft>
+        <AppBarToolbar>
+          <AppBarLeft>
+            <AppBarIconSkeleton animation="wave" variant="rounded" />
+            <AppBarLogoSkeleton animation="wave" variant="rounded" />
+            <AppBarTitleSkeleton animation="wave" variant="rounded" />
+          </AppBarLeft>
 
-        {/* Center - Actions */}
-        <AppBarCenter>
-          <ToolbarActionSkeleton animation="wave" variant="circular" width={36} height={36} />
-          <ToolbarActionSkeleton animation="wave" variant="circular" width={36} height={36} />
-          <ToolbarActionSkeleton animation="wave" variant="circular" width={36} height={36} />
-          <ToolbarActionSkeleton animation="wave" variant="circular" width={36} height={36} />
-          <SkeletonBlock animation="wave" variant="circular" width={36} height={36} />
-        </AppBarCenter>
+          <Box sx={{ flexGrow: 1 }} />
 
-        {/* Right side - Account, Help, Export, Theme */}
-        <AppBarRight>
-          <SkeletonBlock animation="wave" variant="circular" width={36} height={36} />
-          <SkeletonBlock animation="wave" variant="circular" width={36} height={36} />
-          <SkeletonBlock animation="wave" variant="circular" width={36} height={36} />
-          <SkeletonBlock animation="wave" variant="circular" width={36} height={36} />
-        </AppBarRight>
+          <AppBarRight>
+            {/* Undo / Redo */}
+            <AppBarIconSkeleton animation="wave" variant="rounded" />
+            <AppBarIconSkeleton animation="wave" variant="rounded" />
+            <AppBarDivider />
+
+            {/* Save (+ History / Starred on md+) */}
+            <AppBarIconSkeleton animation="wave" variant="rounded" />
+            <DesktopOnlyGroup>
+              <AppBarIconSkeleton animation="wave" variant="rounded" />
+              <AppBarIconSkeleton animation="wave" variant="rounded" />
+            </DesktopOnlyGroup>
+            <AppBarDivider />
+
+            {/* Find / Outline */}
+            <AppBarIconSkeleton animation="wave" variant="rounded" />
+            <AppBarIconSkeleton animation="wave" variant="rounded" />
+
+            {/* Export / Theme on md+, or Overflow trigger on compact screens */}
+            <DesktopOnlyGroup>
+              <AppBarDivider />
+              <AppBarIconSkeleton animation="wave" variant="rounded" />
+              <AppBarIconSkeleton animation="wave" variant="rounded" />
+            </DesktopOnlyGroup>
+            <CompactOnlyGroup>
+              <AppBarIconSkeleton animation="wave" variant="rounded" />
+            </CompactOnlyGroup>
+          </AppBarRight>
+        </AppBarToolbar>
       </AppBarSkeleton>
 
-      {/* Canvas Area with Central Node Skeleton */}
+      {/* Canvas Area with Prism Mindmap Silhouette */}
       <CanvasSkeleton>
-        {/* Central Topic Skeleton */}
-        <CentralNodeSkeleton animation="wave" variant="rectangular" width={200} height={60} />
+        <MindmapStage>
+          <ConnectorsSvg viewBox="-340 -120 680 240" aria-hidden="true">
+            {/* Central -> Left Main Topics */}
+            <path
+              d="M -90 0 C -130 0, -135 -54, -172 -54"
+              fill="none"
+              stroke={primaryBranchStroke}
+              strokeWidth="2"
+            />
+            <path
+              d="M -90 0 C -130 0, -135 54, -172 54"
+              fill="none"
+              stroke={primaryBranchStroke}
+              strokeWidth="2"
+            />
+            {/* Left Main -> SubTopics */}
+            <path
+              d="M -276 -54 C -292 -54, -296 -72, -312 -72"
+              fill="none"
+              stroke={secondaryBranchStroke}
+              strokeWidth="1.5"
+            />
+            <path
+              d="M -276 -54 C -292 -54, -296 -36, -312 -36"
+              fill="none"
+              stroke={secondaryBranchStroke}
+              strokeWidth="1.5"
+            />
+            <path
+              d="M -276 54 C -292 54, -296 54, -312 54"
+              fill="none"
+              stroke={secondaryBranchStroke}
+              strokeWidth="1.5"
+            />
 
-        {/* Surrounding nodes skeleton - subtle branches */}
-        <SideNodes>
-          <LeftNodes>
-            <ButtonSkeleton animation="wave" variant="rectangular" width={120} height={40} />
-            <ButtonSkeleton animation="wave" variant="rectangular" width={120} height={40} />
-            <ButtonSkeleton animation="wave" variant="rectangular" width={100} height={36} />
-          </LeftNodes>
-          <RightNodes>
-            <ButtonSkeleton animation="wave" variant="rectangular" width={120} height={40} />
-            <ButtonSkeleton animation="wave" variant="rectangular" width={120} height={40} />
-            <ButtonSkeleton animation="wave" variant="rectangular" width={100} height={36} />
-          </RightNodes>
-        </SideNodes>
+            {/* Central -> Right Main Topics */}
+            <path
+              d="M 90 0 C 130 0, 135 -54, 172 -54"
+              fill="none"
+              stroke={primaryBranchStroke}
+              strokeWidth="2"
+            />
+            <path
+              d="M 90 0 C 130 0, 135 54, 172 54"
+              fill="none"
+              stroke={primaryBranchStroke}
+              strokeWidth="2"
+            />
+            {/* Right Main -> SubTopics */}
+            <path
+              d="M 276 -54 C 292 -54, 296 -72, 312 -72"
+              fill="none"
+              stroke={secondaryBranchStroke}
+              strokeWidth="1.5"
+            />
+            <path
+              d="M 276 -54 C 292 -54, 296 -36, 312 -36"
+              fill="none"
+              stroke={secondaryBranchStroke}
+              strokeWidth="1.5"
+            />
+            <path
+              d="M 276 54 C 292 54, 296 54, 312 54"
+              fill="none"
+              stroke={secondaryBranchStroke}
+              strokeWidth="1.5"
+            />
+          </ConnectorsSvg>
+
+          {/* Left Branches */}
+          <BranchSide sx={{ mr: '56px' }}>
+            <BranchGroup>
+              <SubNodesColumn>
+                <SubNodeSkeleton animation="wave" variant="rounded" width={82} />
+                <SubNodeSkeleton animation="wave" variant="rounded" width={72} />
+              </SubNodesColumn>
+              <MainNodeSkeleton animation="wave" variant="rounded" width={112} />
+            </BranchGroup>
+            <BranchGroup>
+              <SubNodesColumn>
+                <SubNodeSkeleton animation="wave" variant="rounded" width={88} />
+              </SubNodesColumn>
+              <MainNodeSkeleton animation="wave" variant="rounded" width={104} />
+            </BranchGroup>
+          </BranchSide>
+
+          {/* Central Topic */}
+          <CentralNodeSkeleton animation="wave" variant="rounded" />
+
+          {/* Right Branches */}
+          <BranchSide sx={{ ml: '56px' }}>
+            <BranchGroup>
+              <MainNodeSkeleton animation="wave" variant="rounded" width={116} />
+              <SubNodesColumn>
+                <SubNodeSkeleton animation="wave" variant="rounded" width={86} />
+                <SubNodeSkeleton animation="wave" variant="rounded" width={70} />
+              </SubNodesColumn>
+            </BranchGroup>
+            <BranchGroup>
+              <MainNodeSkeleton animation="wave" variant="rounded" width={106} />
+              <SubNodesColumn>
+                <SubNodeSkeleton animation="wave" variant="rounded" width={84} />
+              </SubNodesColumn>
+            </BranchGroup>
+          </BranchSide>
+        </MindmapStage>
       </CanvasSkeleton>
 
-      {/* Bottom Visualization Toolbar Skeleton */}
+      {/* Bottom Pill Visualization Dock Skeleton */}
       <ZoomToolbarSkeleton>
-        <ButtonSkeleton animation="wave" variant="rectangular" width={32} height={32} />
-        <ButtonSkeleton animation="wave" variant="rectangular" width={32} height={32} />
-        <ButtonSkeleton animation="wave" variant="rectangular" width={60} height={32} />
-        <ButtonSkeleton animation="wave" variant="rectangular" width={32} height={32} />
-        <ButtonSkeleton animation="wave" variant="rectangular" width={32} height={32} />
+        <DockButtonSkeleton animation="wave" variant="circular" />
+        <DockButtonSkeleton animation="wave" variant="circular" />
+        <DockZoomPillSkeleton animation="wave" variant="rounded" />
+        <DockButtonSkeleton animation="wave" variant="circular" />
+        <DockDivider />
+        <DockButtonSkeleton animation="wave" variant="circular" />
+        <DockButtonSkeleton animation="wave" variant="circular" />
+        <DockButtonSkeleton animation="wave" variant="circular" />
+        <DockDivider />
+        <DockButtonSkeleton animation="wave" variant="circular" />
+        <DockButtonSkeleton animation="wave" variant="circular" />
+        <DockDivider />
+        <DockButtonSkeleton animation="wave" variant="circular" />
       </ZoomToolbarSkeleton>
     </LoadingContainer>
   );
