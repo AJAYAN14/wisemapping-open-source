@@ -18,10 +18,11 @@
 
 import React, { ReactElement, useMemo, useRef, useState } from 'react';
 
-import { IntlProvider } from 'react-intl';
-import { $notify, Designer, ImagePreviewEvent } from '@wisemapping/mindplot';
+import { IntlProvider, FormattedMessage } from 'react-intl';
+import { $notify, DeleteConfirmEvent, Designer, ImagePreviewEvent } from '@wisemapping/mindplot';
 import { blobToDataUrl, compressTopicImage } from '../utils/imageAssetUtils';
 import TopicImageLightbox from './topic-image-lightbox';
+import ConfirmDeleteDialog from './confirm-delete-dialog';
 
 import { useLocaleData } from '../classes/i18n-msg';
 
@@ -64,6 +65,7 @@ const EditorContent = ({
   const designer = model?.getDesigner();
   const { mode: internalMode } = useTheme();
   const [imagePreview, setImagePreview] = useState<ImagePreviewEvent | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<DeleteConfirmEvent | null>(null);
 
   // Subscribe to designer image preview requests (both edit zoom badge and read-only image click)
   React.useEffect(() => {
@@ -73,9 +75,14 @@ const EditorContent = ({
     const handleImagePreview = (payload: ImagePreviewEvent) => {
       setImagePreview(payload);
     };
+    const handleDeleteConfirm = (payload: DeleteConfirmEvent) => {
+      setPendingDelete(payload);
+    };
     designer.addEvent('imagePreview', handleImagePreview);
+    designer.addEvent('deleteConfirm', handleDeleteConfirm);
     return () => {
       designer.removeEvent('imagePreview', handleImagePreview);
+      designer.removeEvent('deleteConfirm', handleDeleteConfirm);
     };
   }, [designer]);
 
@@ -283,6 +290,81 @@ const EditorContent = ({
           <Notifier id="headerNotifier" />
 
           <TopicImageLightbox preview={imagePreview} onClose={() => setImagePreview(null)} />
+
+          <ConfirmDeleteDialog
+            open={Boolean(pendingDelete)}
+            title={
+              pendingDelete && pendingDelete.topicCount === 0 && pendingDelete.relationshipCount > 0 ? (
+                <FormattedMessage
+                  id="confirm-delete.relationship-title"
+                  defaultMessage="Delete relationship?"
+                />
+              ) : (
+                <FormattedMessage id="confirm-delete.topic-title" defaultMessage="Delete topic?" />
+              )
+            }
+            message={(() => {
+              if (!pendingDelete) {
+                return '';
+              }
+              if (pendingDelete.topicCount === 0 && pendingDelete.relationshipCount > 0) {
+                return (
+                  <FormattedMessage
+                    id="confirm-delete.relationship-message"
+                    defaultMessage="Are you sure you want to delete the selected relationship? You can undo this later."
+                  />
+                );
+              }
+              if (pendingDelete.topicCount === 1) {
+                const title = pendingDelete.topicTitles[0];
+                if (pendingDelete.hasChildren) {
+                  return title ? (
+                    <FormattedMessage
+                      id="confirm-delete.single-topic-with-children"
+                      defaultMessage='Delete "{title}" and all of its child topics? You can undo this later.'
+                      values={{ title }}
+                    />
+                  ) : (
+                    <FormattedMessage
+                      id="confirm-delete.topic-with-children"
+                      defaultMessage="Delete this topic and all of its child topics? You can undo this later."
+                    />
+                  );
+                }
+                return title ? (
+                  <FormattedMessage
+                    id="confirm-delete.single-topic"
+                    defaultMessage='Are you sure you want to delete "{title}"? You can undo this later.'
+                    values={{ title }}
+                  />
+                ) : (
+                  <FormattedMessage
+                    id="confirm-delete.topic-generic"
+                    defaultMessage="Are you sure you want to delete the selected topic? You can undo this later."
+                  />
+                );
+              }
+              return pendingDelete.hasChildren ? (
+                <FormattedMessage
+                  id="confirm-delete.multiple-topics-with-children"
+                  defaultMessage="Delete the {count} selected topics and their child topics? You can undo this later."
+                  values={{ count: pendingDelete.topicCount }}
+                />
+              ) : (
+                <FormattedMessage
+                  id="confirm-delete.multiple-topics"
+                  defaultMessage="Delete the {count} selected topics? You can undo this later."
+                  values={{ count: pendingDelete.topicCount }}
+                />
+              );
+            })()}
+            onConfirm={() => {
+              const target = pendingDelete;
+              setPendingDelete(null);
+              target?.confirm();
+            }}
+            onCancel={() => setPendingDelete(null)}
+          />
 
           {!model?.isMapLoadded() && <EditorLoadingSkeleton />}
         </IntlProvider>

@@ -79,12 +79,12 @@ describe('TextPeer lines', () => {
 
   // The tspans share the text's x format (2 decimals), so a redraw that calls setText and then
   // setPosition with the same values writes nothing.
-  it('every tspan starts a new line at the text x', () => {
+  it('every tspan starts a new line at the text x with comfortable line spacing', () => {
     const text = new Text();
     text.setPosition(12.5, 30);
-    text.setText('a\nb');
-    tspans(text).forEach((t) => {
-      expect(t.getAttribute('dy')).toBe('1em');
+    text.setText('a\nb\nc');
+    tspans(text).forEach((t, i) => {
+      expect(t.getAttribute('dy')).toBe(i === 0 ? '1em' : '1.4em');
       expect(t.getAttribute('x')).toBe('12.50');
       expect(t.getAttribute('x')).toBe(text.peer._native.getAttribute('x'));
     });

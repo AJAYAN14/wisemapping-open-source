@@ -99,11 +99,21 @@ export type ImagePreviewEvent = {
   height?: number;
 };
 
+/** The payload of 'deleteConfirm': ask the host editor to confirm deleting selected entities. */
+export type DeleteConfirmEvent = {
+  topicCount: number;
+  relationshipCount: number;
+  hasChildren: boolean;
+  topicTitles: string[];
+  confirm: () => void;
+};
+
 /** The events a designer fires to its host (the editor) and their payloads. */
 export type DesignerEvents = {
   modelUpdate: ModelUpdateEvent;
   featureEdit: FeatureEditEvent;
   imagePreview: ImagePreviewEvent;
+  deleteConfirm: DeleteConfirmEvent;
   onfocus: void;
   onblur: void;
   loadSuccess: void;
@@ -1668,15 +1678,31 @@ class Designer extends EventDispispatcher<DesignerEvents> {
     }
 
     // If the central topic has been selected, I must filter ir
-    const topicIds = topics
-      .filter((topic) => !topic.isCentralTopic())
-      .map((topic) => topic.getId());
+    const deletableTopics = topics.filter((topic) => !topic.isCentralTopic());
+    const topicIds = deletableTopics.map((topic) => topic.getId());
 
     const relIds = relation.map((rel) => rel.getId());
 
     // Finally delete the topics ...
     if (topicIds.length > 0 || relIds.length > 0) {
-      this._actionDispatcher.deleteEntities(topicIds, relIds);
+      const executeDelete = () => {
+        this._actionDispatcher.deleteEntities(topicIds, relIds);
+      };
+      if (this.listenerCount('deleteConfirm') > 0) {
+        const hasChildren = deletableTopics.some((topic) => topic.getChildren().length > 0);
+        const topicTitles = deletableTopics
+          .map((topic) => topic.getText()?.trim() ?? '')
+          .filter(Boolean);
+        this.fireEvent('deleteConfirm', {
+          topicCount: topicIds.length,
+          relationshipCount: relIds.length,
+          hasChildren,
+          topicTitles,
+          confirm: executeDelete,
+        });
+      } else {
+        executeDelete();
+      }
     }
   }
 

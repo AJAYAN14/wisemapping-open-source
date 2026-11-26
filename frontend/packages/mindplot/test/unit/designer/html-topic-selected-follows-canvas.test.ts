@@ -109,4 +109,33 @@ describe('HTMLTopicSelected follows the canvas', () => {
 
     expectOverlayAround(overlay, zoomed);
   });
+
+  it('uses border-box and scales overlay frame and action pills down when zoomed out', async () => {
+    const { harness, topic, overlay, moveTopic } = await selectTopic();
+    expect(overlay.style.boxSizing).toBe('border-box');
+
+    const shadow = harness.designer.getSelectionShadows().get(topic) as unknown as {
+      _rightPlus?: HTMLElement;
+      _bottomPlus?: HTMLElement;
+    };
+
+    const zoomedOut = rect(120, 180, 60, 18);
+    moveTopic(zoomedOut);
+    harness.designer.getWorkSpace().setZoom(2.5); // visualScale = 0.4
+
+    expect(overlay.style.left).toBe('118.4px');
+    expect(overlay.style.top).toBe('178.4px');
+    expect(overlay.style.width).toBe('63.2px');
+    expect(overlay.style.height).toBe('21.2px');
+    expect(overlay.style.borderRadius).toBe('4.8px');
+    expect(overlay.style.borderWidth).toBe('1px');
+    expect(shadow._rightPlus?.style.transform).toContain('scale(0.45)');
+    expect(shadow._bottomPlus?.style.transform).toContain('scale(0.45)');
+    expect(shadow._rightPlus?.style.getPropertyValue('--wise-pill-scale')).toBe('0.45');
+
+    const styleEl = document.getElementById('wisemapping-topic-selection-styles');
+    expect(styleEl?.textContent).toContain('calc(24px / var(--wise-pill-scale, 1))');
+    expect(styleEl?.textContent).toContain('calc(44px / var(--wise-pill-scale, 1))');
+    expect(styleEl?.textContent).toContain('@media (forced-colors: active)');
+  });
 });

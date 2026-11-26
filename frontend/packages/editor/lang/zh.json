@@ -2,6 +2,9 @@
   "action.accept": {
     "defaultMessage": "接受"
   },
+  "action.cancel": {
+    "defaultMessage": "取消"
+  },
   "action.delete": {
     "defaultMessage": "删除"
   },
@@ -498,10 +501,10 @@
     "defaultMessage": "正在压缩并上传至云端存储..."
   },
   "visualization-toolbar.tooltip-add-child": {
-    "defaultMessage": "添加子主題"
+    "defaultMessage": "添加子主题"
   },
   "visualization-toolbar.tooltip-add-sibling": {
-    "defaultMessage": "添加同級主題"
+    "defaultMessage": "添加同级主题"
   },
   "visualization-toolbar.tooltip-collapse-all": {
     "defaultMessage": "折叠所有节点"
@@ -541,5 +544,56 @@
   },
   "visualization-toolbar.tooltip-zoom-to-fit": {
     "defaultMessage": "适合缩放"
+  },
+  "confirm-delete.image-message": {
+    "defaultMessage": "确定要从当前主题移除这张图片吗？"
+  },
+  "confirm-delete.image-title": {
+    "defaultMessage": "确认移除图片？"
+  },
+  "confirm-delete.item-message": {
+    "defaultMessage": "确定要删除这项内容吗？"
+  },
+  "confirm-delete.item-title": {
+    "defaultMessage": "确认删除？"
+  },
+  "confirm-delete.link-message": {
+    "defaultMessage": "确定要移除当前主题的链接吗？"
+  },
+  "confirm-delete.link-title": {
+    "defaultMessage": "确认删除链接？"
+  },
+  "confirm-delete.multiple-topics": {
+    "defaultMessage": "确定要删除所选的 {count} 个主题吗？删除后可通过撤销恢复。"
+  },
+  "confirm-delete.multiple-topics-with-children": {
+    "defaultMessage": "所选的 {count} 个主题包含子节点，删除后将一并移除（可通过撤销恢复）。确定删除吗？"
+  },
+  "confirm-delete.note-message": {
+    "defaultMessage": "确定要移除当前主题的笔记吗？"
+  },
+  "confirm-delete.note-title": {
+    "defaultMessage": "确认删除笔记？"
+  },
+  "confirm-delete.relationship-message": {
+    "defaultMessage": "确定要删除所选的关联线吗？删除后可通过撤销恢复。"
+  },
+  "confirm-delete.relationship-title": {
+    "defaultMessage": "确认删除关联线？"
+  },
+  "confirm-delete.single-topic": {
+    "defaultMessage": "确定要删除主题“{title}”吗？删除后可通过撤销恢复。"
+  },
+  "confirm-delete.single-topic-with-children": {
+    "defaultMessage": "主题“{title}”包含子节点，删除后将一并移除（可通过撤销恢复）。确定删除吗？"
+  },
+  "confirm-delete.topic-generic": {
+    "defaultMessage": "确定要删除所选主题吗？删除后可通过撤销恢复。"
+  },
+  "confirm-delete.topic-title": {
+    "defaultMessage": "确认删除主题？"
+  },
+  "confirm-delete.topic-with-children": {
+    "defaultMessage": "该主题包含子节点，删除后将一并移除（可通过撤销恢复）。确定删除吗？"
   }
 }

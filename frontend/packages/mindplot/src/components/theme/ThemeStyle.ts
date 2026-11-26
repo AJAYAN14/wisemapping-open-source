@@ -22,7 +22,7 @@ import type { FontWeightType } from '../FontWeightType';
 import type { TopicShapeType } from '../model/INodeModel';
 import type { TopicType, ThemeVariant } from './Theme';
 import type { BackgroundPatternType } from '../model/CanvasStyleType';
-import { isMsgKey, type MsgKey } from '../lang/en';
+import { isMsgKey, type MsgKey } from '../lang/zh';
 import {
   isBackgroundPatternType,
   isFontStyleType,

@@ -123,12 +123,20 @@ describe('RichTextNoteEditor', () => {
     expect(closeModal).toHaveBeenCalledTimes(1);
   });
 
-  it('deletes the note through the Delete button', () => {
+  it('confirms before deleting the note through the Delete button', () => {
     const noteModel = property<string | undefined>('to be removed');
     const closeModal = jest.fn();
     renderPane(<RichTextNoteEditor closeModal={closeModal} noteModel={noteModel} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    expect(closeModal).not.toHaveBeenCalled();
+    expect(noteModel.setValue).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByTestId('confirm-delete-cancel'));
+    expect(closeModal).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    fireEvent.click(screen.getByTestId('confirm-delete-submit'));
 
     expect(closeModal).toHaveBeenCalledTimes(1);
     expect(noteModel.setValue).toHaveBeenCalledWith(undefined);

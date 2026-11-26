@@ -5,6 +5,12 @@
       "value": "接受"
     }
   ],
+  "action.cancel": [
+    {
+      "type": 0,
+      "value": "取消"
+    }
+  ],
   "action.delete": [
     {
       "type": 0,
@@ -159,6 +165,140 @@
     {
       "type": 0,
       "value": "关闭"
+    }
+  ],
+  "confirm-delete.image-message": [
+    {
+      "type": 0,
+      "value": "确定要从当前主题移除这张图片吗？"
+    }
+  ],
+  "confirm-delete.image-title": [
+    {
+      "type": 0,
+      "value": "确认移除图片？"
+    }
+  ],
+  "confirm-delete.item-message": [
+    {
+      "type": 0,
+      "value": "确定要删除这项内容吗？"
+    }
+  ],
+  "confirm-delete.item-title": [
+    {
+      "type": 0,
+      "value": "确认删除？"
+    }
+  ],
+  "confirm-delete.link-message": [
+    {
+      "type": 0,
+      "value": "确定要移除当前主题的链接吗？"
+    }
+  ],
+  "confirm-delete.link-title": [
+    {
+      "type": 0,
+      "value": "确认删除链接？"
+    }
+  ],
+  "confirm-delete.multiple-topics": [
+    {
+      "type": 0,
+      "value": "确定要删除所选的 "
+    },
+    {
+      "type": 1,
+      "value": "count"
+    },
+    {
+      "type": 0,
+      "value": " 个主题吗？删除后可通过撤销恢复。"
+    }
+  ],
+  "confirm-delete.multiple-topics-with-children": [
+    {
+      "type": 0,
+      "value": "所选的 "
+    },
+    {
+      "type": 1,
+      "value": "count"
+    },
+    {
+      "type": 0,
+      "value": " 个主题包含子节点，删除后将一并移除（可通过撤销恢复）。确定删除吗？"
+    }
+  ],
+  "confirm-delete.note-message": [
+    {
+      "type": 0,
+      "value": "确定要移除当前主题的笔记吗？"
+    }
+  ],
+  "confirm-delete.note-title": [
+    {
+      "type": 0,
+      "value": "确认删除笔记？"
+    }
+  ],
+  "confirm-delete.relationship-message": [
+    {
+      "type": 0,
+      "value": "确定要删除所选的关联线吗？删除后可通过撤销恢复。"
+    }
+  ],
+  "confirm-delete.relationship-title": [
+    {
+      "type": 0,
+      "value": "确认删除关联线？"
+    }
+  ],
+  "confirm-delete.single-topic": [
+    {
+      "type": 0,
+      "value": "确定要删除主题“"
+    },
+    {
+      "type": 1,
+      "value": "title"
+    },
+    {
+      "type": 0,
+      "value": "”吗？删除后可通过撤销恢复。"
+    }
+  ],
+  "confirm-delete.single-topic-with-children": [
+    {
+      "type": 0,
+      "value": "主题“"
+    },
+    {
+      "type": 1,
+      "value": "title"
+    },
+    {
+      "type": 0,
+      "value": "”包含子节点，删除后将一并移除（可通过撤销恢复）。确定删除吗？"
+    }
+  ],
+  "confirm-delete.topic-generic": [
+    {
+      "type": 0,
+      "value": "确定要删除所选主题吗？删除后可通过撤销恢复。"
+    }
+  ],
+  "confirm-delete.topic-title": [
+    {
+      "type": 0,
+      "value": "确认删除主题？"
+    }
+  ],
+  "confirm-delete.topic-with-children": [
+    {
+      "type": 0,
+      "value": "该主题包含子节点，删除后将一并移除（可通过撤销恢复）。确定删除吗？"
     }
   ],
   "creator-info-pane.creator": [
@@ -1026,13 +1166,13 @@
   "visualization-toolbar.tooltip-add-child": [
     {
       "type": 0,
-      "value": "添加子主題"
+      "value": "添加子主题"
     }
   ],
   "visualization-toolbar.tooltip-add-sibling": [
     {
       "type": 0,
-      "value": "添加同級主題"
+      "value": "添加同级主题"
     }
   ],
   "visualization-toolbar.tooltip-collapse-all": [

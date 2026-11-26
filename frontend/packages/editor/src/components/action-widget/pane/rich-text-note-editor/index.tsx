@@ -424,7 +424,20 @@ const RichTextNoteEditor = ({ closeModal, noteModel }: RichTextNoteEditorProps):
         <CharacterCounter initialCount={initialCount} handleRef={counterRef} />
 
         {/* Save and Delete Buttons */}
-        <SaveAndDelete model={noteModel} closeModal={closeModal} submitHandler={submitHandler} />
+        <SaveAndDelete
+          model={noteModel}
+          closeModal={closeModal}
+          submitHandler={submitHandler}
+          deleteConfirmTitle={
+            <FormattedMessage id="confirm-delete.note-title" defaultMessage="Delete note?" />
+          }
+          deleteConfirmMessage={
+            <FormattedMessage
+              id="confirm-delete.note-message"
+              defaultMessage="Are you sure you want to remove the note from this topic?"
+            />
+          }
+        />
       </FooterBar>
     </NoteEditorFrame>
   );

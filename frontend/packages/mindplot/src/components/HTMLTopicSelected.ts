@@ -38,6 +38,76 @@ import type NodeModel from './model/NodeModel';
  * toolbar's layer no matter how high the pane's own z-index is.
  */
 const CANVAS_AFFORDANCE_Z_INDEX = '999';
+const SELECTION_STYLE_ID = 'wisemapping-topic-selection-styles';
+
+const ensureSelectionStyles = (container: HTMLElement): void => {
+  const root = container.getRootNode();
+  const targetRoot = root instanceof ShadowRoot ? root : container.ownerDocument;
+  if (!targetRoot || targetRoot.getElementById(SELECTION_STYLE_ID)) {
+    return;
+  }
+
+  const style = (container.ownerDocument ?? document).createElement('style');
+  style.id = SELECTION_STYLE_ID;
+  style.textContent = `
+    .wise-topic-selection-pill,
+    .wise-topic-image-preview {
+      appearance: none;
+      -webkit-appearance: none;
+    }
+    .wise-topic-selection-pill::after,
+    .wise-topic-image-preview::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 100%;
+      height: 100%;
+      min-width: calc(24px / var(--wise-pill-scale, 1));
+      min-height: calc(24px / var(--wise-pill-scale, 1));
+    }
+    @media (pointer: coarse) {
+      .wise-topic-selection-pill::after,
+      .wise-topic-image-preview::after {
+        min-width: calc(44px / var(--wise-pill-scale, 1));
+        min-height: calc(44px / var(--wise-pill-scale, 1));
+      }
+    }
+    .wise-topic-selection-pill:focus-visible,
+    .wise-topic-image-preview:focus-visible {
+      outline: 2px solid #0284c7;
+      outline-offset: 2px;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .wise-topic-selection-pill,
+      .wise-topic-image-preview {
+        transition: none !important;
+      }
+    }
+    @media (forced-colors: active) {
+      .wise-topic-selection-overlay {
+        outline: 2px solid Highlight;
+        outline-offset: 1px;
+      }
+      .wise-topic-selection-pill,
+      .wise-topic-image-preview {
+        border-color: ButtonText !important;
+      }
+      .wise-topic-selection-pill:focus-visible,
+      .wise-topic-image-preview:focus-visible {
+        outline: 2px solid Highlight;
+      }
+    }
+  `;
+  if (targetRoot instanceof ShadowRoot) {
+    targetRoot.appendChild(style);
+  } else if (targetRoot.head) {
+    targetRoot.head.appendChild(style);
+  } else {
+    targetRoot.documentElement?.appendChild(style);
+  }
+};
 
 type Unsubscribe = () => void;
 
@@ -56,7 +126,7 @@ type PillVisualState = {
   pillHoverBorder?: string;
 };
 
-type ActionPillElement = HTMLDivElement & {
+type ActionPillElement = HTMLButtonElement & {
   _pillState?: PillVisualState;
   _baseColor?: string;
   _hoverColor?: string;
@@ -124,7 +194,7 @@ class HTMLTopicSelected {
 
   private _bottomPlus: ActionPillElement | undefined;
 
-  private _imagePreviewButton: HTMLDivElement | undefined;
+  private _imagePreviewButton: HTMLButtonElement | undefined;
 
   private _screenManager: ScreenManager;
 
@@ -143,6 +213,7 @@ class HTMLTopicSelected {
     this._containerElement = containerElement;
     this._screenManager = screenManager;
     this._isVisible = false;
+    ensureSelectionStyles(containerElement);
 
     // Create overlay container - insert it first so it's behind SVG
     this._overlayContainer = document.createElement('div');
@@ -159,7 +230,10 @@ class HTMLTopicSelected {
 
     // Create overlay for the topic
     this._overlay = document.createElement('div');
+    this._overlay.className = 'wise-topic-selection-overlay';
     this._overlay.style.position = 'absolute';
+    // Keep border inside overlayWidth/Height so selection wraps symmetrically on all 4 sides.
+    this._overlay.style.boxSizing = 'border-box';
     // Colors will be set by updateColors() method
     this._overlay.style.pointerEvents = 'none'; // Overlay itself doesn't capture clicks
     this._overlay.style.display = 'none'; // Hidden by default
@@ -296,10 +370,37 @@ class HTMLTopicSelected {
     return `rgba(${r}, ${g}, ${b}, ${alpha})`;
   }
 
+  private getVisualScale(): number {
+    const zoom = this._topic.getDesigner()?.getWorkSpace?.()?.getZoom?.();
+    return typeof zoom === 'number' && Number.isFinite(zoom) && zoom > 0 ? 1 / zoom : 1;
+  }
+
+  private getOverlayMetrics(visualScale = this.getVisualScale()): {
+    visualScale: number;
+    padding: number;
+    borderWidth: number;
+    ringWidth: number;
+    borderRadius: number;
+  } {
+    const overlayScale = visualScale >= 1 ? 1 : Math.max(0.3, visualScale);
+    const borderWidth = Math.max(1, Number((2.5 * overlayScale).toFixed(2)));
+    const padding =
+      visualScale >= 1 ? 4 : Math.max(borderWidth + 0.5, Number((4 * overlayScale).toFixed(2)));
+    const ringWidth = Math.max(1, Number((3 * overlayScale).toFixed(2)));
+    const borderRadius = Number((Math.min(8, 8 * visualScale) + padding).toFixed(2));
+    return { visualScale, padding, borderWidth, ringWidth, borderRadius };
+  }
+
+  private getPillScale(visualScale = this.getVisualScale(), isTouch = isTouchOrMobileDevice()): number {
+    return isTouch
+      ? Math.max(0.65, Math.min(1.15, Number(visualScale.toFixed(3))))
+      : Math.max(0.45, Math.min(1.25, Number(visualScale.toFixed(3))));
+  }
+
   /**
    * Update colors based on topic variant
    */
-  private updateColors(): boolean {
+  private updateColors(metrics = this.getOverlayMetrics()): boolean {
     // Don't update colors if overlay doesn't exist (read-only mode)
     if (!this._overlay) {
       return false;
@@ -315,9 +416,9 @@ class HTMLTopicSelected {
     }
 
     const { variant, connectionColor } = topicColors;
-    // Crisp Apple-style focus border with subtle ambient focus ring
-    this._overlay.style.border = `2.5px solid ${connectionColor}`;
-    this._overlay.style.boxShadow = `0 0 0 3px ${this.hexToRgba(
+    // Crisp Apple-style focus border with subtle ambient focus ring scaled with canvas zoom
+    this._overlay.style.border = `${metrics.borderWidth}px solid ${connectionColor}`;
+    this._overlay.style.boxShadow = `0 0 0 ${metrics.ringWidth}px ${this.hexToRgba(
       connectionColor,
       variant === 'dark' ? 0.28 : 0.16,
     )}`;
@@ -397,7 +498,10 @@ class HTMLTopicSelected {
     this.setupHoverEffect(pill, palette.pillBaseBg, palette.pillHoverBg);
   }
 
-  private computeOverlayGeometry(topic: Topic): OverlayGeometry | undefined {
+  private computeOverlayGeometry(
+    topic: Topic,
+    metrics = this.getOverlayMetrics(),
+  ): OverlayGeometry | undefined {
     const corners = topic.getAbsoluteCornerCoordinates();
     if (!corners) {
       return undefined;
@@ -416,8 +520,8 @@ class HTMLTopicSelected {
     const width = corners.topRight.x - corners.topLeft.x;
     const height = corners.bottomLeft.y - corners.topLeft.y;
 
-    // Symmetrical 4px breathing room around the topic card (matches 8px inner radius + 4px = 12px outer radius)
-    const padding = 4;
+    // Symmetrical breathing room around the topic card, scaled when zoomed out
+    const { padding } = metrics;
     const overlayWidth = width + padding * 2;
     const overlayHeight = height + padding * 2;
     const overlayLeft = left - padding;
@@ -442,7 +546,8 @@ class HTMLTopicSelected {
   }
 
   private updateOverlay(): void {
-    const geometry = this.withTopic((topic) => this.computeOverlayGeometry(topic));
+    const metrics = this.getOverlayMetrics();
+    const geometry = this.withTopic((topic) => this.computeOverlayGeometry(topic, metrics));
     if (!geometry) {
       if (this._overlay) {
         this._overlay.style.display = 'none';
@@ -453,7 +558,7 @@ class HTMLTopicSelected {
     const hasChildren = this.withTopic((topic) => topic.getChildren().length > 0) ?? false;
     const hasImage = this.withTopic((topic) => Boolean(topic.getImageUrl()?.trim())) ?? false;
 
-    const colorsUpdated = this.updateColors();
+    const colorsUpdated = this.updateColors(metrics);
     if (colorsUpdated === false) {
       if (this._overlay) {
         this._overlay.style.display = 'none';
@@ -463,30 +568,31 @@ class HTMLTopicSelected {
 
     if (this._overlay) {
       this._overlay.style.display = 'block';
-      this.applyOverlayFrame(geometry);
+      this.applyOverlayFrame(geometry, metrics);
     }
     this.ensurePlusButtons();
-    this.updatePlusButtons(geometry, hasChildren);
-    this.updateImagePreviewButton(geometry, hasImage);
+    this.updatePlusButtons(geometry, hasChildren, metrics.visualScale);
+    this.updateImagePreviewButton(geometry, hasImage, metrics.visualScale);
   }
 
-  private applyOverlayFrame({
-    overlayLeft,
-    overlayTop,
-    overlayWidth,
-    overlayHeight,
-  }: OverlayGeometry): void {
+  private applyOverlayFrame(
+    { overlayLeft, overlayTop, overlayWidth, overlayHeight }: OverlayGeometry,
+    metrics = this.getOverlayMetrics(),
+  ): void {
     if (!this._overlay) {
       return;
     }
 
-    this._overlay.style.left = `${Math.round(overlayLeft)}px`;
-    this._overlay.style.top = `${Math.round(overlayTop)}px`;
-    this._overlay.style.width = `${Math.round(overlayWidth)}px`;
-    this._overlay.style.height = `${Math.round(overlayHeight)}px`;
+    const fmt = (value: number): string =>
+      metrics.visualScale < 1 ? value.toFixed(1) : String(Math.round(value));
 
-    // Concentric 12px outer radius wrapping the 8px inner card with 4px uniform padding
-    this._overlay.style.borderRadius = '12px';
+    this._overlay.style.left = `${fmt(overlayLeft)}px`;
+    this._overlay.style.top = `${fmt(overlayTop)}px`;
+    this._overlay.style.width = `${fmt(overlayWidth)}px`;
+    this._overlay.style.height = `${fmt(overlayHeight)}px`;
+
+    // Concentric outer radius wrapping the inner card with uniform scaled padding
+    this._overlay.style.borderRadius = `${metrics.borderRadius}px`;
   }
 
   /**
@@ -494,6 +600,8 @@ class HTMLTopicSelected {
    */
   private createPlusIcon(size = 12): SVGElement {
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.setAttribute('focusable', 'false');
     svg.setAttribute('viewBox', '0 0 16 16');
     svg.setAttribute('width', String(size));
     svg.setAttribute('height', String(size));
@@ -518,6 +626,8 @@ class HTMLTopicSelected {
 
   private createZoomIcon(size = 14): SVGElement {
     const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.setAttribute('focusable', 'false');
     svg.setAttribute('viewBox', '0 0 24 24');
     svg.setAttribute('width', String(size));
     svg.setAttribute('height', String(size));
@@ -622,10 +732,10 @@ class HTMLTopicSelected {
    * Helper function to handle both click and touch events for action buttons
    * Prevents duplicate triggers by tracking if action was already handled
    */
-  private addPlusButtonHandlers(button: ActionPillElement, handler: () => void): void {
+  private addPlusButtonHandlers(button: HTMLButtonElement, handler: () => void): void {
     let touchHandled = false;
 
-    // Handle click events (desktop and mobile fallback)
+    // Handle click events (desktop, mobile fallback, and native Enter/Space keyboard activation)
     button.addEventListener('click', (event) => {
       // If touch was already handled, ignore click (prevents double-trigger)
       if (touchHandled) {
@@ -635,6 +745,13 @@ class HTMLTopicSelected {
       event.stopPropagation();
       event.preventDefault();
       handler();
+    });
+
+    // Keep Enter/Space activation local to the focused button so DesignerKeyboard does not hijack it
+    button.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.stopPropagation();
+      }
     });
 
     // Handle touch events (mobile)
@@ -666,7 +783,9 @@ class HTMLTopicSelected {
 
   private createActionPill(onTrigger: () => void): ActionPillElement {
     const isTouch = isTouchOrMobileDevice();
-    const pill = document.createElement('div') as ActionPillElement;
+    const pill = document.createElement('button') as ActionPillElement;
+    pill.type = 'button';
+    pill.className = 'wise-topic-selection-pill';
     pill.style.position = 'absolute';
     pill.style.left = '0px';
     pill.style.top = '0px';
@@ -687,7 +806,7 @@ class HTMLTopicSelected {
     pill.style.backdropFilter = 'blur(8px)';
     pill.style.setProperty('-webkit-backdrop-filter', 'blur(8px)');
     pill.style.transition = 'background-color 0.16s ease, border-color 0.16s ease';
-    pill.style.transformOrigin = 'center center';
+    pill.style.transformOrigin = '0 0';
 
     const badge = document.createElement('span');
     badge.style.width = isTouch ? '22px' : '18px';
@@ -710,6 +829,7 @@ class HTMLTopicSelected {
     labelSpan.style.whiteSpace = 'nowrap';
 
     const kbdSpan = document.createElement('span');
+    kbdSpan.setAttribute('aria-hidden', 'true');
     kbdSpan.style.fontSize = '10px';
     kbdSpan.style.fontWeight = '500';
     kbdSpan.style.fontFamily =
@@ -779,7 +899,9 @@ class HTMLTopicSelected {
       return;
     }
     const isTouch = isTouchOrMobileDevice();
-    const button = document.createElement('div');
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'wise-topic-image-preview';
     button.appendChild(this.createZoomIcon(isTouch ? 15 : 13));
     button.style.position = 'absolute';
     button.style.left = '0px';
@@ -801,6 +923,7 @@ class HTMLTopicSelected {
     button.style.pointerEvents = 'auto';
     button.style.cursor = 'zoom-in';
     button.style.zIndex = CANVAS_AFFORDANCE_Z_INDEX;
+    button.style.transformOrigin = '0 0';
     button.style.transform = 'translate(-100%, 0)';
     button.setAttribute('title', '查看大图');
     button.setAttribute('aria-label', '查看大图');
@@ -822,7 +945,11 @@ class HTMLTopicSelected {
     this._imagePreviewButton = button;
   }
 
-  private updateImagePreviewButton(geometry: OverlayGeometry, hasImage: boolean): void {
+  private updateImagePreviewButton(
+    geometry: OverlayGeometry,
+    hasImage: boolean,
+    visualScale = this.getVisualScale(),
+  ): void {
     if (!hasImage) {
       if (this._imagePreviewButton) {
         this._imagePreviewButton.style.display = 'none';
@@ -837,10 +964,14 @@ class HTMLTopicSelected {
     }
 
     const isTouch = isTouchOrMobileDevice();
+    const buttonScale = this.getPillScale(visualScale, isTouch);
+    const scalePrefix = buttonScale === 1 ? '' : `scale(${buttonScale}) `;
+    this._imagePreviewButton.style.setProperty('--wise-pill-scale', String(buttonScale));
     this._imagePreviewButton.style.width = isTouch ? '30px' : '24px';
     this._imagePreviewButton.style.height = isTouch ? '30px' : '24px';
-    this._imagePreviewButton.style.left = `${geometry.topicRight - 6}px`;
-    this._imagePreviewButton.style.top = `${geometry.topicTop + 6}px`;
+    this._imagePreviewButton.style.left = `${geometry.topicRight - 6 * buttonScale}px`;
+    this._imagePreviewButton.style.top = `${geometry.topicTop + 6 * buttonScale}px`;
+    this._imagePreviewButton.style.transform = `${scalePrefix}translate(-100%, 0)`;
     this._imagePreviewButton.style.display = 'flex';
     this._imagePreviewButton.style.pointerEvents = 'auto';
   }
@@ -889,21 +1020,28 @@ class HTMLTopicSelected {
     );
   }
 
-  private updatePlusButtons(geometry: OverlayGeometry, hasChildren: boolean): void {
-    const rightPillDistance = 14;
-    const bottomPillDistance = 10;
+  private updatePlusButtons(
+    geometry: OverlayGeometry,
+    hasChildren: boolean,
+    visualScale = this.getVisualScale(),
+  ): void {
+    const pillScale = this.getPillScale(visualScale);
+    const scalePrefix = pillScale === 1 ? '' : `scale(${pillScale}) `;
+    const rightPillDistance = 14 * pillScale;
+    const bottomPillDistance = 10 * pillScale;
     const isCentral = this.withTopic((topic) => topic.isCentralTopic()) ?? false;
 
     if (this._rightPlus) {
+      this._rightPlus.style.setProperty('--wise-pill-scale', String(pillScale));
       if (geometry.isOnLeft) {
         this._rightPlus.style.left = `${geometry.topicLeft - rightPillDistance}px`;
         this._rightPlus.style.right = 'auto';
-        this._rightPlus.style.transform = 'translate(-100%, -50%)';
+        this._rightPlus.style.transform = `${scalePrefix}translate(-100%, -50%)`;
         this._rightPlus.style.flexDirection = 'row-reverse';
       } else {
         this._rightPlus.style.left = `${geometry.topicRight + rightPillDistance}px`;
         this._rightPlus.style.right = 'auto';
-        this._rightPlus.style.transform = 'translate(0, -50%)';
+        this._rightPlus.style.transform = `${scalePrefix}translate(0, -50%)`;
         this._rightPlus.style.flexDirection = 'row';
       }
       this._rightPlus.style.top = `${geometry.topicCenterY}px`;
@@ -919,9 +1057,10 @@ class HTMLTopicSelected {
     }
 
     if (this._bottomPlus) {
+      this._bottomPlus.style.setProperty('--wise-pill-scale', String(pillScale));
       this._bottomPlus.style.left = `${geometry.topicCenterX}px`;
       this._bottomPlus.style.top = `${geometry.topicBottom + bottomPillDistance}px`;
-      this._bottomPlus.style.transform = 'translate(-50%, 0)';
+      this._bottomPlus.style.transform = `${scalePrefix}translate(-50%, 0)`;
       this._bottomPlus.style.flexDirection = 'row';
       const shouldDisplay = geometry.isVertical ? !hasChildren : !isCentral;
 

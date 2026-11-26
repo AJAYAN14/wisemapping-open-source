@@ -28,6 +28,7 @@ import NodeProperty from '../../../../../classes/model/node-property';
 import type { UploadTopicImageFn } from '../../../../../hooks/useEditor';
 import { blobToDataUrl, compressTopicImage } from '../../../../../utils/imageAssetUtils';
 import TopicImageLightbox from '../../../../topic-image-lightbox';
+import ConfirmDeleteDialog from '../../../../confirm-delete-dialog';
 
 type ImageUploadTabProps = {
   topicImageModel?: NodeProperty<TopicImageValue | undefined> | undefined;
@@ -45,6 +46,7 @@ const ImageUploadTab = ({
   const [uploading, setUploading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [confirmRemoveOpen, setConfirmRemoveOpen] = useState(false);
 
   const currentImage = topicImageModel?.getValue();
   const canEdit = Boolean(topicImageModel?.setValue);
@@ -258,7 +260,7 @@ const ImageUploadTab = ({
             color="error"
             startIcon={<DeleteOutlineRoundedIcon fontSize="small" />}
             disabled={!canEdit || uploading}
-            onClick={handleRemoveImage}
+            onClick={() => setConfirmRemoveOpen(true)}
           >
             <FormattedMessage id="topic-image.remove" defaultMessage="移除图片" />
           </Button>
@@ -268,6 +270,21 @@ const ImageUploadTab = ({
       <TopicImageLightbox
         preview={previewOpen && currentImage ? { url: currentImage.url } : null}
         onClose={() => setPreviewOpen(false)}
+      />
+      <ConfirmDeleteDialog
+        open={confirmRemoveOpen}
+        title={<FormattedMessage id="confirm-delete.image-title" defaultMessage="Remove image?" />}
+        message={
+          <FormattedMessage
+            id="confirm-delete.image-message"
+            defaultMessage="Are you sure you want to remove the image from this topic?"
+          />
+        }
+        onConfirm={() => {
+          setConfirmRemoveOpen(false);
+          handleRemoveImage();
+        }}
+        onCancel={() => setConfirmRemoveOpen(false)}
       />
     </Box>
   );

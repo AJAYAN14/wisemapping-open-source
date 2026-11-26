@@ -91,7 +91,7 @@ class EditorComponent extends EventDispatcher<EditorEvents> {
     textareaElem.style.resize = 'none';
     textareaElem.style.overflow = 'hidden';
     textareaElem.style.padding = '0px 0px 0px 0px';
-    textareaElem.style.lineHeight = '1.2';
+    textareaElem.style.lineHeight = '1.4';
     textareaElem.style.whiteSpace = 'pre-wrap';
     textareaElem.style.overflowWrap = 'break-word';
     textareaElem.style.width = '100%';

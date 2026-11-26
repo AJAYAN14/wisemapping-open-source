@@ -29,7 +29,7 @@ jest.mock('../../../src/components/export/PDFExporter', () => ({
  * sibling, depending on the layout; a tap must add one topic, not two.
  */
 
-type PlusButtons = { _rightPlus: HTMLDivElement; _bottomPlus: HTMLDivElement };
+type PlusButtons = { _rightPlus: HTMLButtonElement; _bottomPlus: HTMLButtonElement };
 
 const harnesses: Harness[] = [];
 const open = async (xml = SAMPLE_MAP) => {
@@ -54,9 +54,19 @@ const topicCount = (harness: Harness) => harness.designer.getModel().getTopics()
 
 describe('Selection plus buttons on a mind map', () => {
   it('adds a child with the right button, undoably', async () => {
-    const { harness, right } = await open();
+    const { harness, right, bottom } = await open();
     const before = harness.save();
+    expect(right.tagName).toBe('BUTTON');
+    expect(right.type).toBe('button');
+    expect(bottom.tagName).toBe('BUTTON');
+    expect(right.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
     expect(right.title).toBe('创建子主题');
+
+    const docKeydown = jest.fn();
+    document.addEventListener('keydown', docKeydown);
+    right.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    expect(docKeydown).not.toHaveBeenCalled();
+    document.removeEventListener('keydown', docKeydown);
 
     const click = new MouseEvent('click', { bubbles: true, cancelable: true });
     right.dispatchEvent(click);
@@ -144,9 +154,14 @@ describe('Selection plus buttons on a touch screen', () => {
     topic.setOnFocus(true);
 
     const shadow = harness.designer.getSelectionShadows().get(topic) as unknown as {
-      _imagePreviewButton?: HTMLDivElement;
+      _imagePreviewButton?: HTMLButtonElement;
     };
     expect(shadow._imagePreviewButton).toBeDefined();
+    expect(shadow._imagePreviewButton?.tagName).toBe('BUTTON');
+    expect(shadow._imagePreviewButton?.type).toBe('button');
+    expect(shadow._imagePreviewButton?.querySelector('svg')?.getAttribute('aria-hidden')).toBe(
+      'true',
+    );
     expect(shadow._imagePreviewButton?.style.display).toBe('flex');
 
     const previewEvents: unknown[] = [];

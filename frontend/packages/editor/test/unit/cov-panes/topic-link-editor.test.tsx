@@ -116,12 +116,20 @@ describe('TopicLinkEditor', () => {
     expect(link.getAttribute('target')).toBe('_blank');
   });
 
-  it('removes the existing link with Delete', () => {
+  it('confirms before removing the existing link with Delete', () => {
     const urlModel = property<string>('https://a.com');
     const closeModal = jest.fn();
     renderPane(<TopicLinkEditor closeModal={closeModal} urlModel={urlModel} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    expect(closeModal).not.toHaveBeenCalled();
+    expect(urlModel.setValue).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByTestId('confirm-delete-cancel'));
+    expect(closeModal).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    fireEvent.click(screen.getByTestId('confirm-delete-submit'));
 
     expect(closeModal).toHaveBeenCalledTimes(1);
     expect(urlModel.setValue).toHaveBeenCalledWith(undefined);
@@ -200,7 +208,7 @@ describe('SaveAndDelete', () => {
     expect(submitHandler).toHaveBeenCalledTimes(1);
   });
 
-  it('closes on Delete even when the value cannot be changed', () => {
+  it('closes after confirming Delete even when the value cannot be changed', () => {
     const closeModal = jest.fn();
     renderPane(
       <SaveAndDelete
@@ -211,6 +219,9 @@ describe('SaveAndDelete', () => {
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Delete' }));
+    expect(closeModal).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByTestId('confirm-delete-submit'));
 
     expect(closeModal).toHaveBeenCalledTimes(1);
   });

@@ -39,6 +39,7 @@ const createInteractiveModel = () => {
   const selectionState = { topics: 0, relationships: 0 };
   const topic = {
     getId: () => 5,
+    isCentralTopic: () => false,
     getFontFamily: () => 'Arial',
     getLinkValue: () => undefined,
     getNoteValue: () => undefined,
@@ -64,6 +65,7 @@ const createInteractiveModel = () => {
   const designer = {
     undo: jest.fn(),
     redo: jest.fn(),
+    deleteSelectedEntities: jest.fn(),
     addEvent: jest.fn((type: string, l: () => void) => {
       listeners[type] = [...(listeners[type] ?? []), l];
     }),
@@ -88,7 +90,7 @@ const createInteractiveModel = () => {
       (listeners[type] ?? []).forEach((l) => l());
     });
 
-  return { model, selectionState, fire };
+  return { model, designer, topic, selectionState, fire };
 };
 
 const createMapInfo = (): MapInfo =>
@@ -139,10 +141,15 @@ describe('AppBar contextual formatting', () => {
     expect(within(ctxGroup).getByRole('button', { name: 'Add Topic Image' })).toBeEnabled();
     expect(within(ctxGroup).getByRole('button', { name: /Add Note/ })).toBeEnabled();
     expect(within(ctxGroup).getByRole('button', { name: /Add Link/ })).toBeEnabled();
+    const deleteBtn = within(ctxGroup).getByTestId('appbar-delete-topic-button');
+    expect(deleteBtn).toBeEnabled();
     expect(
       within(ctxGroup).queryByRole('button', { name: 'Relationship Style' }),
     ).not.toBeInTheDocument();
     expect(screen.getByTestId('find-in-map-panel')).toBeInTheDocument();
+
+    fireEvent.click(deleteBtn);
+    expect(model.getDesigner().deleteSelectedEntities).toHaveBeenCalledTimes(1);
 
     selectionState.topics = 0;
     selectionState.relationships = 1;
@@ -194,5 +201,25 @@ describe('AppBar contextual formatting', () => {
       </Providers>,
     );
     expect(screen.queryByTestId('appbar-context-formatting')).not.toBeInTheDocument();
+  });
+
+  it('omits the delete button in AppBar when only the central topic is selected', () => {
+    const { model, topic, selectionState } = createInteractiveModel();
+    topic.isCentralTopic = () => true;
+    selectionState.topics = 1;
+
+    render(
+      <Providers>
+        <AppBar
+          model={model}
+          mapInfo={createMapInfo()}
+          capability={new Capability('edition-owner', false)}
+          onAction={jest.fn()}
+        />
+      </Providers>,
+    );
+
+    const ctxGroup = screen.getByTestId('appbar-context-formatting');
+    expect(within(ctxGroup).queryByTestId('appbar-delete-topic-button')).not.toBeInTheDocument();
   });
 });

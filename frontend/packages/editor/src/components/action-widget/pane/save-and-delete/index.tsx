@@ -17,18 +17,37 @@
  */
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
-import { ReactElement } from 'react';
+import { ReactElement, ReactNode, useState } from 'react';
 import NodeProperty from '../../../../classes/model/node-property';
 import { FormattedMessage } from 'react-intl';
+import ConfirmDeleteDialog from '../../../confirm-delete-dialog';
 
 type SaveAndDeleteProps = {
   model: NodeProperty<string | undefined>;
   closeModal: () => void;
   submitHandler: () => void;
+  deleteConfirmTitle?: ReactNode;
+  deleteConfirmMessage?: ReactNode;
 };
 
-const SaveAndDelete = ({ model, closeModal, submitHandler }: SaveAndDeleteProps): ReactElement => {
+const SaveAndDelete = ({
+  model,
+  closeModal,
+  submitHandler,
+  deleteConfirmTitle,
+  deleteConfirmMessage,
+}: SaveAndDeleteProps): ReactElement => {
   const value = model.getValue();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const handleConfirmDelete = () => {
+    setConfirmOpen(false);
+    closeModal();
+    if (model.setValue) {
+      model.setValue(undefined);
+    }
+  };
+
   return (
     <Box
       component="span"
@@ -39,20 +58,35 @@ const SaveAndDelete = ({ model, closeModal, submitHandler }: SaveAndDeleteProps)
       }}
     >
       {value && value.trim() !== '' && (
-        <Button
-          color="secondary"
-          variant="outlined"
-          onClick={() => {
-            closeModal();
-            if (model.setValue) {
-              model.setValue(undefined);
+        <>
+          <Button
+            color="secondary"
+            variant="outlined"
+            onClick={() => setConfirmOpen(true)}
+            sx={{ mr: 1 }}
+            size="small"
+          >
+            <FormattedMessage id="action.delete" defaultMessage="Delete" />
+          </Button>
+          <ConfirmDeleteDialog
+            open={confirmOpen}
+            title={
+              deleteConfirmTitle ?? (
+                <FormattedMessage id="confirm-delete.item-title" defaultMessage="Delete item?" />
+              )
             }
-          }}
-          sx={{ mr: 1 }}
-          size="small"
-        >
-          <FormattedMessage id="action.delete" defaultMessage="Delete" />
-        </Button>
+            message={
+              deleteConfirmMessage ?? (
+                <FormattedMessage
+                  id="confirm-delete.item-message"
+                  defaultMessage="Are you sure you want to delete this item?"
+                />
+              )
+            }
+            onConfirm={handleConfirmDelete}
+            onCancel={() => setConfirmOpen(false)}
+          />
+        </>
       )}
       <Button color="primary" variant="outlined" onClick={submitHandler} size="small">
         <FormattedMessage id="action.accept" defaultMessage="Accept" />

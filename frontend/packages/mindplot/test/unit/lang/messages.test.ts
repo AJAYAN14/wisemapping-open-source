@@ -17,60 +17,44 @@
  */
 import Messages, { $msg } from '../../../src/components/Messages';
 import Bundle from '../../../src/components/lang/Bundle';
-import type { LocaleMessages } from '../../../src/components/lang/en';
+import type { LocaleMessages } from '../../../src/components/lang/zh';
 
 describe('Messages locale resolution', () => {
   afterEach(() => {
-    Messages.init('en');
+    Messages.init('zh');
   });
 
-  it.each([
-    ['zh-CN', 'zh'],
-    ['zh_CN', 'zh'],
-    ['pt-BR', 'pt'],
-    ['pt_BR', 'pt'],
-    ['de-AT', 'de'],
-    ['ja-JP', 'ja'],
-    ['ES', 'es'],
-    ['fr', 'fr'],
-  ])('resolves %s to the %s bundle', (locale, bundle) => {
+  it.each(['zh', 'zh-CN', 'zh_CN', 'en', 'xx', ''])('resolves %p to Simplified Chinese', (locale) => {
     Messages.init(locale);
-    expect($msg('MAIN_TOPIC')).toBe(Bundle[bundle]?.MAIN_TOPIC);
-  });
-
-  it.each(['xx', 'xx-YY', ''])('falls back to English for unknown locale %p', (locale) => {
-    Messages.init(locale);
-    expect($msg('MAIN_TOPIC')).toBe(Bundle.en.MAIN_TOPIC);
+    expect($msg('MAIN_TOPIC')).toBe(Bundle.zh.MAIN_TOPIC);
   });
 });
 
 describe('$msg fallback', () => {
   afterEach(() => {
-    Messages.init('en');
+    Messages.init('zh');
   });
 
-  it('falls back to the English text when the active bundle lacks the key', () => {
-    // Bundles are typed complete: an incomplete one can only come from outside the type system.
+  it('falls back to the Simplified Chinese bundle when the active bundle lacks the key', () => {
     Messages.__bundle = {} as LocaleMessages;
-    expect($msg('MAIN_TOPIC')).toBe('Main Topic');
+    expect($msg('MAIN_TOPIC')).toBe('重点主题');
   });
 
   it('returns the key only when no bundle has it', () => {
-    Messages.init('es');
+    Messages.init('zh');
     // @ts-expect-error an unknown key does not compile
     expect($msg('NO_SUCH_KEY')).toBe('NO_SUCH_KEY');
   });
 });
 
-// ts-jest type-checks the tests: these fail to compile while the bundles are string records.
 describe('typed bundles (T4)', () => {
   it('a locale must translate every key, and only those', () => {
-    const { NOTE, ...withoutNote } = Bundle.en;
-    expect(NOTE).toBe('Note');
+    const { NOTE, ...withoutNote } = Bundle.zh;
+    expect(NOTE).toBe('笔记');
     // @ts-expect-error NOTE is missing
     const missing: LocaleMessages = withoutNote;
     // @ts-expect-error EXTRA is not a key
-    const extra: LocaleMessages = { ...Bundle.en, EXTRA: 'x' };
+    const extra: LocaleMessages = { ...Bundle.zh, EXTRA: 'x' };
     expect([missing, extra]).toHaveLength(2);
   });
 });

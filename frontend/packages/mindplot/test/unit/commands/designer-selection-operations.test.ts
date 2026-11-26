@@ -351,6 +351,40 @@ describe('Designer.deleteSelectedEntities', () => {
     harness.designer.redo();
     expect(harness.designer.getModel().getRelationships()).toHaveLength(0);
   });
+
+  it('defers deletion to the deleteConfirm listener when one is registered', async () => {
+    const harness = await build();
+    const events: Array<{
+      topicCount: number;
+      relationshipCount: number;
+      hasChildren: boolean;
+      topicTitles: string[];
+      confirm: () => void;
+    }> = [];
+    harness.designer.addEvent('deleteConfirm', (payload) => {
+      events.push(payload);
+    });
+
+    select(harness, 3);
+    const before = harness.save();
+    harness.designer.deleteSelectedEntities();
+
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({
+      topicCount: 1,
+      relationshipCount: 0,
+      hasChildren: true,
+    });
+    expect(harness.save()).toEqual(before);
+
+    events[0]!.confirm();
+    const ids = harness.designer
+      .getModel()
+      .getTopics()
+      .map((topic) => topic.getId());
+    expect(ids).not.toContain(3);
+    expect(ids).not.toContain(4);
+  });
 });
 
 describe('Designer relationship style operations', () => {

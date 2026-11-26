@@ -20,12 +20,11 @@ import { useIntl } from 'react-intl';
 import { useTheme } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
-import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 import Capability from '../../classes/action/capability';
 import Model from '../../classes/model/editor';
 import ActionConfig from '../../classes/action/action-config';
 import Toolbar from '../toolbar';
-import { buildEditorPanelConfig } from './configBuilder';
+import { buildDeleteSelectionConfig, buildEditorPanelConfig } from './configBuilder';
 import { useSelection } from '../../hooks/useSelection';
 import type { UploadTopicImageFn } from '../../hooks/useEditor';
 import { EDITOR_Z_INDEX } from '../../theme/layout';
@@ -96,32 +95,11 @@ const EditorToolbar = ({
 
     contextActions.push(...enabledActions);
 
-    const selectedTopics = (() => {
-      try {
-        return model.getDesigner()?.getModel?.()?.filterSelectedTopics?.() ?? [];
-      } catch {
-        return [];
-      }
-    })();
-    const isOnlyCentralSelected =
-      selectedTopics.length === 1 &&
-      Boolean((selectedTopics[0] as { isCentralTopic?: () => boolean })?.isCentralTopic?.()) &&
-      selection.relationshipCount === 0;
-
-    if (!isOnlyCentralSelected) {
-      const deleteLabel = intl.formatMessage({
-        id: 'editor-panel.tooltip-delete-selected',
-        defaultMessage: 'Delete',
-      });
-      contextActions.push({
-        icon: <DeleteOutlineRoundedIcon />,
-        tooltip: deleteLabel,
-        ariaLabel: deleteLabel,
-        'data-testid': 'mobile-delete-topic-button',
-        onClick: () => {
-          model.getDesigner()?.deleteSelectedEntities?.();
-        },
-      });
+    const deleteAction = buildDeleteSelectionConfig(model, intl, selection, {
+      testId: 'mobile-delete-topic-button',
+    });
+    if (deleteAction) {
+      contextActions.push(deleteAction);
     }
 
     return contextActions;

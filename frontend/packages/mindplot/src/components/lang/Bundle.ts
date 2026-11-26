@@ -15,35 +15,17 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-import ES from './es';
-import EN from './en';
-import DE from './de';
-import FR from './fr';
-import RU from './ru';
 import ZH from './zh';
-import JA from './ja';
-import PT from './pt';
-import IT from './it';
-import HI from './hi';
-import type { LocaleMessages } from './en';
+import type { LocaleMessages } from './zh';
 
-// Looked up by the user locale, so any other locale is missing. English is the fallback.
 interface LanguageBundle {
-  en: LocaleMessages;
+  zh: LocaleMessages;
   [locale: string]: LocaleMessages | undefined;
 }
 
 const Bundle: LanguageBundle = {
-  es: ES,
-  en: EN,
-  de: DE,
-  fr: FR,
-  ru: RU,
   zh: ZH,
-  ja: JA,
-  pt: PT,
-  it: IT,
-  hi: HI,
+  'zh-CN': ZH,
 };
 
 export default Bundle;

@@ -18,14 +18,11 @@
 import fs from 'fs';
 import path from 'path';
 import Bundle from '../../../src/components/lang/Bundle';
-import { isMsgKey } from '../../../src/components/lang/en';
-
-const enKeys = Object.keys(Bundle.en).sort();
-const locales = Object.keys(Bundle).filter((l) => l !== 'en');
+import { isMsgKey } from '../../../src/components/lang/zh';
 
 describe('mindplot language bundles', () => {
-  it.each(locales)('%s has exactly the English key set', (locale) => {
-    expect(Object.keys(Bundle[locale] ?? {}).sort()).toEqual(enKeys);
+  it('only ships Simplified Chinese bundles', () => {
+    expect(Object.keys(Bundle).sort()).toEqual(['zh', 'zh-CN']);
   });
 
   it.each(Object.keys(Bundle))('%s has a non-empty translation for every key', (locale) => {
@@ -54,7 +51,7 @@ describe('mindplot language bundles', () => {
     // Topic placeholder texts are looked up through the theme style msgKey.
     ['MAIN_TOPIC', 'SUB_TOPIC', 'CENTRAL_TOPIC', 'ISOLATED_TOPIC'].forEach((k) => used.add(k));
 
-    const missing = [...used].filter((key) => !(key in Bundle.en)).sort();
+    const missing = [...used].filter((key) => !(key in Bundle.zh)).sort();
     expect(missing).toEqual([]);
     expect(used.has('LINK')).toBe(true);
     expect(used.has('NOTE')).toBe(true);
@@ -73,8 +70,8 @@ describe('mindplot language bundles', () => {
     expect(keys.filter((key) => !isMsgKey(key))).toEqual([]);
   });
 
-  it('labels link and note tooltips in English', () => {
-    expect(Bundle.en.LINK).toBe('Link');
-    expect(Bundle.en.NOTE).toBe('Note');
+  it('labels link and note tooltips in Simplified Chinese', () => {
+    expect(Bundle.zh.LINK).toBe('链接');
+    expect(Bundle.zh.NOTE).toBe('笔记');
   });
 });

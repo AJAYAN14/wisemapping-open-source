@@ -26,6 +26,8 @@ import { createTextMeasurer, wrapTextLines } from './wrapTextLines';
 
 // A no-break space: unlike a plain space it is never collapsed, so an empty line keeps its height.
 const EMPTY_LINE = '\u00A0';
+const FIRST_LINE_DY = '1em';
+const LINE_DY = '1.4em';
 
 // Bumped whenever cached text measurements may be wrong: a web font that finishes loading changes
 // the metrics of every text drawn with it.
@@ -100,10 +102,10 @@ class TextPeer extends ElementPeer<SVGTextElement> {
       let tspan = this._tspans[i];
       if (!tspan) {
         tspan = ElementPeer.createNode('tspan');
-        tspan.setAttribute('dy', '1em');
         this._native.appendChild(tspan);
         this._tspans.push(tspan);
       }
+      ElementPeer.writeAttribute(tspan, 'dy', i === 0 ? FIRST_LINE_DY : LINE_DY);
       ElementPeer.writeAttribute(tspan, 'x', x);
 
       // An empty line still needs a glyph to take its height: a plain space is collapsed when it

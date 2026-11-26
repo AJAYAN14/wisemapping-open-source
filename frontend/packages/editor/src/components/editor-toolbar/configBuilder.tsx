@@ -19,6 +19,7 @@ import TextFieldsRoundedIcon from '@mui/icons-material/TextFieldsRounded';
 import StickyNote2OutlinedIcon from '@mui/icons-material/StickyNote2Outlined';
 import LinkRoundedIcon from '@mui/icons-material/LinkRounded';
 import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
+import DeleteOutlineRoundedIcon from '@mui/icons-material/DeleteOutlineRounded';
 
 import ActionConfig from '../../classes/action/action-config';
 import NodePropertyValueModelBuilder from '../../classes/model/node-property-builder';
@@ -182,4 +183,49 @@ export function buildEditorPanelConfig(
     editLinkUrlConfiguration,
     ...(selection.relationshipCount > 0 ? [relationshipStyleConfiguration] : []),
   ];
+}
+
+/**
+ * Builds the delete action for currently selected topics/relationships when deletable
+ * (omitted when only the central topic is selected).
+ */
+export function buildDeleteSelectionConfig(
+  model: Editor,
+  intl: IntlShape,
+  selection: SelectionSnapshot,
+  options?: { testId?: string; includeShortcutHint?: boolean },
+): ActionConfig | undefined {
+  if (selection.topicCount === 0 && selection.relationshipCount === 0) {
+    return undefined;
+  }
+
+  const selectedTopics = (() => {
+    try {
+      return model.getDesigner()?.getModel?.()?.filterSelectedTopics?.() ?? [];
+    } catch {
+      return [];
+    }
+  })();
+  const isOnlyCentralSelected =
+    selectedTopics.length === 1 &&
+    Boolean((selectedTopics[0] as { isCentralTopic?: () => boolean })?.isCentralTopic?.()) &&
+    selection.relationshipCount === 0;
+
+  if (isOnlyCentralSelected) {
+    return undefined;
+  }
+
+  const deleteLabel = intl.formatMessage({
+    id: 'editor-panel.tooltip-delete-selected',
+    defaultMessage: 'Delete',
+  });
+  return {
+    icon: <DeleteOutlineRoundedIcon />,
+    tooltip: options?.includeShortcutHint ? `${deleteLabel} (Delete / Backspace)` : deleteLabel,
+    ariaLabel: deleteLabel,
+    ...(options?.testId ? { 'data-testid': options.testId } : {}),
+    onClick: () => {
+      model.getDesigner()?.deleteSelectedEntities?.();
+    },
+  };
 }

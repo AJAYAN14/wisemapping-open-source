@@ -77,4 +77,25 @@ describe('TopicImagePicker', () => {
 
     expect(triggerClose).toHaveBeenCalledTimes(1);
   });
+
+  it('confirms before removing an existing topic image', () => {
+    const topicImageModel = property<TopicImageValue | undefined>({
+      url: 'https://example.com/img.png',
+      width: 100,
+      height: 100,
+    });
+    renderPane(
+      <TopicImagePicker triggerClose={jest.fn()} topicImageModel={topicImageModel} />,
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: '移除图片' }));
+    expect(topicImageModel.setValue).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByTestId('confirm-delete-cancel'));
+    expect(topicImageModel.setValue).not.toHaveBeenCalled();
+
+    fireEvent.click(screen.getByRole('button', { name: '移除图片' }));
+    fireEvent.click(screen.getByTestId('confirm-delete-submit'));
+    expect(topicImageModel.setValue).toHaveBeenCalledWith(undefined);
+  });
 });

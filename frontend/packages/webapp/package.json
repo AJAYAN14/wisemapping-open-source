@@ -19,7 +19,6 @@
     "cy:run": "npx cypress run --browser chrome",
     "dev": "vite",
     "i18n:compile": "formatjs compile lang/zh.json --ast --out-file src/compiled-lang/zh.json && formatjs compile lang/zh-CN.json --ast --out-file src/compiled-lang/zh-CN.json",
-    "i18n:extract": "formatjs extract 'src/**/*.ts*' --ignore 'src/@types/**/*' --preserve-whitespace --out-file lang/en.json",
     "lint": "eslint src test cypress cypress.config.ts eslint.config.mjs vite.config.mts --ext js,ts,tsx && yarn typecheck:cypress",
     "lint:fix": "eslint src test cypress cypress.config.ts eslint.config.mjs vite.config.mts --ext js,ts,tsx --fix",
     "start": "vite",

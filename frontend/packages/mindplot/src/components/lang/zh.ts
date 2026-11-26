@@ -16,9 +16,7 @@
  *   limitations under the License.
  */
 
-import type { LocaleMessages } from './en';
-
-const ZH: LocaleMessages = {
+const ZH = {
   LOADING: '加载......',
   SAVING: '保存......',
   SAVE_COMPLETE: '保存完成',
@@ -47,5 +45,14 @@ const ZH: LocaleMessages = {
   LINK: '链接',
   NOTE: '笔记',
 };
+
+/** The key of a message: Simplified Chinese is the sole bundle. */
+export type MsgKey = keyof typeof ZH;
+
+export const isMsgKey = (key: string): key is MsgKey =>
+  Object.prototype.hasOwnProperty.call(ZH, key);
+
+/** A locale bundle: a translation for every key, and no other key. */
+export type LocaleMessages = Record<MsgKey, string>;
 
 export default ZH;

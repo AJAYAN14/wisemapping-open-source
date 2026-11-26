@@ -16,26 +16,20 @@
  *   limitations under the License.
  */
 import Bundle from './lang/Bundle';
-import type { LocaleMessages, MsgKey } from './lang/en';
+import type { LocaleMessages, MsgKey } from './lang/zh';
 
 class Messages {
   public static __bundle: LocaleMessages | undefined;
 
-  static init(locale: string) {
-    const userLocale = locale || 'zh';
-
-    // Try Chinese first, then user locale, then base language.
-    const baseLanguage = userLocale.split(/[-_]/)[0]!.toLowerCase(); // split always has a first item
-    this.__bundle = Bundle['zh'] || Bundle[userLocale] || Bundle[baseLanguage] || Bundle.en;
+  static init(_locale?: string) {
+    this.__bundle = Bundle.zh;
   }
 }
 
 const $msg = function $msg(key: MsgKey): string {
-  if (!Messages.__bundle) {
-    Messages.init('zh');
-  }
-  // init() always sets the bundle.
-  return Messages.__bundle![key] || Bundle['zh']?.[key] || Bundle.en[key] || key;
+  const bundle = Messages.__bundle ?? Bundle.zh;
+  Messages.__bundle = bundle;
+  return bundle[key] || Bundle.zh[key] || key;
 };
 
 export default Messages;

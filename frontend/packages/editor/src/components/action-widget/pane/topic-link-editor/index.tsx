@@ -25,7 +25,7 @@ import IconButton from '@mui/material/IconButton';
 import SaveAndDelete from '../save-and-delete';
 import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
-import { useIntl } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 
 /**
  * Url form for toolbar and node contextual editor
@@ -71,10 +71,10 @@ const TopicLinkEditor = (props: {
         pt: 1.5,
         px: 1.5,
         pb: 1,
-        minWidth: '320px',
-        maxWidth: '380px',
+        minWidth: 'min(320px, calc(100dvw - 32px))',
+        maxWidth: 'min(380px, calc(100dvw - 24px))',
         backgroundColor: 'background.paper',
-        borderRadius: '8px',
+        borderRadius: '16px',
         border: '1px solid',
         borderColor: 'divider',
         position: 'relative',
@@ -133,6 +133,15 @@ const TopicLinkEditor = (props: {
         model={props.urlModel as NodeProperty<string | undefined>}
         closeModal={props.closeModal}
         submitHandler={submitHandler}
+        deleteConfirmTitle={
+          <FormattedMessage id="confirm-delete.link-title" defaultMessage="Delete link?" />
+        }
+        deleteConfirmMessage={
+          <FormattedMessage
+            id="confirm-delete.link-message"
+            defaultMessage="Are you sure you want to remove the link from this topic?"
+          />
+        }
       />
     </Box>
   );

@@ -34,6 +34,7 @@ import React, {
 import MaterialToolbar from '@mui/material/Toolbar';
 import MaterialAppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
+import Divider from '@mui/material/Divider';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Menu from '@mui/material/Menu';
@@ -66,8 +67,14 @@ import TextField from '@mui/material/TextField';
 import { $notify } from '@wisemapping/mindplot';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useTheme as useMuiTheme } from '@mui/material/styles';
-import { getFrostedGlassBar, appleFontStack, applePressMixin } from '../../theme/appleDesign';
-import { buildEditorPanelConfig } from '../editor-toolbar/configBuilder';
+import type { Theme } from '@mui/material/styles';
+import {
+  getFrostedGlassBar,
+  getFrostedGlassCard,
+  appleFontStack,
+  applePressMixin,
+} from '../../theme/appleDesign';
+import { buildDeleteSelectionConfig, buildEditorPanelConfig } from '../editor-toolbar/configBuilder';
 import { useSelection } from '../../hooks/useSelection';
 import type { UploadTopicImageFn } from '../../hooks/useEditor';
 import debounce from 'lodash/debounce';
@@ -160,9 +167,17 @@ const AppBar = ({
     if (!showCenterFormatting || !model) {
       return [];
     }
-    return buildEditorPanelConfig(model, intl, selection, uploadTopicImage).filter(
+    const items = buildEditorPanelConfig(model, intl, selection, uploadTopicImage).filter(
       (item) => !(item.disabled && item.disabled()),
     );
+    const deleteAction = buildDeleteSelectionConfig(model, intl, selection, {
+      testId: 'appbar-delete-topic-button',
+      includeShortcutHint: true,
+    });
+    if (deleteAction) {
+      items.push(deleteAction);
+    }
+    return items;
   }, [intl, model, selection, showCenterFormatting, uploadTopicImage]);
 
   const handleStarredOnClick = () => {
@@ -545,12 +560,14 @@ const AppBar = ({
             })}
           >
             <IconButton
+              id="app-bar-more-button"
               aria-label={intl.formatMessage({
                 id: 'appbar.more-actions',
                 defaultMessage: 'More actions',
               })}
               aria-haspopup="menu"
               aria-expanded={Boolean(overflowAnchor)}
+              aria-controls={overflowAnchor ? 'app-bar-overflow-menu' : undefined}
               data-testid="app-bar-more-button"
               onClick={(e) => setOverflowAnchor(e.currentTarget)}
             >
@@ -558,9 +575,79 @@ const AppBar = ({
             </IconButton>
           </Tooltip>
           <Menu
+            id="app-bar-overflow-menu"
             anchorEl={overflowAnchor}
             open={Boolean(overflowAnchor)}
             onClose={() => setOverflowAnchor(null)}
+            elevation={0}
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+            slotProps={{
+              list: {
+                'aria-labelledby': 'app-bar-more-button',
+              },
+              paper: {
+                ...({ 'data-testid': 'app-bar-overflow-menu-paper' } as Record<string, string>),
+                sx: (theme: Theme) => {
+                  const isDark = theme.palette.mode === 'dark';
+                  return {
+                    ...getFrostedGlassCard(theme, '16px'),
+                    mt: 1,
+                    minWidth: 188,
+                    p: '6px',
+                    borderRadius: '16px',
+                    transformOrigin: 'top right',
+                    fontFamily: appleFontStack,
+                    overflow: 'hidden',
+                    '@media (forced-colors: active)': {
+                      backgroundColor: 'Canvas',
+                      color: 'CanvasText',
+                      borderColor: 'ButtonBorder',
+                    },
+                    '& .MuiList-root': {
+                      p: 0,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '2px',
+                    },
+                    '& .MuiMenuItem-root': {
+                      borderRadius: '10px',
+                      minHeight: '44px',
+                      px: 1.5,
+                      py: 1,
+                      gap: 1.25,
+                      fontSize: '0.92rem',
+                      fontWeight: 500,
+                      fontFamily: appleFontStack,
+                      transition:
+                        'background-color 140ms ease, transform 120ms cubic-bezier(0.2, 0, 0, 1)',
+                      '&:hover': {
+                        backgroundColor: isDark
+                          ? 'rgba(255, 255, 255, 0.10)'
+                          : 'rgba(0, 0, 0, 0.05)',
+                      },
+                      '&:active': {
+                        transform: 'scale(0.98)',
+                      },
+                      '&:focus-visible': {
+                        outline: `2px solid ${theme.palette.primary.main}`,
+                        outlineOffset: '-2px',
+                      },
+                      '@media (prefers-reduced-motion: reduce)': {
+                        transition: 'none',
+                        '&:active': {
+                          transform: 'none',
+                        },
+                      },
+                    },
+                    '& .MuiListItemIcon-root': {
+                      minWidth: 'auto',
+                      color: theme.palette.text.secondary,
+                    },
+                  };
+                },
+              },
+            }}
           >
             {!capability.isHidden('history') && (
               <MenuItem
@@ -621,6 +708,20 @@ const AppBar = ({
                   })}
                 </ListItemText>
               </MenuItem>
+            )}
+            {(!capability.isHidden('history') ||
+              !capability.isHidden('starred') ||
+              !capability.isHidden('export')) && (
+              <Divider
+                sx={{
+                  my: 0.5,
+                  mx: 1,
+                  borderColor: (theme) =>
+                    theme.palette.mode === 'dark'
+                      ? 'rgba(255, 255, 255, 0.10)'
+                      : 'rgba(0, 0, 0, 0.08)',
+                }}
+              />
             )}
             <MenuItem
               onClick={() => {
@@ -689,8 +790,8 @@ const AppBar = ({
             mx: { xs: '4px', sm: '6px' },
           },
           '& .MuiButtonBase-root': {
-            width: '34px',
-            height: '34px',
+            minWidth: '34px',
+            minHeight: '34px',
             padding: 0,
             marginX: 0,
             borderRadius: '10px',
@@ -699,10 +800,19 @@ const AppBar = ({
             '& .MuiSvgIcon-root': {
               fontSize: '20px',
             },
+            '&:focus-visible': {
+              outline: `2px solid ${muiTheme.palette.primary.main}`,
+              outlineOffset: '2px',
+            },
+            '@media (forced-colors: active)': {
+              '&:focus-visible': {
+                outline: '2px solid Highlight',
+              },
+            },
             ...applePressMixin,
             [muiTheme.breakpoints.up('sm')]: {
-              width: '36px',
-              height: '36px',
+              minWidth: '36px',
+              minHeight: '36px',
             },
             '@media (pointer: coarse)': {
               minWidth: '36px',
