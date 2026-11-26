@@ -103,10 +103,13 @@ const LoginPage = (): React.ReactElement => {
 
   return (
     <AccountAccessLayout headerType="none" compact>
-      <AppleLoginCard role="region" aria-label={intl.formatMessage({ id: 'login.page-title', defaultMessage: 'Login' })}>
+      <AppleLoginCard
+        role="region"
+        aria-label={intl.formatMessage({ id: 'login.page-title', defaultMessage: 'Login' })}
+      >
         <BrandBadge aria-hidden="true">
           <svg width="40" height="30" viewBox="0 0 1510 1100" style={{ display: 'block' }}>
-            <g stroke="#1D1D1D" strokeWidth="60" strokeLinejoin="round" strokeLinecap="round">
+            <g stroke="#000000" strokeWidth="60" strokeLinejoin="round" strokeLinecap="round">
               <path
                 d="M755 40 C1038 40 1268 212 1268 425 C1268 610 1125 720 960 818 C850 883 786 918 755 1000 C724 918 660 883 550 818 C385 720 242 610 242 425 C242 212 472 40 755 40 Z"
                 fill="#FFCB00"

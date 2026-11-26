@@ -347,6 +347,7 @@ const AppBar = ({
         <Box sx={{ display: { xs: 'none', sm: 'flex' }, alignItems: 'center', flexShrink: 0 }}>
           <img
             src={mode === 'light' ? LogoTextBlackSvg : LogoTextOrangeSvg}
+            style={{ height: 28, width: 'auto', display: 'block' }}
             aria-label={intl.formatMessage({
               id: 'appbar.logo-aria-label',
               defaultMessage: 'WiseMapping Logo',

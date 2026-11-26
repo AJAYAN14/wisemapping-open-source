@@ -29,9 +29,9 @@ export const StyledLogo = styled('div')`
   position: fixed;
   left: 20px;
   bottom: 10px;
-  background: url(${LogoTextBlackSvg}) no-repeat;
-  width: 90px;
-  height: 40px;
+  background: url(${LogoTextBlackSvg}) no-repeat center / contain;
+  width: 40px;
+  height: 30px;
 `;
 
 export const Notifier = styled('div')`

@@ -104,7 +104,9 @@ export default async function middleware(request: Request) {
     }
     .header-logo img {
       transition: opacity 0.2s ease;
-      height: auto;
+      height: 32px;
+      width: auto;
+      display: block;
     }
     .header-logo:hover img {
       opacity: 0.8;
