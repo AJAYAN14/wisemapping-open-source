@@ -342,7 +342,7 @@ class DragPivot implements CanvasElement {
     // just hidden and disconnected
   }
 
-  static DEFAULT_PIVOT_SIZE = { width: 40, height: 18 };
+  static DEFAULT_PIVOT_SIZE = { width: 54, height: 32 };
 }
 
 export default DragPivot;
