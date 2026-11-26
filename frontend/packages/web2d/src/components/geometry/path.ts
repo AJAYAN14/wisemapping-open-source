@@ -80,6 +80,10 @@ export class PathBuilder {
     return this._push('C', control1, control2, p);
   }
 
+  quadTo(control: Vec, p: Vec): this {
+    return this._push('Q', control, p);
+  }
+
   close(): this {
     this._commands.push('Z');
     return this;

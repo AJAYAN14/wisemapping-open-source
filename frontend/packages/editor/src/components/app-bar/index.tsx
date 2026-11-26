@@ -33,7 +33,6 @@ import React, {
 import MaterialToolbar from '@mui/material/Toolbar';
 import MaterialAppBar from '@mui/material/AppBar';
 import Box from '@mui/material/Box';
-import Dialog from '@mui/material/Dialog';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Menu from '@mui/material/Menu';
@@ -53,7 +52,6 @@ import StarRateRoundedIcon from '@mui/icons-material/StarRateRounded';
 import StarBorderRoundedIcon from '@mui/icons-material/StarBorderRounded';
 import ArrowBackIosNewRoundedIcon from '@mui/icons-material/ArrowBackIosNewRounded';
 import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
-import PaletteOutlinedIcon from '@mui/icons-material/PaletteOutlined';
 import DarkModeOutlinedIcon from '@mui/icons-material/DarkModeOutlined';
 import LightModeRoundedIcon from '@mui/icons-material/LightModeRounded';
 import Typography from '@mui/material/Typography';
@@ -64,8 +62,6 @@ import IconButton from '@mui/material/IconButton';
 import { ToolbarActionType } from '../toolbar/ToolbarActionType';
 import MapInfo from '../../classes/model/map-info';
 import { useIntl } from 'react-intl';
-import ThemeEditor from '../action-widget/pane/theme-editor';
-import NodePropertyValueModelBuilder from '../../classes/model/node-property-builder';
 import TextField from '@mui/material/TextField';
 import { $notify } from '@wisemapping/mindplot';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -98,7 +94,6 @@ const AppBar = ({
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [currentTitle, setCurrentTitle] = useState<string>(() => mapInfo.getTitle());
   const [overflowAnchor, setOverflowAnchor] = useState<HTMLElement | null>(null);
-  const [themeDialogOpen, setThemeDialogOpen] = useState<boolean>(false);
   const [findInMapOpen, setFindInMapOpen] = useState<boolean>(false);
   const canRename = !capability.isHidden('rename');
 
@@ -491,25 +486,6 @@ const AppBar = ({
     buildFindInMapConfig(model, intl, { open: findInMapOpen, setOpen: setFindInMapOpen }),
     buildOutlineViewConfig(model, capability, intl),
     {
-      icon: <PaletteOutlinedIcon />,
-      tooltip: intl.formatMessage({ id: 'appbar.tooltip-theme', defaultMessage: 'Theme' }),
-      options: [
-        {
-          render: (closeModal) => {
-            if (model) {
-              const modelBuilder = new NodePropertyValueModelBuilder(model.getDesigner());
-              return (
-                <ThemeEditor closeModal={closeModal} themeModel={modelBuilder.getThemeModel()} />
-              );
-            }
-            return <div>Theme Editor not available</div>;
-          },
-        },
-      ],
-      visible: !isCompactBar && !capability.isHidden('theme'),
-      disabled: () => !isMapLoaded,
-    },
-    {
       icon: <FileDownloadRoundedIcon />,
       onClick: () => {
         onAction('export');
@@ -593,25 +569,6 @@ const AppBar = ({
                   {intl.formatMessage({
                     id: 'appbar.tooltip-starred',
                     defaultMessage: 'Starred',
-                  })}
-                </ListItemText>
-              </MenuItem>
-            )}
-            {!capability.isHidden('theme') && (
-              <MenuItem
-                disabled={!isMapLoaded}
-                onClick={() => {
-                  setOverflowAnchor(null);
-                  setThemeDialogOpen(true);
-                }}
-              >
-                <ListItemIcon>
-                  <PaletteOutlinedIcon fontSize="small" />
-                </ListItemIcon>
-                <ListItemText>
-                  {intl.formatMessage({
-                    id: 'appbar.tooltip-theme',
-                    defaultMessage: 'Theme',
                   })}
                 </ListItemText>
               </MenuItem>
@@ -734,19 +691,6 @@ const AppBar = ({
           })}
         </MaterialToolbar>
       </MaterialAppBar>
-      {themeDialogOpen && model && (
-        <Dialog
-          open={themeDialogOpen}
-          onClose={() => setThemeDialogOpen(false)}
-          maxWidth="sm"
-          fullWidth
-        >
-          <ThemeEditor
-            closeModal={() => setThemeDialogOpen(false)}
-            themeModel={new NodePropertyValueModelBuilder(model.getDesigner()).getThemeModel()}
-          />
-        </Dialog>
-      )}
     </>
   );
 };

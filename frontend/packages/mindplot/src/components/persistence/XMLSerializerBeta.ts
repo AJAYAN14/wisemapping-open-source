@@ -57,8 +57,8 @@ class XMLSerializerBeta implements XMLMindmapSerializer {
     version = version ?? ModelCodeName.BETA;
     const mindmap = new Mindmap(mapId, version);
 
-    // Default to classic theme for beta version maps
-    mindmap.setTheme('classic');
+    // Default to prism theme for beta version maps
+    mindmap.setTheme('prism');
 
     // Beta version always uses mindmap layout
     mindmap.setLayout('mindmap');

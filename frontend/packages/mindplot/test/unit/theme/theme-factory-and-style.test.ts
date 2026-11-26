@@ -17,14 +17,9 @@
  */
 import { afterEach, describe, expect, it, jest } from '@jest/globals';
 import { LineType } from '../../../src/components/ConnectionLine';
-import AuroraTheme from '../../../src/components/theme/AuroraTheme';
-import ClassicTheme from '../../../src/components/theme/ClassicTheme';
 import ColorUtil from '../../../src/components/theme/ColorUtil';
 import DefaultTheme from '../../../src/components/theme/DefaultTheme';
-import OceanTheme from '../../../src/components/theme/OceanTheme';
 import PrismTheme from '../../../src/components/theme/PrismTheme';
-import RobotTheme from '../../../src/components/theme/RobotTheme';
-import SunriseTheme from '../../../src/components/theme/SunriseTheme';
 import ThemeFactory from '../../../src/components/theme/ThemeFactory';
 import { ThemeStyle } from '../../../src/components/theme/ThemeStyle';
 import type { TopicType, ThemeVariant } from '../../../src/components/theme/Theme';
@@ -32,8 +27,8 @@ import NodeModel from '../../../src/components/model/NodeModel';
 import Mindmap from '../../../src/components/model/Mindmap';
 import type ThemeType from '../../../src/components/model/ThemeType';
 import { THEME_TYPES } from '../../../src/components/model/ThemeType';
-import classicDefault from '../../../src/components/theme/styles/classic-default.json';
-import classicDark from '../../../src/components/theme/styles/classic-dark.json';
+import prismDefault from '../../../src/components/theme/styles/prism-default.json';
+import prismDark from '../../../src/components/theme/styles/prism-dark.json';
 import fakeTopic from './FakeTopic';
 
 const variants: ThemeVariant[] = ['light', 'dark'];
@@ -43,43 +38,42 @@ describe('ThemeFactory', () => {
     ThemeFactory.clearCache();
   });
 
-  it.each([
-    ['classic', ClassicTheme],
-    ['prism', PrismTheme],
-    ['robot', RobotTheme],
-    ['sunrise', SunriseTheme],
-    ['ocean', OceanTheme],
-    ['aurora', AuroraTheme],
-  ] as const)('creates the %s theme', (id, type) => {
+  it('creates the prism theme', () => {
     variants.forEach((variant) => {
-      expect(ThemeFactory.createById(id, variant)).toBeInstanceOf(type);
+      expect(ThemeFactory.createById('prism', variant)).toBeInstanceOf(PrismTheme);
     });
   });
 
   it('caches one instance per theme and variant', () => {
     ThemeFactory.clearCache();
-    const light = ThemeFactory.createById('ocean', 'light');
-    expect(ThemeFactory.createById('ocean', 'light')).toBe(light);
-    const dark = ThemeFactory.createById('ocean', 'dark');
+    const light = ThemeFactory.createById('prism', 'light');
+    expect(ThemeFactory.createById('prism', 'light')).toBe(light);
+    const dark = ThemeFactory.createById('prism', 'dark');
     expect(dark).not.toBe(light);
     expect(ThemeFactory.getCacheSize()).toBe(2);
 
     ThemeFactory.clearCache();
     expect(ThemeFactory.getCacheSize()).toBe(0);
-    expect(ThemeFactory.createById('ocean', 'light')).not.toBe(light);
+    expect(ThemeFactory.createById('prism', 'light')).not.toBe(light);
   });
 
-  it('reads the legacy dark-prism id as prism', () => {
-    expect(ThemeFactory.createById('dark-prism', 'dark')).toBe(
-      ThemeFactory.createById('prism', 'dark'),
-    );
-  });
+  it.each(['dark-prism', 'classic', 'robot', 'sunrise', 'ocean', 'aurora', 'retro'])(
+    'maps legacy or removed theme id %s to prism',
+    (legacyId) => {
+      expect(ThemeFactory.createById(legacyId, 'light')).toBe(
+        ThemeFactory.createById('prism', 'light'),
+      );
+      expect(ThemeFactory.createById(legacyId, 'dark')).toBe(
+        ThemeFactory.createById('prism', 'dark'),
+      );
+    },
+  );
 
   it('creates the theme of the mindmap a node belongs to', () => {
     const mindmap = new Mindmap('test');
-    mindmap.setTheme('sunrise');
+    mindmap.setTheme('prism');
     const model = new NodeModel('MainTopic', mindmap);
-    expect(ThemeFactory.create(model, 'dark')).toBe(ThemeFactory.createById('sunrise', 'dark'));
+    expect(ThemeFactory.create(model, 'dark')).toBe(ThemeFactory.createById('prism', 'dark'));
   });
 });
 
@@ -110,20 +104,20 @@ describe('ThemeStyle', () => {
   });
 
   it('applies the variant over the light style, and the light style over the default', () => {
-    const light = new ThemeStyle('classic', 'light');
-    const dark = new ThemeStyle('classic', 'dark');
-    // classic-light.json has no canvas: the default one applies.
+    const light = new ThemeStyle('prism', 'light');
+    const dark = new ThemeStyle('prism', 'dark');
+    // prism-light.json has no canvas: the default one applies.
     expect(light.getCanvasStyle()).toEqual({
-      backgroundColor: classicDefault.Canvas.backgroundColor,
-      gridColor: classicDefault.Canvas.gridColor,
+      backgroundColor: prismDefault.Canvas.backgroundColor,
+      gridColor: prismDefault.Canvas.gridColor,
       opacity: 1,
-      showGrid: true,
+      showGrid: false,
       gridPattern: undefined,
     });
-    // classic-dark.json overrides the colour and the grid, and keeps the rest.
+    // prism-dark.json overrides the colour, grid colour and showGrid, and keeps the rest.
     expect(dark.getCanvasStyle()).toEqual({
-      backgroundColor: classicDark.Canvas.backgroundColor,
-      gridColor: classicDefault.Canvas.gridColor,
+      backgroundColor: prismDark.Canvas.backgroundColor,
+      gridColor: prismDark.Canvas.gridColor,
       opacity: 1,
       showGrid: false,
       gridPattern: undefined,
@@ -141,7 +135,7 @@ describe('ThemeStyle', () => {
   });
 
   it('reads every connection style a theme can name', () => {
-    const style = new ThemeStyle('classic', 'light') as unknown as {
+    const style = new ThemeStyle('prism', 'light') as unknown as {
       convertStringToLineType: (name: string) => LineType;
     };
     const names = Object.keys(LineType).filter((key) => Number.isNaN(Number(key)));
@@ -152,7 +146,7 @@ describe('ThemeStyle', () => {
   });
 
   it('fails on an unknown topic type', () => {
-    const style = new ThemeStyle('classic', 'light');
+    const style = new ThemeStyle('prism', 'light');
     expect(() => style.getStyles('Bogus' as TopicType)).toThrow(
       'No styles found for topic type: Bogus',
     );
@@ -162,13 +156,13 @@ describe('ThemeStyle', () => {
 /** The base theme behaviour, which the bundled themes partly override. */
 class BaseTheme extends DefaultTheme {
   constructor(variant: ThemeVariant) {
-    super(new ThemeStyle('classic', variant), variant);
+    super(new ThemeStyle('prism', variant), variant);
   }
 }
 
 describe('DefaultTheme base colours', () => {
   const theme = new BaseTheme('light');
-  const classic = new ThemeStyle('classic', 'light');
+  const prism = new ThemeStyle('prism', 'light');
   const central = fakeTopic({}, undefined, { central: true });
 
   it('keeps a background colour set on the topic', () => {
@@ -184,14 +178,14 @@ describe('DefaultTheme base colours', () => {
   it('does not derive the central topic background from its border colour', () => {
     const bordered = fakeTopic({ borderColor: '#000080' }, undefined, { central: true });
     const expected = ([] as string[]).concat(
-      classic.getStyles('CentralTopic').backgroundColor as string | string[],
+      prism.getStyles('CentralTopic').backgroundColor as string | string[],
     )[0];
     expect(theme.getBackgroundColor(bordered)).toBe(expected);
   });
 
   it('picks the theme background by topic order', () => {
     const colors = ([] as string[]).concat(
-      classic.getStyles('MainTopic').backgroundColor as string | string[],
+      prism.getStyles('MainTopic').backgroundColor as string | string[],
     );
     const main = fakeTopic({}, central, { order: colors.length + 1 });
     expect(theme.getBackgroundColor(main)).toBe(colors[1 % colors.length]);
@@ -201,6 +195,5 @@ describe('DefaultTheme base colours', () => {
     const main = fakeTopic({ fontColor: '#aa0000' }, central, { order: 0 });
     const sub = fakeTopic({}, main, { order: 0 });
     expect(theme.getFontColor(sub)).toBe('#aa0000');
-    expect(theme.getFontColor(central)).toBe(classic.getStyles('CentralTopic').fontColor);
   });
 });

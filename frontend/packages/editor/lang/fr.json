@@ -500,54 +500,6 @@
   "note.character.limit.warning": {
     "defaultMessage": "(Limite bientôt atteinte)"
   },
-  "theme-editor.accept": {
-    "defaultMessage": "Appliquer le thème"
-  },
-  "theme-editor.cancel": {
-    "defaultMessage": "Annuler"
-  },
-  "theme-editor.description": {
-    "defaultMessage": "Un thème définit le style visuel de votre carte mentale, y compris les couleurs, les polices et l'apparence générale. Choisissez un thème qui correspond le mieux à votre contenu et à votre public."
-  },
-  "theme-editor.title": {
-    "defaultMessage": "Choisir un thème"
-  },
-  "theme.classic.description": {
-    "defaultMessage": "Design épuré et professionnel aux accents bleus. Parfait pour les présentations professionnelles et les documents formels."
-  },
-  "theme.classic.name": {
-    "defaultMessage": "Classique"
-  },
-  "theme.aurora.description": {
-    "defaultMessage": "Thème en dégradé d'inspiration néon, avec effets lumineux, typographie grasse et connecteurs très contrastés, conçu pour une narration immersive."
-  },
-  "theme.aurora.name": {
-    "defaultMessage": "Aurora"
-  },
-  "theme.ocean.description": {
-    "defaultMessage": "Thème bleu inspiré de l'océan, avec variantes claire et sombre. Des couleurs calmes et professionnelles, parfaites pour les projets professionnels et créatifs."
-  },
-  "theme.ocean.name": {
-    "defaultMessage": "Océan"
-  },
-  "theme.robot.description": {
-    "defaultMessage": "Thème vert d'inspiration technologique. Parfait pour la documentation technique et les présentations futuristes."
-  },
-  "theme.robot.name": {
-    "defaultMessage": "Robot"
-  },
-  "theme.summer.description": {
-    "defaultMessage": "Thème orange lumineux et éclatant. Idéal pour les projets créatifs et les présentations dynamiques."
-  },
-  "theme.summer.name": {
-    "defaultMessage": "Été"
-  },
-  "theme.sunrise.description": {
-    "defaultMessage": "Thème Lever de soleil avec variantes en mode clair et sombre. Couleurs et contraste améliorés pour une meilleure lisibilité."
-  },
-  "theme.sunrise.name": {
-    "defaultMessage": "Lever de soleil"
-  },
   "theme.switch-to-dark": {
     "defaultMessage": "Passer en mode sombre"
   },

@@ -511,9 +511,9 @@ describe('NodePropertyBuilder relationship models', () => {
 
 describe('NodePropertyBuilder map-scoped models', () => {
   it('reads the map theme and changes it', () => {
-    const { builder, spies } = setup({ theme: 'classic' });
-    expect(builder.getThemeModel().getValue()).toBe('classic');
-    builder.getThemeModel().setValue!('prism' as never);
+    const { builder, spies } = setup({ theme: 'prism' });
+    expect(builder.getThemeModel().getValue()).toBe('prism');
+    builder.getThemeModel().setValue!('prism');
     expect(spies.changeTheme).toHaveBeenCalledWith('prism');
     expect(builder.getThemeModel()).toBe(builder.getThemeModel());
   });

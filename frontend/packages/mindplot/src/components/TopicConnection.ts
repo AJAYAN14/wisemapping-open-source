@@ -19,6 +19,7 @@
 import {
   CurvedLine,
   PolyLine,
+  RoundedPolyLine,
   STRAIGHT_TOLERANCE_PX,
   defaultControlPoints,
   isWithinStraightTolerance,
@@ -85,6 +86,8 @@ class TopicConnection extends BaseConnectionLine {
     // Set orientation for polylines and arc lines based on parent topic
     const orientation = this._parentTopic.getOrientation();
     if (this._line instanceof PolyLine) {
+      this._line.setOrientation(orientation);
+    } else if (this._line instanceof RoundedPolyLine) {
       this._line.setOrientation(orientation);
     } else if (this._line instanceof ArcLine) {
       this._line.setOrientation(orientation);
@@ -184,7 +187,7 @@ class TopicConnection extends BaseConnectionLine {
         this._line.setStroke(2, 'solid', color, 1);
         break;
       case LineType.POLYLINE_CURVED:
-        this._line.setStroke(2, 'solid', color, 1);
+        this._line.setStroke(this._parentTopic.isCentralTopic() ? 3 : 2, 'solid', color, 1);
         break;
       case LineType.POLYLINE_STRAIGHT:
         this._line.setStroke(2, 'solid', color, 1);
@@ -236,6 +239,16 @@ class TopicConnection extends BaseConnectionLine {
     const orientation = parentTopic.getOrientation();
     if (line2d instanceof PolyLine) {
       line2d.setOrientation(orientation);
+    } else if (line2d instanceof RoundedPolyLine) {
+      line2d.setOrientation(orientation);
+      line2d.setMiddleCoord(
+        this._computeRoundedElbowMiddle(
+          parentPosition,
+          parentConnectionPos,
+          childConnectionPos,
+          orientation,
+        ),
+      );
     } else if (line2d instanceof ArcLine) {
       line2d.setOrientation(orientation);
     }
@@ -252,6 +265,28 @@ class TopicConnection extends BaseConnectionLine {
 
     // Update color ...
     this.updateColor();
+  }
+
+  /**
+   * Centers the elbow bend in the visible gap between the central topic's outer edge and the
+   * child's incoming edge in horizontal layout so rounded corners are never clipped by the center
+   * box; sub-branches use the default 50% midpoint.
+   */
+  private _computeRoundedElbowMiddle(
+    parentPosition: PositionType,
+    parentConnectionPos: PositionType,
+    childConnectionPos: PositionType,
+    orientation: 'horizontal' | 'vertical',
+  ): number | undefined {
+    if (!this._parentTopic.isCentralTopic() || orientation !== 'horizontal') {
+      return undefined;
+    }
+    const sign = childConnectionPos.x >= parentConnectionPos.x ? 1 : -1;
+    const parentEdgeX = parentPosition.x + sign * (this._parentTopic.getSize().width / 2);
+    if (sign * (childConnectionPos.x - parentEdgeX) <= 0) {
+      return undefined;
+    }
+    return parentEdgeX + (childConnectionPos.x - parentEdgeX) * 0.5;
   }
 
   protected _positionLine(parentTopic: Topic): void {

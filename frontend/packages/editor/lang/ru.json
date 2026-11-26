@@ -500,54 +500,6 @@
   "note.character.limit.warning": {
     "defaultMessage": "(Приближается к лимиту)"
   },
-  "theme-editor.accept": {
-    "defaultMessage": "Применить тему"
-  },
-  "theme-editor.cancel": {
-    "defaultMessage": "Отмена"
-  },
-  "theme-editor.description": {
-    "defaultMessage": "Тема определяет визуальный стиль вашей карты разума, включая цвета, шрифты и общий внешний вид. Выберите тему, которая лучше всего подходит вашему контенту и аудитории."
-  },
-  "theme-editor.title": {
-    "defaultMessage": "Выбрать тему"
-  },
-  "theme.classic.description": {
-    "defaultMessage": "Чистый профессиональный дизайн с синими акцентами. Идеально подходит для деловых презентаций и официальных документов."
-  },
-  "theme.classic.name": {
-    "defaultMessage": "Классический"
-  },
-  "theme.aurora.description": {
-    "defaultMessage": "Градиентная тема в неоновом стиле с эффектами свечения, жирной типографикой и контрастными соединителями для захватывающего повествования."
-  },
-  "theme.aurora.name": {
-    "defaultMessage": "Аврора"
-  },
-  "theme.ocean.description": {
-    "defaultMessage": "Синяя тема в морском стиле со светлым и тёмным вариантами. Спокойные профессиональные цвета, идеальные для деловых и творческих проектов."
-  },
-  "theme.ocean.name": {
-    "defaultMessage": "Океан"
-  },
-  "theme.robot.description": {
-    "defaultMessage": "Зелёная тема в технологическом стиле. Идеально подходит для технической документации и футуристических презентаций."
-  },
-  "theme.robot.name": {
-    "defaultMessage": "Робот"
-  },
-  "theme.summer.description": {
-    "defaultMessage": "Яркая и насыщенная оранжевая тема. Отлично подходит для творческих проектов и энергичных презентаций."
-  },
-  "theme.summer.name": {
-    "defaultMessage": "Лето"
-  },
-  "theme.sunrise.description": {
-    "defaultMessage": "Тема «Рассвет» со светлым и тёмным режимами. Улучшенные цвета и контраст для лучшей читаемости."
-  },
-  "theme.sunrise.name": {
-    "defaultMessage": "Рассвет"
-  },
   "theme.switch-to-dark": {
     "defaultMessage": "Переключить на темный режим"
   },

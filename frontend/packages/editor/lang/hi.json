@@ -500,54 +500,6 @@
   "note.character.limit.warning": {
     "defaultMessage": "(सीमा के करीब)"
   },
-  "theme-editor.accept": {
-    "defaultMessage": "थीम लागू करें"
-  },
-  "theme-editor.cancel": {
-    "defaultMessage": "रद्द करें"
-  },
-  "theme-editor.description": {
-    "defaultMessage": "एक थीम आपके माइंडमैप की दृश्य शैली को परिभाषित करती है, जिसमें रंग, फॉन्ट और समग्र उपस्थिति शामिल है। एक थीम चुनें जो आपकी सामग्री और दर्शकों के लिए सबसे अच्छी हो।"
-  },
-  "theme-editor.title": {
-    "defaultMessage": "थीम चुनें"
-  },
-  "theme.classic.description": {
-    "defaultMessage": "नीले रंग के लहजे के साथ साफ़ और पेशेवर डिज़ाइन। व्यावसायिक प्रस्तुतियों और औपचारिक दस्तावेज़ों के लिए उत्तम।"
-  },
-  "theme.classic.name": {
-    "defaultMessage": "क्लासिक"
-  },
-  "theme.aurora.description": {
-    "defaultMessage": "नियॉन से प्रेरित ग्रेडिएंट थीम, जिसमें ग्लो इफ़ेक्ट, बोल्ड टाइपोग्राफ़ी और हाई-कॉन्ट्रास्ट कनेक्टर हैं, जो प्रभावशाली कहानी कहने के लिए बनाई गई है।"
-  },
-  "theme.aurora.name": {
-    "defaultMessage": "ऑरोरा"
-  },
-  "theme.ocean.description": {
-    "defaultMessage": "समुद्र से प्रेरित नीली थीम, लाइट/डार्क वेरिएंट के साथ। शांत और पेशेवर रंग, व्यावसायिक और रचनात्मक परियोजनाओं के लिए उत्तम।"
-  },
-  "theme.ocean.name": {
-    "defaultMessage": "महासागर"
-  },
-  "theme.robot.description": {
-    "defaultMessage": "तकनीक से प्रेरित हरी थीम। तकनीकी दस्तावेज़ों और भविष्यवादी प्रस्तुतियों के लिए उत्तम।"
-  },
-  "theme.robot.name": {
-    "defaultMessage": "रोबोट"
-  },
-  "theme.summer.description": {
-    "defaultMessage": "चमकीली और जीवंत नारंगी थीम। रचनात्मक परियोजनाओं और ऊर्जावान प्रस्तुतियों के लिए बढ़िया।"
-  },
-  "theme.summer.name": {
-    "defaultMessage": "गर्मी"
-  },
-  "theme.sunrise.description": {
-    "defaultMessage": "लाइट/डार्क मोड वेरिएंट वाली सूर्योदय थीम। बेहतर पठनीयता के लिए उन्नत रंग और कॉन्ट्रास्ट।"
-  },
-  "theme.sunrise.name": {
-    "defaultMessage": "सूर्योदय"
-  },
   "theme.switch-to-dark": {
     "defaultMessage": "डार्क मोड पर स्विच करें"
   },

@@ -33,6 +33,7 @@ import Text from '../../src/components/Text';
 import Arrow from '../../src/components/Arrow';
 import StraightLine from '../../src/components/StraightLine';
 import PolyLine from '../../src/components/PolyLine';
+import RoundedPolyLine from '../../src/components/RoundedPolyLine';
 import CurvedLine from '../../src/components/CurvedLine';
 import ArcLine from '../../src/components/ArcLine';
 import HeartbeatLine from '../../src/components/HeartbeatLine';
@@ -65,6 +66,7 @@ describe('as-const unions (typing T3)', () => {
       new Arrow(),
       new StraightLine(),
       new PolyLine(),
+      new RoundedPolyLine(),
       new CurvedLine(),
       new ArcLine(),
       new HeartbeatLine(),

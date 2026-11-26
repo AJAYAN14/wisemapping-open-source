@@ -500,54 +500,6 @@
   "note.character.limit.warning": {
     "defaultMessage": "(制限に近づいています)"
   },
-  "theme-editor.accept": {
-    "defaultMessage": "テーマを適用"
-  },
-  "theme-editor.cancel": {
-    "defaultMessage": "キャンセル"
-  },
-  "theme-editor.description": {
-    "defaultMessage": "テーマは、色、フォント、全体的な外観を含むマインドマップの視覚的スタイルを定義します。コンテンツとオーディエンスに最適なテーマを選択してください。"
-  },
-  "theme-editor.title": {
-    "defaultMessage": "テーマを選択"
-  },
-  "theme.classic.description": {
-    "defaultMessage": "青のアクセントが効いた、すっきりとしたプロフェッショナルなデザイン。ビジネスプレゼンテーションや正式な文書に最適です。"
-  },
-  "theme.classic.name": {
-    "defaultMessage": "クラシック"
-  },
-  "theme.aurora.description": {
-    "defaultMessage": "ネオンにインスパイアされたグラデーションテーマ。グロー効果、太字のタイポグラフィ、高コントラストのコネクタで、没入感のあるストーリーテリングを演出します。"
-  },
-  "theme.aurora.name": {
-    "defaultMessage": "オーロラ"
-  },
-  "theme.ocean.description": {
-    "defaultMessage": "海をイメージした青いテーマで、ライト/ダークの各バリエーションがあります。落ち着いたプロフェッショナルな配色で、ビジネスにもクリエイティブなプロジェクトにも最適です。"
-  },
-  "theme.ocean.name": {
-    "defaultMessage": "オーシャン"
-  },
-  "theme.robot.description": {
-    "defaultMessage": "テクノロジーをイメージした緑のテーマ。技術文書や未来的なプレゼンテーションに最適です。"
-  },
-  "theme.robot.name": {
-    "defaultMessage": "ロボット"
-  },
-  "theme.summer.description": {
-    "defaultMessage": "明るく鮮やかなオレンジのテーマ。クリエイティブなプロジェクトやエネルギッシュなプレゼンテーションにぴったりです。"
-  },
-  "theme.summer.name": {
-    "defaultMessage": "サマー"
-  },
-  "theme.sunrise.description": {
-    "defaultMessage": "ライト/ダークモードに対応した日の出テーマ。色とコントラストを強化し、読みやすさを向上させました。"
-  },
-  "theme.sunrise.name": {
-    "defaultMessage": "日の出"
-  },
   "theme.switch-to-dark": {
     "defaultMessage": "ダークモードに切り替え"
   },

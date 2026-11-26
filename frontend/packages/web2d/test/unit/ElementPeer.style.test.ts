@@ -29,6 +29,7 @@ import FontPeer from '../../src/components/peer/svg/FontPeer';
 import ElipsePeer from '../../src/components/peer/svg/ElipsePeer';
 import StraightLinePeer from '../../src/components/peer/svg/StraightPeer';
 import PolyLinePeer from '../../src/components/peer/svg/PolyLinePeer';
+import RoundedPolyLinePeer from '../../src/components/peer/svg/RoundedPolyLinePeer';
 import CurvedLinePeer from '../../src/components/peer/svg/CurvedLinePeer';
 import ArcLinePeer from '../../src/components/peer/svg/ArcLinePeer';
 import ArrowPeer from '../../src/components/peer/svg/ArrowPeer';
@@ -149,7 +150,8 @@ describe('ElementPeer stroke', () => {
       ['CurvedLinePeer', () => new CurvedLinePeer()],
       ['ArcLinePeer', () => new ArcLinePeer()],
       ['PolyLinePeer', () => new PolyLinePeer()],
-    ] as [string, () => CurvedLinePeer | ArcLinePeer | PolyLinePeer][])(
+      ['RoundedPolyLinePeer', () => new RoundedPolyLinePeer()],
+    ] as [string, () => CurvedLinePeer | ArcLinePeer | PolyLinePeer | RoundedPolyLinePeer][])(
       '%s.setStrokeWidth rescales the dash',
       (_name, create) => {
         const p = create();

@@ -139,7 +139,7 @@ describe('LayoutSelector', () => {
 });
 
 describe('ThemeEditor', () => {
-  const themes = ['Summer', 'Aurora', '80s Retro Night', 'Sunrise', 'Ocean', 'Classic', 'Robot'];
+  const themes = ['Summer', 'Sunrise', 'Ocean', 'Classic', 'Robot'];
 
   it('lists every theme', () => {
     renderPane(<ThemeEditor closeModal={jest.fn()} themeModel={property<ThemeType>('classic')} />);
@@ -151,7 +151,6 @@ describe('ThemeEditor', () => {
 
   it.each([
     ['Summer', 'prism'],
-    ['Aurora', 'aurora'],
     ['Sunrise', 'sunrise'],
     ['Ocean', 'ocean'],
     ['Robot', 'robot'],

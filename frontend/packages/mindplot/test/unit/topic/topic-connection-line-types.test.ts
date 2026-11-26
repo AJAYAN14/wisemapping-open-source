@@ -86,12 +86,32 @@ describe('TopicConnection line types', () => {
   );
 
   it.each([
+    [LineType.POLYLINE_CURVED, 3, 2],
     [LineType.HEARTBEAT, 4.5, 3],
     [LineType.NEURON, 4, 3],
   ])('draws style %s thicker from the central topic', async (style, fromCentral, fromOther) => {
     const harness = await open(style, 'mindmap');
     expect(strokeWidth(connectionOf(harness, 1))).toBe(fromCentral);
     expect(strokeWidth(connectionOf(harness, 2))).toBe(fromOther);
+  });
+
+  it('centers horizontal POLYLINE_CURVED bends in the gap outside the central topic box', async () => {
+    const harness = await open(LineType.POLYLINE_CURVED, 'mindmap');
+    const central = harness.topic(0);
+    const child = harness.topic(1);
+    const centralWidth = central.getSize().width;
+    const childX = child.getPosition().x;
+    child.setPosition({ x: childX, y: central.getPosition().y + 60 });
+
+    const conn = connectionOf(harness, 1);
+    const middleCoord = (
+      conn.getLine() as unknown as { getMiddleCoord: () => number | undefined }
+    ).getMiddleCoord();
+    const edgeX = central.getPosition().x + Math.sign(childX) * (centralWidth / 2);
+    const childIncomingX = child.workoutOutgoingConnectionPoint(central.getPosition()).x;
+
+    expect(middleCoord).toBeCloseTo(edgeX + (childIncomingX - edgeX) * 0.5, 5);
+    expect(Math.abs(middleCoord!)).toBeGreaterThan(centralWidth / 2);
   });
 
   it('curves a tree connection straight down, or as an organic S on the organic style', async () => {

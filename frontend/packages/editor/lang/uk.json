@@ -500,54 +500,6 @@
   "note.character.limit.warning": {
     "defaultMessage": "(Наближається до ліміту)"
   },
-  "theme-editor.accept": {
-    "defaultMessage": "Застосувати тему"
-  },
-  "theme-editor.cancel": {
-    "defaultMessage": "Скасувати"
-  },
-  "theme-editor.description": {
-    "defaultMessage": "Тема визначає візуальний стиль вашої карти розуму, включаючи кольори, шрифти та загальний вигляд. Виберіть тему, яка найкраще підходить вашому контенту та аудиторії."
-  },
-  "theme-editor.title": {
-    "defaultMessage": "Вибрати тему"
-  },
-  "theme.classic.description": {
-    "defaultMessage": "Чистий професійний дизайн із синіми акцентами. Ідеально підходить для ділових презентацій та офіційних документів."
-  },
-  "theme.classic.name": {
-    "defaultMessage": "Класичний"
-  },
-  "theme.aurora.description": {
-    "defaultMessage": "Градієнтна тема в неоновому стилі з ефектами світіння, жирною типографікою та контрастними з'єднувачами для захопливої розповіді."
-  },
-  "theme.aurora.name": {
-    "defaultMessage": "Аврора"
-  },
-  "theme.ocean.description": {
-    "defaultMessage": "Синя тема в морському стилі зі світлим і темним варіантами. Спокійні професійні кольори, ідеальні для ділових і творчих проєктів."
-  },
-  "theme.ocean.name": {
-    "defaultMessage": "Океан"
-  },
-  "theme.robot.description": {
-    "defaultMessage": "Зелена тема в технологічному стилі. Ідеально підходить для технічної документації та футуристичних презентацій."
-  },
-  "theme.robot.name": {
-    "defaultMessage": "Робот"
-  },
-  "theme.summer.description": {
-    "defaultMessage": "Яскрава й насичена помаранчева тема. Чудово підходить для творчих проєктів та енергійних презентацій."
-  },
-  "theme.summer.name": {
-    "defaultMessage": "Літо"
-  },
-  "theme.sunrise.description": {
-    "defaultMessage": "Тема «Схід сонця» зі світлим і темним режимами. Покращені кольори та контраст для кращої читабельності."
-  },
-  "theme.sunrise.name": {
-    "defaultMessage": "Схід сонця"
-  },
   "theme.switch-to-dark": {
     "defaultMessage": "Перемкнути на темний режим"
   },

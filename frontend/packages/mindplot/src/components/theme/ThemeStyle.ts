@@ -34,21 +34,6 @@ import {
 import prismDefault from './styles/prism-default.json';
 import prismLight from './styles/prism-light.json';
 import prismDark from './styles/prism-dark.json';
-import classicDefault from './styles/classic-default.json';
-import classicLight from './styles/classic-light.json';
-import classicDark from './styles/classic-dark.json';
-import robotDefault from './styles/robot-default.json';
-import robotLight from './styles/robot-light.json';
-import robotDark from './styles/robot-dark.json';
-import sunriseDefault from './styles/sunrise-default.json';
-import sunriseLight from './styles/sunrise-light.json';
-import sunriseDark from './styles/sunrise-dark.json';
-import oceanDefault from './styles/ocean-default.json';
-import oceanLight from './styles/ocean-light.json';
-import oceanDark from './styles/ocean-dark.json';
-import auroraDefault from './styles/aurora-default.json';
-import auroraLight from './styles/aurora-light.json';
-import auroraDark from './styles/aurora-dark.json';
 
 /** The colours a theme picks from by topic order: never empty, which loading checks. */
 export type Palette = readonly [string, ...string[]];
@@ -112,21 +97,6 @@ const STYLE_FILES: Record<string, JsonThemeStyles> = {
   'prism-default.json': prismDefault,
   'prism-light.json': prismLight,
   'prism-dark.json': prismDark,
-  'classic-default.json': classicDefault,
-  'classic-light.json': classicLight,
-  'classic-dark.json': classicDark,
-  'robot-default.json': robotDefault,
-  'robot-light.json': robotLight,
-  'robot-dark.json': robotDark,
-  'sunrise-default.json': sunriseDefault,
-  'sunrise-light.json': sunriseLight,
-  'sunrise-dark.json': sunriseDark,
-  'ocean-default.json': oceanDefault,
-  'ocean-light.json': oceanLight,
-  'ocean-dark.json': oceanDark,
-  'aurora-default.json': auroraDefault,
-  'aurora-light.json': auroraLight,
-  'aurora-dark.json': auroraDark,
 };
 
 const TOPIC_TYPES: TopicType[] = ['CentralTopic', 'MainTopic', 'SubTopic', 'IsolatedTopic'];

@@ -1251,54 +1251,6 @@
       "value": "用滚轮放大或缩小"
     }
   ],
-  "theme-editor.accept": [
-    {
-      "type": 0,
-      "value": "应用主题"
-    }
-  ],
-  "theme-editor.cancel": [
-    {
-      "type": 0,
-      "value": "取消"
-    }
-  ],
-  "theme-editor.description": [
-    {
-      "type": 0,
-      "value": "主题定义了思维导图的视觉样式，包括颜色、字体和整体外观。选择最适合您内容和受众的主题。"
-    }
-  ],
-  "theme-editor.title": [
-    {
-      "type": 0,
-      "value": "选择主题"
-    }
-  ],
-  "theme.aurora.description": [
-    {
-      "type": 0,
-      "value": "霓虹风格的渐变主题，带有发光效果、粗体字体和高对比度连接线，专为沉浸式叙事而设计。"
-    }
-  ],
-  "theme.aurora.name": [
-    {
-      "type": 0,
-      "value": "极光"
-    }
-  ],
-  "theme.classic.description": [
-    {
-      "type": 0,
-      "value": "简洁专业的设计，搭配蓝色点缀。非常适合商务演示和正式文档。"
-    }
-  ],
-  "theme.classic.name": [
-    {
-      "type": 0,
-      "value": "经典"
-    }
-  ],
   "theme.dark": [
     {
       "type": 0,
@@ -1309,54 +1261,6 @@
     {
       "type": 0,
       "value": "浅色"
-    }
-  ],
-  "theme.ocean.description": [
-    {
-      "type": 0,
-      "value": "海洋风格的蓝色主题，提供浅色和深色两种变体。沉稳专业的配色，非常适合商务和创意项目。"
-    }
-  ],
-  "theme.ocean.name": [
-    {
-      "type": 0,
-      "value": "海洋"
-    }
-  ],
-  "theme.robot.description": [
-    {
-      "type": 0,
-      "value": "科技风格的绿色主题。非常适合技术文档和未来感演示。"
-    }
-  ],
-  "theme.robot.name": [
-    {
-      "type": 0,
-      "value": "机器人"
-    }
-  ],
-  "theme.summer.description": [
-    {
-      "type": 0,
-      "value": "明亮活泼的橙色主题。非常适合创意项目和充满活力的演示。"
-    }
-  ],
-  "theme.summer.name": [
-    {
-      "type": 0,
-      "value": "夏季"
-    }
-  ],
-  "theme.sunrise.description": [
-    {
-      "type": 0,
-      "value": "日出主题，提供浅色和深色模式。增强的颜色和对比度带来更好的可读性。"
-    }
-  ],
-  "theme.sunrise.name": [
-    {
-      "type": 0,
-      "value": "日出"
     }
   ],
   "theme.switch-to-dark": [

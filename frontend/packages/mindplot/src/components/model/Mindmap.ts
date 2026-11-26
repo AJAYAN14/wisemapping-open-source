@@ -53,7 +53,7 @@ class Mindmap extends IMindmap {
     this._branches = [];
     this._description = '';
     this._relationships = [];
-    this._theme = 'classic'; // Default theme
+    this._theme = 'prism'; // Default theme
     this._version = version;
     this._id = id;
     this._layout = 'mindmap'; // Default layout

@@ -20,13 +20,13 @@ import type { ThemeStyle } from '../../../src/components/theme/ThemeStyle';
 
 const STYLES = '../../../src/components/theme/styles';
 
-/** The ThemeStyle class, loaded with classic-default.json changed by edit. */
-const loadWithClassicDefault = (edit: (json: Record<string, Record<string, unknown>>) => void) => {
+/** The ThemeStyle class, loaded with prism-default.json changed by edit. */
+const loadWithPrismDefault = (edit: (json: Record<string, Record<string, unknown>>) => void) => {
   let ThemeStyleClass: typeof ThemeStyle | undefined;
   jest.isolateModules(() => {
-    jest.doMock(`${STYLES}/classic-default.json`, () => {
+    jest.doMock(`${STYLES}/prism-default.json`, () => {
       const json = JSON.parse(
-        JSON.stringify(jest.requireActual(`${STYLES}/classic-default.json`)),
+        JSON.stringify(jest.requireActual(`${STYLES}/prism-default.json`)),
       ) as Record<string, Record<string, unknown>>;
       edit(json);
       return json;
@@ -43,49 +43,49 @@ const loadWithClassicDefault = (edit: (json: Record<string, Record<string, unkno
 // with that style undefined.
 describe('ThemeStyle requires every style key (BL5-203)', () => {
   afterEach(() => {
-    jest.dontMock(`${STYLES}/classic-default.json`);
+    jest.dontMock(`${STYLES}/prism-default.json`);
   });
 
   it('fails on a theme whose JSON files set no value for a key, naming the theme and key', () => {
-    const ThemeStyleClass = loadWithClassicDefault((json) => {
+    const ThemeStyleClass = loadWithPrismDefault((json) => {
       delete json['SubTopic']!['outerBorderColor'];
     });
-    expect(() => new ThemeStyleClass('classic', 'light')).toThrow(
-      "Theme 'classic' sets no outerBorderColor for SubTopic",
+    expect(() => new ThemeStyleClass('prism', 'light')).toThrow(
+      "Theme 'prism' sets no outerBorderColor for SubTopic",
     );
   });
 
   it('accepts a key the light file sets on top of the default one', () => {
-    // classic-light.json sets the CentralTopic font colour.
-    const ThemeStyleClass = loadWithClassicDefault((json) => {
+    // prism-light.json sets the CentralTopic font colour.
+    const ThemeStyleClass = loadWithPrismDefault((json) => {
       delete json['CentralTopic']!['fontColor'];
     });
-    expect(new ThemeStyleClass('classic', 'dark').getStyles('CentralTopic').fontColor).toBe(
-      '#000000',
+    expect(new ThemeStyleClass('prism', 'dark').getStyles('CentralTopic').fontColor).toBe(
+      '#FFFFFF',
     );
   });
 
   it('fails on an unknown message key instead of dropping it', () => {
-    const ThemeStyleClass = loadWithClassicDefault((json) => {
+    const ThemeStyleClass = loadWithPrismDefault((json) => {
       json['MainTopic']!['msgKey'] = 'NO_SUCH_MESSAGE';
     });
-    expect(() => new ThemeStyleClass('classic', 'light')).toThrow(
+    expect(() => new ThemeStyleClass('prism', 'light')).toThrow(
       'Unknown message key: NO_SUCH_MESSAGE',
     );
   });
 
   // BL5-209: the grid pattern of a theme JSON is checked instead of cast to its type.
   it('fails on an unknown grid pattern', () => {
-    const ThemeStyleClass = loadWithClassicDefault((json) => {
+    const ThemeStyleClass = loadWithPrismDefault((json) => {
       json['Canvas']!['gridPattern'] = 'stripes';
     });
-    expect(() => new ThemeStyleClass('classic', 'light')).toThrow('Unknown grid pattern: stripes');
+    expect(() => new ThemeStyleClass('prism', 'light')).toThrow('Unknown grid pattern: stripes');
   });
 
   it('reads the grid pattern a theme sets', () => {
-    const ThemeStyleClass = loadWithClassicDefault((json) => {
+    const ThemeStyleClass = loadWithPrismDefault((json) => {
       json['Canvas']!['gridPattern'] = 'dots';
     });
-    expect(new ThemeStyleClass('classic', 'dark').getCanvasStyle().gridPattern).toBe('dots');
+    expect(new ThemeStyleClass('prism', 'dark').getCanvasStyle().gridPattern).toBe('dots');
   });
 });

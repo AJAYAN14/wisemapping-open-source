@@ -274,19 +274,23 @@ class HTMLTopicSelected {
     }
 
     const { variant, connectionColor } = topicColors;
-    // Border color: use connection color directly (3px)
-    this._overlay.style.border = `3px solid ${connectionColor}`;
+    // Crisp Apple-style focus border with subtle ambient focus ring
+    this._overlay.style.border = `2.5px solid ${connectionColor}`;
+    this._overlay.style.boxShadow = `0 0 0 3px ${this.hexToRgba(
+      connectionColor,
+      variant === 'dark' ? 0.28 : 0.16,
+    )}`;
 
     // Background color: create a semi-transparent version based on variant
     let backgroundColor: string;
     if (variant === 'dark') {
-      // For dark mode: lighten the connection color and use with low opacity for dark background
+      // For dark mode: lighten the connection color and use with low opacity for pure black canvas
       const lightenedColor = ColorUtil.lightenColor(connectionColor, 30);
-      backgroundColor = this.hexToRgba(lightenedColor, 0.25);
+      backgroundColor = this.hexToRgba(lightenedColor, 0.22);
     } else {
       // For light mode: lighten the connection color significantly and use with higher opacity
       const lightenedColor = ColorUtil.lightenColor(connectionColor, 80);
-      backgroundColor = this.hexToRgba(lightenedColor, 0.95);
+      backgroundColor = this.hexToRgba(lightenedColor, 0.92);
     }
     this._overlay.style.backgroundColor = backgroundColor;
 
@@ -338,27 +342,27 @@ class HTMLTopicSelected {
       applyColors(
         tabKey,
         tabText,
-        { backgroundColor: '#3a3a3a', borderColor: '#555', color: '#e0e0e0' },
-        '#b0b0b0',
+        { backgroundColor: '#1C1C1E', borderColor: '#38383A', color: '#F5F5F7' },
+        '#A1A1A6',
       );
       applyColors(
         enterKey,
         enterText,
-        { backgroundColor: '#3a3a3a', borderColor: '#555', color: '#e0e0e0' },
-        '#b0b0b0',
+        { backgroundColor: '#1C1C1E', borderColor: '#38383A', color: '#F5F5F7' },
+        '#A1A1A6',
       );
     } else {
       applyColors(
         tabKey,
         tabText,
-        { backgroundColor: '#f5f5f5', borderColor: '#ddd', color: '#333' },
-        '#666',
+        { backgroundColor: '#F5F5F7', borderColor: '#D2D2D7', color: '#1D1D1F' },
+        '#6E6E73',
       );
       applyColors(
         enterKey,
         enterText,
-        { backgroundColor: '#f5f5f5', borderColor: '#ddd', color: '#333' },
-        '#666',
+        { backgroundColor: '#F5F5F7', borderColor: '#D2D2D7', color: '#1D1D1F' },
+        '#6E6E73',
       );
     }
   }

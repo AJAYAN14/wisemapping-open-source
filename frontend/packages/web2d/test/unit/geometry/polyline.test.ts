@@ -18,9 +18,11 @@
 import {
   CURVED_CHAMFER,
   MIDDLE_CURVED_CHAMFER,
+  ROUNDED_ELBOW_RADIUS,
   STRAIGHT_TOLERANCE_PX,
   buildChamferedElbowPath,
   buildMiddleStraightPath,
+  buildRoundedElbowPath,
   chamferedElbowPoints,
   elbowPoints,
   isWithinStraightTolerance,
@@ -218,6 +220,46 @@ describe('geometry/polyline buildMiddleStraightPath', () => {
   it('writes NaN through, rather than throwing', () => {
     expect(buildMiddleStraightPath(0, 0, NaN, 100, 'horizontal')).toBe(
       '0, 0 NaN, 0 NaN, 100 NaN, 100',
+    );
+  });
+});
+
+describe('geometry/polyline buildRoundedElbowPath', () => {
+  it('defaults ROUNDED_ELBOW_RADIUS to 12', () => {
+    expect(ROUNDED_ELBOW_RADIUS).toBe(12);
+  });
+
+  it('horizontal: rounds both 90-degree corners with quadratic Beziers around 50%', () => {
+    expect(buildRoundedElbowPath(0, 0, 100, 100, 12, 'horizontal')).toBe(
+      'M0.0,0.0 L38.0,0.0 Q50.0,0.0 50.0,12.0 L50.0,88.0 Q50.0,100.0 62.0,100.0 L100.0,100.0',
+    );
+  });
+
+  it('vertical: rounds both corners with swapped axes', () => {
+    expect(buildRoundedElbowPath(0, 0, 100, 100, 12, 'vertical')).toBe(
+      'M0.0,0.0 L0.0,38.0 Q0.0,50.0 12.0,50.0 L88.0,50.0 Q100.0,50.0 100.0,62.0 L100.0,100.0',
+    );
+  });
+
+  it('supports custom middleCoord (e.g. central topic edge-to-child midpoint)', () => {
+    expect(buildRoundedElbowPath(0, 0, 140, 80, 12, 'horizontal', 100)).toBe(
+      'M0.0,0.0 L88.0,0.0 Q100.0,0.0 100.0,12.0 L100.0,68.0 Q100.0,80.0 112.0,80.0 L140.0,80.0',
+    );
+  });
+
+  it('clamps the corner radius so short segments never overshoot', () => {
+    expect(buildRoundedElbowPath(0, 0, 16, 20, 12, 'horizontal')).toBe(
+      'M0.0,0.0 Q8.0,0.0 8.0,8.0 L8.0,12.0 Q8.0,20.0 16.0,20.0',
+    );
+  });
+
+  it.each(ORIENTATIONS)('draws a straight path within the 5 px tolerance (%s)', (o) => {
+    expect(buildRoundedElbowPath(0, 0, 5, 5, 12, o)).toBe('M0.0,0.0 L5.0,5.0');
+  });
+
+  it('falls back to a sharp orthogonal path when radius is 0', () => {
+    expect(buildRoundedElbowPath(0, 0, 100, 60, 0, 'horizontal')).toBe(
+      'M0.0,0.0 L50.0,0.0 L50.0,60.0 L100.0,60.0',
     );
   });
 });

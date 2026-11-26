@@ -524,54 +524,6 @@
   "note.character.limit.warning": {
     "defaultMessage": "(الاقتراب من الحد الأقصى)"
   },
-  "theme-editor.accept": {
-    "defaultMessage": "تطبيق السمة"
-  },
-  "theme-editor.cancel": {
-    "defaultMessage": "إلغاء"
-  },
-  "theme-editor.description": {
-    "defaultMessage": "تحدد السمة الأسلوب البصري لخريطتك الذهنية، بما في ذلك الألوان والخطوط والمظهر العام. اختر سمة تناسب محتواك وجمهورك."
-  },
-  "theme-editor.title": {
-    "defaultMessage": "اختر السمة"
-  },
-  "theme.classic.description": {
-    "defaultMessage": "تصميم نظيف ومهني بلمسات زرقاء. مثالي للعروض التقديمية للأعمال والوثائق الرسمية."
-  },
-  "theme.classic.name": {
-    "defaultMessage": "كلاسيكي"
-  },
-  "theme.aurora.description": {
-    "defaultMessage": "سمة بتدرجات نيون مع تأثيرات توهج وخطوط جريئة وروابط عالية التباين، مصممة للسرد الغامر."
-  },
-  "theme.aurora.name": {
-    "defaultMessage": "أورورا"
-  },
-  "theme.ocean.description": {
-    "defaultMessage": "سمة زرقاء مستوحاة من المحيط بإصدارات فاتحة/داكنة. ألوان هادئة ومهنية مثالية للأعمال والمشاريع الإبداعية."
-  },
-  "theme.ocean.name": {
-    "defaultMessage": "محيط"
-  },
-  "theme.robot.description": {
-    "defaultMessage": "سمة خضراء مستوحاة من التكنولوجيا. مثالية للوثائق التقنية والعروض المستقبلية."
-  },
-  "theme.robot.name": {
-    "defaultMessage": "روبوت"
-  },
-  "theme.summer.description": {
-    "defaultMessage": "سمة برتقالية زاهية ونابضة بالحياة. رائعة للمشاريع الإبداعية والعروض الحماسية."
-  },
-  "theme.summer.name": {
-    "defaultMessage": "صيف"
-  },
-  "theme.sunrise.description": {
-    "defaultMessage": "سمة الشروق مع إصدارات فاتحة/داكنة. ألوان وتباين محسّنان لقراءة أفضل."
-  },
-  "theme.sunrise.name": {
-    "defaultMessage": "شروق"
-  },
   "theme.switch-to-dark": {
     "defaultMessage": "التبديل إلى الوضع الداكن"
   },

@@ -18,21 +18,26 @@
 
 import type NodeModel from '../model/NodeModel';
 import type ThemeType from '../model/ThemeType';
-import ClassicTheme from './ClassicTheme';
 import PrismTheme from './PrismTheme';
-import SunriseTheme from './SunriseTheme';
-import OceanTheme from './OceanTheme';
-import RobotTheme from './RobotTheme';
 import type { ThemeVariant } from './Theme';
 import type Theme from './Theme';
-import AuroraTheme from './AuroraTheme';
+
+const LEGACY_THEME_IDS = new Set([
+  'dark-prism',
+  'classic',
+  'robot',
+  'sunrise',
+  'ocean',
+  'aurora',
+  'retro',
+]);
 
 class ThemeFactory {
   private static _cache = new Map<string, Theme>();
 
-  static createById(id: ThemeType | 'dark-prism', variant: ThemeVariant): Theme {
-    // Map dark-prism to prism for backward compatibility
-    const actualId = id === 'dark-prism' ? 'prism' : id;
+  static createById(id: ThemeType | string, variant: ThemeVariant): Theme {
+    // Only 'prism' remains active; known legacy ids map silently to 'prism'.
+    const actualId = id === 'prism' || LEGACY_THEME_IDS.has(id) ? 'prism' : id;
 
     // Create cache key from actual theme ID and variant
     const cacheKey = `${actualId}-${variant}`;
@@ -44,33 +49,13 @@ class ThemeFactory {
 
     // Create new instance and cache it
     let result: Theme;
-    switch (actualId) {
-      case 'classic':
-        result = new ClassicTheme(variant);
-        break;
-      case 'prism':
-        result = new PrismTheme(variant);
-        break;
-      case 'robot':
-        result = new RobotTheme(variant);
-        break;
-      case 'sunrise':
-        result = new SunriseTheme(variant);
-        break;
-      case 'ocean':
-        result = new OceanTheme(variant);
-        break;
-      case 'aurora':
-        result = new AuroraTheme(variant);
-        break;
-      default: {
-        // The id comes from the map XML without validation, so do not prevent the map from opening.
-        // The fallback is cached under the unknown key, so the warning is logged only once.
-        const unknownId: never = actualId;
-        console.warn(`Unknown theme '${unknownId}', falling back to 'classic'.`);
-        result = ThemeFactory.createById('classic', variant);
-        break;
-      }
+    if (actualId === 'prism') {
+      result = new PrismTheme(variant);
+    } else {
+      // The id comes from the map XML without validation, so do not prevent the map from opening.
+      // The fallback is cached under the unknown key, so the warning is logged only once.
+      console.warn(`Unknown theme '${actualId}', falling back to 'prism'.`);
+      result = ThemeFactory.createById('prism', variant);
     }
 
     // Cache the instance

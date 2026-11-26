@@ -500,54 +500,6 @@
   "note.character.limit.warning": {
     "defaultMessage": "(Limit fast erreicht)"
   },
-  "theme-editor.accept": {
-    "defaultMessage": "Thema anwenden"
-  },
-  "theme-editor.cancel": {
-    "defaultMessage": "Abbrechen"
-  },
-  "theme-editor.description": {
-    "defaultMessage": "Ein Thema definiert den visuellen Stil deiner Mindmap, einschließlich Farben, Schriftarten und Gesamterscheinung. Wähle ein Thema, das am besten zu deinem Inhalt und Publikum passt."
-  },
-  "theme-editor.title": {
-    "defaultMessage": "Thema wählen"
-  },
-  "theme.classic.description": {
-    "defaultMessage": "Klares, professionelles Design mit blauen Akzenten. Ideal für Geschäftspräsentationen und formelle Dokumente."
-  },
-  "theme.classic.name": {
-    "defaultMessage": "Klassisch"
-  },
-  "theme.aurora.description": {
-    "defaultMessage": "Neon-inspiriertes Farbverlaufsthema mit Leuchteffekten, kräftiger Typografie und kontrastreichen Verbindungen für immersives Storytelling."
-  },
-  "theme.aurora.name": {
-    "defaultMessage": "Aurora"
-  },
-  "theme.ocean.description": {
-    "defaultMessage": "Vom Ozean inspiriertes blaues Thema mit hellen und dunklen Varianten. Ruhige, professionelle Farben, ideal für geschäftliche und kreative Projekte."
-  },
-  "theme.ocean.name": {
-    "defaultMessage": "Ozean"
-  },
-  "theme.robot.description": {
-    "defaultMessage": "Technisch inspiriertes grünes Thema. Ideal für technische Dokumentation und futuristische Präsentationen."
-  },
-  "theme.robot.name": {
-    "defaultMessage": "Roboter"
-  },
-  "theme.summer.description": {
-    "defaultMessage": "Helles, lebendiges orangefarbenes Thema. Ideal für kreative Projekte und energiegeladene Präsentationen."
-  },
-  "theme.summer.name": {
-    "defaultMessage": "Sommer"
-  },
-  "theme.sunrise.description": {
-    "defaultMessage": "Sonnenaufgang-Thema mit hellem und dunklem Modus. Verbesserte Farben und Kontraste für bessere Lesbarkeit."
-  },
-  "theme.sunrise.name": {
-    "defaultMessage": "Sonnenaufgang"
-  },
   "theme.switch-to-dark": {
     "defaultMessage": "Zu dunklem Modus wechseln"
   },

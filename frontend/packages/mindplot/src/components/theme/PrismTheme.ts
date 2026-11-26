@@ -29,46 +29,57 @@ class PrismTheme extends DefaultTheme {
   }
 
   override getConnectionColor(topic: Topic): string {
-    let result: string | undefined;
+    // A colour picked by the user on the topic or an ancestor is used as is ...
+    const picked = this.resolve('connectionColor', topic, false);
+    if (picked) {
+      return picked;
+    }
 
-    // Color of the node is the connection is the color of the parent ...
     const parent = topic.getParent();
+    // SubTopics inherit their parent branch's connection colour so branches remain scannable.
     if (parent && !parent.isCentralTopic()) {
-      result = this.resolve('connectionColor', parent, false);
+      return this.getConnectionColor(parent);
     }
 
-    // A color picked by the user (on the topic or an ancestor) is used as is ...
-    if (!result) {
-      result = this.resolve('connectionColor', topic, false);
-    }
+    const colors = this.getStyles(topic).connectionColor;
+    let result = pickByOrder(colors, topic.getOrder());
 
-    if (!result) {
-      const colors = this.getStyles(topic).connectionColor;
-      result = pickByOrder(colors, topic.getOrder());
-
-      if (result && this._variant === 'dark') {
-        // Lighten the theme connection color for better visibility on dark background
-        result = ColorUtil.lightenColor(result, 20);
-      }
+    if (result && this._variant === 'dark' && !topic.isCentralTopic()) {
+      // Lighten the theme connection colour for better visibility on pure black canvas
+      result = ColorUtil.lightenColor(result, 20);
     }
 
     return result;
   }
 
   override getBorderColor(topic: Topic): string {
-    const model = topic.getModel();
-    // A color picked by the user (on the topic or an ancestor) is used as is ...
-    let result = model.getBorderColor() || this.resolve('borderColor', topic, false);
+    // A colour picked by the user on the topic or an ancestor is used as is ...
+    const picked = this.resolve('borderColor', topic, false);
+    if (picked) {
+      return picked;
+    }
 
-    // If border color has not been defined, use the theme border color ...
-    if (!result) {
-      const colors = this.getStyles(topic).borderColor;
-      result = pickByOrder(colors, topic.getOrder());
-
-      if (result && this._variant === 'dark') {
-        // Lighten the theme border color for better visibility on dark background
-        result = ColorUtil.lightenColor(result, 15);
+    const parent = topic.getParent();
+    // SubTopics derive a subtle, branch-harmonized card border from their parent branch colour.
+    if (parent && !parent.isCentralTopic()) {
+      const branchColor = this.getConnectionColor(parent);
+      const parsed = ColorUtil.parse(branchColor);
+      if (parsed) {
+        const backdrop = this._variant === 'dark' ? '#000000' : '#FFFFFF';
+        const alpha = this._variant === 'dark' ? 0.45 : 0.42;
+        const tinted = ColorUtil.over(`rgba(${parsed.r}, ${parsed.g}, ${parsed.b}, ${alpha})`, backdrop);
+        if (tinted) {
+          return tinted;
+        }
       }
+    }
+
+    const colors = this.getStyles(topic).borderColor;
+    let result = pickByOrder(colors, topic.getOrder());
+
+    if (result && this._variant === 'dark' && !topic.isCentralTopic()) {
+      // Lighten the theme border colour for better visibility on pure black canvas
+      result = ColorUtil.lightenColor(result, 15);
     }
 
     return result;

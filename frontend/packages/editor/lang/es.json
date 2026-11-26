@@ -500,54 +500,6 @@
   "note.character.limit.warning": {
     "defaultMessage": "(Acercándose al límite)"
   },
-  "theme-editor.accept": {
-    "defaultMessage": "Aplicar tema"
-  },
-  "theme-editor.cancel": {
-    "defaultMessage": "Cancelar"
-  },
-  "theme-editor.description": {
-    "defaultMessage": "Un tema define el estilo visual de tu mapa mental, incluyendo colores, fuentes y apariencia general. Elige un tema que se adapte mejor a tu contenido y audiencia."
-  },
-  "theme-editor.title": {
-    "defaultMessage": "Elegir tema"
-  },
-  "theme.classic.description": {
-    "defaultMessage": "Diseño limpio y profesional con acentos azules. Perfecto para presentaciones de negocios y documentos formales."
-  },
-  "theme.classic.name": {
-    "defaultMessage": "Clásico"
-  },
-  "theme.aurora.description": {
-    "defaultMessage": "Tema degradado de inspiración neón con efectos de brillo, tipografía en negrita y conectores de alto contraste, pensado para narraciones inmersivas."
-  },
-  "theme.aurora.name": {
-    "defaultMessage": "Aurora"
-  },
-  "theme.ocean.description": {
-    "defaultMessage": "Tema azul inspirado en el océano, con variantes clara y oscura. Colores serenos y profesionales, perfectos para proyectos de negocios y creativos."
-  },
-  "theme.ocean.name": {
-    "defaultMessage": "Océano"
-  },
-  "theme.robot.description": {
-    "defaultMessage": "Tema verde de inspiración tecnológica. Perfecto para documentación técnica y presentaciones futuristas."
-  },
-  "theme.robot.name": {
-    "defaultMessage": "Robot"
-  },
-  "theme.summer.description": {
-    "defaultMessage": "Tema naranja brillante y vibrante. Ideal para proyectos creativos y presentaciones llenas de energía."
-  },
-  "theme.summer.name": {
-    "defaultMessage": "Verano"
-  },
-  "theme.sunrise.description": {
-    "defaultMessage": "Tema Amanecer con variantes de modo claro y oscuro. Colores y contraste mejorados para una mejor legibilidad."
-  },
-  "theme.sunrise.name": {
-    "defaultMessage": "Amanecer"
-  },
   "theme.switch-to-dark": {
     "defaultMessage": "Cambiar a modo oscuro"
   },

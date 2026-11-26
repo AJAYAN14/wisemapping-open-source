@@ -1,24 +1,30 @@
 {
   "CentralTopic": {
-    "backgroundColor": "#0284C7",
+    "backgroundColor": "#0071E3",
+    "borderColor": "#0071E3",
+    "connectionColor": "#0071E3",
     "fontColor": "#FFFFFF"
   },
   "MainTopic": {
     "backgroundColor": [
-      "#F0F9FF",
-      "#EEF2FF",
-      "#ECFDF5",
-      "#FFFBEB",
-      "#FDF2F8",
-      "#F5F3FF",
-      "#F0FDFA",
-      "#EFF6FF",
-      "#F7FEE7",
-      "#FFF7ED"
+      "#EBF5FF",
+      "#F1EFFF",
+      "#E9FBF1",
+      "#FFF5E6",
+      "#FDF0F7",
+      "#F4F0FF",
+      "#E9FBF8",
+      "#EDF4FF",
+      "#F2FCE7",
+      "#FFF2E8"
     ],
     "fontColor": "#0F172A"
   },
   "SubTopic": {
+    "backgroundColor": "#FFFFFF",
+    "fontColor": "#1E293B"
+  },
+  "IsolatedTopic": {
     "backgroundColor": "#FFFFFF",
     "fontColor": "#1E293B"
   }

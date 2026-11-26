@@ -24,7 +24,7 @@ import {
   isFontWeightType,
   isTopicShapeType,
 } from '../../../src/components/persistence/TopicAttributeTypes';
-import ClassicTheme from '../../../src/components/theme/ClassicTheme';
+import PrismTheme from '../../../src/components/theme/PrismTheme';
 import type { TopicType } from '../../../src/components/theme/Theme';
 import type Topic from '../../../src/components/Topic';
 import { ThemeStyle } from '../../../src/components/theme/ThemeStyle';
@@ -58,7 +58,7 @@ describe('ThemeStyle checks the JSON values (BL5-186)', () => {
     [{ backgroundColor: [] }, /Empty background colour palette/],
     [{ connectionColor: [] }, /Empty connection colour palette/],
   ])('rejects the unknown value in %p', (json, error) => {
-    const style = new ThemeStyle('classic', 'light');
+    const style = new ThemeStyle('prism', 'light');
     const convert = (style as unknown as { convertJsonToTopicStyle: (j: object) => unknown })
       .convertJsonToTopicStyle;
     expect(() => convert.call(style, json)).toThrow(error);
@@ -67,7 +67,7 @@ describe('ThemeStyle checks the JSON values (BL5-186)', () => {
 
 // Its typed values, read through a subclass: resolve is protected. ts-jest type-checks the
 // return types below, which were all the union of every style value.
-class ResolvingTheme extends ClassicTheme {
+class ResolvingTheme extends PrismTheme {
   shapeType(topic: Topic): TopicShapeType {
     return this.resolve('shapeType', topic);
   }

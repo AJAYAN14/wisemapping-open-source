@@ -42,7 +42,7 @@ export default {
     imageEmojiChar: { control: 'text' },
     theme: {
       control: 'select',
-      options: ['classic', 'aurora', 'prism', 'robot', 'sunrise', 'ocean'],
+      options: ['prism'],
     },
     zoom: {
       control: { type: 'range', min: 0.3, max: 1.9, step: 0.1 },
@@ -111,44 +111,12 @@ ShapeNone.args = {
   shapeType: 'none',
 };
 
-export const ThemeClassic = Template.bind({});
-ThemeClassic.args = {
-  text: 'Theme Classic',
-  eicon: ['🌈'],
-  shapeType: 'none',
-  theme: 'classic',
-};
-
 export const ThemePrime = Template.bind({});
 ThemePrime.args = {
   text: 'Theme Prime',
   eicon: ['🌈'],
   shapeType: 'none',
   theme: 'prism',
-};
-
-export const ThemeSunrise = Template.bind({});
-ThemeSunrise.args = {
-  text: 'Theme Sunrise',
-  eicon: ['🌈'],
-  shapeType: 'none',
-  theme: 'sunrise',
-};
-
-export const ThemeOcean = Template.bind({});
-ThemeOcean.args = {
-  text: 'Theme Ocean',
-  eicon: ['🌊'],
-  shapeType: 'none',
-  theme: 'ocean',
-};
-
-export const ThemeAurora = Template.bind({});
-ThemeAurora.args = {
-  text: 'Theme Aurora',
-  eicon: ['🌌'],
-  shapeType: 'none',
-  theme: 'aurora',
 };
 
 export const ImageEmojiFeature = Template.bind({});

@@ -16,7 +16,13 @@
  *   limitations under the License.
  */
 
-import { CurvedLine, PolyLine, HeartbeatLine, NeuronLine } from '@wisemapping/web2d';
+import {
+  CurvedLine,
+  PolyLine,
+  RoundedPolyLine,
+  HeartbeatLine,
+  NeuronLine,
+} from '@wisemapping/web2d';
 import type { Line, StrokeStyle } from '@wisemapping/web2d';
 import type Canvas from './Canvas';
 
@@ -71,8 +77,7 @@ abstract class BaseConnectionLine<L extends Line = Line> {
         (line as PolyLine).setStyle('MiddleStraight');
         break;
       case LineType.POLYLINE_CURVED:
-        line = new PolyLine();
-        (line as PolyLine).setStyle('Curved');
+        line = new RoundedPolyLine();
         break;
       case LineType.POLYLINE_STRAIGHT:
         line = new PolyLine();

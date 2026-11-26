@@ -16,7 +16,7 @@
  *   limitations under the License.
  */
 import { LineType } from '../../../src/components/ConnectionLine';
-import ClassicTheme from '../../../src/components/theme/ClassicTheme';
+import PrismTheme from '../../../src/components/theme/PrismTheme';
 import DefaultTheme from '../../../src/components/theme/DefaultTheme';
 import type { ThemeStyle } from '../../../src/components/theme/ThemeStyle';
 import fakeTopic from './FakeTopic';
@@ -26,7 +26,7 @@ import fakeTopic from './FakeTopic';
 // themes default to THIN_CURVED, so treating 0 as "unset" silently replaces
 // the user's choice.
 describe('DefaultTheme.resolve with falsy explicit values', () => {
-  const theme = new ClassicTheme('light');
+  const theme = new PrismTheme('light');
 
   it('keeps an explicit THIN_CURVED connection style on the topic', () => {
     const central = fakeTopic({}, undefined, { central: true });
@@ -55,7 +55,7 @@ describe('DefaultTheme.resolve with falsy explicit values', () => {
     const central = fakeTopic({}, undefined, { central: true });
     const main = fakeTopic({}, central);
 
-    expect(theme.getConnectionType(main)).toBe(LineType.THICK_CURVED);
+    expect(theme.getConnectionType(main)).toBe(LineType.POLYLINE_CURVED);
   });
 });
 

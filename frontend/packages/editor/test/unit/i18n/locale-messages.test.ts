@@ -53,7 +53,6 @@ const SAME_AS_ENGLISH: Record<string, string[]> = {
   'shortcut-help-pane.category-format': ['de', 'fr'],
   'shortcut-help-pane.diagram-parent': ['fr'],
   'shortcut-help-pane.navigation': ['de'],
-  'theme.aurora.name': ['de', 'es', 'fr', 'it', 'pt'],
   'theme.robot.name': ['es', 'fr', 'it'],
 };
 

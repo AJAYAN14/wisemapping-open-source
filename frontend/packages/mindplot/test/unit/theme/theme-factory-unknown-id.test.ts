@@ -17,7 +17,7 @@
  */
 import { afterEach, describe, expect, it, jest } from '@jest/globals';
 import ThemeFactory from '../../../src/components/theme/ThemeFactory';
-import ClassicTheme from '../../../src/components/theme/ClassicTheme';
+import PrismTheme from '../../../src/components/theme/PrismTheme';
 import type ThemeType from '../../../src/components/model/ThemeType';
 
 // A map's XML can carry any theme id (XMLSerializerTango only casts it), so an
@@ -28,12 +28,12 @@ describe('ThemeFactory with an unknown theme id', () => {
     jest.restoreAllMocks();
   });
 
-  it('falls back to the classic theme and warns once', () => {
+  it('falls back to the prism theme and warns once', () => {
     const warn = jest.spyOn(console, 'warn').mockImplementation(() => undefined);
     const unknown = 'no-such-theme' as ThemeType;
 
     const theme = ThemeFactory.createById(unknown, 'light');
-    expect(theme).toBeInstanceOf(ClassicTheme);
+    expect(theme).toBeInstanceOf(PrismTheme);
     expect(ThemeFactory.createById(unknown, 'light')).toBe(theme);
     expect(warn).toHaveBeenCalledTimes(1);
     expect(String(warn.mock.calls[0]![0])).toContain('no-such-theme');
@@ -44,7 +44,7 @@ describe('ThemeFactory with an unknown theme id', () => {
     const unknown = 'no-such-theme' as ThemeType;
 
     expect(ThemeFactory.createById(unknown, 'dark').getCanvasBackgroundColor()).toBe(
-      ThemeFactory.createById('classic', 'dark').getCanvasBackgroundColor(),
+      ThemeFactory.createById('prism', 'dark').getCanvasBackgroundColor(),
     );
   });
 });

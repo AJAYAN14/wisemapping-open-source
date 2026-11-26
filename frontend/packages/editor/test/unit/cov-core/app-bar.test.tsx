@@ -220,7 +220,7 @@ describe('AppBar actions', () => {
 
     fireEvent.click(button('Theme'));
 
-    expect(await screen.findByText('Aurora')).toBeInTheDocument();
+    expect(await screen.findByText('Summer')).toBeInTheDocument();
   });
 
   it('opens the layout picker', async () => {

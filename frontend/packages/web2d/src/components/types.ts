@@ -59,6 +59,7 @@ export const ELEMENT_TYPES = [
   'Arrow',
   'Line',
   'PolyLine',
+  'RoundedPolyLine',
   'CurvedLine',
   'ArcLine',
   'HeartbeatLine',

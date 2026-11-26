@@ -15,14 +15,7 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-export const THEME_TYPES = [
-  'classic',
-  'prism',
-  'robot',
-  'sunrise',
-  'ocean',
-  'aurora',
-] as const;
+export const THEME_TYPES = ['prism'] as const;
 
 type ThemeType = (typeof THEME_TYPES)[number];
 

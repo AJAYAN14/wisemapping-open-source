@@ -500,54 +500,6 @@
   "note.character.limit.warning": {
     "defaultMessage": "(Limite vicino)"
   },
-  "theme-editor.accept": {
-    "defaultMessage": "Applica tema"
-  },
-  "theme-editor.cancel": {
-    "defaultMessage": "Annulla"
-  },
-  "theme-editor.description": {
-    "defaultMessage": "Un tema definisce lo stile visivo della tua mappa mentale, inclusi colori, font e aspetto generale. Scegli un tema che si adatti meglio al tuo contenuto e pubblico."
-  },
-  "theme-editor.title": {
-    "defaultMessage": "Scegli tema"
-  },
-  "theme.classic.description": {
-    "defaultMessage": "Design pulito e professionale con accenti blu. Perfetto per presentazioni aziendali e documenti formali."
-  },
-  "theme.classic.name": {
-    "defaultMessage": "Classico"
-  },
-  "theme.aurora.description": {
-    "defaultMessage": "Tema sfumato ispirato al neon con effetti luminosi, tipografia in grassetto e connettori ad alto contrasto, pensato per uno storytelling coinvolgente."
-  },
-  "theme.aurora.name": {
-    "defaultMessage": "Aurora"
-  },
-  "theme.ocean.description": {
-    "defaultMessage": "Tema blu ispirato all'oceano con varianti chiara e scura. Colori calmi e professionali, perfetti per progetti aziendali e creativi."
-  },
-  "theme.ocean.name": {
-    "defaultMessage": "Oceano"
-  },
-  "theme.robot.description": {
-    "defaultMessage": "Tema verde di ispirazione tecnologica. Perfetto per documentazione tecnica e presentazioni futuristiche."
-  },
-  "theme.robot.name": {
-    "defaultMessage": "Robot"
-  },
-  "theme.summer.description": {
-    "defaultMessage": "Tema arancione luminoso e vivace. Ottimo per progetti creativi e presentazioni piene di energia."
-  },
-  "theme.summer.name": {
-    "defaultMessage": "Estate"
-  },
-  "theme.sunrise.description": {
-    "defaultMessage": "Tema Alba con varianti in modalità chiara e scura. Colori e contrasto migliorati per una migliore leggibilità."
-  },
-  "theme.sunrise.name": {
-    "defaultMessage": "Alba"
-  },
   "theme.switch-to-dark": {
     "defaultMessage": "Passa alla modalità scura"
   },

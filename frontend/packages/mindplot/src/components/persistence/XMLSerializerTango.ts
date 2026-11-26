@@ -66,7 +66,7 @@ class XMLSerializerTango implements XMLMindmapSerializer {
 
     // Add theme ...
     const theme = mindmap.getTheme();
-    if (theme && theme !== 'classic') {
+    if (theme && theme !== 'prism') {
       mapElem.setAttribute('theme', theme);
     }
 
@@ -394,16 +394,25 @@ class XMLSerializerTango implements XMLMindmapSerializer {
     const mindmap = new Mindmap(mapId, version);
 
     const theme = rootElem.getAttribute('theme');
-    // Map dark-prism to prism for backward compatibility
-    const mappedTheme = theme === 'dark-prism' ? 'prism' : theme;
+    const legacyThemes = new Set([
+      'dark-prism',
+      'classic',
+      'robot',
+      'sunrise',
+      'ocean',
+      'aurora',
+      'retro',
+    ]);
+    // Map legacy/removed theme ids to prism for backward compatibility
+    const mappedTheme = theme && legacyThemes.has(theme) ? 'prism' : theme;
     if (mappedTheme && isThemeType(mappedTheme)) {
       mindmap.setTheme(mappedTheme);
     } else {
-      // Default to classic theme if no theme is specified, or it is not a known one
+      // Default to prism theme if no theme is specified, or it is not a known one
       if (mappedTheme) {
-        console.warn(`Unknown theme '${mappedTheme}', falling back to 'classic'.`);
+        console.warn(`Unknown theme '${mappedTheme}', falling back to 'prism'.`);
       }
-      mindmap.setTheme('classic');
+      mindmap.setTheme('prism');
     }
 
     // Always enforce standard horizontal mindmap layout (tree layout has been removed).

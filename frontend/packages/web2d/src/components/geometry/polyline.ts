@@ -15,12 +15,21 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-import { fixed, formatPoint, fullPrecision, pointsData, unsignedFixed, type Vec } from './path';
+import {
+  PathBuilder,
+  fixed,
+  formatPoint,
+  fullPrecision,
+  pointsData,
+  unsignedFixed,
+  type Vec,
+} from './path';
 import type { Orientation } from '../types';
 
 /*
  * The elbow connectors of PolyLine: the straight elbow, the chamfered elbow (`Curved` and
- * `MiddleCurved`) and the rounded-middle elbow (`MiddleStraight`), in both orientations.
+ * `MiddleCurved`), the rounded-middle elbow (`MiddleStraight`), and the smooth rounded elbow
+ * (`RoundedPolyLine`), in both orientations.
  */
 
 /** The corner chamfer of the `Curved` style. */
@@ -28,6 +37,9 @@ export const CURVED_CHAMFER = 5;
 
 /** The corner chamfer of the `MiddleCurved` style. */
 export const MIDDLE_CURVED_CHAMFER = 10;
+
+/** The default corner radius of the smooth rounded orthogonal elbow (`RoundedPolyLine`). */
+export const ROUNDED_ELBOW_RADIUS = 12;
 
 /**
  * A connection whose ends are at most this far apart across the layout (in y for a mind map, in x
@@ -181,3 +193,69 @@ export const buildVerticalCurvedPath = (
   x2: number,
   y2: number,
 ): string => buildChamferedElbowPath(x1, y1, x2, y2, CURVED_CHAMFER, 'vertical');
+
+/**
+ * An orthogonal elbow connector with smooth quadratic-Bezier rounded corners (`Q`) as an SVG
+ * `<path>` `d` attribute. When the ends are within `STRAIGHT_TOLERANCE_PX` across the layout axis,
+ * draws a single straight segment. `middleCoord` optionally overrides the 50% bend coordinate along
+ * the main axis (e.g. centering the bend in the visible gap outside a central topic box).
+ */
+export const buildRoundedElbowPath = (
+  x1: number,
+  y1: number,
+  x2: number,
+  y2: number,
+  radius: number,
+  orientation: Orientation,
+  middleCoord?: number,
+): string => {
+  const format = unsignedFixed(1);
+  const builder = new PathBuilder(format);
+
+  if (isWithinStraightTolerance(x1, y1, x2, y2, orientation)) {
+    return builder.moveTo({ x: x1, y: y1 }).lineTo({ x: x2, y: y2 }).toString();
+  }
+
+  const vertical = orientation === 'vertical';
+  const a1 = vertical ? y1 : x1;
+  const b1 = vertical ? x1 : y1;
+  const a2 = vertical ? y2 : x2;
+  const b2 = vertical ? x2 : y2;
+  const toXY = ([a, b]: [number, number]): Vec => (vertical ? { x: b, y: a } : { x: a, y: b });
+
+  const middle = middleCoord !== undefined ? middleCoord : a1 + (a2 - a1) * 0.5;
+  const len1 = Math.abs(middle - a1);
+  const len2 = Math.abs(a2 - middle);
+  const lenCross = Math.abs(b2 - b1);
+  const r = Math.max(0, Math.min(radius, len1, len2, lenCross / 2));
+
+  builder.moveTo(toXY([a1, b1]));
+
+  if (r <= 0.01) {
+    return builder
+      .lineTo(toXY([middle, b1]))
+      .lineTo(toXY([middle, b2]))
+      .lineTo(toXY([a2, b2]))
+      .toString();
+  }
+
+  const signA1 = middle >= a1 ? 1 : -1;
+  const signA2 = a2 >= middle ? 1 : -1;
+  const signB = b2 >= b1 ? 1 : -1;
+
+  if (len1 > r) {
+    builder.lineTo(toXY([middle - r * signA1, b1]));
+  }
+  builder.quadTo(toXY([middle, b1]), toXY([middle, b1 + r * signB]));
+
+  if (lenCross > 2 * r) {
+    builder.lineTo(toXY([middle, b2 - r * signB]));
+  }
+  builder.quadTo(toXY([middle, b2]), toXY([middle + r * signA2, b2]));
+
+  if (len2 > r) {
+    builder.lineTo(toXY([a2, b2]));
+  }
+
+  return builder.toString();
+};

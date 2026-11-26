@@ -56,7 +56,7 @@ describe('map attributes validation (BL-06)', () => {
       '<map version="tango" theme="bogus" layout="spiral" backgroundPattern="stripes">' +
         '<topic central="true" id="1" text="c"/></map>',
     );
-    expect(mindmap.getTheme()).toBe('classic');
+    expect(mindmap.getTheme()).toBe('prism');
     expect(mindmap.getLayout()).toBe('mindmap');
     expect(mindmap.getCanvasStyle()?.backgroundPattern).toBeUndefined();
   });
@@ -70,6 +70,17 @@ describe('map attributes validation (BL-06)', () => {
     expect(mindmap.getLayout()).toBe('tree');
     expect(mindmap.getCanvasStyle()?.backgroundPattern).toBe('grid');
   });
+
+  test.each(['classic', 'robot', 'sunrise', 'ocean', 'aurora', 'retro'])(
+    'maps removed theme %s to prism',
+    (legacyTheme) => {
+      const legacyMap = load(
+        `<map version="tango" theme="${legacyTheme}" layout="mindmap">` +
+          '<topic central="true" id="1" text="c"/></map>',
+      );
+      expect(legacyMap.getTheme()).toBe('prism');
+    },
+  );
 });
 
 describe('beta loader (BL-41, BL-53, BL-73)', () => {

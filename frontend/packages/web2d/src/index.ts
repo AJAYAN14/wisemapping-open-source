@@ -20,6 +20,7 @@ import Workspace from './components/Workspace';
 import Ellipse from './components/Ellipse';
 import StraightLine from './components/StraightLine';
 import PolyLine from './components/PolyLine';
+import RoundedPolyLine from './components/RoundedPolyLine';
 import CurvedLine from './components/CurvedLine';
 import Arrow from './components/Arrow';
 import Group from './components/Group';
@@ -43,7 +44,11 @@ import type {
 } from './components/peer/svg/ElementPeer';
 import type { ElementEventListener } from './components/WorkspaceElement';
 import type StyleAttributes from './components/StyleAttributes';
-import { STRAIGHT_TOLERANCE_PX, isWithinStraightTolerance } from './components/geometry/polyline';
+import {
+  ROUNDED_ELBOW_RADIUS,
+  STRAIGHT_TOLERANCE_PX,
+  isWithinStraightTolerance,
+} from './components/geometry/polyline';
 import { defaultControlPoints } from './components/geometry/curve';
 import {
   STROKE_STYLES,
@@ -72,6 +77,7 @@ export {
   StraightLine,
   Point,
   PolyLine,
+  RoundedPolyLine,
   ArcLine,
   HeartbeatLine,
   NeuronLine,
@@ -79,6 +85,7 @@ export {
   Text,
   Workspace,
   ElementPeer,
+  ROUNDED_ELBOW_RADIUS,
   STRAIGHT_TOLERANCE_PX,
   STROKE_STYLES,
   POLYLINE_STYLES,

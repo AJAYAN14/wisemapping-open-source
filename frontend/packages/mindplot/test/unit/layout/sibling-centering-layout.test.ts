@@ -96,7 +96,7 @@ const connectionPoints = (topic: Topic): { x: number; y: number }[] => {
 const centerLineYs = (topic: Topic): number[] => {
   const points = connectionPoints(topic);
   const native = connectionNode(topic);
-  if (native.tagName.toLowerCase() !== 'path') {
+  if (native.tagName.toLowerCase() !== 'path' || !native.getAttribute('d')?.includes('Z')) {
     return points.map((point) => point.y);
   }
   const half = points.length / 2;
@@ -204,7 +204,6 @@ describe('Layout of a map with centred siblings (MindManager mmap2json sample)',
   };
 
   const CURVED_STYLES: [string, LineType | undefined][] = [
-    ['the theme default style', undefined],
     ['THIN_CURVED', LineType.THIN_CURVED],
     ['THICK_CURVED', LineType.THICK_CURVED],
     ['THICK_CURVED_ORGANIC', LineType.THICK_CURVED_ORGANIC],
@@ -255,4 +254,26 @@ describe('Layout of a map with centred siblings (MindManager mmap2json sample)',
       );
     },
   );
+
+  describe.each([
+    ['the theme default style', undefined],
+    ['POLYLINE_CURVED', LineType.POLYLINE_CURVED],
+  ] as [string, LineType | undefined][])('rounded elbow with %s', (_name, lineType) => {
+    it.each([0, 5, -5])('draws straight without Q corners when dy = %d', async (dy) => {
+      const { topic } = await buildDesigner(mapWith(lineType));
+      const [e, g] = [topic(4), topic(6)];
+      g.setPosition({ x: pos(g).x, y: pos(e).y + dy });
+      const d = connectionNode(g).getAttribute('d');
+      expect(d).toMatch(/^M.*L/);
+      expect(d).not.toContain('Q');
+    });
+
+    it('draws rounded orthogonal Q corners when dy = 40', async () => {
+      const { topic } = await buildDesigner(mapWith(lineType));
+      const [e, g] = [topic(4), topic(6)];
+      g.setPosition({ x: pos(g).x, y: pos(e).y + 40 });
+      const d = connectionNode(g).getAttribute('d');
+      expect(d).toContain('Q');
+    });
+  });
 });

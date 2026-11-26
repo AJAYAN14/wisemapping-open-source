@@ -608,59 +608,11 @@
   "shortcut-help-pane.zoom-wheel": {
     "defaultMessage": "Zoom in/out with the wheel"
   },
-  "theme-editor.accept": {
-    "defaultMessage": "Apply Theme"
-  },
-  "theme-editor.cancel": {
-    "defaultMessage": "Cancel"
-  },
-  "theme-editor.description": {
-    "defaultMessage": "A theme defines the visual style of your mind map, including colors, fonts, and overall appearance. Choose a theme that best fits your content and audience."
-  },
-  "theme-editor.title": {
-    "defaultMessage": "Choose Theme"
-  },
-  "theme.aurora.description": {
-    "defaultMessage": "Neon-inspired gradient theme with glow effects, bold typography, and high-contrast connectors designed for immersive storytelling."
-  },
-  "theme.aurora.name": {
-    "defaultMessage": "Aurora"
-  },
-  "theme.classic.description": {
-    "defaultMessage": "Clean and professional design with blue accents. Perfect for business presentations and formal documents."
-  },
-  "theme.classic.name": {
-    "defaultMessage": "Classic"
-  },
   "theme.dark": {
     "defaultMessage": "Dark"
   },
   "theme.light": {
     "defaultMessage": "Light"
-  },
-  "theme.ocean.description": {
-    "defaultMessage": "Ocean-inspired blue theme with light/dark variants. Calm and professional colors perfect for business and creative projects."
-  },
-  "theme.ocean.name": {
-    "defaultMessage": "Ocean"
-  },
-  "theme.robot.description": {
-    "defaultMessage": "Tech-inspired green theme. Perfect for technical documentation and futuristic presentations."
-  },
-  "theme.robot.name": {
-    "defaultMessage": "Robot"
-  },
-  "theme.summer.description": {
-    "defaultMessage": "Bright and vibrant orange theme. Great for creative projects and energetic presentations."
-  },
-  "theme.summer.name": {
-    "defaultMessage": "Summer"
-  },
-  "theme.sunrise.description": {
-    "defaultMessage": "Sunrise theme with light/dark mode variants. Enhanced colors and contrast for better readability."
-  },
-  "theme.sunrise.name": {
-    "defaultMessage": "Sunrise"
   },
   "theme.switch-to-dark": {
     "defaultMessage": "Switch to dark mode"

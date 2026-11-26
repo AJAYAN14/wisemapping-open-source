@@ -32,11 +32,6 @@ export default {
 
 const Template: StoryFn<TopicArgs> = (args: TopicArgs) => createConnection(args);
 
-export const Classic = Template.bind({});
-Classic.args = {
-  theme: 'classic',
-};
-
 export const Prism = Template.bind({});
 Prism.args = {
   theme: 'prism',
@@ -45,24 +40,4 @@ Prism.args = {
 export const DarkPrism = Template.bind({});
 DarkPrism.args = {
   theme: 'prism',
-};
-
-export const robot = Template.bind({});
-robot.args = {
-  theme: 'robot',
-};
-
-export const sunrise = Template.bind({});
-sunrise.args = {
-  theme: 'sunrise',
-};
-
-export const ocean = Template.bind({});
-ocean.args = {
-  theme: 'ocean',
-};
-
-export const aurora = Template.bind({});
-aurora.args = {
-  theme: 'aurora',
 };
