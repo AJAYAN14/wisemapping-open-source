@@ -78,6 +78,12 @@ import {
 } from './folder-dialogs';
 import { MAP_IDS_DRAG_MIME, getFolderPathString } from './folderTree';
 import DrawerNav, { ToolbarButtonInfo } from './drawer-nav';
+import {
+  APPLE_FONT_STACK,
+  appleColors,
+  glassMaterialMixin,
+  isDarkTheme,
+} from './appleDesign';
 import { useSpringValue } from './useSpringValue';
 import { ClientContext } from '../../classes/provider/client-context';
 import { ScannedMapFile, scanFileList, scanDataTransferItems } from './directoryScanner';
@@ -796,16 +802,20 @@ const MapsPage = (): ReactElement => {
             }}
           >
             <Box
-              sx={{
-                p: 4,
-                borderRadius: '24px',
-                textAlign: 'center',
-                background: 'rgba(255, 255, 255, 0.92)',
-                boxShadow: '0 24px 60px rgba(0, 0, 0, 0.25)',
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 1.5,
+              sx={(theme) => {
+                const c = appleColors(isDarkTheme(theme));
+                return {
+                  p: 4,
+                  borderRadius: '24px',
+                  textAlign: 'center',
+                  border: `1px solid ${c.hairline}`,
+                  boxShadow: c.shadowFloat,
+                  ...glassMaterialMixin(c.sidebarGlass, c.surfaceElevated, 24),
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  gap: 1.5,
+                };
               }}
             >
               <Box
@@ -822,10 +832,22 @@ const MapsPage = (): ReactElement => {
               >
                 <FolderRoundedIcon sx={{ fontSize: 36 }} />
               </Box>
-              <Typography variant="h6" sx={{ fontWeight: 700, color: '#1D1D1F' }}>
+              <Typography
+                variant="h6"
+                sx={(theme) => ({
+                  fontWeight: 700,
+                  color: appleColors(isDarkTheme(theme)).textPrimary,
+                })}
+              >
                 松开鼠标即可导入文件夹或文件
               </Typography>
-              <Typography variant="body2" sx={{ color: '#86868B', maxWidth: 360 }}>
+              <Typography
+                variant="body2"
+                sx={(theme) => ({
+                  color: appleColors(isDarkTheme(theme)).textSecondary,
+                  maxWidth: 360,
+                })}
+              >
                 自动递归读取子目录，保留文件夹层级并在列表中归类展示
               </Typography>
             </Box>
@@ -907,14 +929,30 @@ const MapsPage = (): ReactElement => {
               slotProps={{
                 paper: {
                   elevation: 0,
-                  sx: {
-                    borderRadius: '14px',
-                    minWidth: 190,
-                    p: 0.6,
-                    background: 'rgba(255, 255, 255, 0.88)',
-                    backdropFilter: 'blur(24px)',
-                    boxShadow: '0 12px 32px rgba(0, 0, 0, 0.15)',
-                    border: '1px solid rgba(0, 0, 0, 0.08)',
+                  sx: (theme) => {
+                    const c = appleColors(isDarkTheme(theme));
+                    return {
+                      mt: 0.75,
+                      borderRadius: '14px',
+                      minWidth: 190,
+                      p: 0.6,
+                      color: c.textPrimary,
+                      boxShadow: c.shadowFloat,
+                      border: `1px solid ${c.hairline}`,
+                      fontFamily: APPLE_FONT_STACK,
+                      ...glassMaterialMixin(c.sidebarGlass, c.surfaceElevated, 24),
+                      '@media (forced-colors: active)': {
+                        backgroundColor: 'Canvas',
+                        color: 'CanvasText',
+                        borderColor: 'ButtonBorder',
+                      },
+                      '& .MuiMenuItem-root': {
+                        borderRadius: '8px',
+                        '&:hover': {
+                          backgroundColor: c.hoverFill,
+                        },
+                      },
+                    };
                   },
                 },
               }}
