@@ -19,7 +19,6 @@
   },
   "include": [
     "api/**/*.ts",
-    "netlify/functions/**/*.ts",
     "tests/**/*.ts",
     "vitest.config.ts"
   ],
@@ -27,6 +26,6 @@
     "node_modules",
     "frontend",
     "dist",
-    ".netlify"
+    ".vercel"
   ]
 }

@@ -4,8 +4,8 @@ import {
   buildPoolConfig,
   getDbPool,
   withUserDb,
-} from '../../netlify/functions/lib/db';
-import type { PoolLike } from '../../netlify/functions/lib/db';
+} from '../../api/_core/lib/db';
+import type { PoolLike } from '../../api/_core/lib/db';
 
 const TEST_UID = '11111111-2222-4333-8444-555555555555';
 

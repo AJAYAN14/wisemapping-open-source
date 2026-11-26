@@ -248,5 +248,12 @@
 
 ## Questions for Review
 
-- Live verification against the real Supabase project: Whenever you are ready to connect to your live WiseMapping Supabase instance, create `.env.local` with the database connection string and API keys; all 25 live DB / RLS integration tests will execute automatically and verify schema, transactions, and row-level policies end-to-end.
 - Run `supabase/migrations/0004_folders.sql` against the live WiseMapping Supabase database before deploying the updated Netlify Functions + frontend bundle so existing `folder_path` records are backfilled into `public.folders`.
+- After Vercel deployment: verify `/c/login` page loads, Google OAuth sign-in completes the PKCE flow, and mind maps can be created and saved without errors.
+
+
+44. **Netlify → Vercel Migration (`netlify/functions/` → `api/_core/`)**
+    - **Plan**: Move all Netlify backend functions to Vercel, updating all import paths, tests, and documentation.
+    - **Actual**: Used `git mv` to rename `netlify/functions/*.ts` and `netlify/functions/lib/*.ts` to `api/_core/` (10 files). Deleted `netlify.toml` and `.netlify/` directory. Updated all source imports in `api/wm-api.ts`, `api/wm-oauth.ts`, `scripts/dev-server.ts`, `scripts/migrate-inline-images.ts`. Updated `api/_core/lib/http.ts` to use Vercel env vars (`VERCEL_PROJECT_PRODUCTION_URL` / `VERCEL_URL`) and new API path prefixes (`/api/wm-api`, `/api/wm-oauth`). Updated 6 unit test files, 2 contract test files, deleted `netlify-config.test.ts` and created `vercel-config.test.ts`, updated all 4 E2E test files and `support/client.ts`. Updated `README.md`, rewrote `docs/deployment-guide.md` for Vercel. Updated SQL migration comment and `.gitignore`.
+    - **Deviation**: `api-contract.test.ts` fixture host changed from `wisemapping-private.netlify.app` to `wisemapping-private.vercel.app` for consistency; `auth-and-config.test.ts` fixture hosts changed from `my-wise.netlify.app` to `my-wise.vercel.app`. The `createNetlifyContextStub` function in `client.ts` renamed to `createContextStub`. `loadNetlifyHandler` renamed to `loadApiHandler`. `shouldRouteRestfulOAuthToOAuthHandler` now reads `vercel.json` JSON instead of `netlify.toml` TOML.
+    - **Node version note**: `api/_core/` runs on Node 20 locally (same as before); Vercel automatically uses the Node version specified in `vercel.json` or `package.json` engines field.

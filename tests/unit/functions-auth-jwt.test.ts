@@ -11,8 +11,8 @@ import {
   requireAuth,
   signSessionJwt,
   verifySessionJwt,
-} from '../../netlify/functions/lib/auth';
-import { NemoProtectionError, assertNotNemoTarget } from '../../netlify/functions/lib/env';
+} from '../../api/_core/lib/auth';
+import { NemoProtectionError, assertNotNemoTarget } from '../../api/_core/lib/env';
 
 const TEST_SECRET = '0123456789abcdef0123456789abcdef0123456789abcdef';
 const TEST_UID = '11111111-2222-4333-8444-555555555555';

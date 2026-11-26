@@ -8,8 +8,8 @@ const rootDir = process.cwd();
 dotenv.config({ path: path.resolve(rootDir, '.env.local'), override: true });
 dotenv.config({ path: path.resolve(rootDir, '.env'), override: false });
 
-import apiHandler from '../netlify/functions/api';
-import oauthHandler from '../netlify/functions/oauth';
+import apiHandler from '../api/_core/api';
+import oauthHandler from '../api/_core/oauth';
 
 const PORT = parseInt(process.env.PORT || '8888', 10);
 const DIST_DIR = path.resolve(rootDir, 'frontend/packages/webapp/dist');

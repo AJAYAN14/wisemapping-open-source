@@ -82,13 +82,11 @@ export function resolveOrigin(req: Request): string {
   }
 
   const envUrl =
-    process.env.URL?.trim() ||
-    process.env.DEPLOY_PRIME_URL?.trim() ||
-    process.env.APP_ORIGIN?.trim() ||
-    (process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim()
+    process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim()
       ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL.trim()}`
-      : undefined) ||
-    (process.env.VERCEL_URL?.trim() ? `https://${process.env.VERCEL_URL.trim()}` : undefined);
+      : process.env.VERCEL_URL?.trim()
+        ? `https://${process.env.VERCEL_URL.trim()}`
+        : process.env.APP_ORIGIN?.trim() || process.env.URL?.trim();
   if (envUrl) {
     return envUrl.replace(/\/+$/, '');
   }
@@ -296,8 +294,8 @@ export function extractExpectedVersion(req: Request, bodyVersion?: unknown): num
 
 export function normalizeApiPath(url: URL): string {
   let path = url.pathname;
-  if (path.startsWith('/.netlify/functions/api')) {
-    path = path.slice('/.netlify/functions/api'.length);
+  if (path.startsWith('/api/wm-api')) {
+    path = path.slice('/api/wm-api'.length);
   } else if (path.startsWith('/api/restful')) {
     path = path.slice('/api/restful'.length);
   }
@@ -312,8 +310,8 @@ export function normalizeApiPath(url: URL): string {
 
 export function normalizeOAuthPath(url: URL): string {
   let path = url.pathname;
-  if (path.startsWith('/.netlify/functions/oauth')) {
-    path = path.slice('/.netlify/functions/oauth'.length);
+  if (path.startsWith('/api/wm-oauth')) {
+    path = path.slice('/api/wm-oauth'.length);
   }
   if (!path.startsWith('/')) {
     path = `/${path}`;

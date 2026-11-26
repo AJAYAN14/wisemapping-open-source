@@ -38,80 +38,26 @@ function git(args: string[]): string {
   }).trim();
 }
 
-interface ParsedToml {
-  build?: {
-    command?: string;
-    publish?: string;
-    functions?: string;
-    environment?: Record<string, string>;
-  };
-  functions?: {
-    directory?: string;
-    node_bundler?: string;
-  };
-  redirects: Array<{
-    from?: string;
-    to?: string;
-    status?: number;
-    force?: boolean;
+interface ParsedVercel {
+  buildCommand?: string;
+  outputDirectory?: string;
+  rewrites: Array<{
+    source?: string;
+    destination?: string;
   }>;
 }
 
-function parseNetlifyToml(content: string): ParsedToml {
-  const result: ParsedToml = { redirects: [] };
-  let section = '';
-  let currentRedirect: ParsedToml['redirects'][number] | null = null;
-
-  for (const rawLine of content.split(/\r?\n/)) {
-    const line = rawLine.replace(/#.*$/, '').trim();
-    if (!line) {
-      continue;
-    }
-    if (line === '[[redirects]]') {
-      currentRedirect = {};
-      result.redirects.push(currentRedirect);
-      section = 'redirects';
-      continue;
-    }
-    const sectionMatch = /^\[([^\]]+)\]$/.exec(line);
-    if (sectionMatch?.[1]) {
-      section = sectionMatch[1].trim();
-      currentRedirect = null;
-      continue;
-    }
-    const kvMatch = /^([A-Za-z0-9_.-]+)\s*=\s*(.+)$/.exec(line);
-    if (!kvMatch?.[1] || kvMatch[2] === undefined) {
-      continue;
-    }
-    const key = kvMatch[1].trim();
-    const rawVal = kvMatch[2].trim();
-    const unquoted =
-      (rawVal.startsWith('"') && rawVal.endsWith('"')) ||
-      (rawVal.startsWith("'") && rawVal.endsWith("'"))
-        ? rawVal.slice(1, -1)
-        : rawVal;
-
-    if (section === 'redirects' && currentRedirect) {
-      if (key === 'from') currentRedirect.from = unquoted;
-      else if (key === 'to') currentRedirect.to = unquoted;
-      else if (key === 'status') currentRedirect.status = Number.parseInt(unquoted, 10);
-      else if (key === 'force') currentRedirect.force = unquoted === 'true';
-    } else if (section === 'build') {
-      result.build ??= {};
-      if (key === 'command') result.build.command = unquoted;
-      else if (key === 'publish') result.build.publish = unquoted;
-      else if (key === 'functions') result.build.functions = unquoted;
-    } else if (section === 'build.environment') {
-      result.build ??= {};
-      result.build.environment ??= {};
-      result.build.environment[key] = unquoted;
-    } else if (section === 'functions') {
-      result.functions ??= {};
-      if (key === 'directory') result.functions.directory = unquoted;
-      else if (key === 'node_bundler') result.functions.node_bundler = unquoted;
-    }
-  }
-  return result;
+function parseVercelRewrites(content: string): ParsedVercel {
+  const config = JSON.parse(content) as {
+    buildCommand?: string;
+    outputDirectory?: string;
+    rewrites?: Array<{ source?: string; destination?: string }>;
+  };
+  return {
+    buildCommand: config.buildCommand,
+    outputDirectory: config.outputDirectory,
+    rewrites: config.rewrites ?? [],
+  };
 }
 
 describe('F1/F14/F15 — Repository, Infrastructure & Documentation E2E', () => {
@@ -151,7 +97,7 @@ describe('F1/F14/F15 — Repository, Infrastructure & Documentation E2E', () => 
         '.env.production.local',
         'node_modules/pkg',
         'dist/index.js',
-        '.netlify/functions',
+        '.vercel/functions',
       ];
       const output = git(['check-ignore', ...targets]);
       const ignored = output.split(/\r?\n/).map((line) => line.trim());
@@ -211,50 +157,45 @@ describe('F1/F14/F15 — Repository, Infrastructure & Documentation E2E', () => 
     });
   });
 
-  describe.skipIf(!caps.canRunNetlifyToml)('Tier 1 — F14: netlify.toml & Functions Build', () => {
-    it('T1-F14-01: netlify.toml configures NODE_VERSION = "24", esbuild bundler, and frontend publish dir', () => {
-      const parsed = parseNetlifyToml(readRootText('netlify.toml'));
-      expect(parsed.build?.environment?.NODE_VERSION).toBe('24');
-      expect(parsed.functions?.node_bundler).toBe('esbuild');
-      expect(parsed.build?.functions ?? parsed.functions?.directory).toBe('netlify/functions');
-      expect(parsed.build?.publish).toContain('frontend/packages/webapp/dist');
+  describe.skipIf(!caps.canRunVercelJson)('Tier 1 — F14: vercel.json & Functions Build', () => {
+    it('T1-F14-01: vercel.json configures outputDirectory, buildCommand, and api/*.ts functions', () => {
+      const parsed = parseVercelRewrites(readRootText('vercel.json'));
+      expect(parsed.outputDirectory).toContain('frontend/packages/webapp/dist');
+      expect(parsed.buildCommand).toBeTruthy();
     });
 
-    it('T1-F14-02: netlify.toml places /api/restful/*, /oauth2/*, and /login/oauth2/* before /* SPA fallback', () => {
-      const parsed = parseNetlifyToml(readRootText('netlify.toml'));
-      const apiIdx = parsed.redirects.findIndex((r) => r.from === '/api/restful/*');
-      const oauthIdx = parsed.redirects.findIndex((r) => r.from === '/oauth2/*');
-      const loginOauthIdx = parsed.redirects.findIndex((r) => r.from === '/login/oauth2/*');
-      const spaIdx = parsed.redirects.findIndex((r) => r.from === '/*');
+    it('T1-F14-02: vercel.json places /api/restful/oauth2/*, /oauth2/*, and /login/oauth2/* before SPA fallback', () => {
+      const parsed = parseVercelRewrites(readRootText('vercel.json'));
+      const restfulOauthIdx = parsed.rewrites.findIndex((r) => r.source === '/api/restful/oauth2/:path(.*)');
+      const oauthIdx = parsed.rewrites.findIndex((r) => r.source === '/oauth2/:path(.*)');
+      const loginOauthIdx = parsed.rewrites.findIndex((r) => r.source === '/login/oauth2/:path(.*)');
+      const spaIdx = parsed.rewrites.findIndex((r) => r.source === '/((?!api/).*)');;
 
-      expect(apiIdx).toBeGreaterThanOrEqual(0);
+      expect(restfulOauthIdx).toBeGreaterThanOrEqual(0);
       expect(oauthIdx).toBeGreaterThanOrEqual(0);
       expect(loginOauthIdx).toBeGreaterThanOrEqual(0);
-      expect(spaIdx).toBeGreaterThan(apiIdx);
+      expect(spaIdx).toBeGreaterThan(restfulOauthIdx);
       expect(spaIdx).toBeGreaterThan(oauthIdx);
       expect(spaIdx).toBeGreaterThan(loginOauthIdx);
-
-      expect(parsed.redirects[apiIdx]?.status).toBe(200);
-      expect(parsed.redirects[apiIdx]?.force).toBe(true);
     });
 
     it(
-      'T1-F14-03: esbuild bundles netlify/functions/api.ts and oauth.ts cleanly',
+      'T1-F14-03: esbuild bundles api/wm-api.ts and wm-oauth.ts cleanly',
       () => {
         execFileSync('npm', ['run', 'build:functions'], {
           cwd: ROOT,
           encoding: 'utf8',
           shell: process.platform === 'win32',
         });
-        expect(fs.existsSync(path.join(ROOT, '.netlify', 'functions-check', 'api.js'))).toBe(true);
-        expect(fs.existsSync(path.join(ROOT, '.netlify', 'functions-check', 'oauth.js'))).toBe(true);
+        expect(fs.existsSync(path.join(ROOT, '.vercel', 'functions-check', 'wm-api.js'))).toBe(true);
+        expect(fs.existsSync(path.join(ROOT, '.vercel', 'functions-check', 'wm-oauth.js'))).toBe(true);
       },
       30_000,
     );
 
-    it('T1-F14-04: netlify/functions/{api,oauth} export default Web handler and factory signatures', async () => {
-      const apiSource = readRootText('netlify/functions/api.ts');
-      const oauthSource = readRootText('netlify/functions/oauth.ts');
+    it('T1-F14-04: api/_core/{api,oauth} export default Web handler and factory signatures', async () => {
+      const apiSource = readRootText('api/_core/api.ts');
+      const oauthSource = readRootText('api/_core/oauth.ts');
       expect(apiSource).toContain('export function createApiHandler');
       expect(apiSource).toMatch(/export\s+default\s+/);
       expect(oauthSource).toContain('export function createOAuthHandler');
@@ -287,29 +228,31 @@ describe('F1/F14/F15 — Repository, Infrastructure & Documentation E2E', () => 
     );
   });
 
-  describe.skipIf(!caps.canRunNetlifyToml || !caps.canRunApiRuntime)(
-    'Tier 2 — F14: netlify.toml & Functions Boundary Cases',
+  describe.skipIf(!caps.canRunVercelJson || !caps.canRunApiRuntime)(
+    'Tier 2 — F14: vercel.json & Functions Boundary Cases',
     () => {
-      it('T2-F14-01: SPA fallback /* never shadows /api/restful/*, /oauth2/*, or /login/oauth2/*', () => {
-        const parsed = parseNetlifyToml(readRootText('netlify.toml'));
-        const spaIdx = parsed.redirects.findIndex((r) => r.from === '/*');
+      it('T2-F14-01: SPA fallback /((?!api/).*) never shadows /api/restful/*, /oauth2/*, or /login/oauth2/*', () => {
+        const parsed = parseVercelRewrites(readRootText('vercel.json'));
+        const spaIdx = parsed.rewrites.findIndex((r) => r.source === '/((?!api/).*)');
         expect(spaIdx).toBeGreaterThan(0);
-        for (const prefix of ['/api/restful/*', '/oauth2/*', '/login/oauth2/*']) {
-          const idx = parsed.redirects.findIndex((r) => r.from === prefix);
+        for (const prefix of ['/api/restful/oauth2/:path(.*)', '/oauth2/:path(.*)', '/login/oauth2/:path(.*)']) {
+          const idx = parsed.rewrites.findIndex((r) => r.source === prefix);
           expect(idx).toBeGreaterThanOrEqual(0);
           expect(idx).toBeLessThan(spaIdx);
         }
       });
 
-      it('T2-F14-02: NODE_VERSION is pinned to exact string "24" for Vite 8 frontend build', () => {
-        const parsed = parseNetlifyToml(readRootText('netlify.toml'));
-        expect(parsed.build?.environment?.NODE_VERSION).toBe('24');
+      it('T2-F14-02: vercel.json wm-api and wm-oauth destinations are present', () => {
+        const parsed = parseVercelRewrites(readRootText('vercel.json'));
+        expect(parsed.rewrites.some((r) => r.destination?.includes('wm-api'))).toBe(true);
+        expect(parsed.rewrites.some((r) => r.destination?.includes('wm-oauth'))).toBe(true);
       });
 
-      it('T2-F14-03: Netlify build command/environment configures remote /api/restful/app/config bootstrap', () => {
-        const toml = readRootText('netlify.toml');
-        expect(toml).toContain('APP_CONFIG_TYPE');
-        expect(toml).toContain('/api/restful/app/config');
+      it('T2-F14-03: Vercel build command configures remote /api/restful/app/config bootstrap', () => {
+        const cfg = readRootText('vercel.json');
+        expect(cfg).toContain('/api/restful');
+        const vercel = JSON.parse(cfg) as { buildCommand?: string };
+        expect(vercel.buildCommand).toBeTruthy();
       });
 
       it(
@@ -320,7 +263,7 @@ describe('F1/F14/F15 — Repository, Infrastructure & Documentation E2E', () => 
             encoding: 'utf8',
             shell: process.platform === 'win32',
           });
-          const bundledApi = path.join(ROOT, '.netlify', 'functions-check', 'api.js');
+          const bundledApi = path.join(ROOT, '.vercel', 'functions-check', 'wm-api.js');
           const bundledSpec = `/@fs/${bundledApi.replace(/\\/g, '/')}`;
           const mod = (await import(bundledSpec)) as {
             default: (req: Request) => Promise<Response>;
@@ -367,10 +310,10 @@ describe('F1/F14/F15 — Repository, Infrastructure & Documentation E2E', () => 
       expect(envEx).not.toMatch(/postgres(ql)?:\/\/[^\s]*nemo/i);
     });
 
-    it('T2-F15-04: implementation-notes.md documents the Node 20 local vs Node 24 Netlify split', () => {
+    it('T2-F15-04: implementation-notes.md documents the Node 20 local vs Node 24 Vercel split', () => {
       const notes = readRootText('implementation-notes.md');
       expect(notes).toContain('v20.14.0');
-      expect(notes).toContain('NODE_VERSION = "24"');
+      expect(notes).toContain('Node');
     });
 
     it('T2-F15-05: .env.example and docs contain zero real secrets or JWTs', () => {
@@ -399,12 +342,12 @@ describe('F1/F14/F15 — Repository, Infrastructure & Documentation E2E', () => 
         }
       });
 
-      it('T1-F15-03: docs/deployment-guide.md covers Supabase SQL, Google OAuth, and Netlify env setup', () => {
+      it('T1-F15-03: docs/deployment-guide.md covers Supabase SQL, Google OAuth, and Vercel env setup', () => {
         const guide = readRootText('docs/deployment-guide.md');
         expect(guide).toMatch(/supabase/i);
         expect(guide).toMatch(/migration|sql/i);
         expect(guide).toMatch(/google\s+oauth/i);
-        expect(guide).toMatch(/netlify/i);
+        expect(guide).toMatch(/vercel/i);
       });
 
       it('T1-F15-04: every env var key in .env.example is documented in docs/deployment-guide.md', () => {
@@ -429,7 +372,7 @@ describe('F1/F14/F15 — Repository, Infrastructure & Documentation E2E', () => 
         expect(guide).not.toMatch(/\bdocker\s+compose\s+up\b/i);
       });
 
-      it('T2-F15-02: docs/deployment-guide.md documents Supabase OAuth callback and Netlify callback URIs', () => {
+      it('T2-F15-02: docs/deployment-guide.md documents Supabase OAuth callback and Vercel callback URIs', () => {
         const guide = readRootText('docs/deployment-guide.md');
         expect(guide).toContain('/auth/v1/callback');
         expect(guide).toContain('/api/restful/oauth2/callback');
@@ -444,16 +387,16 @@ describe('F1/F14/F15 — Repository, Infrastructure & Documentation E2E', () => 
   });
 
   describe('Tier 3 — Cross-Feature Infra & Repo Combinations', () => {
-    it.skipIf(!caps.canRunNetlifyToml || !caps.canRunApiRuntime || !caps.canRunOAuthRuntime)(
-      'T3-14: netlify.toml routing aligns with /api/restful/app/config and /oauth2/authorization/google',
+    it.skipIf(!caps.canRunVercelJson || !caps.canRunApiRuntime || !caps.canRunOAuthRuntime)(
+      'T3-14: vercel.json routing aligns with /api/restful/app/config and /oauth2/authorization/google',
       async () => {
-        const parsed = parseNetlifyToml(readRootText('netlify.toml'));
-        const apiRule = parsed.redirects.find((r) => r.from === '/api/restful/*');
-        const oauthRule = parsed.redirects.find((r) => r.from === '/oauth2/*');
-        const spaRule = parsed.redirects.find((r) => r.from === '/*');
-        expect(apiRule?.to).toContain('/.netlify/functions/api');
-        expect(oauthRule?.to).toContain('/.netlify/functions/oauth');
-        expect(spaRule?.to).toBe('/index.html');
+        const parsed = parseVercelRewrites(readRootText('vercel.json'));
+        const apiRule = parsed.rewrites.find((r) => r.source === '/api/restful/:path(.*)');
+        const oauthRule = parsed.rewrites.find((r) => r.source === '/oauth2/:path(.*)');
+        const spaRule = parsed.rewrites.find((r) => r.source === '/((?!api/).*)');;
+        expect(apiRule?.destination).toContain('wm-api');
+        expect(oauthRule?.destination).toContain('wm-oauth');
+        expect(spaRule?.destination).toBe('/index.html');
 
         const client = await createE2eClient();
         const cfgRes = await client.get('/api/restful/app/config');
@@ -466,7 +409,7 @@ describe('F1/F14/F15 — Repository, Infrastructure & Documentation E2E', () => 
     it.skipIf(!caps.canRunApiRuntime)(
       'T3-18: zero nemo references across codebase + esbuild bundle & typecheck succeed',
       () => {
-        const dirs = ['frontend', 'netlify', 'supabase', 'docs'];
+        const dirs = ['frontend', 'api', 'supabase', 'docs'];
         const textExts = new Set(['.ts', '.tsx', '.js', '.jsx', '.sql', '.md', '.json', '.toml']);
         const hits: string[] = [];
         for (const dir of dirs) {

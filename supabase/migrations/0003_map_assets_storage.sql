@@ -1,5 +1,5 @@
 -- =============================================================================
--- WiseMapping Personal Private Edition â€” Migration 0003: Map Assets Storage Bucket
+-- WiseMapping Personal Private Edition â€?Migration 0003: Map Assets Storage Bucket
 -- Target: WiseMapping Supabase PostgreSQL (storage schema)
 -- Idempotent migration: safe to re-run without side effects.
 -- =============================================================================
@@ -7,7 +7,7 @@
 BEGIN;
 
 -- Create dedicated public CDN bucket for externalized mindmap topic images.
--- Writes & deletes are authorized exclusively server-side via Netlify Functions
+-- Writes & deletes are authorized exclusively server-side via Vercel Functions
 -- (signed upload URLs / service_role cleanup) after validating the 7-day JWT.
 -- Keeping storage.objects without broad public SELECT prevents bucket listing
 -- while public=true allows direct CDN image fetches by URL.

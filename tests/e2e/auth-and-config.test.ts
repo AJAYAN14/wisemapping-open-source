@@ -51,15 +51,15 @@ describe('F7/F8 — App Config, Google OAuth PKCE, Allowlist & 7-Day JWT E2E', (
         const client = await createE2eClient({ apiDeps: createFakeHandlerDeps(store, oauth) });
         const res = await client.get('/api/restful/app/config', {
           headers: {
-            host: 'my-wise.netlify.app',
+            host: 'my-wise.vercel.app',
             'x-forwarded-proto': 'https',
           },
         });
         expect(res.status).toBe(200);
         expect(res.headers.get('content-type') ?? '').toContain('application/json');
         const cfg = await client.json<{ apiBaseUrl: string; uiBaseUrl: string }>(res);
-        expect(cfg.apiBaseUrl).toBe('https://my-wise.netlify.app');
-        expect(cfg.uiBaseUrl).toBe('https://my-wise.netlify.app');
+        expect(cfg.apiBaseUrl).toBe('https://my-wise.vercel.app');
+        expect(cfg.uiBaseUrl).toBe('https://my-wise.vercel.app');
       },
     );
 
@@ -69,14 +69,14 @@ describe('F7/F8 — App Config, Google OAuth PKCE, Allowlist & 7-Day JWT E2E', (
         const client = await createE2eClient({ apiDeps: createFakeHandlerDeps(store, oauth) });
         const res = await client.get('/api/restful/app/config', {
           headers: {
-            host: 'my-wise.netlify.app',
+            host: 'my-wise.vercel.app',
             'x-forwarded-proto': 'https',
           },
         });
         expect(res.status).toBe(200);
         const cfg = await client.json<{ googleOauth2Enabled: boolean; googleOauth2Url: string }>(res);
         expect(cfg.googleOauth2Enabled).toBe(true);
-        expect(cfg.googleOauth2Url).toBe('https://my-wise.netlify.app/oauth2/authorization/google');
+        expect(cfg.googleOauth2Url).toBe('https://my-wise.vercel.app/oauth2/authorization/google');
       },
     );
 
@@ -124,7 +124,7 @@ describe('F7/F8 — App Config, Google OAuth PKCE, Allowlist & 7-Day JWT E2E', (
     it('T1-F07-05: OPTIONS preflight exposes ResourceId, Location, and X-Mindmap-Version headers', async () => {
       const client = await createE2eClient({ apiDeps: createFakeHandlerDeps(store, oauth) });
       const res = await client.options('/api/restful/app/config', {
-        headers: { origin: 'https://my-wise.netlify.app' },
+        headers: { origin: 'https://my-wise.vercel.app' },
       });
       expect([200, 204]).toContain(res.status);
       const exposed = (res.headers.get('access-control-expose-headers') ?? '').toLowerCase();

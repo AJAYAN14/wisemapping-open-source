@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createApiHandler } from '../../netlify/functions/api';
-import { replaceInlineImagesInXml } from '../../netlify/functions/lib/inline-image-migration';
+import { createApiHandler } from '../../api/_core/api';
+import { replaceInlineImagesInXml } from '../../api/_core/lib/inline-image-migration';
 import {
   MAP_ASSETS_BUCKET,
   StorageConfigurationError,
@@ -8,8 +8,8 @@ import {
   SupabaseAssetStorageService,
   extractReferencedAssetPaths,
   validateUploadRequestItems,
-} from '../../netlify/functions/lib/storage';
-import type { AssetStorageService } from '../../netlify/functions/lib/storage';
+} from '../../api/_core/lib/storage';
+import type { AssetStorageService } from '../../api/_core/lib/storage';
 import {
   InMemoryMindmapRepo,
   TEST_JWT_SECRET,

@@ -5,6 +5,6 @@ export default defineConfig({
     globals: false,
     environment: 'node',
     include: ['tests/**/*.test.ts'],
-    exclude: ['frontend/**', 'node_modules/**', 'dist/**', '.netlify/**'],
+    exclude: ['frontend/**', 'node_modules/**', 'dist/**', '.vercel/**'],
   },
 });

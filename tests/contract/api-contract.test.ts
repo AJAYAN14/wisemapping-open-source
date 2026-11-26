@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { createApiHandler } from '../../netlify/functions/api';
+import { createApiHandler } from '../../api/_core/api';
 import {
   InMemoryMindmapRepo,
   TEST_JWT_SECRET,
@@ -34,10 +34,10 @@ describe('API Contract Tests (/api/restful/*)', () => {
 
   it('serves dynamic non-empty /app/config and enforces Google-only auth flags', async () => {
     const res = await handler(
-      new Request('https://internal/.netlify/functions/api/app/config', {
+      new Request('https://internal/api/wm-api/app/config', {
         headers: {
           'x-forwarded-proto': 'https',
-          'x-forwarded-host': 'wisemapping-private.netlify.app',
+          'x-forwarded-host': 'wisemapping-private.vercel.app',
         },
       }),
     );
@@ -49,11 +49,11 @@ describe('API Contract Tests (/api/restful/*)', () => {
 
     const config = (await res.json()) as Record<string, unknown>;
     expect(config).toMatchObject({
-      apiBaseUrl: 'https://wisemapping-private.netlify.app',
-      uiBaseUrl: 'https://wisemapping-private.netlify.app',
+      apiBaseUrl: 'https://wisemapping-private.vercel.app',
+      uiBaseUrl: 'https://wisemapping-private.vercel.app',
       clientType: 'rest',
       googleOauth2Enabled: true,
-      googleOauth2Url: 'https://wisemapping-private.netlify.app/oauth2/authorization/google',
+      googleOauth2Url: 'https://wisemapping-private.vercel.app/oauth2/authorization/google',
       facebookOauth2Enabled: false,
       oidcOauth2Enabled: false,
       localLoginEnabled: false,

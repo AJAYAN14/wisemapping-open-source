@@ -8,7 +8,7 @@ import {
   validateMindmapXml,
   validateNoteContent,
   validateTitle,
-} from '../../netlify/functions/lib/validators';
+} from '../../api/_core/lib/validators';
 
 describe('functions validators', () => {
   it('validates mindmap XML structure, topic counts, and security rules', () => {

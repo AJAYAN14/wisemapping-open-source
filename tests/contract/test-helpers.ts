@@ -1,10 +1,10 @@
 import { SignJWT } from 'jose';
-import { JWT_EXPIRATION_SECONDS } from '../../netlify/functions/lib/auth';
+import { JWT_EXPIRATION_SECONDS } from '../../api/_core/lib/auth';
 import {
   NotFoundOrForbiddenError,
   RepoValidationError,
   VersionConflictError,
-} from '../../netlify/functions/lib/repo';
+} from '../../api/_core/lib/repo';
 import type {
   CreateFolderInput,
   CreateLabelInput,
@@ -20,7 +20,7 @@ import type {
   UpdateDocumentInput,
   UpdateFolderInput,
   UpdateMapInput,
-} from '../../netlify/functions/lib/repo';
+} from '../../api/_core/lib/repo';
 
 export const TEST_JWT_SECRET = '0123456789abcdef0123456789abcdef0123456789abcdef';
 export const TEST_OWNER_UID = '11111111-2222-4333-8444-555555555555';
@@ -607,7 +607,7 @@ export class InMemoryMindmapRepo implements MindmapRepository {
         }
         visited.add(cur);
         const curEntry = this.folders.get(cur);
-        cur = curEntry?.ownerId === user.uid ? curEntry.dto.parentId : null;
+        cur = curEntry?.ownerId === user.uid ? (curEntry.dto.parentId ?? null) : null;
       }
     }
     for (const other of this.folders.values()) {

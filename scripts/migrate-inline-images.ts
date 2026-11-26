@@ -1,10 +1,10 @@
 import path from 'node:path';
 import dotenv from 'dotenv';
 import { StorageClient } from '@supabase/storage-js';
-import { getDbPool, closeDbPool } from '../netlify/functions/lib/db';
-import { getSupabaseServiceRoleConfig } from '../netlify/functions/lib/env';
-import { replaceInlineImagesInXml } from '../netlify/functions/lib/inline-image-migration';
-import { MAP_ASSETS_BUCKET } from '../netlify/functions/lib/storage';
+import { getDbPool, closeDbPool } from '../api/_core/lib/db';
+import { getSupabaseServiceRoleConfig } from '../api/_core/lib/env';
+import { replaceInlineImagesInXml } from '../api/_core/lib/inline-image-migration';
+import { MAP_ASSETS_BUCKET } from '../api/_core/lib/storage';
 
 const rootDir = process.cwd();
 dotenv.config({ path: path.resolve(rootDir, '.env.local'), override: true });

@@ -18,14 +18,14 @@ export interface E2eCapabilities {
   baseUrl: string | null;
   apiEntry: string | null;
   oauthEntry: string | null;
-  hasNetlifyToml: boolean;
+  hasVercelJson: boolean;
   hasMigrations: boolean;
   hasDocsDeploymentGuide: boolean;
   hasEnvLocal: boolean;
   hasDatabaseUrl: boolean;
   canRunApiRuntime: boolean;
   canRunOAuthRuntime: boolean;
-  canRunNetlifyToml: boolean;
+  canRunVercelJson: boolean;
   canRunMigrationChecks: boolean;
   canRunLiveDb: boolean;
 }
@@ -34,7 +34,7 @@ const ENTRY_EXTENSIONS = ['.ts', '.js', '.mts', '.mjs'] as const;
 
 export function resolveFunctionEntry(name: 'api' | 'oauth'): string | null {
   for (const ext of ENTRY_EXTENSIONS) {
-    const candidate = path.join(ROOT, 'netlify', 'functions', `${name}${ext}`);
+    const candidate = path.join(ROOT, 'api', '_core', `${name}${ext}`);
     if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
       return candidate;
     }
@@ -72,7 +72,7 @@ export function detectE2eCapabilities(): E2eCapabilities {
 
   const apiEntry = resolveFunctionEntry('api');
   const oauthEntry = resolveFunctionEntry('oauth');
-  const hasNetlifyToml = fs.existsSync(path.join(ROOT, 'netlify.toml'));
+  const hasVercelJson = fs.existsSync(path.join(ROOT, 'vercel.json'));
   const hasMigrations = listMigrationFiles().length > 0;
   const hasDocsDeploymentGuide = fs.existsSync(path.join(ROOT, 'docs', 'deployment-guide.md'));
   const hasDatabaseUrl = Boolean(process.env.DATABASE_URL?.trim());
@@ -85,14 +85,14 @@ export function detectE2eCapabilities(): E2eCapabilities {
     baseUrl,
     apiEntry,
     oauthEntry,
-    hasNetlifyToml,
+    hasVercelJson,
     hasMigrations,
     hasDocsDeploymentGuide,
     hasEnvLocal,
     hasDatabaseUrl,
     canRunApiRuntime,
     canRunOAuthRuntime,
-    canRunNetlifyToml: hasNetlifyToml,
+    canRunVercelJson: hasVercelJson,
     canRunMigrationChecks: hasMigrations,
     canRunLiveDb: hasMigrations && hasDatabaseUrl,
   };
@@ -120,13 +120,13 @@ async function importDynamicModule(absPath: string): Promise<Record<string, unkn
   return (await import(specifier)) as Record<string, unknown>;
 }
 
-export async function loadNetlifyHandler(
+export async function loadApiHandler(
   name: 'api' | 'oauth',
   deps?: unknown,
 ): Promise<WebHandler> {
   const entry = resolveFunctionEntry(name);
   if (!entry) {
-    throw new Error(`Netlify function entry "${name}" does not exist under netlify/functions/`);
+    throw new Error(`API function entry "${name}" does not exist under api/_core/`);
   }
 
   const mod = await importDynamicModule(entry);
@@ -220,7 +220,7 @@ export class CookieJar {
   }
 }
 
-function createNetlifyContextStub(cookieJar: CookieJar): Record<string, unknown> {
+function createContextStub(cookieJar: CookieJar): Record<string, unknown> {
   return {
     requestId: crypto.randomUUID(),
     ip: '127.0.0.1',
@@ -245,13 +245,25 @@ function createNetlifyContextStub(cookieJar: CookieJar): Record<string, unknown>
 }
 
 function shouldRouteRestfulOAuthToOAuthHandler(): boolean {
-  const tomlPath = path.join(ROOT, 'netlify.toml');
-  if (!fs.existsSync(tomlPath)) {
+  const vercelJsonPath = path.join(ROOT, 'vercel.json');
+  if (!fs.existsSync(vercelJsonPath)) {
     return false;
   }
-  const toml = fs.readFileSync(tomlPath, 'utf8');
-  // Check if netlify.toml explicitly maps /api/restful/oauth2/* to oauth function
-  return /\/api\/restful\/oauth2\/\*[\s\S]{0,200}functions\/oauth/i.test(toml);
+  try {
+    const config = JSON.parse(fs.readFileSync(vercelJsonPath, 'utf8')) as {
+      rewrites?: Array<{ source?: string; destination?: string }>;
+    };
+    // Check if vercel.json explicitly maps /api/restful/oauth2/* to wm-oauth
+    return (config.rewrites ?? []).some(
+      (r) =>
+        typeof r.source === 'string' &&
+        r.source.startsWith('/api/restful/oauth2/') &&
+        typeof r.destination === 'string' &&
+        r.destination.includes('wm-oauth'),
+    );
+  } catch {
+    return false;
+  }
 }
 
 export interface E2eRequestOptions extends Omit<RequestInit, 'body' | 'headers'> {
@@ -292,7 +304,7 @@ export interface CreateE2eClientOptions {
 
 async function loadRepoErrorConstructors(): Promise<RepoErrorConstructors | null> {
   for (const ext of ENTRY_EXTENSIONS) {
-    const candidate = path.join(ROOT, 'netlify', 'functions', 'lib', `repo${ext}`);
+    const candidate = path.join(ROOT, 'api', '_core', 'lib', `repo${ext}`);
     if (fs.existsSync(candidate) && fs.statSync(candidate).isFile()) {
       const mod = await importDynamicModule(candidate);
       if (
@@ -358,12 +370,12 @@ export async function createE2eClient(
       : options.oauthDeps;
 
   const [apiHandler, oauthHandler] = await Promise.all([
-    caps.apiEntry ? loadNetlifyHandler('api', resolvedApiDeps) : Promise.resolve(null),
-    caps.oauthEntry ? loadNetlifyHandler('oauth', resolvedOAuthDeps) : Promise.resolve(null),
+    caps.apiEntry ? loadApiHandler('api', resolvedApiDeps) : Promise.resolve(null),
+    caps.oauthEntry ? loadApiHandler('oauth', resolvedOAuthDeps) : Promise.resolve(null),
   ]);
 
   if (!apiHandler && !oauthHandler) {
-    throw new Error('No Netlify Function handlers available for E2eClient.');
+    throw new Error('No API function handlers available for E2eClient.');
   }
 
   const routeRestfulOAuthToOAuth = shouldRouteRestfulOAuthToOAuthHandler();
@@ -376,7 +388,7 @@ export async function createE2eClient(
     cookieJar,
     dispatchInProcess: async (req: Request) => {
       const pathname = new URL(req.url).pathname;
-      const ctx = createNetlifyContextStub(cookieJar);
+      const ctx = createContextStub(cookieJar);
 
       if (pathname.startsWith('/oauth2/') || pathname.startsWith('/login/oauth2/')) {
         if (!oauthHandler) {

@@ -1,4 +1,4 @@
-import oauthHandler from '../netlify/functions/oauth.js';
+import oauthHandler from './_core/oauth.js';
 import { restoreRewrittenRequest } from './_shared.js';
 
 export default {

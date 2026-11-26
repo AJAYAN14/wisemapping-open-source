@@ -1,4 +1,4 @@
-import apiHandler from '../netlify/functions/api.js';
+import apiHandler from './_core/api.js';
 import { restoreRewrittenRequest } from './_shared.js';
 
 export default {

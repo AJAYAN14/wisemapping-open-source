@@ -1,11 +1,11 @@
 import { decodeJwt } from 'jose';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { resolveOrigin } from '../../netlify/functions/lib/http';
+import { resolveOrigin } from '../../api/_core/lib/http';
 import {
   createOAuthHandler,
   sanitizeSafeRedirectPath,
-} from '../../netlify/functions/oauth';
-import type { OAuthClientLike } from '../../netlify/functions/oauth';
+} from '../../api/_core/oauth';
+import type { OAuthClientLike } from '../../api/_core/oauth';
 
 const TEST_SECRET = '0123456789abcdef0123456789abcdef0123456789abcdef';
 const TEST_UID = '11111111-2222-4333-8444-555555555555';
@@ -187,7 +187,7 @@ describe('functions oauth PKCE handler & email allowlist', () => {
     expect(setCookies.some((c) => c.startsWith('sb-proj-auth-token-code-verifier='))).toBe(true);
   });
 
-  it('handles rewritten /.netlify/functions/oauth/authorization/google path identically', async () => {
+  it('handles rewritten /api/wm-oauth/authorization/google path identically', async () => {
     const handler = createOAuthHandler({
       createSupabaseClient: (): OAuthClientLike => ({
         auth: {
@@ -205,7 +205,7 @@ describe('functions oauth PKCE handler & email allowlist', () => {
     });
 
     const res = await handler(
-      new Request('http://localhost:8888/.netlify/functions/oauth/authorization/google'),
+      new Request('http://localhost:8888/api/wm-oauth/authorization/google'),
     );
     expect(res.status).toBe(302);
     expect(res.headers.get('location')).toBe(

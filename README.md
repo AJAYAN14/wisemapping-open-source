@@ -1,13 +1,13 @@
 # WiseMapping Personal Private Edition
 
-WiseMapping Personal Private Edition is a modern, single-owner, serverless web-based mind mapping application. It combines the official open-source WiseMapping frontend with a serverless cloud-native architecture on Netlify and Supabase.
+WiseMapping Personal Private Edition is a modern, single-owner, serverless web-based mind mapping application. It combines the official open-source WiseMapping frontend with a serverless cloud-native architecture on Vercel and Supabase.
 
 ---
 
 ## ✨ Features & Architecture
 
 - **Official Frontend Baseline**: Built on the clean, official `wisemapping/wisemapping-frontend` (`main` @ `fb15a53`) using React 19, Vite 8, and Yarn 4.
-- **Serverless API Adapter**: TypeScript Netlify Functions (`netlify/functions/`) provide 100% API compatibility with the WiseMapping REST wire contract (`/api/restful/*`).
+- **Serverless API Adapter**: TypeScript Vercel Functions (`api/_core/`) provide 100% API compatibility with the WiseMapping REST wire contract (`/api/restful/*`).
 - **PostgreSQL Database & RLS**: Supabase PostgreSQL backend with strict Row-Level Security (RLS) policies isolating user mind maps and metadata.
 - **Single-Owner Google OAuth**: Server-side Google OAuth 2.0 PKCE flow via `@supabase/ssr`, enforced by a strict `ALLOWED_EMAIL` allowlist (default: `a.jian0629@gmail.com`) and 7-day secure HS256 JWT sessions.
 - **Atomic Optimistic Locking (R4)**: End-to-end `version` tracking preventing concurrent save collisions. If a version conflict occurs, auto-save halts immediately and a non-dismissible refresh dialog prompts the user, keeping map history safe.
@@ -24,10 +24,13 @@ WiseMapping Personal Private Edition is a modern, single-owner, serverless web-b
 │   │   ├── mindplot/         # Core SVG mind map rendering & interaction engine
 │   │   ├── web2d/            # Vector graphics abstraction library
 │   │   └── webapp/           # Main SPA application & routing
-├── netlify/
-│   └── functions/
-│       ├── api.ts            # /api/restful/* REST endpoints adapter
-│       └── oauth.ts          # /oauth2/* Google OAuth PKCE & JWT authentication
+├── api/
+│   ├── _core/
+│   │   ├── api.ts            # /api/restful/* REST endpoints adapter
+│   │   ├── oauth.ts          # /oauth2/* Google OAuth PKCE & JWT authentication
+│   │   └── lib/              # Auth, DB, HTTP, repo, storage, validators
+│   ├── wm-api.ts             # Vercel Function entry for /api/restful/*
+│   └── wm-oauth.ts           # Vercel Function entry for /oauth2/*
 ├── supabase/
 │   └── migrations/
 │       └── 0001_initial_schema.sql  # Database tables, triggers, and RLS policies
@@ -35,11 +38,11 @@ WiseMapping Personal Private Edition is a modern, single-owner, serverless web-b
 │   ├── implementation-plan.md       # Implementation architecture & decisions
 │   └── deployment-guide.md          # Step-by-step production deployment guide
 ├── tests/
-│   ├── contract/             # API contract & Netlify routing tests
+│   ├── contract/             # API contract & Vercel routing tests
 │   ├── db/                   # SQL migration schema & live DB test suite
 │   ├── e2e/                  # End-to-end test suites (CRUD, auth, locking, etc.)
 │   └── unit/                 # Functions, auth, and validation unit tests
-├── netlify.toml              # Netlify build configuration & redirect routes
+├── vercel.json               # Vercel build configuration & rewrite routes
 ├── package.json              # Root project dependencies & test scripts
 └── implementation-notes.md   # Architectural decisions, deviations & edge cases
 ```
@@ -81,12 +84,12 @@ npm run verify:m3
 
 ## 🚀 Production Deployment
 
-Deploying WiseMapping Personal Private Edition to Netlify and Supabase takes only a few minutes.
+Deploying WiseMapping Personal Private Edition to Vercel and Supabase takes only a few minutes.
 
 For detailed, step-by-step instructions on setting up:
 1. Supabase database tables & RLS policies
 2. Google Cloud Console OAuth 2.0 credentials
-3. Netlify environment variables and build settings
+3. Vercel environment variables and build settings
 
 👉 Please refer to the complete guide: [**Deployment Guide**](file:///e:/Web/wisemapping-open-source/docs/deployment-guide.md).
 

@@ -67,7 +67,7 @@ describe('F16 — E2E Track Meta-Verification & Harness Self-Tests', () => {
       expect(counts.t1 + counts.t2 + counts.t3 + counts.t4).toBeGreaterThanOrEqual(184);
     });
 
-    it('T1-F16-03: strict opaque-box boundary — zero imports from netlify/functions/lib/* or frontend/node_modules', () => {
+    it('T1-F16-03: strict opaque-box boundary — zero imports from api/_core/lib/* or frontend/node_modules', () => {
       const allTsFiles = [
         ...EXPECTED_SPEC_FILES.map((f) => path.join(E2E_DIR, f)),
         ...['client.ts', 'fake-repo.ts', 'fixtures.ts'].map((f) =>
@@ -77,7 +77,7 @@ describe('F16 — E2E Track Meta-Verification & Harness Self-Tests', () => {
       for (const file of allTsFiles) {
         const src = fs.readFileSync(file, 'utf8');
         expect(src, `${path.basename(file)} imports internal lib`).not.toMatch(
-          /from\s+['"][^'"]*netlify\/functions\/lib/,
+          /from\s+['"][^'"]*api\/_core\/lib/,
         );
         expect(src, `${path.basename(file)} imports frontend/node_modules`).not.toMatch(
           /from\s+['"][^'"]*frontend\/node_modules/,
