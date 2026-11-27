@@ -33,6 +33,7 @@ import { ClientContext } from '../../../classes/provider/client-context';
 import { MapInfo, MapMetadata } from '../../../classes/client';
 import { mapMetadataQueryKey } from '../../../classes/middleware';
 import { buildMapEditPath } from '../../../utils/mapPath';
+import { navigateTo } from '../../../utils/appNavigation';
 
 // Uses the editor's exporters: loaded lazily on demand.
 const ExportDialog = React.lazy(() => import('./export-dialog'));
@@ -79,10 +80,10 @@ const ActionDispatcher = ({
             );
             const known = cachedListMap ?? cachedMeta;
             if (known) {
-              window.location.href = buildMapEditPath(known.folderPath, known.title);
+              navigateTo(buildMapEditPath(known.folderPath, known.title));
             } else if (client?.fetchMapMetadata) {
               void client.fetchMapMetadata(targetId).then((meta) => {
-                window.location.href = buildMapEditPath(meta.folderPath, meta.title);
+                navigateTo(buildMapEditPath(meta.folderPath, meta.title));
               });
             }
           }
@@ -90,7 +91,7 @@ const ActionDispatcher = ({
           break;
         }
         case 'back':
-          window.location.href = '/';
+          navigateTo('/');
           onClose(true);
           break;
       }

@@ -6,7 +6,21 @@
 
 ---
 
-## Latest Fixes (v6.0.35)
+## Latest Fixes (v6.0.36)
+
+- **SPA Map Opening & Idle/Intent Preloading (`appNavigation.ts`, `editorPreload.ts`, `app.tsx`, `MapRow.tsx`, `MapGridCard.tsx`, `MapCard.tsx`, `action-dispatcher/`, `maps-page/index.tsx`, `editor-page/loader.ts`, `editor-page/index.tsx`)**:
+  - Replaced full-document `<a href>` / `window.location.href` transitions on map rows, grid cards, mobile cards, and create/duplicate/open/import/back actions with an in-app SPA router bridge (`navigateTo` / `handleSpaLinkClick`) that uses `router.navigate(...)` while preserving middle-click / modifier-key / context-menu new-tab behavior and falling back safely when no router is mounted.
+  - Added idle chunk preloading (`scheduleIdleEditorPreload`) on `MapsPage`, hover/focus JS+i18n chunk preloading (`preloadEditorResources`), `onPointerDown` XML+metadata prefetching (`prefetchMapForOpen`), and parallelized `loadEditorPage()` with `loadMap` inside `editor-page/loader.ts`.
+  - Invalidated `['maps', 'metadata-by-path']` and `['maps']` alongside `['maps', 'metadata', mapId]` on editor unmount and conflict so SPA re-entry never loads stale `bootstrapXML`.
+- **Synchronous Same-Origin Bootstrap Config (`app-config/index.ts`, `app.tsx`)**:
+  - Added `AppConfig.tryInitializeSync()` and fast-path resolution for same-origin `/api/restful/app/config` (`window.location.origin`), eliminating the blocking `cache: 'no-store'` `/api/restful/app/config` round-trip before router creation while keeping `config.prod.json` and external remote config fetching untouched.
+- **Single-Transaction Backend Metadata Query (`api/_core/lib/repo.ts`, `api/_core/api.ts`)**:
+  - Added `getMapMetadataByPath` and `getMapMetadataById` on `PgMindmapRepository`, merging the read and `last_open_time = NOW()` update into a single `UPDATE ... RETURNING` (or `SELECT`) inside one transaction and skipping unused `mindmap_labels` joins.
+- **Vite Vendor Chunking & Non-Blocking Icon Fonts (`vite.config.mts`, `index.html`, `MindplotWebComponent.ts`)**:
+  - Added `manualChunks` in `vite.config.mts` to split `react-vendor` and `mui-vendor` from the main entry (`index-*.js` reduced from `531.5 kB` to `169.13 kB`).
+  - Converted `Material Symbols Rounded` in `index.html` to async preload-to-stylesheet and appended `&display=swap` to `Material Icons` in `MindplotWebComponent.ts`.
+
+## Previous Fixes (v6.0.35)
 
 - **Un-jammed Rich Text Note Toolbar Buttons (`rich-text-note-editor/styled.ts`, `index.tsx`)**: Replaced fused `ButtonGroup` blocks (where buttons had 0px gap and shared borders like a dense brick) with independent rounded icon buttons (`width: 32px`, `height: 32px`, `borderRadius: 8px`, `gap: 6px`) and inserted clean vertical rules (`ToolDivider`) between logical groups (Heading selector, Link, Typography, Lists & Indent), giving each tool tactile clarity and generous breathing room.
 

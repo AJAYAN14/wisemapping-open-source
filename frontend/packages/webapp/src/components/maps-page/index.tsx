@@ -75,6 +75,8 @@ import { ClientContext } from '../../classes/provider/client-context';
 import { ScannedMapFile, scanFileList, scanDataTransferItems } from './directoryScanner';
 import { readStorage, writeStorage, removeStorage } from '../../utils/storage';
 import { buildMapEditPath } from '../../utils/mapPath';
+import { navigateTo } from '../../utils/appNavigation';
+import { scheduleIdleEditorPreload } from '../../utils/editorPreload';
 
 export type Filter = GenericFilter | LabelFilter | FolderFilter;
 
@@ -646,6 +648,8 @@ const MapsPage = (): ReactElement => {
     window.scrollTo(0, 0);
   }, []);
 
+  useEffect(() => scheduleIdleEditorPreload(), []);
+
   const mutation = useMutation({
     mutationFn: (id: number) => client.deleteLabel(id),
     onSuccess: () => {
@@ -1185,7 +1189,7 @@ const MapsPage = (): ReactElement => {
         onOpenMap={
           importState.createdMapEditUrl
             ? () => {
-                window.location.href = importState.createdMapEditUrl!;
+                navigateTo(importState.createdMapEditUrl!);
               }
             : undefined
         }

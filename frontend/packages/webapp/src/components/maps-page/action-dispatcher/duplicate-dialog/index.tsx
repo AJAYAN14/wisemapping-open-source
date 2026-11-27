@@ -33,6 +33,8 @@ import BaseDialog from '../base-dialog';
 import { useFetchMapById } from '../../../../classes/middleware';
 import { ClientContext } from '../../../../classes/provider/client-context';
 import { buildMapEditPath, validateMapTitleInput } from '../../../../utils/mapPath';
+import { navigateTo } from '../../../../utils/appNavigation';
+import { preloadEditorResources } from '../../../../utils/editorPreload';
 
 export type DuplicateModel = {
   id: number;
@@ -56,6 +58,7 @@ const DuplicateDialog = ({ mapId, onClose }: SimpleDialogProps): React.ReactElem
     DuplicateModel
   >({
     mutationFn: async (model: DuplicateModel) => {
+      void preloadEditorResources();
       const { id, title, description } = model;
       // Convert to BasicMapInfo format
       const basicInfo: BasicMapInfo = {
@@ -70,7 +73,7 @@ const DuplicateDialog = ({ mapId, onClose }: SimpleDialogProps): React.ReactElem
       return { folderPath: meta.folderPath ?? '', title: meta.title };
     },
     onSuccess: ({ folderPath, title }) => {
-      window.location.href = buildMapEditPath(folderPath, title);
+      navigateTo(buildMapEditPath(folderPath, title));
     },
     onError: (error) => {
       setError(error);

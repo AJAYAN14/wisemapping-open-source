@@ -16,7 +16,7 @@
  *   limitations under the License.
  */
 
-import React, { memo } from 'react';
+import React, { memo, use } from 'react';
 import { useIntl } from 'react-intl';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
@@ -25,8 +25,11 @@ import Tooltip from '@mui/material/Tooltip';
 import CheckBoxOutlineBlankRoundedIcon from '@mui/icons-material/CheckBoxOutlineBlankRounded';
 import CheckBoxRoundedIcon from '@mui/icons-material/CheckBoxRounded';
 import { Label, MapInfo } from '../../../classes/client';
+import { ClientContext } from '../../../classes/provider/client-context';
 import { useDate } from '../../../classes/app-i18n/dates';
 import { buildMapEditPath } from '../../../utils/mapPath';
+import { handleSpaLinkClick } from '../../../utils/appNavigation';
+import { prefetchMapForOpen, preloadEditorResources } from '../../../utils/editorPreload';
 import { formatMapSize } from '../../../utils/mapPreview';
 import { GoogleIcon } from '../../common/google-symbol';
 import { LabelsCell } from './labels-cell';
@@ -83,6 +86,8 @@ const MapRowComponent = ({
 }: MapRowProps): React.ReactElement => {
   const intl = useIntl();
   const date = useDate();
+  const client = use(ClientContext);
+  const editPath = buildMapEditPath(map.folderPath, map.title);
   const displayTime =
     timeField === 'lastOpenTime'
       ? (map.lastOpenTime ?? map.lastModificationTime)
@@ -153,9 +158,18 @@ const MapRowComponent = ({
             >
               <TitleLink
                 id={`map-title-${map.id}`}
-                href={buildMapEditPath(map.folderPath, map.title)}
+                href={editPath}
                 underline="none"
-                onClick={(e) => e.stopPropagation()}
+                onMouseEnter={() => {
+                  void preloadEditorResources();
+                }}
+                onFocus={() => {
+                  void preloadEditorResources();
+                }}
+                onPointerDown={() => {
+                  prefetchMapForOpen(client, map.folderPath ?? '', map.title);
+                }}
+                onClick={(e) => handleSpaLinkClick(e, editPath)}
               >
                 {map.title}
               </TitleLink>

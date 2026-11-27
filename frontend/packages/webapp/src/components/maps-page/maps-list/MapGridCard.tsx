@@ -1,12 +1,15 @@
-import React, { memo } from 'react';
+import React, { memo, use } from 'react';
 import { useIntl } from 'react-intl';
 import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import CheckBoxOutlineBlankRoundedIcon from '@mui/icons-material/CheckBoxOutlineBlankRounded';
 import CheckBoxRoundedIcon from '@mui/icons-material/CheckBoxRounded';
 import { MapInfo } from '../../../classes/client';
+import { ClientContext } from '../../../classes/provider/client-context';
 import { useDate } from '../../../classes/app-i18n/dates';
 import { buildMapEditPath } from '../../../utils/mapPath';
+import { handleSpaLinkClick } from '../../../utils/appNavigation';
+import { prefetchMapForOpen, preloadEditorResources } from '../../../utils/editorPreload';
 import { formatMapSize } from '../../../utils/mapPreview';
 import { GoogleIcon } from '../../common/google-symbol';
 import type { MapItemHandlers } from './MapRow';
@@ -56,6 +59,8 @@ const MapGridCardComponent = ({
 }: MapGridCardProps): React.ReactElement => {
   const intl = useIntl();
   const date = useDate();
+  const client = use(ClientContext);
+  const editPath = buildMapEditPath(map.folderPath, map.title);
 
   const displayTime =
     timeField === 'lastOpenTime'
@@ -89,7 +94,20 @@ const MapGridCardComponent = ({
       onDragStart={onDragStart ? (e) => onDragStart(map.id, e) : undefined}
       onContextMenu={onContextMenu ? (e) => onContextMenu(map.id, e) : undefined}
     >
-      <GridCardLink href={buildMapEditPath(map.folderPath, map.title)} underline="none">
+      <GridCardLink
+        href={editPath}
+        underline="none"
+        onMouseEnter={() => {
+          void preloadEditorResources();
+        }}
+        onFocus={() => {
+          void preloadEditorResources();
+        }}
+        onPointerDown={() => {
+          prefetchMapForOpen(client, map.folderPath ?? '', map.title);
+        }}
+        onClick={(e) => handleSpaLinkClick(e, editPath, false)}
+      >
         <GridCardPreview>
           <MindmapMiniPreview preview={map.preview} title={map.title} />
 

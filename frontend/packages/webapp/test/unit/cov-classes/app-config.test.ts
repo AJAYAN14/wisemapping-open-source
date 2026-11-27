@@ -114,6 +114,26 @@ describe('AppConfig.initialize', () => {
   it('refuses to answer before it is initialized', () => {
     expect(() => AppConfig.getApiBaseUrl()).toThrow('App configuration has not been initialized');
   });
+
+  it('synchronously initializes static REST config and same-origin /api/restful/app/config without fetch', () => {
+    const fetchSpy = jest.spyOn(globalThis, 'fetch');
+
+    expect(AppConfig.tryInitializeSync()).toBeUndefined();
+
+    setBootstrap({ type: 'static', config: { ...baseConfig, clientType: 'mock' } });
+    expect(AppConfig.tryInitializeSync()).toBeUndefined();
+
+    setBootstrap({ type: 'remote', url: '/api/restful/app/config' });
+    const resolved = AppConfig.tryInitializeSync();
+    expect(resolved).toMatchObject({
+      clientType: 'rest',
+      apiBaseUrl: window.location.origin,
+      uiBaseUrl: window.location.origin,
+      googleOauth2Enabled: true,
+    });
+    expect(AppConfig.tryInitializeSync()).toBe(resolved);
+    expect(fetchSpy).not.toHaveBeenCalled();
+  });
 });
 
 describe('AppConfig settings', () => {

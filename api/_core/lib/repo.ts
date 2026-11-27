@@ -141,6 +141,17 @@ export interface MindmapRepository {
   createMap(user: RepoUser, input: CreateMapInput): Promise<MindmapRecord>;
   getMap(user: RepoUser, mapId: number): Promise<MindmapWithLabels>;
   getMapByPath(user: RepoUser, folderPath: string, title: string): Promise<MindmapWithLabels>;
+  getMapMetadataById?(
+    user: RepoUser,
+    mapId: number,
+    touchLastOpenTime: boolean,
+  ): Promise<MindmapRecord>;
+  getMapMetadataByPath?(
+    user: RepoUser,
+    folderPath: string,
+    title: string,
+    touchLastOpenTime: boolean,
+  ): Promise<MindmapRecord>;
   getMapXml(user: RepoUser, mapId: number): Promise<{ xml: string; version: number }>;
   touchLastOpenTime?(user: RepoUser, mapId: number): Promise<string>;
   updateDocument(
@@ -665,6 +676,76 @@ export class PgMindmapRepository implements MindmapRepository {
         throw new NotFoundOrForbiddenError();
       }
       return toIso(row.last_open_time);
+    });
+  }
+
+  /**
+   * Fetches map metadata (and optionally touches `last_open_time`) in a single DB transaction
+   * and single SQL statement, skipping unused label joins.
+   */
+  async getMapMetadataById(
+    user: RepoUser,
+    mapId: number,
+    touchLastOpenTime: boolean,
+  ): Promise<MindmapRecord> {
+    return this.runInTx(user, async (client) => {
+      const sql = touchLastOpenTime
+        ? `UPDATE public.mindmaps
+           SET last_open_time = NOW()
+           WHERE id = $1 AND owner_id = $2
+           RETURNING id, owner_id, title, description, folder_id, folder_path, xml, properties, starred, version,
+                     last_modification_by, creation_time, last_modification_time, last_open_time`
+        : `SELECT id, owner_id, title, description, folder_id, folder_path, xml, properties, starred, version,
+                  last_modification_by, creation_time, last_modification_time, last_open_time
+           FROM public.mindmaps
+           WHERE id = $1 AND owner_id = $2
+           LIMIT 1`;
+      const res = await client.query<RawMindmapRow>(sql, [mapId, user.uid]);
+      const row = res.rows[0];
+      if (!row) {
+        throw new NotFoundOrForbiddenError();
+      }
+      return mapMindmapRow(row);
+    });
+  }
+
+  /**
+   * Fetches map metadata by path (and optionally touches `last_open_time`) in a single DB
+   * transaction and single SQL statement, skipping unused label joins.
+   */
+  async getMapMetadataByPath(
+    user: RepoUser,
+    folderPath: string,
+    title: string,
+    touchLastOpenTime: boolean,
+  ): Promise<MindmapRecord> {
+    const normalizedTitle = title.trim();
+    if (!normalizedTitle) {
+      throw new NotFoundOrForbiddenError();
+    }
+    const normalizedPath = normalizeFolderPath(folderPath);
+    return this.runInTx(user, async (client) => {
+      const sql = touchLastOpenTime
+        ? `UPDATE public.mindmaps
+           SET last_open_time = NOW()
+           WHERE owner_id = $1 AND folder_path = $2 AND title = $3
+           RETURNING id, owner_id, title, description, folder_id, folder_path, xml, properties, starred, version,
+                     last_modification_by, creation_time, last_modification_time, last_open_time`
+        : `SELECT id, owner_id, title, description, folder_id, folder_path, xml, properties, starred, version,
+                  last_modification_by, creation_time, last_modification_time, last_open_time
+           FROM public.mindmaps
+           WHERE owner_id = $1 AND folder_path = $2 AND title = $3
+           LIMIT 1`;
+      const res = await client.query<RawMindmapRow>(sql, [
+        user.uid,
+        normalizedPath,
+        normalizedTitle,
+      ]);
+      const row = res.rows[0];
+      if (!row) {
+        throw new NotFoundOrForbiddenError();
+      }
+      return mapMindmapRow(row);
     });
   }
 

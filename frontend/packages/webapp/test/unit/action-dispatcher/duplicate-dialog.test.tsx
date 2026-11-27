@@ -25,6 +25,9 @@ const mockUseFetchMapById = jest.fn();
 jest.mock('../../../src/classes/middleware', () => ({
   useFetchMapById: (id: number) => mockUseFetchMapById(id),
 }));
+jest.mock('../../../src/utils/editorPreload', () => ({
+  preloadEditorResources: jest.fn().mockResolvedValue(undefined),
+}));
 
 import DuplicateDialog from '../../../src/components/maps-page/action-dispatcher/duplicate-dialog';
 import Client, {

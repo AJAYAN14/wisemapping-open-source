@@ -165,6 +165,28 @@ export default defineConfig(({ mode }) => {
       sourcemap: true,
       minify: 'esbuild', // Vite uses esbuild by default which is faster, but we can be explicit
       chunkSizeWarningLimit: 2000, // Adjust as needed based on webpack performance hints
+      rollupOptions: {
+        output: {
+          manualChunks(id: string) {
+            if (!id.includes('node_modules')) {
+              return undefined;
+            }
+            if (
+              id.includes('/react/') ||
+              id.includes('/react-dom/') ||
+              id.includes('/react-router/') ||
+              id.includes('/react-intl/') ||
+              id.includes('/@tanstack/react-query/')
+            ) {
+              return 'react-vendor';
+            }
+            if (id.includes('/@mui/') || id.includes('/@emotion/')) {
+              return 'mui-vendor';
+            }
+            return undefined;
+          },
+        },
+      },
     },
     // Mimic webpack's production mode optimization where appropriate
     // Vite handles minification and tree-shaking automatically in build mode

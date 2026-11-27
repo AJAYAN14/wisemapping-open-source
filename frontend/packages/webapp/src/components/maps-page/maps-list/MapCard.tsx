@@ -16,7 +16,7 @@
  *   limitations under the License.
  */
 
-import React, { memo } from 'react';
+import React, { memo, use } from 'react';
 import { useIntl } from 'react-intl';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
@@ -24,8 +24,11 @@ import Tooltip from '@mui/material/Tooltip';
 import CheckBoxOutlineBlankRoundedIcon from '@mui/icons-material/CheckBoxOutlineBlankRounded';
 import CheckBoxRoundedIcon from '@mui/icons-material/CheckBoxRounded';
 import { MapInfo } from '../../../classes/client';
+import { ClientContext } from '../../../classes/provider/client-context';
 import { useDate } from '../../../classes/app-i18n/dates';
 import { buildMapEditPath } from '../../../utils/mapPath';
+import { handleSpaLinkClick } from '../../../utils/appNavigation';
+import { prefetchMapForOpen, preloadEditorResources } from '../../../utils/editorPreload';
 import { formatMapSize } from '../../../utils/mapPreview';
 import { GoogleIcon } from '../../common/google-symbol';
 import type { MapItemHandlers } from './MapRow';
@@ -63,6 +66,8 @@ const MapCardComponent = ({
 }: MapCardProps): React.ReactElement => {
   const intl = useIntl();
   const date = useDate();
+  const client = use(ClientContext);
+  const editPath = buildMapEditPath(map.folderPath, map.title);
 
   // Both buttons sit inside the card's link: neither may follow it.
   const handleStar = (event: React.MouseEvent<HTMLButtonElement>): void => {
@@ -110,9 +115,18 @@ const MapCardComponent = ({
           </CardSelectBox>
         )}
         <CardLink
-          href={buildMapEditPath(map.folderPath, map.title)}
+          href={editPath}
           underline="none"
-          onClick={(e) => e.stopPropagation()}
+          onMouseEnter={() => {
+            void preloadEditorResources();
+          }}
+          onFocus={() => {
+            void preloadEditorResources();
+          }}
+          onPointerDown={() => {
+            prefetchMapForOpen(client, map.folderPath ?? '', map.title);
+          }}
+          onClick={(e) => handleSpaLinkClick(e, editPath)}
         >
           <CompactCardHeader
             avatar={

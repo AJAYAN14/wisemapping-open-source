@@ -31,6 +31,8 @@ import Input from '../../../form/input';
 import BaseDialog from '../base-dialog';
 import { ClientContext } from '../../../../classes/provider/client-context';
 import { buildMapEditPath, validateMapTitleInput } from '../../../../utils/mapPath';
+import { navigateTo } from '../../../../utils/appNavigation';
+import { preloadEditorResources } from '../../../../utils/editorPreload';
 
 export type CreateModel = {
   title: string;
@@ -52,6 +54,7 @@ const CreateDialog = ({ onClose, folderId }: CreateProps): React.ReactElement =>
 
   const mutation = useMutation<{ folderPath: string; title: string }, ErrorInfo, CreateModel>({
     mutationFn: async (model: CreateModel) => {
+      void preloadEditorResources();
       const mapId = await client.createMap({
         ...model,
         ...(folderId !== undefined ? { folderId } : {}),
@@ -60,7 +63,7 @@ const CreateDialog = ({ onClose, folderId }: CreateProps): React.ReactElement =>
       return { folderPath: meta.folderPath ?? '', title: meta.title };
     },
     onSuccess: ({ folderPath, title }) => {
-      window.location.href = buildMapEditPath(folderPath, title);
+      navigateTo(buildMapEditPath(folderPath, title));
     },
     onError: (error) => {
       setError(error);

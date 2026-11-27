@@ -27,7 +27,7 @@ import {
   VersionConflictError,
 } from './lib/repo.js';
 import { getDbPool } from './lib/db.js';
-import type { MindmapRepository, MindmapWithLabels, RepoUser } from './lib/repo.js';
+import type { MindmapRecord, MindmapRepository, RepoUser } from './lib/repo.js';
 import { extractMapPreview } from './lib/preview.js';
 import {
   MAP_ASSETS_BUCKET,
@@ -62,7 +62,7 @@ const VALID_LOCALE_REGEX = /^[a-z]{2}(?:-[A-Z]{2})?$/;
 function buildMapMetadataResponse(
   req: Request,
   user: RepoUser,
-  map: MindmapWithLabels,
+  map: MindmapRecord,
   includeXml: boolean,
 ): Response {
   return jsonResponse(
@@ -672,10 +672,15 @@ export function createApiHandler(
         }
         const folderPath = url.searchParams.get('folderPath') ?? '';
         const includeXml = url.searchParams.get('xml')?.toLowerCase() === 'true';
-        const map = await repo.getMapByPath(user, folderPath, title);
-        if (includeXml && repo.touchLastOpenTime) {
-          map.lastOpenTime = await repo.touchLastOpenTime(user, map.id);
-        }
+        const map = repo.getMapMetadataByPath
+          ? await repo.getMapMetadataByPath(user, folderPath, title, includeXml)
+          : await (async () => {
+              const found = await repo.getMapByPath(user, folderPath, title);
+              if (includeXml && repo.touchLastOpenTime) {
+                found.lastOpenTime = await repo.touchLastOpenTime(user, found.id);
+              }
+              return found;
+            })();
         return buildMapMetadataResponse(req, user, map, includeXml);
       }
 
@@ -749,10 +754,15 @@ export function createApiHandler(
       if (metadataMatch && method === 'GET') {
         const mapId = parsePositiveInt(metadataMatch[1], 'mapId');
         const includeXml = url.searchParams.get('xml')?.toLowerCase() === 'true';
-        const map = await repo.getMap(user, mapId);
-        if (includeXml && repo.touchLastOpenTime) {
-          map.lastOpenTime = await repo.touchLastOpenTime(user, map.id);
-        }
+        const map = repo.getMapMetadataById
+          ? await repo.getMapMetadataById(user, mapId, includeXml)
+          : await (async () => {
+              const found = await repo.getMap(user, mapId);
+              if (includeXml && repo.touchLastOpenTime) {
+                found.lastOpenTime = await repo.touchLastOpenTime(user, found.id);
+              }
+              return found;
+            })();
         return buildMapMetadataResponse(req, user, map, includeXml);
       }
 

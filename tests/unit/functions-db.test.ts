@@ -5,6 +5,7 @@ import {
   getDbPool,
   withUserDb,
 } from '../../api/_core/lib/db';
+import { PgMindmapRepository } from '../../api/_core/lib/repo';
 import type { PoolLike } from '../../api/_core/lib/db';
 
 const TEST_UID = '11111111-2222-4333-8444-555555555555';
@@ -141,5 +142,66 @@ describe('functions db pool config & RLS transaction wrapper', () => {
       withUserDb({ uid: 'not-a-uuid', email: 'a.jian0629@gmail.com' }, async () => {}, fakePool),
     ).rejects.toThrow(/UUID/);
     expect(connected).toBe(false);
+  });
+
+  it('fetches map metadata by path and id in a single transaction and single SQL statement', async () => {
+    const queries: string[] = [];
+    let connectCount = 0;
+
+    const fakeRow = {
+      id: 42,
+      owner_id: TEST_UID,
+      title: '架构规划',
+      description: '',
+      folder_id: null,
+      folder_path: '工作/',
+      xml: '<map/>',
+      properties: '{"zoom":0.8}',
+      starred: false,
+      version: 3,
+      last_modification_by: 'Owner',
+      creation_time: new Date('2026-01-01T00:00:00Z'),
+      last_modification_time: new Date('2026-01-02T00:00:00Z'),
+      last_open_time: new Date('2026-01-03T00:00:00Z'),
+    };
+
+    const fakePool: PoolLike = {
+      async connect() {
+        connectCount += 1;
+        return {
+          async query(text: string) {
+            queries.push(text);
+            if (text.includes('FROM public.mindmaps') || text.includes('UPDATE public.mindmaps')) {
+              return { rows: [fakeRow], rowCount: 1 } as never;
+            }
+            return { rows: [], rowCount: 0 } as never;
+          },
+          release() {},
+        } as never;
+      },
+    };
+
+    const repo = new PgMindmapRepository(fakePool);
+    const user = { uid: TEST_UID, email: 'a.jian0629@gmail.com', name: 'Owner' };
+
+    const byPathTouch = await repo.getMapMetadataByPath(user, '工作/', '架构规划', true);
+    expect(byPathTouch.id).toBe(42);
+    expect(connectCount).toBe(1);
+    const appQueries1 = queries.filter(
+      (q) => !q.startsWith('BEGIN') && !q.startsWith('COMMIT') && !q.includes('set_config') && !q.startsWith('SET LOCAL'),
+    );
+    expect(appQueries1).toHaveLength(1);
+    expect(appQueries1[0]).toContain('UPDATE public.mindmaps');
+    expect(appQueries1[0]).toContain('RETURNING');
+
+    queries.length = 0;
+    const byIdReadOnly = await repo.getMapMetadataById(user, 42, false);
+    expect(byIdReadOnly.title).toBe('架构规划');
+    expect(connectCount).toBe(2);
+    const appQueries2 = queries.filter(
+      (q) => !q.startsWith('BEGIN') && !q.startsWith('COMMIT') && !q.includes('set_config') && !q.startsWith('SET LOCAL'),
+    );
+    expect(appQueries2).toHaveLength(1);
+    expect(appQueries2[0]).toContain('SELECT id, owner_id');
   });
 });

@@ -54,8 +54,10 @@ import Redirect from './components/redirect';
 import AppConfig from './classes/app-config';
 import { useFetchAccount } from './classes/middleware';
 import { parseMapRouteSplat } from './utils/mapPath';
+import { registerRouterNavigate } from './utils/appNavigation';
+import { loadEditorPage } from './utils/editorPreload';
 
-const EditorPage = React.lazy(() => import('./components/editor-page'));
+const EditorPage = React.lazy(loadEditorPage);
 const MapsPage = React.lazy(() => import('./components/maps-page'));
 
 const LegacyMapWildcardRedirect = (): ReactElement => {
@@ -186,10 +188,25 @@ const AppWithTheme = (): ReactElement => {
     root.style.colorScheme = mode;
     root.style.backgroundColor = theme.palette.background.default;
   }, [mode, theme]);
-  const [router, setRouter] = useState<ReturnType<typeof createBrowserRouter>>();
+  const [router, setRouter] = useState<ReturnType<typeof createBrowserRouter> | undefined>(() => {
+    const syncConfig =
+      typeof AppConfig.tryInitializeSync === 'function' ? AppConfig.tryInitializeSync() : undefined;
+    return syncConfig ? buildRouter() : undefined;
+  });
   const [initializationError, setInitializationError] = useState<string>();
 
   useEffect(() => {
+    if (!router) {
+      return undefined;
+    }
+    registerRouterNavigate((to) => router.navigate?.(to));
+    return () => registerRouterNavigate(undefined);
+  }, [router]);
+
+  useEffect(() => {
+    if (router) {
+      return undefined;
+    }
     let cancelled = false;
 
     AppConfig.initialize()
@@ -213,7 +230,7 @@ const AppWithTheme = (): ReactElement => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [router]);
 
   // The theme wraps the whole app, the moments before the router is ready included: an empty
   // page rendered outside it showed the browser's white between the steps of signing in, also in

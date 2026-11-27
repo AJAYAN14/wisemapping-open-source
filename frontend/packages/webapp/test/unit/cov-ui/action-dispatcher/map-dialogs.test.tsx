@@ -34,6 +34,9 @@ jest.mock('../../../../src/classes/middleware', () => ({
   ...jest.requireActual('../../../../src/classes/middleware'),
   useFetchMapById: (id: number) => mockUseFetchMapById(id),
 }));
+jest.mock('../../../../src/utils/editorPreload', () => ({
+  preloadEditorResources: jest.fn().mockResolvedValue(undefined),
+}));
 
 import RenameDialog from '../../../../src/components/maps-page/action-dispatcher/rename-dialog';
 import DeleteDialog from '../../../../src/components/maps-page/action-dispatcher/delete-dialog';

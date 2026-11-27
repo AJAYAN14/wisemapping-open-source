@@ -16,6 +16,10 @@
  *   limitations under the License.
  */
 
+jest.mock('../../../src/utils/editorPreload', () => ({
+  loadEditorPage: jest.fn().mockResolvedValue({ default: () => null }),
+}));
+
 import type { LoaderFunctionArgs } from 'react-router';
 import AppConfig from '../../../src/classes/app-config';
 import Client, { MapMetadata } from '../../../src/classes/client';

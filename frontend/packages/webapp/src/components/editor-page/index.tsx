@@ -228,11 +228,14 @@ const LoadedEditorPage = ({
   const handleVersionConflict = useCallback(() => {
     setVersionConflict(true);
     queryClient.invalidateQueries({ queryKey: ['maps', 'metadata', mapId] });
+    queryClient.invalidateQueries({ queryKey: ['maps', 'metadata-by-path'] });
   }, [mapId]);
 
   useEffect(() => {
     return () => {
       queryClient.invalidateQueries({ queryKey: ['maps', 'metadata', mapId] });
+      queryClient.invalidateQueries({ queryKey: ['maps', 'metadata-by-path'] });
+      queryClient.invalidateQueries({ queryKey: ['maps'] });
     };
   }, [mapId]);
 

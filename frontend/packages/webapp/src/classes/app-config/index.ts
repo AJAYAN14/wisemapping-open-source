@@ -48,6 +48,26 @@ class AppConfig {
       }
     | undefined;
 
+  static tryInitializeSync(): Config | undefined {
+    if (this._config) {
+      return this._config;
+    }
+
+    const windowWithConfig = window as unknown as { BoostrapConfig?: ConfigContainer };
+    const extConfig = windowWithConfig.BoostrapConfig;
+    if (!extConfig) {
+      return undefined;
+    }
+
+    const resolved = this.resolveSyncConfig(extConfig);
+    if (!resolved || this.usesMockClient(resolved)) {
+      return undefined;
+    }
+
+    this._config = resolved;
+    return resolved;
+  }
+
   static async initialize(): Promise<Config> {
     if (this._config) {
       return this._config;
@@ -89,6 +109,36 @@ class AppConfig {
     return this._config;
   }
 
+  /**
+   * Resolves configuration synchronously when either static config is embedded or
+   * the remote endpoint is the same-origin `/api/restful/app/config` path whose
+   * fields are purely derived from `window.location.origin`.
+   */
+  private static resolveSyncConfig(extConfig: ConfigContainer): Config | undefined {
+    if (extConfig.type === 'static') {
+      return extConfig.config;
+    }
+
+    if (
+      extConfig.type === 'remote' &&
+      extConfig.url === '/api/restful/app/config' &&
+      typeof window !== 'undefined' &&
+      /^https?:$/i.test(window.location.protocol)
+    ) {
+      const origin = window.location.origin;
+      return {
+        apiBaseUrl: origin,
+        uiBaseUrl: origin,
+        clientType: 'rest',
+        googleOauth2Url: `${origin}/oauth2/authorization/google`,
+        googleOauth2Enabled: true,
+        jwtExpirationMin: 10080,
+      };
+    }
+
+    return undefined;
+  }
+
   private static async loadConfig(): Promise<Config> {
     // Dynamic import for BootstrapConfig
     const windowWithConfig = window as unknown as { BoostrapConfig?: ConfigContainer };
@@ -98,9 +148,9 @@ class AppConfig {
       );
     }
     const extConfig: ConfigContainer = windowWithConfig.BoostrapConfig;
-    if (extConfig.type === 'static') {
-      // Configuration has been defined as part of webpack ...
-      return extConfig.config;
+    const syncResolved = this.resolveSyncConfig(extConfig);
+    if (syncResolved) {
+      return syncResolved;
     }
 
     // Configuration must be fetched externally ...

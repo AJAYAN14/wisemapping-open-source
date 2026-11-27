@@ -28,6 +28,7 @@ import AppI18n from '../../classes/app-i18n';
 import I18nMsg from '@wisemapping/editor/classes/i18n-msg';
 import { appLogger as log } from '../../utils/logger';
 import { parseMapRouteSplat } from '../../utils/mapPath';
+import { loadEditorPage } from '../../utils/editorPreload';
 
 export type EditorMetadata = {
   editorMode: EditorRenderMode;
@@ -69,7 +70,11 @@ const preloadEditorMessages = (): Promise<unknown> =>
 export const loader = (bootstrap = false) => {
   const loadMap = loadMapFor(bootstrap);
   return async (args: LoaderFunctionArgs): Promise<Response> => {
-    const [result] = await Promise.all([loadMap(args), preloadEditorMessages()]);
+    const [result] = await Promise.all([
+      loadMap(args),
+      preloadEditorMessages(),
+      loadEditorPage().catch(() => undefined),
+    ]);
     return result;
   };
 };
