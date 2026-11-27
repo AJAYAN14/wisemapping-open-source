@@ -11,6 +11,12 @@
       "value": "关闭"
     }
   ],
+  "action.create-unified": [
+    {
+      "type": 0,
+      "value": "新建"
+    }
+  ],
   "action.delete": [
     {
       "type": 0,

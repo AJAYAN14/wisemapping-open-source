@@ -18,6 +18,7 @@
 import React, { ErrorInfo, ReactElement, use, useEffect, useMemo } from 'react';
 import Alert from '@mui/material/Alert';
 import Box from '@mui/material/Box';
+import Divider from '@mui/material/Divider';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
@@ -33,7 +34,6 @@ import {
   PageContent,
   PageRoot,
   PrimaryToolbarButton,
-  SecondaryToolbarButton,
   WorkspaceTopBar,
 } from './styled';
 import { MapsList } from './maps-list';
@@ -52,7 +52,6 @@ import { useFetchAccount } from '../../classes/middleware';
 import MenuRoundedIcon from '@mui/icons-material/MenuRounded';
 
 import AddCircleRoundedIcon from '@mui/icons-material/AddCircleRounded';
-import CloudUploadRoundedIcon from '@mui/icons-material/CloudUploadRounded';
 import CreateNewFolderRoundedIcon from '@mui/icons-material/CreateNewFolderRounded';
 import FolderRoundedIcon from '@mui/icons-material/FolderRounded';
 import InsertDriveFileRoundedIcon from '@mui/icons-material/InsertDriveFileRounded';
@@ -131,7 +130,7 @@ const MapsPage = (): ReactElement => {
   );
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const folderInputRef = React.useRef<HTMLInputElement>(null);
-  const [importMenuAnchor, setImportMenuAnchor] = React.useState<null | HTMLElement>(null);
+  const [createMenuAnchor, setCreateMenuAnchor] = React.useState<null | HTMLElement>(null);
   const [isDraggingOver, setIsDraggingOver] = React.useState(false);
   const dragCounter = React.useRef(0);
   const duplicateResolverRef = React.useRef<
@@ -764,78 +763,44 @@ const MapsPage = (): ReactElement => {
   );
 
   const toolbarActions = (
-    <>
-      <Tooltip
-        arrow={true}
-        title={intl.formatMessage({
-          id: 'maps.create-tooltip',
-          defaultMessage: 'Create a new mindmap',
-        })}
+    <Tooltip
+      arrow={true}
+      title={intl.formatMessage({
+        id: 'maps.create-tooltip',
+        defaultMessage: '新建导图、文件夹或导入',
+      })}
+    >
+      <PrimaryToolbarButton
+        color="primary"
+        data-testid="create"
+        size="medium"
+        variant="contained"
+        type="button"
+        disableElevation={true}
+        aria-haspopup="menu"
+        aria-expanded={Boolean(createMenuAnchor)}
+        startIcon={<AddCircleRoundedIcon />}
+        endIcon={
+          <KeyboardArrowDownRoundedIcon
+            sx={{
+              fontSize: 18,
+              ml: -0.5,
+              opacity: 0.85,
+              transition: 'transform 200ms cubic-bezier(0.32, 0.72, 0, 1)',
+              transform: createMenuAnchor ? 'rotate(180deg)' : 'none',
+              '@media (prefers-reduced-motion: reduce)': {
+                transition: 'none',
+              },
+            }}
+          />
+        }
+        onClick={(e) => setCreateMenuAnchor(e.currentTarget)}
       >
-        <PrimaryToolbarButton
-          color="primary"
-          data-testid="create"
-          size="medium"
-          variant="contained"
-          type="button"
-          disableElevation={true}
-          startIcon={<AddCircleRoundedIcon />}
-          onClick={() => setActiveDialog('create')}
-        >
-          <span className="message">
-            <FormattedMessage id="action.new" defaultMessage="New map" />
-          </span>
-        </PrimaryToolbarButton>
-      </Tooltip>
-
-      {filter.type === 'folder' && (
-        <Tooltip
-          arrow={true}
-          title={intl.formatMessage({
-            id: 'folder.new',
-            defaultMessage: '新建文件夹',
-          })}
-        >
-          <SecondaryToolbarButton
-            data-testid="create-folder"
-            size="medium"
-            variant="text"
-            type="button"
-            disableElevation={true}
-            startIcon={<CreateNewFolderRoundedIcon />}
-            onClick={() => setFolderDialog({ mode: 'create', parentId: activeFolderId })}
-          >
-            <span className="message">
-              <FormattedMessage id="folder.new" defaultMessage="新建文件夹" />
-            </span>
-          </SecondaryToolbarButton>
-        </Tooltip>
-      )}
-
-      <Tooltip
-        arrow={true}
-        title={intl.formatMessage({
-          id: 'maps.import-desc',
-          defaultMessage: 'Import from other tools',
-        })}
-      >
-        <SecondaryToolbarButton
-          size="medium"
-          variant="text"
-          type="button"
-          disableElevation={true}
-          startIcon={<CloudUploadRoundedIcon />}
-          endIcon={
-            <KeyboardArrowDownRoundedIcon sx={{ fontSize: 18, ml: -0.5, opacity: 0.7 }} />
-          }
-          onClick={(e) => setImportMenuAnchor(e.currentTarget)}
-        >
-          <span className="message">
-            <FormattedMessage id="action.import" defaultMessage="Import" />
-          </span>
-        </SecondaryToolbarButton>
-      </Tooltip>
-    </>
+        <span className="message">
+          <FormattedMessage id="action.create-unified" defaultMessage="新建" />
+        </span>
+      </PrimaryToolbarButton>
+    </Tooltip>
   );
 
   const container = document !== undefined ? () => document.body : undefined;
@@ -920,9 +885,12 @@ const MapsPage = (): ReactElement => {
           </Box>
         )}
         <Menu
-          anchorEl={importMenuAnchor}
-          open={Boolean(importMenuAnchor)}
-          onClose={() => setImportMenuAnchor(null)}
+          id="create-action-menu"
+          anchorEl={createMenuAnchor}
+          open={Boolean(createMenuAnchor)}
+          onClose={() => setCreateMenuAnchor(null)}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
+          transformOrigin={{ vertical: 'top', horizontal: 'left' }}
           slotProps={{
             paper: {
               elevation: 0,
@@ -931,7 +899,7 @@ const MapsPage = (): ReactElement => {
                 return {
                   mt: 0.75,
                   borderRadius: '14px',
-                  minWidth: 190,
+                  minWidth: 204,
                   p: 0.6,
                   color: c.textPrimary,
                   boxShadow: c.shadowFloat,
@@ -945,6 +913,12 @@ const MapsPage = (): ReactElement => {
                   },
                   '& .MuiMenuItem-root': {
                     borderRadius: '8px',
+                    py: 1,
+                    px: 1.25,
+                    gap: 1.25,
+                    fontSize: '0.86rem',
+                    fontWeight: 600,
+                    transition: 'background-color 120ms ease',
                     '&:hover': {
                       backgroundColor: c.hoverFill,
                     },
@@ -955,33 +929,84 @@ const MapsPage = (): ReactElement => {
           }}
         >
           <MenuItem
+            data-testid="menu-create-map"
             onClick={() => {
-              setImportMenuAnchor(null);
+              setCreateMenuAnchor(null);
+              setActiveDialog('create');
+            }}
+          >
+            <ListItemIcon sx={{ minWidth: 26, color: (theme) => appleColors(isDarkTheme(theme)).amber }}>
+              <AddCircleRoundedIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText
+              primary={<FormattedMessage id="action.new" defaultMessage="新建思维导图" />}
+              slotProps={{
+                primary: {
+                  sx: { fontSize: '0.86rem', fontWeight: 600, fontFamily: APPLE_FONT_STACK },
+                },
+              }}
+            />
+          </MenuItem>
+
+          <MenuItem
+            data-testid="menu-create-folder"
+            onClick={() => {
+              setCreateMenuAnchor(null);
+              setFolderDialog({ mode: 'create', parentId: activeFolderId });
+            }}
+          >
+            <ListItemIcon sx={{ minWidth: 26, color: 'text.secondary' }}>
+              <CreateNewFolderRoundedIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText
+              primary={<FormattedMessage id="folder.new" defaultMessage="新建文件夹" />}
+              slotProps={{
+                primary: {
+                  sx: { fontSize: '0.86rem', fontWeight: 600, fontFamily: APPLE_FONT_STACK },
+                },
+              }}
+            />
+          </MenuItem>
+
+          <Divider sx={{ my: 0.6, borderColor: (theme) => appleColors(isDarkTheme(theme)).hairline }} />
+
+          <MenuItem
+            data-testid="menu-import-file"
+            onClick={() => {
+              setCreateMenuAnchor(null);
               fileInputRef.current?.click();
             }}
-            sx={{ borderRadius: '8px', py: 1, gap: 1.2 }}
           >
-            <ListItemIcon sx={{ minWidth: 26, color: 'text.primary' }}>
+            <ListItemIcon sx={{ minWidth: 26, color: 'text.secondary' }}>
               <InsertDriveFileRoundedIcon fontSize="small" />
             </ListItemIcon>
             <ListItemText
               primary="导入文件"
-              slotProps={{ primary: { sx: { fontSize: '13.5px', fontWeight: 500 } } }}
+              slotProps={{
+                primary: {
+                  sx: { fontSize: '0.86rem', fontWeight: 500, fontFamily: APPLE_FONT_STACK },
+                },
+              }}
             />
           </MenuItem>
+
           <MenuItem
+            data-testid="menu-import-folder"
             onClick={() => {
-              setImportMenuAnchor(null);
+              setCreateMenuAnchor(null);
               folderInputRef.current?.click();
             }}
-            sx={{ borderRadius: '8px', py: 1, gap: 1.2 }}
           >
-            <ListItemIcon sx={{ minWidth: 26, color: 'text.primary' }}>
+            <ListItemIcon sx={{ minWidth: 26, color: 'text.secondary' }}>
               <FolderRoundedIcon fontSize="small" />
             </ListItemIcon>
             <ListItemText
               primary="导入文件夹"
-              slotProps={{ primary: { sx: { fontSize: '13.5px', fontWeight: 500 } } }}
+              slotProps={{
+                primary: {
+                  sx: { fontSize: '0.86rem', fontWeight: 500, fontFamily: APPLE_FONT_STACK },
+                },
+              }}
             />
           </MenuItem>
         </Menu>

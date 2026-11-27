@@ -362,3 +362,12 @@
       - Added legacy redirects: `/c/maps` and `/c/maps/` redirect to `/`, and `/c/maps/*` redirects to `/*` via `LegacyMapWildcardRedirect`.
       - Added `/c/login` -> `/login` redirect while maintaining `/c/oauth-callback` and `/c/registration-google` route aliases so Google Cloud Console / Supabase authorized redirect URIs remain completely valid.
     - **Verification**: Updated and passed all affected frontend unit test suites (`map-path.test.ts`, `redirect.test.ts`, `app.test.tsx`, `loaders.test.ts`, `hooks.test.tsx`, `maps-list.test.tsx`, `maps-page.test.tsx`, `map-dialogs.test.tsx`, `login-page.test.tsx`, `oauth-callback-flows.test.tsx`, `error-page.test.tsx`, `layout.test.tsx`, `menus.test.tsx`, `session-expired-dialog.test.tsx`, `maps-page-loader.test.ts`), root repository setup tests (`m1-repo-setup.test.ts`), root unit suite (`test:unit`, 64/64 passed), and confirmed clean Vite production build.
+63. **Unified Google Drive-Style Creation Dropdown & Responsive Space Optimization (`maps-page/index.tsx`, `lang/`)**
+    - **Eliminated Multi-Button Sprawl & Released ~230px Horizontal Space**: Merged three scattered toolbar actions (`+ 新建导图`, `新建文件夹`, `导入 ▾`) into a single high-contrast amber `[+ 新建 ▾]` capsule button (`PrimaryToolbarButton`), reducing the right action cluster from 6 controls (~720px) to 4 controls (~470px).
+    - **Google Drive Progressive Disclosure Menu**: Clicking `+ 新建` opens a unified Apple-glass dropdown menu containing:
+      - `新建思维导图` (`AddCircleRoundedIcon`, amber brand accent)
+      - `新建文件夹` (`CreateNewFolderRoundedIcon`, creates child folder inside active folder or root)
+      - Divider
+      - `导入文件...` (`InsertDriveFileRoundedIcon`, triggers native OS file picker)
+      - `导入文件夹...` (`FolderRoundedIcon`, triggers folder picker)
+    - **Responsive & Mobile Polish**: On mobile/small viewports (`down('sm')`), the button text and dropdown arrow hide gracefully via `mobileAppbarButton`, presenting a crisp `44×44px` touch-friendly `[+]` button, eliminating the row of ambiguous icon squares and catastrophic multi-line toolbar wrapping on tablets and split screens. Added smooth `200ms` chevron rotation micro-interaction on open.

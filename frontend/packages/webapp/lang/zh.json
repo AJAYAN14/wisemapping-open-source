@@ -5,6 +5,9 @@
   "action.close-button": {
     "defaultMessage": "关闭"
   },
+  "action.create-unified": {
+    "defaultMessage": "新建"
+  },
   "action.delete": {
     "defaultMessage": "删除"
   },
