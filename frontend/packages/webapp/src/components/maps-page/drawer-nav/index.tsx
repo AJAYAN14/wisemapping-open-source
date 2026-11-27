@@ -18,6 +18,7 @@
 import React, { ReactElement } from 'react';
 import Box from '@mui/material/Box';
 import List from '@mui/material/List';
+import Tooltip from '@mui/material/Tooltip';
 import NavigateBeforeRoundedIcon from '@mui/icons-material/NavigateBeforeRounded';
 import NavigateNextRoundedIcon from '@mui/icons-material/NavigateNextRounded';
 
@@ -96,36 +97,80 @@ const DrawerNav = ({
     <DrawerContent>
       <LogoBox
         key="logo"
-        sx={!drawerOpen ? { padding: '14px 6px', justifyContent: 'center', gap: '2px' } : undefined}
+        sx={
+          !drawerOpen
+            ? {
+                padding: '10px 0',
+                justifyContent: 'center',
+                alignItems: 'center',
+                minHeight: '60px',
+              }
+            : undefined
+        }
       >
-        <LogoIcon
-          src={logoIcon}
-          alt={intl.formatMessage({ id: 'common.logo', defaultMessage: 'WiseMapping logo' })}
-          sx={!drawerOpen ? { height: '22px' } : undefined}
-        />
+        {!drawerOpen && !onToggleDesktopDrawer && (
+          <LogoIcon
+            src={logoIcon}
+            alt={intl.formatMessage({ id: 'common.logo', defaultMessage: 'WiseMapping logo' })}
+            sx={{ height: '26px' }}
+          />
+        )}
         {drawerOpen && (
-          <LogoText>
-            <span className="logo-wise">wise</span>
-            <span className="logo-mapping">mapping</span>
-          </LogoText>
+          <>
+            <LogoIcon
+              src={logoIcon}
+              alt={intl.formatMessage({ id: 'common.logo', defaultMessage: 'WiseMapping logo' })}
+            />
+            <LogoText>
+              <span className="logo-wise">wise</span>
+              <span className="logo-mapping">mapping</span>
+            </LogoText>
+          </>
         )}
         {onToggleDesktopDrawer && (
-          <DesktopDrawerToggle
-            aria-label={intl.formatMessage({
-              id: 'common.open-drawer',
-              defaultMessage: 'Open drawer',
+          <Tooltip
+            arrow={true}
+            placement={drawerOpen ? 'bottom' : 'right'}
+            title={intl.formatMessage({
+              id: drawerOpen ? 'common.close-drawer' : 'common.open-drawer',
+              defaultMessage: drawerOpen ? '收起侧边栏' : '展开侧边栏',
             })}
-            onClick={onToggleDesktopDrawer}
-            id="open-desktop-drawer"
-            sx={
-              drawerOpen
-                ? { ml: 'auto', mr: 0 }
-                : { width: '26px', height: '26px', mr: 0, ml: '2px' }
-            }
           >
-            {!drawerOpen && <NavigateNextRoundedIcon />}
-            {drawerOpen && <NavigateBeforeRoundedIcon />}
-          </DesktopDrawerToggle>
+            <DesktopDrawerToggle
+              aria-label={intl.formatMessage({
+                id: drawerOpen ? 'common.close-drawer' : 'common.open-drawer',
+                defaultMessage: drawerOpen ? 'Close drawer' : 'Open drawer',
+              })}
+              onClick={onToggleDesktopDrawer}
+              id="open-desktop-drawer"
+              sx={
+                drawerOpen
+                  ? { ml: 'auto', mr: 0 }
+                  : {
+                      width: '44px',
+                      height: '44px',
+                      margin: '0 auto',
+                      borderRadius: '12px',
+                      position: 'relative',
+                    }
+              }
+            >
+              {!drawerOpen ? (
+                <>
+                  <img
+                    src={logoIcon}
+                    alt={intl.formatMessage({ id: 'common.logo', defaultMessage: 'WiseMapping logo' })}
+                    className="collapsed-logo"
+                  />
+                  <span className="collapsed-expand-icon">
+                    <NavigateNextRoundedIcon />
+                  </span>
+                </>
+              ) : (
+                <NavigateBeforeRoundedIcon />
+              )}
+            </DesktopDrawerToggle>
+          </Tooltip>
         )}
       </LogoBox>
 

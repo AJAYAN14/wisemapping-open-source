@@ -59,7 +59,7 @@ import InsertDriveFileRoundedIcon from '@mui/icons-material/InsertDriveFileRound
 import KeyboardArrowDownRoundedIcon from '@mui/icons-material/KeyboardArrowDownRounded';
 import LabelRoundedIcon from '@mui/icons-material/LabelRounded';
 import GridViewRoundedIcon from '@mui/icons-material/GridViewRounded';
-import StarRateRoundedIcon from '@mui/icons-material/StarRateRounded';
+import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import Tooltip from '@mui/material/Tooltip';
 
 import LabelDeleteConfirm from './maps-list/label-delete-confirm';
@@ -733,7 +733,7 @@ const MapsPage = (): ReactElement => {
     {
       filter: { type: 'starred' },
       label: intl.formatMessage({ id: 'maps.nav-starred', defaultMessage: 'Starred' }),
-      icon: <StarRateRoundedIcon />,
+      icon: <StarRoundedIcon />,
     },
   ];
 

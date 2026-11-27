@@ -136,6 +136,7 @@ const StyleListItem = (props: ListItemProps): ReactElement => {
         {typeof count === 'number' && count > 0 && (
           <Box
             component="span"
+            className="filter-count-badge"
             sx={(theme) => {
               const c = appleColors(isDarkTheme(theme));
               return {
