@@ -6,7 +6,16 @@
 
 ---
 
-## Latest Fixes (v6.0.28)
+## Latest Fixes (v6.0.29)
+
+- **Homepage Anti-Slop & Visual Unification (`appleDesign.ts`, `maps-page/`, `index.html`)**:
+  - **Tokens & Layer Restraint**: Unified neutral canvas (`#F5F5F7` / `#0D0D10`), surface (`#FFFFFF` / `#1A1A1E`), strict 3-step border-radius scale (`12px` / `8px` / `6px`), and single charcoal primary CTA (`#18181B` / `#F4F4F5`) with high-contrast text, keeping warm amber solely for active/selected/starred states. Made desktop `PageContent` transparent so cards sit at most 2 layers deep on the canvas.
+  - **Google Fonts Material Symbols Rounded (`common/google-symbol/`, `index.html`)**: Replaced all `@mui/icons-material/*` icons across the homepage (`maps-page`, `drawer-nav`, `account-menu`, `action-chooser`, `maps-list`) with Google Fonts `Material Symbols Rounded` ligature glyphs with fixed `1em x 1em` box metrics and smooth `FILL` transitions. Removed `QuickIconBadge` indigo/yellow gradients and drop shadows in `account-menu/index.tsx`.
+  - **Card Baseline Alignment & Restrained Mini-Previews (`MapGridCard.tsx`, `MindmapMiniPreview.tsx`)**: Placed `GridCardTitle` first at the top of `GridCardBody` with `GridCardMeta` pinned at the bottom (`marginTop: auto`) so titles stay aligned across grid rows regardless of folder path presence; removed candy-purple/blue colors from `MindmapMiniPreview.tsx`.
+  - **Motion & React Performance (`styled.ts`, `MapGridCard.tsx`, `MapCard.tsx`)**: Standardized `EASE_OUT` (`cubic-bezier(0.23, 1, 0.32, 1)`), removed high-frequency `translateY` keyframes from `ViewTransitionStage`, gated card hover states behind `@media (hover: hover) and (pointer: fine)`, hoisted inline `sx` styles to styled components, and added `content-visibility: auto` on `GridCardRoot`.
+  - **Skeleton Parity (`MapsListSkeleton.tsx`, `skeleton.styled.ts`)**: Aligned `MapsPageLoading` and `GridCardSkeleton` with the new layout, toolbar segmented tabs/CTA/view-toggle/sort controls, collapsed sidebar footer placeholders, and stored `mapsListViewMode` (`grid` vs `list`) to eliminate loading layout shift.
+
+## Previous Fixes (v6.0.28)
 
 - **Font Consistency Fix (`appleDesign.ts`, `theme/index.ts`)**: Removed Japanese rounded font (`"Hiragino Maru Gothic ProN"`) and non-standard fallbacks; standardized on Apple and Chinese system fonts (`-apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑"`), resolving font mismatch between `导入文件` and `导入文件夹`.
 - **Logo & Toggle Button Overlap Fix (`styled.ts`, `maps-page/index.tsx`, `drawer-nav/index.tsx`)**: Removed `zIndex: 1300` from `MobileDrawerToggle` and `DesktopDrawerToggle` which caused the mobile hamburger menu icon to sit on top of the open drawer's `LogoBox` (MUI Drawer zIndex: 1200). Added `display: none` to `WorkspaceTopBar` when `mobileDrawerOpen === true`, and added a mobile close button inside `LogoBox`.

@@ -16,19 +16,25 @@
  *   limitations under the License.
  */
 
-import AppBar from '@mui/material/AppBar';
 import Paper from '@mui/material/Paper';
 import Skeleton from '@mui/material/Skeleton';
 import TableCell from '@mui/material/TableCell';
 import TableContainer from '@mui/material/TableContainer';
 import Toolbar from '@mui/material/Toolbar';
 import { alpha, styled } from '@mui/material/styles';
-import { APPLE_FONT_STACK, appleColors, glassMaterialMixin, isDarkTheme } from '../appleDesign';
+import {
+  APPLE_FONT_STACK,
+  RADIUS_LG,
+  RADIUS_MD,
+  RADIUS_SM,
+  appleColors,
+  isDarkTheme,
+} from '../appleDesign';
 
 // The loading placeholder of the map page (see MapsListSkeleton).
 
-const DRAWER_WIDTH_EXPANDED = 240;
-const DRAWER_WIDTH_COLLAPSED = 68;
+const DRAWER_WIDTH_EXPANDED = 236;
+const DRAWER_WIDTH_COLLAPSED = 64;
 
 const notExpanded = (prop: PropertyKey): boolean => prop !== 'expanded';
 
@@ -40,9 +46,9 @@ const drawerWidthOf = (expanded: boolean): number =>
   expanded ? DRAWER_WIDTH_EXPANDED : DRAWER_WIDTH_COLLAPSED;
 
 export const DrawerSkeleton = styled(Skeleton)(({ theme }) => ({
-  backgroundColor: alpha(theme.palette.text.primary, 0.08),
+  backgroundColor: alpha(theme.palette.text.primary, 0.07),
   ...theme.applyStyles('dark', {
-    backgroundColor: alpha(theme.palette.common.white, 0.1),
+    backgroundColor: alpha(theme.palette.common.white, 0.09),
   }),
   '@media (prefers-reduced-motion: reduce)': {
     animation: 'none',
@@ -51,40 +57,6 @@ export const DrawerSkeleton = styled(Skeleton)(({ theme }) => ({
     },
   },
 }));
-
-export const LoadingAppBar = styled(AppBar, { shouldForwardProp: notExpanded })<ExpandedProps>(({
-  theme,
-  expanded,
-}) => {
-  const c = appleColors(isDarkTheme(theme));
-  const width = drawerWidthOf(expanded);
-  return {
-    '&&': {
-      ...glassMaterialMixin(c.headerGlass, c.headerSolid, 20),
-      boxShadow: 'none',
-      border: 'none',
-      borderBottom: `1px solid ${c.hairline}`,
-    },
-    marginLeft: width,
-    width: `calc(100% - ${width}px)`,
-    paddingTop: 'env(safe-area-inset-top, 0px)',
-    '& .MuiToolbar-root': {
-      backgroundColor: 'transparent',
-      minHeight: '3.75rem',
-      paddingLeft: 'max(20px, env(safe-area-inset-left, 0px))',
-      paddingRight: 'max(20px, env(safe-area-inset-right, 0px))',
-      gap: '8px',
-    },
-    [theme.breakpoints.down('sm')]: {
-      marginLeft: 0,
-      width: '100%',
-      '& .MuiToolbar-root': {
-        paddingLeft: 'max(12px, env(safe-area-inset-left, 0px))',
-        paddingRight: 'max(12px, env(safe-area-inset-right, 0px))',
-      },
-    },
-  };
-});
 
 export const LoadingContainer = styled('div')(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
@@ -111,7 +83,7 @@ export const LoadingDrawer = styled('div', { shouldForwardProp: notExpanded })<E
     flexShrink: 0,
     backgroundColor: c.surface,
     border: `1px solid ${c.hairline}`,
-    borderRadius: '16px',
+    borderRadius: RADIUS_LG,
     boxShadow: c.shadowSubtle,
     height: 'calc(100dvh - 24px)',
     display: 'flex',
@@ -127,17 +99,17 @@ export const LoadingDrawer = styled('div', { shouldForwardProp: notExpanded })<E
 
 export const LoadingDrawerLogo = styled('div', { shouldForwardProp: notExpanded })<ExpandedProps>(
   ({ expanded }) => ({
-    padding: '16px 16px 14px 16px',
+    padding: '14px 14px 12px 14px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: expanded ? 'flex-start' : 'center',
     gap: '10px',
-    minHeight: '60px',
+    minHeight: '56px',
   }),
 );
 
 export const LoadingDrawerSectionHeader = styled('div')({
-  padding: '10px 14px 4px 18px',
+  padding: '10px 14px 4px 14px',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
@@ -160,69 +132,94 @@ export const LoadingDrawerItem = styled('div', {
     alignItems: 'center',
     justifyContent: expanded ? 'flex-start' : 'center',
     gap: expanded ? '10px' : 0,
-    padding: expanded ? '8px 12px' : '8px 14px',
-    minHeight: '40px',
-    borderRadius: '12px',
-    margin: '2px 10px',
+    padding: expanded ? '7px 10px' : 0,
+    minHeight: expanded ? '36px' : '40px',
+    width: expanded ? 'auto' : '40px',
+    height: expanded ? 'auto' : '40px',
+    borderRadius: RADIUS_MD,
+    margin: expanded ? '2px 8px' : '2px auto',
     backgroundColor: selected ? c.amberSoft : 'transparent',
   };
 });
 
-export const LoadingDrawerUserCard = styled('div')(({ theme }) => {
-  const isDark = isDarkTheme(theme);
-  const c = appleColors(isDark);
-  return {
+export const LoadingDrawerFooter = styled('div', { shouldForwardProp: notExpanded })<ExpandedProps>(
+  ({ expanded }) => ({
     marginTop: 'auto',
-    margin: 'auto 10px 12px 10px',
-    padding: '10px 12px',
-    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
-    borderRadius: '12px',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: expanded ? 'stretch' : 'center',
+    gap: '6px',
+    paddingBottom: expanded ? '10px' : '12px',
+  }),
+);
+
+export const LoadingDrawerQuickGrid = styled('div')({
+  display: 'grid',
+  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+  gap: '6px',
+  margin: '0 8px',
+});
+
+export const LoadingDrawerQuickPill = styled('div')(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    height: '34px',
+    borderRadius: RADIUS_MD,
+    border: `1px solid ${c.hairline}`,
+    backgroundColor: c.surface,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '6px',
+    padding: '0 8px',
+  };
+});
+
+export const LoadingDrawerUserCard = styled('div')(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    margin: '0 8px',
+    padding: '8px 10px',
+    backgroundColor: c.hoverFill,
+    borderRadius: RADIUS_MD,
     border: `1px solid ${c.hairline}`,
     display: 'flex',
     alignItems: 'center',
-    gap: '10px',
+    gap: '9px',
   };
 });
 
-export const LoadingMainContent = styled('main')(({ theme }) => {
-  const c = appleColors(isDarkTheme(theme));
-  return {
-    flexGrow: 1,
-    minWidth: 0,
-    display: 'flex',
-    flexDirection: 'column',
-    boxSizing: 'border-box',
-    [theme.breakpoints.up('sm')]: {
-      backgroundColor: c.surface,
-      borderRadius: '16px',
-      border: `1px solid ${c.hairline}`,
-      boxShadow: c.shadowSubtle,
-      minHeight: 'calc(100dvh - 24px)',
-      paddingBottom: '24px',
-    },
-    [theme.breakpoints.down('sm')]: {
-      paddingTop: 'env(safe-area-inset-top, 0px)',
-      paddingBottom: 'max(2.5rem, env(safe-area-inset-bottom, 0px))',
-      paddingInlineStart: 'env(safe-area-inset-left, 0px)',
-      paddingInlineEnd: 'env(safe-area-inset-right, 0px)',
-    },
-  };
-});
-
-export const LoadingToolbarSpacer = styled('div')({
-  minHeight: 'calc(3.75rem + env(safe-area-inset-top, 0px))',
-});
+/** Transparent main workspace matching PageContent. */
+export const LoadingMainContent = styled('main')(({ theme }) => ({
+  flexGrow: 1,
+  minWidth: 0,
+  display: 'flex',
+  flexDirection: 'column',
+  boxSizing: 'border-box',
+  [theme.breakpoints.up('sm')]: {
+    backgroundColor: 'transparent',
+    minHeight: 'calc(100dvh - 24px)',
+    paddingTop: '6px',
+    paddingBottom: '28px',
+  },
+  [theme.breakpoints.down('sm')]: {
+    paddingTop: 'env(safe-area-inset-top, 0px)',
+    paddingBottom: 'max(2.5rem, env(safe-area-inset-bottom, 0px))',
+    paddingInlineStart: 'env(safe-area-inset-left, 0px)',
+    paddingInlineEnd: 'env(safe-area-inset-right, 0px)',
+  },
+}));
 
 export const LoadingSearchToolbar = styled(Toolbar)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
   flexWrap: 'wrap',
-  gap: '12px',
+  gap: '10px',
   padding: 0,
-  paddingTop: '14px',
-  paddingBottom: '18px',
-  minHeight: '56px',
+  paddingTop: '4px',
+  paddingBottom: '16px',
+  minHeight: '48px',
   boxShadow: 'none',
   backgroundColor: 'transparent',
   [theme.breakpoints.down('sm')]: {
@@ -233,16 +230,41 @@ export const LoadingSearchToolbar = styled(Toolbar)(({ theme }) => ({
   },
 }));
 
-export const LoadingHeadingCluster = styled('div')({
-  display: 'flex',
-  alignItems: 'center',
-  gap: '10px',
-  minWidth: 0,
+export const LoadingSegmentedGroup = styled('div')(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    display: 'inline-flex',
+    alignItems: 'center',
+    height: '34px',
+    boxSizing: 'border-box',
+    padding: '3px',
+    borderRadius: RADIUS_MD,
+    backgroundColor: c.hoverFill,
+    border: `1px solid ${c.hairline}`,
+    gap: '2px',
+  };
+});
+
+export const LoadingSegmentedTab = styled('div', {
+  shouldForwardProp: (prop) => prop !== 'active',
+})<{ active?: boolean }>(({ theme, active }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    height: '26px',
+    padding: '0 10px',
+    borderRadius: RADIUS_SM,
+    backgroundColor: active ? c.surface : 'transparent',
+    boxShadow: active ? c.shadowSubtle : 'none',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '6px',
+  };
 });
 
 export const LoadingSearchCluster = styled('div')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
+  gap: '8px',
   marginLeft: 'auto',
   [theme.breakpoints.down('sm')]: {
     flexBasis: '100%',
@@ -258,23 +280,39 @@ export const LoadingSearchBox = styled('div')(({ theme }) => {
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: '10px',
-    width: '248px',
-    height: '36px',
-    padding: '0 10px 0 12px',
-    borderRadius: '12px',
+    width: '220px',
+    height: '34px',
+    boxSizing: 'border-box',
+    padding: '0 10px 0 11px',
+    borderRadius: RADIUS_MD,
     backgroundColor: c.surface,
     border: `1px solid ${c.hairline}`,
-    boxShadow: c.shadowSubtle,
     [theme.breakpoints.down('sm')]: {
+      flex: 1,
       width: '100%',
     },
   };
 });
 
+export const LoadingToolbarPill = styled('div')(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    height: '34px',
+    boxSizing: 'border-box',
+    borderRadius: RADIUS_MD,
+    backgroundColor: c.surface,
+    border: `1px solid ${c.hairline}`,
+    display: 'inline-flex',
+    alignItems: 'center',
+    padding: '0 10px',
+    gap: '6px',
+  };
+});
+
 export const SkeletonBlock = styled(Skeleton)(({ theme }) => ({
-  backgroundColor: alpha(theme.palette.common.black, 0.08),
+  backgroundColor: alpha(theme.palette.common.black, 0.065),
   ...theme.applyStyles('dark', {
-    backgroundColor: alpha(theme.palette.common.white, 0.1),
+    backgroundColor: alpha(theme.palette.common.white, 0.085),
   }),
   '@media (prefers-reduced-motion: reduce)': {
     animation: 'none',
@@ -287,30 +325,30 @@ export const SkeletonBlock = styled(Skeleton)(({ theme }) => ({
 export const SkeletonAmberBlock = styled(SkeletonBlock)(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
-    backgroundColor: alpha(c.amber, isDarkTheme(theme) ? 0.24 : 0.2),
+    backgroundColor: alpha(c.amber, isDarkTheme(theme) ? 0.22 : 0.16),
   };
 });
 
 export const SkeletonButton = styled(SkeletonBlock)({
-  borderRadius: '12px',
+  borderRadius: RADIUS_MD,
 });
 
 export const SkeletonText = styled(SkeletonBlock)({
-  fontSize: '0.96rem',
+  fontSize: '0.9rem',
 });
 
-/** The table's card, as wide as the maps list it stands for. */
+/** The list container, matching ListPaper max-width and horizontal edges. */
 export const LoadingListPaper = styled(Paper)(({ theme }) => ({
   backgroundColor: 'transparent',
   width: '100%',
-  maxWidth: 'none',
+  maxWidth: '1440px',
   boxSizing: 'border-box',
-  margin: '0 0 8px 0',
-  paddingLeft: '28px',
-  paddingRight: '28px',
+  margin: '0 auto 8px auto',
+  paddingLeft: '24px',
+  paddingRight: '24px',
   [theme.breakpoints.down('md')]: {
-    paddingLeft: '20px',
-    paddingRight: '20px',
+    paddingLeft: '16px',
+    paddingRight: '16px',
   },
   [theme.breakpoints.down('sm')]: {
     marginTop: 0,
@@ -324,7 +362,7 @@ export const LoadingTableContainer = styled(TableContainer)(({ theme }) => {
   return {
     backgroundColor: c.surface,
     border: `1px solid ${c.hairline}`,
-    borderRadius: '18px',
+    borderRadius: RADIUS_LG,
     boxShadow: c.shadowSubtle,
     overflowX: 'auto',
     overflowY: 'hidden',
@@ -340,6 +378,36 @@ export const LoadingHeaderCell = styled(TableCell)(({ theme }) => {
     borderTop: 0,
     borderLeft: 0,
     borderRight: 0,
-    padding: '11px 14px',
+    padding: '10px 14px',
+  };
+});
+
+export const LoadingGrid = styled('div')({
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fill, minmax(236px, 1fr))',
+  gap: '16px',
+  width: '100%',
+});
+
+export const LoadingGridCard = styled('div')(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    display: 'flex',
+    flexDirection: 'column',
+    borderRadius: RADIUS_LG,
+    backgroundColor: c.surface,
+    border: `1px solid ${c.hairline}`,
+    boxShadow: c.shadowSubtle,
+    overflow: 'hidden',
+  };
+});
+
+export const LoadingGridPreview = styled('div')(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    width: '100%',
+    aspectRatio: '16 / 10',
+    borderBottom: `1px solid ${c.hairline}`,
+    backgroundColor: c.surfaceElevated,
   };
 });

@@ -22,7 +22,7 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemSecondaryAction from '@mui/material/ListItemSecondaryAction';
 import ListItemText from '@mui/material/ListItemText';
 import Tooltip from '@mui/material/Tooltip';
-import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import { GoogleIcon } from '../../common/google-symbol';
 import type { Filter, LabelFilter } from '../index';
 import { MAP_IDS_DRAG_MIME } from '../folderTree';
 import { APPLE_FONT_STACK, appleColors, isDarkTheme } from '../appleDesign';
@@ -164,7 +164,7 @@ const StyleListItem = (props: ListItemProps): ReactElement => {
               size="small"
               className="label-delete-button"
             >
-              <CloseRoundedIcon sx={{ fontSize: '1rem', color: 'inherit' }} />
+              <GoogleIcon name="close" size={16} />
             </DeleteLabelButton>
           </ListItemSecondaryAction>
         )}

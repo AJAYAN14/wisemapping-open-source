@@ -49,17 +49,8 @@ import { externalizeXmlInlineImages } from '../../utils/mapAssets';
 import { useLocaleMessages } from '../../classes/app-i18n/messages';
 import { useFetchAccount } from '../../classes/middleware';
 
-import MenuRoundedIcon from '@mui/icons-material/MenuRounded';
-
-import AddCircleRoundedIcon from '@mui/icons-material/AddCircleRounded';
-import CreateNewFolderRoundedIcon from '@mui/icons-material/CreateNewFolderRounded';
-import FolderRoundedIcon from '@mui/icons-material/FolderRounded';
-import InsertDriveFileRoundedIcon from '@mui/icons-material/InsertDriveFileRounded';
-import KeyboardArrowDownRoundedIcon from '@mui/icons-material/KeyboardArrowDownRounded';
-import LabelRoundedIcon from '@mui/icons-material/LabelRounded';
-import GridViewRoundedIcon from '@mui/icons-material/GridViewRounded';
-import StarRoundedIcon from '@mui/icons-material/StarRounded';
 import Tooltip from '@mui/material/Tooltip';
+import { GoogleIcon } from '../common/google-symbol';
 
 import LabelDeleteConfirm from './maps-list/label-delete-confirm';
 import {
@@ -70,7 +61,15 @@ import {
 } from './folder-dialogs';
 import { MAP_IDS_DRAG_MIME, getFolderPathString } from './folderTree';
 import DrawerNav, { ToolbarButtonInfo } from './drawer-nav';
-import { APPLE_FONT_STACK, appleColors, glassMaterialMixin, isDarkTheme } from './appleDesign';
+import {
+  APPLE_FONT_STACK,
+  EASE_OUT,
+  RADIUS_LG,
+  RADIUS_MD,
+  appleColors,
+  glassMaterialMixin,
+  isDarkTheme,
+} from './appleDesign';
 import { useSpringValue } from './useSpringValue';
 import { ClientContext } from '../../classes/provider/client-context';
 import { ScannedMapFile, scanFileList, scanDataTransferItems } from './directoryScanner';
@@ -727,12 +726,12 @@ const MapsPage = (): ReactElement => {
     {
       filter: { type: 'all' },
       label: intl.formatMessage({ id: 'maps.nav-all', defaultMessage: 'All' }),
-      icon: <GridViewRoundedIcon />,
+      icon: <GoogleIcon name="grid_view" size={18} />,
     },
     {
       filter: { type: 'starred' },
       label: intl.formatMessage({ id: 'maps.nav-starred', defaultMessage: 'Starred' }),
-      icon: <StarRoundedIcon />,
+      icon: <GoogleIcon name="star" size={18} filled={filter.type === 'starred'} />,
     },
   ];
 
@@ -740,7 +739,7 @@ const MapsPage = (): ReactElement => {
     filterButtons.push({
       filter: { type: 'label', label: l },
       label: l.title,
-      icon: <LabelRoundedIcon sx={{ color: l.color ? l.color : 'inherit' }} />,
+      icon: <GoogleIcon name="label" size={18} filled color={l.color ? l.color : undefined} />,
     }),
   );
 
@@ -783,18 +782,15 @@ const MapsPage = (): ReactElement => {
         disableElevation={true}
         aria-haspopup="menu"
         aria-expanded={Boolean(createMenuAnchor)}
-        startIcon={<AddCircleRoundedIcon />}
+        startIcon={<GoogleIcon name="add" size={18} />}
         endIcon={
-          <KeyboardArrowDownRoundedIcon
-            sx={{
-              fontSize: 18,
-              ml: -0.5,
-              opacity: 0.85,
-              transition: 'transform 200ms cubic-bezier(0.32, 0.72, 0, 1)',
+          <GoogleIcon
+            name="keyboard_arrow_down"
+            size={17}
+            style={{
+              opacity: 0.78,
+              transition: `transform 180ms ${EASE_OUT}`,
               transform: createMenuAnchor ? 'rotate(180deg)' : 'none',
-              '@media (prefers-reduced-motion: reduce)': {
-                transition: 'none',
-              },
             }}
           />
         }
@@ -841,11 +837,11 @@ const MapsPage = (): ReactElement => {
                 const c = appleColors(isDarkTheme(theme));
                 return {
                   p: 4,
-                  borderRadius: '24px',
+                  borderRadius: RADIUS_LG,
                   textAlign: 'center',
                   border: `1px solid ${c.hairline}`,
                   boxShadow: c.shadowFloat,
-                  ...glassMaterialMixin(c.sidebarGlass, c.surfaceElevated, 24),
+                  ...glassMaterialMixin(c.sidebarGlass, c.surfaceElevated, 20),
                   display: 'flex',
                   flexDirection: 'column',
                   alignItems: 'center',
@@ -854,23 +850,27 @@ const MapsPage = (): ReactElement => {
               }}
             >
               <Box
-                sx={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: '18px',
-                  background: 'linear-gradient(135deg, #FFB340 0%, #F59E0B 100%)',
-                  color: '#FFF',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
+                sx={(theme) => {
+                  const c = appleColors(isDarkTheme(theme));
+                  return {
+                    width: 56,
+                    height: 56,
+                    borderRadius: RADIUS_LG,
+                    backgroundColor: c.amberSoft,
+                    color: c.amberHover,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  };
                 }}
               >
-                <FolderRoundedIcon sx={{ fontSize: 36 }} />
+                <GoogleIcon name="folder_open" size={30} filled />
               </Box>
               <Typography
                 variant="h6"
                 sx={(theme) => ({
-                  fontWeight: 700,
+                  fontWeight: 600,
+                  fontSize: '1.05rem',
                   color: appleColors(isDarkTheme(theme)).textPrimary,
                 })}
               >
@@ -893,8 +893,8 @@ const MapsPage = (): ReactElement => {
           anchorEl={createMenuAnchor}
           open={Boolean(createMenuAnchor)}
           onClose={() => setCreateMenuAnchor(null)}
-          anchorOrigin={{ vertical: 'bottom', horizontal: 'left' }}
-          transformOrigin={{ vertical: 'top', horizontal: 'left' }}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+          transformOrigin={{ vertical: 'top', horizontal: 'right' }}
           slotProps={{
             paper: {
               elevation: 0,
@@ -902,26 +902,26 @@ const MapsPage = (): ReactElement => {
                 const c = appleColors(isDarkTheme(theme));
                 return {
                   mt: 0.75,
-                  borderRadius: '14px',
-                  minWidth: 204,
-                  p: 0.6,
+                  borderRadius: RADIUS_LG,
+                  minWidth: 196,
+                  p: 0.5,
                   color: c.textPrimary,
                   boxShadow: c.shadowFloat,
                   border: `1px solid ${c.hairline}`,
                   fontFamily: APPLE_FONT_STACK,
-                  ...glassMaterialMixin(c.sidebarGlass, c.surfaceElevated, 24),
+                  ...glassMaterialMixin(c.sidebarGlass, c.surfaceElevated, 18),
                   '@media (forced-colors: active)': {
                     backgroundColor: 'Canvas',
                     color: 'CanvasText',
                     borderColor: 'ButtonBorder',
                   },
                   '& .MuiMenuItem-root': {
-                    borderRadius: '8px',
-                    py: 1,
+                    borderRadius: RADIUS_MD,
+                    py: 0.9,
                     px: 1.25,
                     gap: 1.25,
-                    fontSize: '0.86rem',
-                    fontWeight: 600,
+                    fontSize: '0.84rem',
+                    fontWeight: 500,
                     transition: 'background-color 120ms ease',
                     '&:hover': {
                       backgroundColor: c.hoverFill,
@@ -939,14 +939,14 @@ const MapsPage = (): ReactElement => {
               setActiveDialog('create');
             }}
           >
-            <ListItemIcon sx={{ minWidth: 26, color: (theme) => appleColors(isDarkTheme(theme)).amber }}>
-              <AddCircleRoundedIcon fontSize="small" />
+            <ListItemIcon sx={{ minWidth: 24, color: (theme) => appleColors(isDarkTheme(theme)).amberHover }}>
+              <GoogleIcon name="add_circle" size={18} filled />
             </ListItemIcon>
             <ListItemText
               primary={<FormattedMessage id="action.new" defaultMessage="新建思维导图" />}
               slotProps={{
                 primary: {
-                  sx: { fontSize: '0.86rem', fontWeight: 600, fontFamily: APPLE_FONT_STACK },
+                  sx: { fontSize: '0.84rem', fontWeight: 500, fontFamily: APPLE_FONT_STACK },
                 },
               }}
             />
@@ -959,20 +959,20 @@ const MapsPage = (): ReactElement => {
               setFolderDialog({ mode: 'create', parentId: activeFolderId });
             }}
           >
-            <ListItemIcon sx={{ minWidth: 26, color: 'text.secondary' }}>
-              <CreateNewFolderRoundedIcon fontSize="small" />
+            <ListItemIcon sx={{ minWidth: 24, color: 'text.secondary' }}>
+              <GoogleIcon name="create_new_folder" size={18} />
             </ListItemIcon>
             <ListItemText
               primary={<FormattedMessage id="folder.new" defaultMessage="新建文件夹" />}
               slotProps={{
                 primary: {
-                  sx: { fontSize: '0.86rem', fontWeight: 600, fontFamily: APPLE_FONT_STACK },
+                  sx: { fontSize: '0.84rem', fontWeight: 500, fontFamily: APPLE_FONT_STACK },
                 },
               }}
             />
           </MenuItem>
 
-          <Divider sx={{ my: 0.6, borderColor: (theme) => appleColors(isDarkTheme(theme)).hairline }} />
+          <Divider sx={{ my: 0.5, borderColor: (theme) => appleColors(isDarkTheme(theme)).hairline }} />
 
           <MenuItem
             data-testid="menu-import-file"
@@ -981,14 +981,14 @@ const MapsPage = (): ReactElement => {
               fileInputRef.current?.click();
             }}
           >
-            <ListItemIcon sx={{ minWidth: 26, color: 'text.secondary' }}>
-              <InsertDriveFileRoundedIcon fontSize="small" />
+            <ListItemIcon sx={{ minWidth: 24, color: 'text.secondary' }}>
+              <GoogleIcon name="upload_file" size={18} />
             </ListItemIcon>
             <ListItemText
               primary="导入文件"
               slotProps={{
                 primary: {
-                  sx: { fontSize: '0.86rem', fontWeight: 500, fontFamily: APPLE_FONT_STACK },
+                  sx: { fontSize: '0.84rem', fontWeight: 500, fontFamily: APPLE_FONT_STACK },
                 },
               }}
             />
@@ -1001,14 +1001,14 @@ const MapsPage = (): ReactElement => {
               folderInputRef.current?.click();
             }}
           >
-            <ListItemIcon sx={{ minWidth: 26, color: 'text.secondary' }}>
-              <FolderRoundedIcon fontSize="small" />
+            <ListItemIcon sx={{ minWidth: 24, color: 'text.secondary' }}>
+              <GoogleIcon name="folder_open" size={18} />
             </ListItemIcon>
             <ListItemText
               primary="导入文件夹"
               slotProps={{
                 primary: {
-                  sx: { fontSize: '0.86rem', fontWeight: 500, fontFamily: APPLE_FONT_STACK },
+                  sx: { fontSize: '0.84rem', fontWeight: 500, fontFamily: APPLE_FONT_STACK },
                 },
               }}
             />
@@ -1068,7 +1068,7 @@ const MapsPage = (): ReactElement => {
               onClick={handleMobileDrawerToggle}
               id="open-main-drawer"
             >
-              <MenuRoundedIcon />
+              <GoogleIcon name="menu" size={20} />
             </MobileDrawerToggle>
           </WorkspaceTopBar>
           <section

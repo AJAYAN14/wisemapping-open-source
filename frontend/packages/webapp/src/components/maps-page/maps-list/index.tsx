@@ -26,9 +26,10 @@ import CardContent from '@mui/material/CardContent';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableRow from '@mui/material/TableRow';
-import LoginRoundedIcon from '@mui/icons-material/LoginRounded';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import type { Theme } from '@mui/material/styles';
+import { GoogleIcon } from '../../common/google-symbol';
+import { RADIUS_LG } from '../appleDesign';
 import { ErrorInfo, Folder, MapInfo } from '../../../classes/client';
 import { ClientContext } from '../../../classes/provider/client-context';
 import { buildLoginRedirectUrl, isAuthErrorInfo, leaveTo } from '../../../utils/redirect';
@@ -274,9 +275,9 @@ export const MapsList = ({
         variant="contained"
         color="primary"
         size="small"
-        startIcon={<LoginRoundedIcon />}
+        startIcon={<GoogleIcon name="login" size={17} />}
         onClick={() => leaveTo(buildLoginRedirectUrl())}
-        sx={{ borderRadius: '10px', fontWeight: 700 }}
+        sx={{ borderRadius: '8px', fontWeight: 600 }}
       >
         前往登录
       </Button>
@@ -333,9 +334,9 @@ export const MapsList = ({
   ) : message ? (
     <Card
       elevation={0}
-      sx={{ borderRadius: '18px', margin: '10px 14px', border: '1px solid rgba(128,128,128,0.16)' }}
+      sx={{ borderRadius: RADIUS_LG, margin: '10px 14px', border: '1px solid rgba(128,128,128,0.14)' }}
     >
-      <CardContent sx={{ textAlign: 'center', py: 4, fontWeight: 600 }}>{message}</CardContent>
+      <CardContent sx={{ textAlign: 'center', py: 4, fontWeight: 500 }}>{message}</CardContent>
     </Card>
   ) : (
     <>
@@ -380,9 +381,9 @@ export const MapsList = ({
   ) : message ? (
     <Card
       elevation={0}
-      sx={{ borderRadius: '18px', border: '1px solid rgba(128,128,128,0.16)' }}
+      sx={{ borderRadius: RADIUS_LG, border: '1px solid rgba(128,128,128,0.14)' }}
     >
-      <CardContent sx={{ textAlign: 'center', py: 6, fontWeight: 600, color: 'text.secondary' }}>
+      <CardContent sx={{ textAlign: 'center', py: 6, fontWeight: 500, color: 'text.secondary' }}>
         {message}
       </CardContent>
     </Card>

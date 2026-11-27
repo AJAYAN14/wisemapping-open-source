@@ -20,10 +20,9 @@ import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import List from '@mui/material/List';
 import Tooltip from '@mui/material/Tooltip';
-import NavigateBeforeRoundedIcon from '@mui/icons-material/NavigateBeforeRounded';
-import NavigateNextRoundedIcon from '@mui/icons-material/NavigateNextRounded';
 
 import logoIcon from '../../../../images/logo-icon.svg';
+import { GoogleIcon } from '../../common/google-symbol';
 import { DesktopDrawerToggle } from '../styled';
 import StyleListItem from './filter-list-item';
 import {
@@ -150,10 +149,10 @@ const DrawerNav = ({
                 drawerOpen
                   ? { ml: 'auto', mr: 0 }
                   : {
-                      width: '44px',
-                      height: '44px',
+                      width: '40px',
+                      height: '40px',
                       margin: '0 auto',
-                      borderRadius: '12px',
+                      borderRadius: '8px',
                       position: 'relative',
                     }
               }
@@ -166,11 +165,11 @@ const DrawerNav = ({
                     className="collapsed-logo"
                   />
                   <span className="collapsed-expand-icon">
-                    <NavigateNextRoundedIcon />
+                    <GoogleIcon name="chevron_right" size={20} testId="NavigateNextRoundedIcon" />
                   </span>
                 </>
               ) : (
-                <NavigateBeforeRoundedIcon />
+                <GoogleIcon name="chevron_left" size={20} testId="NavigateBeforeRoundedIcon" />
               )}
             </DesktopDrawerToggle>
           </Tooltip>
@@ -187,10 +186,10 @@ const DrawerNav = ({
               display: { xs: 'inline-flex', sm: 'none' },
               color: 'text.secondary',
               padding: '6px',
-              borderRadius: '10px',
+              borderRadius: '8px',
             }}
           >
-            <NavigateBeforeRoundedIcon />
+            <GoogleIcon name="chevron_left" size={20} testId="NavigateBeforeRoundedIcon" />
           </IconButton>
         )}
       </LogoBox>

@@ -18,7 +18,7 @@
 
 import React from 'react';
 import Box from '@mui/material/Box';
-import FolderRoundedIcon from '@mui/icons-material/FolderRounded';
+import { GoogleIcon } from '../../common/google-symbol';
 import { APPLE_FONT_STACK, appleColors, isDarkTheme } from '../appleDesign';
 
 interface MapFolderPathBadgeProps {
@@ -31,16 +31,16 @@ interface MapFolderPathBadgeProps {
 }
 
 /**
- * Displays a map's parent folder path above its title. When `folderId` and `onOpenFolder`
+ * Displays a map's parent folder path. When `folderId` and `onOpenFolder`
  * are provided, clicking it navigates directly to that folder in the folder browser.
  */
 export const MapFolderPathBadge = ({
   folderPath,
   folderId,
   onOpenFolder,
-  fontSize = '0.74rem',
+  fontSize = '0.73rem',
   iconSize = 13,
-  mb = 0.3,
+  mb = 0.25,
 }: MapFolderPathBadgeProps): React.ReactElement | null => {
   if (!folderPath) {
     return null;
@@ -71,13 +71,12 @@ export const MapFolderPathBadge = ({
           margin: 0,
           display: 'inline-flex',
           alignItems: 'center',
-          gap: 0.4,
+          gap: '4px',
           fontSize,
-          fontWeight: 600,
+          fontWeight: 500,
           fontFamily: APPLE_FONT_STACK,
-          color: 'text.secondary',
-          opacity: 0.85,
-          lineHeight: 1.2,
+          color: c.textTertiary,
+          lineHeight: 1.25,
           mb,
           maxWidth: '100%',
           overflow: 'hidden',
@@ -87,18 +86,17 @@ export const MapFolderPathBadge = ({
           ...(clickable
             ? {
                 cursor: 'pointer',
-                borderRadius: '5px',
-                transition: 'color 120ms ease, opacity 120ms ease',
+                borderRadius: '4px',
+                transition: 'color 120ms ease',
                 '&:hover': {
                   color: c.amberText,
-                  opacity: 1,
                 },
               }
             : {}),
         };
       }}
     >
-      <FolderRoundedIcon sx={{ fontSize: iconSize, opacity: 0.78, flexShrink: 0 }} />
+      <GoogleIcon name="folder" size={iconSize} filled />
       <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{folderPath}</span>
     </Box>
   );

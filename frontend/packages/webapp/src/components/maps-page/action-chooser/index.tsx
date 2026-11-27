@@ -17,21 +17,13 @@
  */
 
 import React from 'react';
-import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded';
-import FileCopyRoundedIcon from '@mui/icons-material/FileCopyRounded';
-import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
-import CloudDownloadRoundedIcon from '@mui/icons-material/CloudDownloadRounded';
-import EditRoundedIcon from '@mui/icons-material/EditRounded';
-import LabelRoundedIcon from '@mui/icons-material/LabelRounded';
-import DriveFileMoveRoundedIcon from '@mui/icons-material/DriveFileMoveRounded';
-import HistoryRoundedIcon from '@mui/icons-material/HistoryRounded';
-
 import { FormattedMessage } from 'react-intl';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Divider from '@mui/material/Divider';
-import { APPLE_FONT_STACK, appleColors, isDarkTheme } from '../appleDesign';
+import { GoogleIcon } from '../../common/google-symbol';
+import { APPLE_FONT_STACK, RADIUS_LG, RADIUS_MD, appleColors, isDarkTheme } from '../appleDesign';
 
 export type ActionType =
   | 'open'
@@ -79,18 +71,22 @@ const ActionChooser = (props: ActionProps): React.ReactElement => {
           sx: (theme) => {
             const c = appleColors(isDarkTheme(theme));
             return {
-              borderRadius: '14px',
+              borderRadius: RADIUS_LG,
               border: `1px solid ${c.hairline}`,
               boxShadow: c.shadowFloat,
-              backgroundColor: c.headerGlass,
-              backdropFilter: 'blur(20px) saturate(180%)',
-              WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+              backgroundColor: c.sidebarGlass,
+              backdropFilter: 'blur(18px) saturate(160%)',
+              WebkitBackdropFilter: 'blur(18px) saturate(160%)',
               fontFamily: APPLE_FONT_STACK,
               '& .MuiMenuItem-root': {
-                fontWeight: 600,
-                fontSize: '0.88rem',
-                borderRadius: '8px',
+                fontWeight: 500,
+                fontSize: '0.84rem',
+                borderRadius: RADIUS_MD,
                 margin: '2px 6px',
+                minHeight: '34px',
+                '&:hover': {
+                  backgroundColor: c.hoverFill,
+                },
               },
               '@media (prefers-reduced-transparency: reduce)': {
                 backgroundColor: c.surface,
@@ -101,9 +97,9 @@ const ActionChooser = (props: ActionProps): React.ReactElement => {
         },
       }}
     >
-      <MenuItem onClick={handleOnClose('open')} sx={{ width: '216px' }}>
-        <ListItemIcon>
-          <DescriptionRoundedIcon fontSize="small" />
+      <MenuItem onClick={handleOnClose('open')} sx={{ width: '204px' }}>
+        <ListItemIcon sx={{ minWidth: 28 }}>
+          <GoogleIcon name="open_in_new" size={18} />
         </ListItemIcon>
         <FormattedMessage id="action.open" defaultMessage="Open" />
       </MenuItem>
@@ -111,51 +107,51 @@ const ActionChooser = (props: ActionProps): React.ReactElement => {
       <Divider />
 
       <MenuItem onClick={handleOnClose('duplicate')}>
-        <ListItemIcon>
-          <FileCopyRoundedIcon fontSize="small" />
+        <ListItemIcon sx={{ minWidth: 28 }}>
+          <GoogleIcon name="content_copy" size={18} />
         </ListItemIcon>
         <FormattedMessage id="action.duplicate" defaultMessage="Duplicate" />
       </MenuItem>
 
       <MenuItem onClick={handleOnClose('rename')}>
-        <ListItemIcon>
-          <EditRoundedIcon fontSize="small" />
+        <ListItemIcon sx={{ minWidth: 28 }}>
+          <GoogleIcon name="edit" size={18} />
         </ListItemIcon>
         <FormattedMessage id="action.rename" defaultMessage="Rename" />
       </MenuItem>
 
       <MenuItem onClick={handleOnClose('label')}>
-        <ListItemIcon>
-          <LabelRoundedIcon fontSize="small" />
+        <ListItemIcon sx={{ minWidth: 28 }}>
+          <GoogleIcon name="label" size={18} />
         </ListItemIcon>
         <FormattedMessage id="action.label" defaultMessage="Add Label" />
       </MenuItem>
 
       <MenuItem onClick={handleOnClose('move-folder')}>
-        <ListItemIcon>
-          <DriveFileMoveRoundedIcon fontSize="small" />
+        <ListItemIcon sx={{ minWidth: 28 }}>
+          <GoogleIcon name="drive_file_move" size={18} />
         </ListItemIcon>
         <FormattedMessage id="action.move-to-folder" defaultMessage="移动到文件夹" />
       </MenuItem>
 
       <MenuItem onClick={handleOnClose('delete')} sx={{ color: 'error.main' }}>
-        <ListItemIcon sx={{ color: 'inherit' }}>
-          <DeleteRoundedIcon fontSize="small" />
+        <ListItemIcon sx={{ minWidth: 28, color: 'inherit' }}>
+          <GoogleIcon name="delete" size={18} />
         </ListItemIcon>
         <FormattedMessage id="action.delete" defaultMessage="Delete" />
       </MenuItem>
       <Divider />
 
       <MenuItem onClick={handleOnClose('export')}>
-        <ListItemIcon>
-          <CloudDownloadRoundedIcon fontSize="small" />
+        <ListItemIcon sx={{ minWidth: 28 }}>
+          <GoogleIcon name="download" size={18} />
         </ListItemIcon>
         <FormattedMessage id="action.export" defaultMessage="Export" />
       </MenuItem>
 
       <MenuItem onClick={handleOnClose('history')}>
-        <ListItemIcon>
-          <HistoryRoundedIcon fontSize="small" />
+        <ListItemIcon sx={{ minWidth: 28 }}>
+          <GoogleIcon name="history" size={18} />
         </ListItemIcon>
         <FormattedMessage id="action.history" defaultMessage="History" />
       </MenuItem>

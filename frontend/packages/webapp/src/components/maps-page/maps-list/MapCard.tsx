@@ -20,21 +20,23 @@ import React, { memo } from 'react';
 import { useIntl } from 'react-intl';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
-import Link from '@mui/material/Link';
 import Tooltip from '@mui/material/Tooltip';
-import Typography from '@mui/material/Typography';
 import CheckBoxOutlineBlankRoundedIcon from '@mui/icons-material/CheckBoxOutlineBlankRounded';
 import CheckBoxRoundedIcon from '@mui/icons-material/CheckBoxRounded';
-import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
 import { MapInfo } from '../../../classes/client';
 import { useDate } from '../../../classes/app-i18n/dates';
 import { buildMapEditPath } from '../../../utils/mapPath';
 import { formatMapSize } from '../../../utils/mapPreview';
+import { GoogleIcon } from '../../common/google-symbol';
 import type { MapItemHandlers } from './MapRow';
 import { MapFolderPathBadge } from './MapFolderPathBadge';
 import {
   ActionIconButton,
+  CardLink,
+  CardMetaText,
+  CardSelectBox,
   CardTitle,
+  CardTitleStack,
   CompactCardHeader,
   MapCardRoot,
   SelectCheckbox,
@@ -89,7 +91,7 @@ const MapCardComponent = ({
     >
       <Box sx={{ display: 'flex', alignItems: 'center' }}>
         {onToggleSelected && (
-          <Box sx={{ pl: 0.5, flexShrink: 0 }}>
+          <CardSelectBox>
             <SelectCheckbox
               checked={selected}
               onChange={() => onToggleSelected(map.id)}
@@ -105,13 +107,12 @@ const MapCardComponent = ({
                 },
               }}
             />
-          </Box>
+          </CardSelectBox>
         )}
-        <Link
+        <CardLink
           href={buildMapEditPath(map.folderPath, map.title)}
           underline="none"
           onClick={(e) => e.stopPropagation()}
-          sx={{ flex: 1, minWidth: 0, display: 'block' }}
         >
           <CompactCardHeader
             avatar={
@@ -152,34 +153,29 @@ const MapCardComponent = ({
                     })}
                     onClick={handleOpenMenu}
                   >
-                    <MoreVertRoundedIcon color="action" />
+                    <GoogleIcon name="more_vert" size={20} />
                   </IconButton>
                 </ActionIconButton>
               </Tooltip>
             }
             // Not a Typography itself, so the header wraps it in its title Typography.
             title={
-              <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+              <CardTitleStack>
+                <CardTitle noWrap>{map.title}</CardTitle>
                 {showFolderPath && (
                   <MapFolderPathBadge
                     folderPath={map.folderPath}
                     folderId={map.folderId}
                     onOpenFolder={onOpenFolder}
                     fontSize="0.72rem"
-                    iconSize={13}
-                    mb={0.2}
+                    iconSize={12}
+                    mb={0}
                   />
                 )}
-                <CardTitle noWrap>{map.title}</CardTitle>
-              </Box>
+              </CardTitleStack>
             }
             subheader={
-              <Typography
-                variant="subtitle2"
-                sx={{ fontSize: '0.76rem', fontWeight: 600, fontVariantNumeric: 'tabular-nums' }}
-              >
-                {intl.formatMessage({ id: 'map.last-update', defaultMessage: 'Last Update' })}
-                <span>: </span>
+              <CardMetaText variant="subtitle2">
                 <Tooltip
                   arrow={true}
                   title={date(map.lastModificationTime).format('lll')}
@@ -190,10 +186,10 @@ const MapCardComponent = ({
                 {typeof map.sizeBytes === 'number' && (
                   <span> · {formatMapSize(map.sizeBytes)}</span>
                 )}
-              </Typography>
+              </CardMetaText>
             }
           />
-        </Link>
+        </CardLink>
       </Box>
     </MapCardRoot>
   );

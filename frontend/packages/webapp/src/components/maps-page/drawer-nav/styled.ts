@@ -21,7 +21,13 @@ import IconButton from '@mui/material/IconButton';
 import ListItemButton from '@mui/material/ListItemButton';
 import Typography from '@mui/material/Typography';
 import { styled } from '@mui/material/styles';
-import { APPLE_FONT_STACK, appleColors, applePressMixin, isDarkTheme } from '../appleDesign';
+import {
+  APPLE_FONT_STACK,
+  RADIUS_MD,
+  appleColors,
+  applePressMixin,
+  isDarkTheme,
+} from '../appleDesign';
 
 export const DrawerContent = styled('div')({
   display: 'flex',
@@ -31,18 +37,18 @@ export const DrawerContent = styled('div')({
 });
 
 export const LogoBox = styled('div')({
-  padding: '16px 16px 14px 16px',
+  padding: '14px 14px 12px 14px',
   display: 'flex',
   alignItems: 'center',
   gap: '10px',
-  minHeight: '60px',
+  minHeight: '56px',
   position: 'relative',
   overflow: 'hidden',
   userSelect: 'none',
 });
 
 export const LogoIcon = styled('img')({
-  height: '28px',
+  height: '24px',
   width: 'auto',
   flexShrink: 0,
   display: 'block',
@@ -54,21 +60,21 @@ export const LogoText = styled('div')(({ theme }) => {
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
-    lineHeight: 1.05,
+    lineHeight: 1.08,
     fontFamily: APPLE_FONT_STACK,
-    fontWeight: 800,
-    fontSize: '15px',
+    fontWeight: 700,
+    fontSize: '14px',
     letterSpacing: '-0.02em',
     color: c.textPrimary,
     whiteSpace: 'nowrap',
     '& .logo-wise': {
-      fontSize: '14px',
-      fontWeight: 800,
+      fontSize: '13.5px',
+      fontWeight: 700,
       letterSpacing: '-0.01em',
     },
     '& .logo-mapping': {
-      fontSize: '15px',
-      fontWeight: 800,
+      fontSize: '14px',
+      fontWeight: 700,
       letterSpacing: '-0.02em',
     },
   };
@@ -77,11 +83,10 @@ export const LogoText = styled('div')(({ theme }) => {
 export const SectionHeader = styled('div')(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
-    padding: '10px 14px 4px 18px',
+    padding: '10px 14px 4px 14px',
     fontSize: '11.5px',
-    fontWeight: 700,
-    letterSpacing: '0.03em',
-    textTransform: 'uppercase',
+    fontWeight: 600,
+    letterSpacing: '0.01em',
     color: c.textTertiary,
     fontFamily: APPLE_FONT_STACK,
     display: 'flex',
@@ -95,14 +100,14 @@ export const SectionActionButton = styled(IconButton)(({ theme }) => {
   return {
     padding: '3px',
     color: c.textTertiary,
-    borderRadius: '8px',
+    borderRadius: RADIUS_MD,
     ...applePressMixin,
     '@media (pointer: coarse)': {
       minWidth: '44px',
       minHeight: '44px',
     },
     '&:hover': {
-      color: c.amber,
+      color: c.textPrimary,
       backgroundColor: c.hoverFill,
     },
   };
@@ -138,14 +143,13 @@ export const FolderMoreButton = styled(IconButton)(({ theme }) => {
 
 /** The signed-in user's name and email, anchored at the bottom of the sidebar. */
 export const UserInfoBox = styled(Box)(({ theme }) => {
-  const isDark = isDarkTheme(theme);
-  const c = appleColors(isDark);
+  const c = appleColors(isDarkTheme(theme));
   return {
     marginTop: 'auto',
-    padding: '10px 12px',
-    margin: 'auto 10px 12px 10px',
-    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
-    borderRadius: '12px',
+    padding: '8px 10px',
+    margin: 'auto 8px 10px 8px',
+    backgroundColor: c.hoverFill,
+    borderRadius: RADIUS_MD,
     border: `1px solid ${c.hairline}`,
     display: 'flex',
     alignItems: 'center',
@@ -156,24 +160,24 @@ export const UserInfoBox = styled(Box)(({ theme }) => {
 export const UserAvatarBadge = styled('div')(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
-    width: '30px',
-    height: '30px',
+    width: '28px',
+    height: '28px',
     borderRadius: '999px',
-    backgroundColor: c.amber,
-    color: '#FFFFFF',
+    backgroundColor: c.ctaPrimary,
+    color: c.ctaPrimaryText,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    fontSize: '13px',
-    fontWeight: 700,
+    fontSize: '12px',
+    fontWeight: 600,
     flexShrink: 0,
     fontFamily: APPLE_FONT_STACK,
   };
 });
 
 export const UserAvatarImage = styled('img')({
-  width: '30px',
-  height: '30px',
+  width: '28px',
+  height: '28px',
   borderRadius: '999px',
   objectFit: 'cover',
   flexShrink: 0,
@@ -183,8 +187,8 @@ export const UserName = styled(Typography)(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
     color: c.textPrimary,
-    fontSize: '14px',
-    fontWeight: 700,
+    fontSize: '13px',
+    fontWeight: 600,
     lineHeight: 1.25,
     fontFamily: APPLE_FONT_STACK,
     overflow: 'hidden',
@@ -198,7 +202,7 @@ export const UserEmail = styled(Typography)(({ theme }) => {
   return {
     color: c.textSecondary,
     fontSize: '11.5px',
-    fontWeight: 500,
+    fontWeight: 400,
     lineHeight: 1.3,
     fontFamily: APPLE_FONT_STACK,
     overflow: 'hidden',

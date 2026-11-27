@@ -23,6 +23,9 @@ import IconButton from '@mui/material/IconButton';
 import { CSSObject, styled, Theme } from '@mui/material/styles';
 import {
   APPLE_FONT_STACK,
+  EASE_OUT,
+  RADIUS_LG,
+  RADIUS_MD,
   appleColors,
   applePressMixin,
   glassMaterialMixin,
@@ -30,8 +33,8 @@ import {
 } from './appleDesign';
 
 /** Expanded and collapsed desktop drawer widths in px. */
-export const DRAWER_WIDTH_EXPANDED = 240;
-export const DRAWER_WIDTH_COLLAPSED = 68;
+export const DRAWER_WIDTH_EXPANDED = 236;
+export const DRAWER_WIDTH_COLLAPSED = 64;
 
 const drawerWidthOf = (expanded: boolean): number =>
   expanded ? DRAWER_WIDTH_EXPANDED : DRAWER_WIDTH_COLLAPSED;
@@ -46,10 +49,10 @@ type ExpandedProps = {
 /** On phones a toolbar button shows only its icon. */
 const mobileAppbarButton: CSSObject = {
   padding: 0,
-  minWidth: '38px',
-  width: '38px',
-  height: '38px',
-  borderRadius: '10px',
+  minWidth: '36px',
+  width: '36px',
+  height: '36px',
+  borderRadius: RADIUS_MD,
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -79,11 +82,11 @@ const drawerPaper = (theme: Theme, expanded: boolean): CSSObject => {
   const isDark = isDarkTheme(theme);
   const c = appleColors(isDark);
   return {
-    ...glassMaterialMixin(c.sidebarGlass, c.sidebarSolid, 24),
+    ...glassMaterialMixin(c.sidebarGlass, c.sidebarSolid, 18),
     backgroundColor: c.surface,
     color: c.textPrimary,
     border: `1px solid ${c.hairline}`,
-    borderRadius: '16px',
+    borderRadius: RADIUS_LG,
     boxShadow: c.shadowSubtle,
     boxSizing: 'border-box',
     overflow: 'hidden',
@@ -102,10 +105,10 @@ const drawerPaper = (theme: Theme, expanded: boolean): CSSObject => {
       border: 'none',
       borderRight: `1px solid ${c.hairline}`,
       boxShadow: 'none',
-      width: 'min(240px, 80dvw, 100dvw - 24px)',
+      width: 'min(236px, 80dvw, 100dvw - 24px)',
       height: '100svh',
       maxHeight: '100svh',
-      backgroundColor: isDark ? '#1C1C20' : '#FFFFFF',
+      backgroundColor: c.sidebarSolid,
       backdropFilter: 'none',
       WebkitBackdropFilter: 'none',
     },
@@ -132,10 +135,10 @@ const desktopDrawer = (theme: Theme, expanded: boolean): CSSObject => {
       display: expanded ? 'block' : 'none !important',
       marginLeft: '4px',
       opacity: expanded ? 1 : 0,
-      transition: 'opacity 140ms ease',
+      transition: `opacity 140ms ${EASE_OUT}`,
       '& .MuiTypography-root': {
-        fontSize: '14.5px',
-        fontWeight: 600,
+        fontSize: '13.5px',
+        fontWeight: 500,
         letterSpacing: '-0.005em',
         fontFamily: APPLE_FONT_STACK,
       },
@@ -147,40 +150,36 @@ const desktopDrawer = (theme: Theme, expanded: boolean): CSSObject => {
       }),
     },
     '& .MuiListItemIcon-root': {
-      minWidth: expanded ? '24px' : 'auto',
-      width: expanded ? 'auto' : '24px',
-      height: expanded ? 'auto' : '24px',
+      minWidth: expanded ? '22px' : 'auto',
+      width: expanded ? 'auto' : '22px',
+      height: expanded ? 'auto' : '22px',
       marginRight: expanded ? '8px' : '0px',
       justifyContent: 'center',
       alignItems: 'center',
       display: 'inline-flex',
       color: c.textSecondary,
-      '& .MuiSvgIcon-root': {
-        fontSize: '19px',
-        display: 'block',
-      },
     },
     '& .MuiListItem-root': {
-      paddingTop: '2px',
-      paddingBottom: '2px',
-      minHeight: '38px',
+      paddingTop: '1px',
+      paddingBottom: '1px',
+      minHeight: '36px',
       ...(!expanded && {
         padding: 0,
-        minHeight: '44px',
+        minHeight: '42px',
         display: 'flex',
         justifyContent: 'center',
       }),
     },
     '& .MuiListItemButton-root': {
-      paddingTop: '8px',
-      paddingBottom: '8px',
-      paddingLeft: expanded ? '12px' : 0,
-      paddingRight: expanded ? '12px' : 0,
-      minHeight: expanded ? '40px' : '44px',
-      width: expanded ? 'auto' : '44px',
-      height: expanded ? 'auto' : '44px',
-      borderRadius: '12px',
-      margin: expanded ? '2px 10px' : '2px auto',
+      paddingTop: '7px',
+      paddingBottom: '7px',
+      paddingLeft: expanded ? '10px' : 0,
+      paddingRight: expanded ? '10px' : 0,
+      minHeight: expanded ? '36px' : '40px',
+      width: expanded ? 'auto' : '40px',
+      height: expanded ? 'auto' : '40px',
+      borderRadius: RADIUS_MD,
+      margin: expanded ? '2px 8px' : '2px auto',
       justifyContent: expanded ? 'flex-start' : 'center',
       alignItems: 'center',
       ...applePressMixin,
@@ -191,10 +190,10 @@ const desktopDrawer = (theme: Theme, expanded: boolean): CSSObject => {
         backgroundColor: c.amberSoft,
         color: c.amberText,
         '& .MuiListItemText-root .MuiTypography-root': {
-          fontWeight: 700,
+          fontWeight: 600,
         },
         '& .MuiListItemIcon-root': {
-          color: c.amber,
+          color: c.amberHover,
         },
         '&:hover': {
           backgroundColor: c.amberSoftHover,
@@ -236,7 +235,7 @@ export const PageAppBar = styled(AppBar, { shouldForwardProp: notExpanded })<Exp
   const fallbackWidth = drawerWidthOf(expanded);
   return {
     '&&': {
-      ...glassMaterialMixin(c.headerGlass, c.headerSolid, 20),
+      ...glassMaterialMixin(c.headerGlass, c.headerSolid, 18),
       color: c.textPrimary,
       boxShadow: 'none',
       border: 'none',
@@ -269,7 +268,7 @@ export const MobileDrawerToggle = styled(IconButton)(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
     marginRight: theme.spacing(0.5),
-    borderRadius: '10px',
+    borderRadius: RADIUS_MD,
     color: c.textSecondary,
     ...applePressMixin,
     '@media (pointer: coarse)': {
@@ -290,11 +289,11 @@ export const MobileDrawerToggle = styled(IconButton)(({ theme }) => {
 export const DesktopDrawerToggle = styled(IconButton)(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
-    width: '34px',
-    height: '34px',
+    width: '32px',
+    height: '32px',
     padding: 0,
-    marginRight: '6px',
-    borderRadius: '10px',
+    marginRight: '4px',
+    borderRadius: RADIUS_MD,
     color: c.textSecondary,
     ...applePressMixin,
     '@media (pointer: coarse)': {
@@ -307,9 +306,9 @@ export const DesktopDrawerToggle = styled(IconButton)(({ theme }) => {
     },
     '& .collapsed-logo': {
       position: 'absolute',
-      width: '24px',
-      height: '24px',
-      transition: 'opacity 180ms cubic-bezier(0.16, 1, 0.3, 1), transform 180ms cubic-bezier(0.16, 1, 0.3, 1)',
+      width: '22px',
+      height: '22px',
+      transition: `opacity 160ms ${EASE_OUT}, transform 160ms ${EASE_OUT}`,
       opacity: 1,
       transform: 'scale(1)',
       pointerEvents: 'none',
@@ -317,23 +316,20 @@ export const DesktopDrawerToggle = styled(IconButton)(({ theme }) => {
     },
     '& .collapsed-expand-icon': {
       position: 'absolute',
-      width: '24px',
-      height: '24px',
-      transition: 'opacity 180ms cubic-bezier(0.16, 1, 0.3, 1), transform 180ms cubic-bezier(0.16, 1, 0.3, 1)',
+      width: '22px',
+      height: '22px',
+      transition: `opacity 160ms ${EASE_OUT}, transform 160ms ${EASE_OUT}`,
       opacity: 0,
-      transform: 'scale(0.82)',
+      transform: 'scale(0.86)',
       pointerEvents: 'none',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
       color: c.textPrimary,
-      '& svg': {
-        fontSize: '22px',
-      },
     },
     '&:hover .collapsed-logo, &:focus-visible .collapsed-logo': {
       opacity: 0,
-      transform: 'scale(0.82)',
+      transform: 'scale(0.86)',
     },
     '&:hover .collapsed-expand-icon, &:focus-visible .collapsed-expand-icon': {
       opacity: 1,
@@ -348,52 +344,61 @@ export const DesktopDrawerToggle = styled(IconButton)(({ theme }) => {
   };
 });
 
-/** Primary CTA ("New map") — warm amber pill with bold rounded presence. */
+/** Primary CTA ("新建") — high-contrast charcoal surface replacing bright orange-yellow blob. */
 export const PrimaryToolbarButton = styled(Button)(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
-    borderRadius: '11px',
-    height: '36px',
+    borderRadius: RADIUS_MD,
+    height: '34px',
     fontSize: '0.84rem',
-    fontWeight: 700,
+    fontWeight: 600,
     letterSpacing: '-0.01em',
-    padding: '6px 14px',
+    padding: '0 12px',
     whiteSpace: 'nowrap',
     flexShrink: 0,
     fontFamily: APPLE_FONT_STACK,
-    backgroundColor: c.amber,
-    color: '#FFFFFF',
-    border: `1px solid ${isDarkTheme(theme) ? 'rgba(255, 255, 255, 0.14)' : 'rgba(255, 255, 255, 0.35)'}`,
-    boxShadow: '0 2px 6px rgba(245, 158, 11, 0.28)',
+    backgroundColor: c.ctaPrimary,
+    color: c.ctaPrimaryText,
+    border: '1px solid transparent',
+    boxShadow: c.shadowSubtle,
     ...applePressMixin,
     '&:hover': {
-      backgroundColor: c.amberHover,
-      boxShadow: '0 4px 12px rgba(245, 158, 11, 0.32)',
+      backgroundColor: c.ctaPrimaryHover,
+      boxShadow: c.shadowSubtle,
     },
-    '& .MuiButton-startIcon svg': {
-      fontSize: '18px',
+    '&:focus-visible': {
+      outline: 'none',
+      boxShadow: `0 0 0 2px ${c.amberRing}`,
+    },
+    '& .MuiButton-startIcon': {
+      marginRight: '5px',
+      marginLeft: '-2px',
+    },
+    '& .MuiButton-endIcon': {
+      marginLeft: '3px',
+      marginRight: '-4px',
     },
     [theme.breakpoints.down('sm')]: mobileAppbarButton,
   };
 });
 
-/** Secondary CTA ("Import") — subtle neutral glass button replacing the harsh orange border. */
+/** Secondary CTA ("导入") — quiet hairline button matching toolbar height. */
 export const SecondaryToolbarButton = styled(Button)(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
-    borderRadius: '11px',
-    height: '36px',
+    borderRadius: RADIUS_MD,
+    height: '34px',
     fontSize: '0.84rem',
-    fontWeight: 700,
+    fontWeight: 500,
     letterSpacing: '-0.01em',
-    padding: '6px 12px',
+    padding: '0 12px',
     whiteSpace: 'nowrap',
     flexShrink: 0,
     fontFamily: APPLE_FONT_STACK,
     backgroundColor: c.surface,
     color: c.textPrimary,
     border: `1px solid ${c.hairline}`,
-    boxShadow: c.shadowSubtle,
+    boxShadow: 'none',
     ...applePressMixin,
     '&:hover': {
       backgroundColor: c.hoverFill,
@@ -401,9 +406,6 @@ export const SecondaryToolbarButton = styled(Button)(({ theme }) => {
     },
     '& .MuiButton-startIcon': {
       color: c.textSecondary,
-    },
-    '& .MuiButton-startIcon svg': {
-      fontSize: '18px',
     },
     [theme.breakpoints.down('sm')]: mobileAppbarButton,
   };
@@ -429,11 +431,11 @@ export const MobileDrawer = styled(Drawer, { shouldForwardProp: notExpanded })<E
       [theme.breakpoints.down('sm')]: {
         display: 'block',
         '& .MuiDrawer-paper': {
-          width: 'min(240px, 80dvw, 100dvw - 24px)',
+          width: 'min(236px, 80dvw, 100dvw - 24px)',
         },
         '& .MuiListItemButton-root': {
-          borderRadius: '10px',
-          margin: '2px 10px',
+          borderRadius: RADIUS_MD,
+          margin: '2px 8px',
         },
       },
     },
@@ -449,32 +451,29 @@ export const DesktopDrawer = styled(Drawer, { shouldForwardProp: notExpanded })<
   ],
 );
 
-export const PageContent = styled('main')(({ theme }) => {
-  const c = appleColors(isDarkTheme(theme));
-  return {
-    flexGrow: 1,
-    minWidth: 0,
-    containerType: 'inline-size',
-    containerName: 'maps-main',
-    boxSizing: 'border-box',
-    [theme.breakpoints.up('sm')]: {
-      backgroundColor: c.surface,
-      borderRadius: '16px',
-      border: `1px solid ${c.hairline}`,
-      boxShadow: c.shadowSubtle,
-      minHeight: 'calc(100dvh - 24px)',
-      overflowX: 'hidden',
-      paddingTop: '14px',
-      paddingBottom: '24px',
-    },
-    [theme.breakpoints.down('sm')]: {
-      paddingTop: 'env(safe-area-inset-top, 0px)',
-      paddingBottom: 'max(2.5rem, env(safe-area-inset-bottom, 0px))',
-      paddingInlineStart: 'env(safe-area-inset-left, 0px)',
-      paddingInlineEnd: 'env(safe-area-inset-right, 0px)',
-    },
-  };
-});
+/** Transparent main workspace on desktop so cards sit cleanly in <= 2 layers on the canvas. */
+export const PageContent = styled('main')(({ theme }) => ({
+  flexGrow: 1,
+  minWidth: 0,
+  containerType: 'inline-size',
+  containerName: 'maps-main',
+  boxSizing: 'border-box',
+  [theme.breakpoints.up('sm')]: {
+    backgroundColor: 'transparent',
+    border: 'none',
+    boxShadow: 'none',
+    minHeight: 'calc(100dvh - 24px)',
+    overflowX: 'hidden',
+    paddingTop: '6px',
+    paddingBottom: '28px',
+  },
+  [theme.breakpoints.down('sm')]: {
+    paddingTop: 'env(safe-area-inset-top, 0px)',
+    paddingBottom: 'max(2.5rem, env(safe-area-inset-bottom, 0px))',
+    paddingInlineStart: 'env(safe-area-inset-left, 0px)',
+    paddingInlineEnd: 'env(safe-area-inset-right, 0px)',
+  },
+}));
 
 /** Mobile-only top strip inside the workspace for opening the drawer. */
 export const WorkspaceTopBar = styled('header')(({ theme }) => ({

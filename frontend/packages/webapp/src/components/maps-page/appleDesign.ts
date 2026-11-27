@@ -19,13 +19,22 @@
 import type { CSSObject, Theme } from '@mui/material/styles';
 
 /**
- * Shared Apple-design tokens & material mixins for the maps workspace.
- * Keeps WiseMapping's warm amber identity while adopting macOS vibrancy,
- * pointer-down tactile feedback, size-aware typography, and accessibility media queries.
+ * Unified workspace design tokens & motion mixins for the maps homepage.
+ * Enforces a calm neutral canvas (#F5F5F7 / #0D0D10), three strict corner radii,
+ * high-contrast charcoal primary CTA, and restrained WiseMapping amber accents.
  */
 
 export const APPLE_FONT_STACK =
-  '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Figtree, system-ui, sans-serif';
+  '-apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei UI", "Microsoft YaHei", Figtree, system-ui, sans-serif';
+
+/** Unified UI motion curves (Emil Design Engineering: strong ease-out, snappy press). */
+export const EASE_OUT = 'cubic-bezier(0.23, 1, 0.32, 1)';
+export const EASE_DRAWER = 'cubic-bezier(0.32, 0.72, 0, 1)';
+
+/** Strict 3-step border-radius scale across the entire workspace. */
+export const RADIUS_LG = '12px';
+export const RADIUS_MD = '8px';
+export const RADIUS_SM = '6px';
 
 export interface AppleColorTokens {
   canvas: string;
@@ -42,6 +51,9 @@ export interface AppleColorTokens {
   hairlineStrong: string;
   hoverFill: string;
   activeFill: string;
+  ctaPrimary: string;
+  ctaPrimaryHover: string;
+  ctaPrimaryText: string;
   amber: string;
   amberHover: string;
   amberSoft: string;
@@ -54,56 +66,59 @@ export interface AppleColorTokens {
 }
 
 export const appleColors = (isDark: boolean): AppleColorTokens => ({
-  canvas: isDark ? '#0D0D10' : '#EFEFF4',
-  surface: isDark ? '#1B1B1F' : '#FFFFFF',
-  surfaceElevated: isDark ? '#25252A' : '#F4F5F7',
-  sidebarGlass: isDark ? 'rgba(28, 28, 32, 0.86)' : 'rgba(255, 255, 255, 0.88)',
-  sidebarSolid: isDark ? '#1C1C20' : '#FFFFFF',
-  headerGlass: isDark ? 'rgba(28, 28, 32, 0.78)' : 'rgba(250, 250, 252, 0.78)',
-  headerSolid: isDark ? '#1C1C20' : '#FAFAFC',
-  textPrimary: isDark ? '#F5F5F7' : '#1D1D1F',
-  textSecondary: isDark ? '#A1A1A6' : '#6E6E73',
-  textTertiary: isDark ? '#787880' : '#86868B',
-  hairline: isDark ? 'rgba(255, 255, 255, 0.09)' : 'rgba(0, 0, 0, 0.07)',
-  hairlineStrong: isDark ? 'rgba(255, 255, 255, 0.16)' : 'rgba(0, 0, 0, 0.12)',
-  hoverFill: isDark ? 'rgba(255, 255, 255, 0.055)' : 'rgba(0, 0, 0, 0.04)',
-  activeFill: isDark ? 'rgba(255, 255, 255, 0.09)' : 'rgba(0, 0, 0, 0.07)',
+  canvas: isDark ? '#0D0D10' : '#F5F5F7',
+  surface: isDark ? '#1A1A1E' : '#FFFFFF',
+  surfaceElevated: isDark ? '#242429' : '#F3F4F6',
+  sidebarGlass: isDark ? 'rgba(26, 26, 30, 0.90)' : 'rgba(255, 255, 255, 0.92)',
+  sidebarSolid: isDark ? '#1A1A1E' : '#FFFFFF',
+  headerGlass: isDark ? 'rgba(26, 26, 30, 0.84)' : 'rgba(245, 245, 247, 0.86)',
+  headerSolid: isDark ? '#1A1A1E' : '#F5F5F7',
+  textPrimary: isDark ? '#F4F4F5' : '#18181B',
+  textSecondary: isDark ? '#A1A1AA' : '#71717A',
+  textTertiary: isDark ? '#71717A' : '#8E8E95',
+  hairline: isDark ? 'rgba(255, 255, 255, 0.09)' : 'rgba(24, 24, 27, 0.08)',
+  hairlineStrong: isDark ? 'rgba(255, 255, 255, 0.18)' : 'rgba(24, 24, 27, 0.16)',
+  hoverFill: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(24, 24, 27, 0.045)',
+  activeFill: isDark ? 'rgba(255, 255, 255, 0.10)' : 'rgba(24, 24, 27, 0.08)',
+  ctaPrimary: isDark ? '#F4F4F5' : '#18181B',
+  ctaPrimaryHover: isDark ? '#E4E4E7' : '#27272A',
+  ctaPrimaryText: isDark ? '#18181B' : '#FFFFFF',
   amber: isDark ? '#FF9F0A' : '#F59E0B',
   amberHover: isDark ? '#FFB340' : '#D97706',
-  amberSoft: isDark ? 'rgba(255, 159, 10, 0.16)' : 'rgba(245, 158, 11, 0.12)',
-  amberSoftHover: isDark ? 'rgba(255, 159, 10, 0.24)' : 'rgba(245, 158, 11, 0.18)',
+  amberSoft: isDark ? 'rgba(255, 159, 10, 0.16)' : 'rgba(245, 158, 11, 0.11)',
+  amberSoftHover: isDark ? 'rgba(255, 159, 10, 0.24)' : 'rgba(245, 158, 11, 0.17)',
   amberText: isDark ? '#FFB340' : '#B45309',
-  amberRing: isDark ? 'rgba(255, 159, 10, 0.24)' : 'rgba(245, 158, 11, 0.2)',
-  specularEdge: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.7)',
+  amberRing: isDark ? 'rgba(255, 159, 10, 0.28)' : 'rgba(217, 119, 6, 0.22)',
+  specularEdge: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(255, 255, 255, 0.75)',
   shadowSubtle: isDark
-    ? '0 2px 10px rgba(0, 0, 0, 0.28)'
-    : '0 2px 12px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.03)',
+    ? '0 1px 3px rgba(0, 0, 0, 0.28)'
+    : '0 1px 2px rgba(24, 24, 27, 0.04)',
   shadowFloat: isDark
-    ? '0 12px 32px rgba(0, 0, 0, 0.45)'
-    : '0 8px 28px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04)',
+    ? '0 12px 32px rgba(0, 0, 0, 0.48)'
+    : '0 10px 28px rgba(24, 24, 27, 0.10), 0 1px 3px rgba(24, 24, 27, 0.05)',
 });
 
 export const isDarkTheme = (theme: Theme): boolean => theme.palette.mode === 'dark';
 
-/** Instant tactile press response (Apple Design §1) with reduced-motion fallback (§14). */
+/** Instant tactile press response with strong ease-out and reduced-motion fallback. */
 export const applePressMixin: CSSObject = {
-  transition: 'transform 110ms cubic-bezier(0.2, 0.8, 0.2, 1), background-color 140ms ease, opacity 140ms ease',
+  transition: `transform 140ms ${EASE_OUT}, background-color 140ms ease, border-color 140ms ease, opacity 140ms ease`,
   '&:active': {
     transform: 'scale(0.97)',
   },
   '@media (prefers-reduced-motion: reduce)': {
-    transition: 'background-color 140ms ease, opacity 140ms ease',
+    transition: 'background-color 140ms ease, border-color 140ms ease, opacity 140ms ease',
     '&:active': {
       transform: 'none',
     },
   },
 };
 
-/** Translucent glass material with reduced-transparency and high-contrast fallbacks (§12, §14). */
-export const glassMaterialMixin = (glassBg: string, solidBg: string, blurPx = 20): CSSObject => ({
+/** Translucent glass material with reduced-transparency and high-contrast fallbacks. */
+export const glassMaterialMixin = (glassBg: string, solidBg: string, blurPx = 18): CSSObject => ({
   backgroundColor: glassBg,
-  backdropFilter: `blur(${blurPx}px) saturate(180%)`,
-  WebkitBackdropFilter: `blur(${blurPx}px) saturate(180%)`,
+  backdropFilter: `blur(${blurPx}px) saturate(160%)`,
+  WebkitBackdropFilter: `blur(${blurPx}px) saturate(160%)`,
   '@media (prefers-reduced-transparency: reduce)': {
     backgroundColor: solidBg,
     backdropFilter: 'none',

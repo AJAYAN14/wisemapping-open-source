@@ -24,12 +24,11 @@ import TableRow from '@mui/material/TableRow';
 import Tooltip from '@mui/material/Tooltip';
 import CheckBoxOutlineBlankRoundedIcon from '@mui/icons-material/CheckBoxOutlineBlankRounded';
 import CheckBoxRoundedIcon from '@mui/icons-material/CheckBoxRounded';
-import HubRoundedIcon from '@mui/icons-material/HubRounded';
-import MoreHorizRoundedIcon from '@mui/icons-material/MoreHorizRounded';
 import { Label, MapInfo } from '../../../classes/client';
 import { useDate } from '../../../classes/app-i18n/dates';
 import { buildMapEditPath } from '../../../utils/mapPath';
 import { formatMapSize } from '../../../utils/mapPreview';
+import { GoogleIcon } from '../../common/google-symbol';
 import { LabelsCell } from './labels-cell';
 import { MapFolderPathBadge } from './MapFolderPathBadge';
 import {
@@ -134,7 +133,7 @@ const MapRowComponent = ({
       <BodyCell>
         <MapRowTitleWrap>
           <MapGlyphBadge aria-hidden="true">
-            <HubRoundedIcon />
+            <GoogleIcon name="hub" size={18} />
           </MapGlyphBadge>
           <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 0, justifyContent: 'center' }}>
             {showFolderPath && (
@@ -207,7 +206,7 @@ const MapRowComponent = ({
               size="small"
               onClick={handleOpenMenu}
             >
-              <MoreHorizRoundedIcon color="action" />
+              <GoogleIcon name="more_horiz" size={19} />
             </IconButton>
           </ActionIconButton>
         </Tooltip>

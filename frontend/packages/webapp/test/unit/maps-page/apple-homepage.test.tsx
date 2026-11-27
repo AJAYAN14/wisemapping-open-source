@@ -22,6 +22,7 @@ import { IntlProvider } from 'react-intl';
 import { ThemeProvider } from '@mui/material/styles';
 import { createAppTheme } from '../../../src/theme';
 import { MapsListToolbar } from '../../../src/components/maps-page/maps-list/MapsListToolbar';
+import { MapsPageLoading } from '../../../src/components/maps-page/maps-list/MapsListSkeleton';
 import { useSpringValue } from '../../../src/components/maps-page/useSpringValue';
 import { appleColors } from '../../../src/components/maps-page/appleDesign';
 
@@ -117,5 +118,19 @@ describe('Apple Design homepage refinements', () => {
     expect(light.sidebarGlass).not.toBe(dark.sidebarGlass);
     expect(light.amber).toBe('#F59E0B');
     expect(dark.amber).toBe('#FF9F0A');
+    expect(light.ctaPrimary).toBe('#18181B');
+    expect(dark.ctaPrimary).toBe('#F4F4F5');
+  });
+
+  test('MapsPageLoading renders grid card skeletons when mapsListViewMode is grid', () => {
+    localStorage.setItem('mapsListViewMode', 'grid');
+    const { container } = render(
+      <ThemeProvider theme={createAppTheme('light')}>
+        <MapsPageLoading />
+      </ThemeProvider>,
+    );
+    expect(container.querySelector('table')).toBeNull();
+    expect(container.querySelectorAll('.MuiSkeleton-root').length).toBeGreaterThan(20);
+    localStorage.removeItem('mapsListViewMode');
   });
 });

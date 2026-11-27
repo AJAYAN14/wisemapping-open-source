@@ -59,10 +59,12 @@ describe('createAppTheme', () => {
     );
   });
 
-  test('exposes the Figtree-first body font stack', () => {
+  test('exposes the unified cross-platform Chinese & Latin body font stack', () => {
     const { fontFamily } = createAppTheme('light').typography;
 
-    expect(fontFamily).toBe('Figtree,Noto Sans JP,Helvetica,system-ui,Arial,sans-serif');
+    expect(fontFamily).toBe(
+      '-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Hiragino Sans GB","Microsoft YaHei UI","Microsoft YaHei",Figtree,system-ui,sans-serif',
+    );
   });
 
   test('buttons opt out of upper-casing and use the rounded 9px radius', () => {

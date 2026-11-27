@@ -1,16 +1,14 @@
 import React, { memo } from 'react';
 import { useIntl } from 'react-intl';
 import IconButton from '@mui/material/IconButton';
-import Link from '@mui/material/Link';
 import Tooltip from '@mui/material/Tooltip';
-import Typography from '@mui/material/Typography';
 import CheckBoxOutlineBlankRoundedIcon from '@mui/icons-material/CheckBoxOutlineBlankRounded';
 import CheckBoxRoundedIcon from '@mui/icons-material/CheckBoxRounded';
-import MoreHorizRoundedIcon from '@mui/icons-material/MoreHorizRounded';
 import { MapInfo } from '../../../classes/client';
 import { useDate } from '../../../classes/app-i18n/dates';
 import { buildMapEditPath } from '../../../utils/mapPath';
 import { formatMapSize } from '../../../utils/mapPreview';
+import { GoogleIcon } from '../../common/google-symbol';
 import type { MapItemHandlers } from './MapRow';
 import { MapFolderPathBadge } from './MapFolderPathBadge';
 import { MindmapMiniPreview } from './MindmapMiniPreview';
@@ -19,10 +17,14 @@ import {
   GridCardActionsOverlay,
   GridCardBody,
   GridCardCheckboxOverlay,
+  GridCardFolderSlot,
+  GridCardLink,
   GridCardMeta,
   GridCardPreview,
   GridCardRoot,
   GridCardTitle,
+  GridMetaSize,
+  GridMetaTime,
   SelectCheckbox,
   StarIcon,
 } from './styled';
@@ -59,7 +61,10 @@ const MapGridCardComponent = ({
     timeField === 'lastOpenTime'
       ? (map.lastOpenTime ?? map.lastModificationTime)
       : map.lastModificationTime;
-  const timeLabelPrefix = timeField === 'lastOpenTime' ? '最近打开' : '最近修改';
+  const timeText =
+    timeField === 'lastOpenTime'
+      ? `打开于 ${date(displayTime).fromNow()}`
+      : date(displayTime).fromNow();
 
   const handleStar = (event: React.MouseEvent<HTMLButtonElement>): void => {
     event.stopPropagation();
@@ -84,11 +89,7 @@ const MapGridCardComponent = ({
       onDragStart={onDragStart ? (e) => onDragStart(map.id, e) : undefined}
       onContextMenu={onContextMenu ? (e) => onContextMenu(map.id, e) : undefined}
     >
-      <Link
-        href={buildMapEditPath(map.folderPath, map.title)}
-        underline="none"
-        sx={{ display: 'flex', flexDirection: 'column', height: '100%', color: 'inherit' }}
-      >
+      <GridCardLink href={buildMapEditPath(map.folderPath, map.title)} underline="none">
         <GridCardPreview>
           <MindmapMiniPreview preview={map.preview} title={map.title} />
 
@@ -144,7 +145,7 @@ const MapGridCardComponent = ({
                   aria-label={intl.formatMessage({ id: 'common.others', defaultMessage: 'Others' })}
                   onClick={handleOpenMenu}
                 >
-                  <MoreHorizRoundedIcon color="action" fontSize="small" />
+                  <GoogleIcon name="more_horiz" size={18} />
                 </IconButton>
               </ActionIconButton>
             </Tooltip>
@@ -152,20 +153,22 @@ const MapGridCardComponent = ({
         </GridCardPreview>
 
         <GridCardBody>
-          {showFolderPath && (
-            <MapFolderPathBadge
-              folderPath={map.folderPath}
-              folderId={map.folderId}
-              onOpenFolder={onOpenFolder}
-              fontSize="0.7rem"
-              iconSize={12}
-              mb={0}
-            />
-          )}
-
           <Tooltip title={map.title} enterDelay={500} placement="top-start">
             <GridCardTitle>{map.title}</GridCardTitle>
           </Tooltip>
+
+          {showFolderPath && map.folderPath ? (
+            <GridCardFolderSlot>
+              <MapFolderPathBadge
+                folderPath={map.folderPath}
+                folderId={map.folderId}
+                onOpenFolder={onOpenFolder}
+                fontSize="0.72rem"
+                iconSize={12}
+                mb={0}
+              />
+            </GridCardFolderSlot>
+          ) : null}
 
           <GridCardMeta>
             <Tooltip
@@ -173,38 +176,12 @@ const MapGridCardComponent = ({
               title={date(displayTime).format('lll')}
               placement="bottom-start"
             >
-              <Typography
-                component="span"
-                variant="caption"
-                sx={{
-                  fontSize: 'inherit',
-                  fontWeight: 'inherit',
-                  color: 'inherit',
-                  fontVariantNumeric: 'tabular-nums',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {timeLabelPrefix}: {date(displayTime).fromNow()}
-              </Typography>
+              <GridMetaTime>{timeText}</GridMetaTime>
             </Tooltip>
-            <Typography
-              component="span"
-              variant="caption"
-              sx={{
-                fontSize: 'inherit',
-                fontWeight: 600,
-                color: 'inherit',
-                fontVariantNumeric: 'tabular-nums',
-                flexShrink: 0,
-              }}
-            >
-              {formatMapSize(map.sizeBytes)}
-            </Typography>
+            <GridMetaSize>{formatMapSize(map.sizeBytes)}</GridMetaSize>
           </GridCardMeta>
         </GridCardBody>
-      </Link>
+      </GridCardLink>
     </GridCardRoot>
   );
 };

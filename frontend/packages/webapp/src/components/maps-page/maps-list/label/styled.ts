@@ -36,8 +36,8 @@ export const LabelContainer = styled('div', {
     backgroundColor: pillTint,
     border: `1px solid ${color ? alpha(color, 0.25) : c.hairline}`,
     alignItems: 'center',
-    fontSize: '0.78rem',
-    fontWeight: 700,
+    fontSize: '0.76rem',
+    fontWeight: 500,
     fontFamily: APPLE_FONT_STACK,
     color: c.textPrimary,
     '& .delete-button': {
@@ -53,7 +53,7 @@ export const LabelContainer = styled('div', {
 export const LabelText = styled('span')({
   marginLeft: '5px',
   marginRight: '2px',
-  fontWeight: 700,
+  fontWeight: 500,
   fontFamily: APPLE_FONT_STACK,
 });
 

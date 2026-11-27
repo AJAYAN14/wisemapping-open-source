@@ -16,6 +16,7 @@
  *   limitations under the License.
  */
 
+import React from 'react';
 import Button from '@mui/material/Button';
 import Checkbox from '@mui/material/Checkbox';
 import InputBase from '@mui/material/InputBase';
@@ -27,9 +28,19 @@ import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
-import StarRateRoundedIcon from '@mui/icons-material/StarRateRounded';
 import { styled } from '@mui/material/styles';
-import { APPLE_FONT_STACK, appleColors, applePressMixin, isDarkTheme } from '../appleDesign';
+import { GoogleIcon } from '../../common/google-symbol';
+import {
+  APPLE_FONT_STACK,
+  EASE_DRAWER,
+  EASE_OUT,
+  RADIUS_LG,
+  RADIUS_MD,
+  RADIUS_SM,
+  appleColors,
+  applePressMixin,
+  isDarkTheme,
+} from '../appleDesign';
 import { BodyCell, CompactCardHeader, MapCardRoot } from './shared.styled';
 
 export { BodyCell, CompactCardHeader, MapCardRoot };
@@ -41,16 +52,16 @@ export const ListRoot = styled('div')({
 });
 
 export const ListPaper = styled(Paper)(({ theme }) => ({
-  maxWidth: 'none',
+  maxWidth: '1440px',
   width: '100%',
   boxSizing: 'border-box',
-  margin: '0 0 8px 0',
-  paddingLeft: '28px',
-  paddingRight: '28px',
+  margin: '0 auto 8px auto',
+  paddingLeft: '24px',
+  paddingRight: '24px',
   backgroundColor: 'transparent',
   [theme.breakpoints.down('md')]: {
-    paddingLeft: '20px',
-    paddingRight: '20px',
+    paddingLeft: '16px',
+    paddingRight: '16px',
   },
   [theme.breakpoints.down('sm')]: {
     marginTop: 0,
@@ -64,11 +75,11 @@ export const ListToolbar = styled(Toolbar)(({ theme }) => ({
   alignItems: 'center',
   justifyContent: 'space-between',
   flexWrap: 'wrap',
-  gap: '12px',
+  gap: '10px',
   padding: 0,
   paddingTop: '4px',
-  paddingBottom: '18px',
-  minHeight: '52px',
+  paddingBottom: '16px',
+  minHeight: '48px',
   boxShadow: 'none',
   backgroundColor: 'transparent',
   [theme.breakpoints.down('sm')]: {
@@ -83,7 +94,7 @@ export const ListToolbar = styled(Toolbar)(({ theme }) => ({
 export const ToolbarActions = styled('div')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
-  gap: '10px',
+  gap: '8px',
   minWidth: 0,
   '& .MuiButton-root': {
     [theme.breakpoints.down('sm')]: {
@@ -105,7 +116,7 @@ export const WorkspaceHeading = styled('div')({
   display: 'flex',
   alignItems: 'center',
   flexWrap: 'wrap',
-  gap: '10px',
+  gap: '8px',
   minWidth: 0,
 });
 
@@ -113,10 +124,10 @@ export const WorkspaceTitle = styled('h1')(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
     margin: 0,
-    fontSize: 'clamp(1.2rem, 1rem + 1vw, 1.55rem)',
-    fontWeight: 800,
-    lineHeight: 1.15,
-    letterSpacing: '-0.025em',
+    fontSize: 'clamp(1.15rem, 1rem + 0.6vw, 1.35rem)',
+    fontWeight: 600,
+    lineHeight: 1.25,
+    letterSpacing: '-0.02em',
     color: c.textPrimary,
     fontFamily: APPLE_FONT_STACK,
     overflowWrap: 'break-word',
@@ -129,14 +140,13 @@ export const CountPill = styled('span')(({ theme }) => {
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: '2px 9px',
+    padding: '1px 7px',
     borderRadius: '999px',
-    fontSize: '0.76rem',
-    fontWeight: 700,
+    fontSize: '0.72rem',
+    fontWeight: 500,
     fontVariantNumeric: 'tabular-nums',
     backgroundColor: c.hoverFill,
     color: c.textSecondary,
-    border: `1px solid ${c.hairline}`,
     fontFamily: APPLE_FONT_STACK,
   };
 });
@@ -147,11 +157,13 @@ export const WorkspaceSegmentedGroup = styled('div')(({ theme }) => {
     position: 'relative',
     display: 'inline-flex',
     alignItems: 'center',
+    height: '34px',
+    boxSizing: 'border-box',
     padding: '3px',
-    borderRadius: '13px',
+    borderRadius: RADIUS_MD,
     backgroundColor: c.hoverFill,
     border: `1px solid ${c.hairline}`,
-    gap: '3px',
+    gap: '2px',
     flexShrink: 0,
   };
 });
@@ -165,13 +177,13 @@ export const SegmentedPillThumb = styled('span', {
     top: '3px',
     bottom: '3px',
     left: 0,
-    borderRadius: '10px',
+    borderRadius: RADIUS_SM,
     backgroundColor: c.surface,
     boxShadow: c.shadowSubtle,
     pointerEvents: 'none',
     zIndex: 0,
     transition: animate
-      ? 'transform 280ms cubic-bezier(0.32, 0.72, 0, 1), width 280ms cubic-bezier(0.32, 0.72, 0, 1)'
+      ? `transform 220ms ${EASE_DRAWER}, width 220ms ${EASE_DRAWER}`
       : 'none',
     '@media (prefers-reduced-motion: reduce)': {
       transition: 'none',
@@ -192,24 +204,22 @@ export const WorkspaceSegmentedButton = styled('button', {
     cursor: 'pointer',
     display: 'inline-flex',
     alignItems: 'center',
-    gap: '7px',
-    padding: '6px 13px',
-    borderRadius: '10px',
+    gap: '6px',
+    height: '26px',
+    padding: '0 10px',
+    borderRadius: RADIUS_SM,
     fontFamily: APPLE_FONT_STACK,
-    fontSize: '0.94rem',
-    fontWeight: active ? 700 : 600,
-    letterSpacing: '-0.015em',
+    fontSize: '0.84rem',
+    fontWeight: active ? 600 : 500,
+    letterSpacing: '-0.01em',
     lineHeight: 1.2,
     backgroundColor: !hasThumb && active ? c.surface : 'transparent',
     color: active ? c.textPrimary : c.textSecondary,
     boxShadow: !hasThumb && active ? c.shadowSubtle : 'none',
-    transition: 'color 180ms ease, transform 110ms cubic-bezier(0.2, 0.8, 0.2, 1)',
+    transition: `color 140ms ease, transform 140ms ${EASE_OUT}`,
     ...applePressMixin,
-    '& svg': {
-      fontSize: '18px',
-      color: active ? c.amber : c.textTertiary,
-      transform: active ? 'scale(1.06)' : 'scale(1)',
-      transition: 'color 180ms ease, transform 220ms cubic-bezier(0.32, 0.72, 0, 1)',
+    '& .material-symbols-rounded': {
+      color: active ? c.amberHover : c.textTertiary,
     },
     '&:hover': {
       color: c.textPrimary,
@@ -219,10 +229,6 @@ export const WorkspaceSegmentedButton = styled('button', {
     },
     '@media (prefers-reduced-motion: reduce)': {
       transition: 'none',
-      '& svg': {
-        transform: 'none',
-        transition: 'none',
-      },
     },
   };
 });
@@ -236,12 +242,12 @@ export const BreadcrumbBar = styled('div')(({ theme }) => {
     gap: '4px',
     padding: '6px 10px',
     marginBottom: '12px',
-    borderRadius: '12px',
-    backgroundColor: c.hoverFill,
+    borderRadius: RADIUS_MD,
+    backgroundColor: c.surface,
     border: `1px solid ${c.hairline}`,
     fontFamily: APPLE_FONT_STACK,
     fontSize: '0.82rem',
-    fontWeight: 600,
+    fontWeight: 500,
     color: c.textSecondary,
     [theme.breakpoints.down('sm')]: {
       marginLeft: '12px',
@@ -259,24 +265,23 @@ export const BreadcrumbChip = styled('button', {
     border: 'none',
     outline: dragTarget ? `2px dashed ${c.amber}` : 'none',
     outlineOffset: '-2px',
-    backgroundColor: dragTarget ? c.amberSoft : active ? c.surface : 'transparent',
+    backgroundColor: dragTarget ? c.amberSoft : active ? c.hoverFill : 'transparent',
     color: dragTarget ? c.amberText : active ? c.textPrimary : c.textSecondary,
     fontFamily: APPLE_FONT_STACK,
     fontSize: '0.82rem',
-    fontWeight: active ? 700 : 600,
-    padding: '4px 9px',
-    borderRadius: '8px',
+    fontWeight: active ? 600 : 500,
+    padding: '4px 8px',
+    borderRadius: RADIUS_SM,
     display: 'inline-flex',
     alignItems: 'center',
     gap: '5px',
     cursor: active ? 'default' : 'pointer',
-    boxShadow: active ? c.shadowSubtle : 'none',
     transition: 'background-color 120ms ease, color 120ms ease',
     ...(!active && applePressMixin),
     '&:hover': active
       ? undefined
       : {
-          backgroundColor: c.surface,
+          backgroundColor: c.hoverFill,
           color: c.textPrimary,
         },
     '&:focus-visible': {
@@ -288,18 +293,20 @@ export const BreadcrumbChip = styled('button', {
 export const BulkActionButton = styled(Button)(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
-    borderRadius: '12px',
+    height: '34px',
+    borderRadius: RADIUS_MD,
     fontSize: '0.84rem',
-    fontWeight: 700,
+    fontWeight: 500,
     fontFamily: APPLE_FONT_STACK,
-    padding: '6px 14px',
+    padding: '0 12px',
     backgroundColor: c.surface,
     color: c.textPrimary,
-    border: `1px solid ${c.hairlineStrong}`,
-    boxShadow: c.shadowSubtle,
+    border: `1px solid ${c.hairline}`,
+    boxShadow: 'none',
     ...applePressMixin,
     '&:hover': {
       backgroundColor: c.hoverFill,
+      borderColor: c.hairlineStrong,
     },
   };
 });
@@ -308,7 +315,7 @@ export const ToolbarRightCluster = styled('div')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   flexWrap: 'wrap',
-  gap: '10px',
+  gap: '8px',
   marginLeft: 'auto',
   minWidth: 0,
   maxWidth: '100%',
@@ -344,10 +351,12 @@ export const SearchBox = styled('div')(({ theme }) => {
     position: 'relative',
     display: 'flex',
     alignItems: 'center',
-    borderRadius: '12px',
+    height: '34px',
+    boxSizing: 'border-box',
+    borderRadius: RADIUS_MD,
     backgroundColor: c.surface,
     border: `1px solid ${c.hairline}`,
-    boxShadow: c.shadowSubtle,
+    boxShadow: 'none',
     transition: 'border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease',
     [theme.breakpoints.down('sm')]: {
       width: '100%',
@@ -359,8 +368,8 @@ export const SearchBox = styled('div')(({ theme }) => {
       borderColor: c.hairlineStrong,
     },
     '&:focus-within': {
-      borderColor: c.amber,
-      boxShadow: `0 0 0 3px ${c.amberRing}`,
+      borderColor: c.amberHover,
+      boxShadow: `0 0 0 2px ${c.amberRing}`,
     },
   };
 });
@@ -368,7 +377,7 @@ export const SearchBox = styled('div')(({ theme }) => {
 export const SearchIconWrapper = styled('div')(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
-    paddingLeft: '11px',
+    paddingLeft: '10px',
     height: '100%',
     position: 'absolute',
     pointerEvents: 'none',
@@ -376,9 +385,6 @@ export const SearchIconWrapper = styled('div')(({ theme }) => {
     alignItems: 'center',
     justifyContent: 'center',
     color: c.textTertiary,
-    '& svg': {
-      fontSize: '18px',
-    },
   };
 });
 
@@ -387,8 +393,8 @@ export const SearchInput = styled(InputBase)(({ theme }) => {
   return {
     color: c.textPrimary,
     fontFamily: APPLE_FONT_STACK,
-    fontSize: '0.86rem',
-    fontWeight: 600,
+    fontSize: '0.84rem',
+    fontWeight: 400,
     [theme.breakpoints.down('sm')]: {
       width: '100%',
     },
@@ -396,17 +402,17 @@ export const SearchInput = styled(InputBase)(({ theme }) => {
       width: '100%',
     },
     '& .MuiInputBase-input': {
-      padding: '7px 54px 7px 34px',
+      padding: '5px 52px 5px 32px',
       border: 'none',
       width: '17ch',
-      transition: 'width 200ms cubic-bezier(0.2, 0.8, 0.2, 1)',
+      transition: `width 180ms ${EASE_OUT}`,
       '&::placeholder': {
         color: c.textTertiary,
         opacity: 1,
-        fontWeight: 500,
+        fontWeight: 400,
       },
       '&:focus': {
-        width: '22ch',
+        width: '21ch',
       },
       [theme.breakpoints.down('sm')]: {
         width: '100%',
@@ -433,12 +439,12 @@ export const SearchShortcutHint = styled('kbd')(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
     position: 'absolute',
-    right: '8px',
+    right: '7px',
     pointerEvents: 'none',
-    padding: '2px 6px',
-    borderRadius: '6px',
+    padding: '2px 5px',
+    borderRadius: RADIUS_SM,
     fontSize: '10.5px',
-    fontWeight: 700,
+    fontWeight: 500,
     fontFamily: APPLE_FONT_STACK,
     backgroundColor: c.hoverFill,
     color: c.textTertiary,
@@ -482,14 +488,14 @@ export const ListPagination = styled(TablePagination)(({ theme }) => {
     display: 'inline-flex',
     backgroundColor: c.surface,
     border: `1px solid ${c.hairline}`,
-    borderRadius: '12px',
+    borderRadius: RADIUS_MD,
     padding: 0,
     margin: 0,
-    boxShadow: c.shadowSubtle,
+    boxShadow: 'none',
     fontFamily: APPLE_FONT_STACK,
     '& .MuiTablePagination-toolbar': {
-      minHeight: '36px',
-      paddingLeft: '14px',
+      minHeight: '34px',
+      paddingLeft: '12px',
       paddingRight: '6px',
       minWidth: 'auto',
       backgroundColor: 'transparent',
@@ -503,7 +509,7 @@ export const ListPagination = styled(TablePagination)(({ theme }) => {
     '& .MuiTablePagination-displayedRows': {
       margin: 0,
       fontSize: '0.8rem',
-      fontWeight: 700,
+      fontWeight: 500,
       fontVariantNumeric: 'tabular-nums',
       color: c.textSecondary,
     },
@@ -520,8 +526,8 @@ export const ListTableContainer = styled(TableContainer)(({ theme }) => {
   return {
     backgroundColor: c.surface,
     border: `1px solid ${c.hairline}`,
-    borderRadius: '14px',
-    boxShadow: 'none',
+    borderRadius: RADIUS_LG,
+    boxShadow: c.shadowSubtle,
     overflowX: 'auto',
     overflowY: 'hidden',
     maxWidth: '100%',
@@ -571,17 +577,16 @@ export const HeaderCell = styled(TableCell)(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
     backgroundColor: c.surface,
-    fontWeight: 700,
+    fontWeight: 600,
     color: c.textSecondary,
     borderBottom: `1px solid ${c.hairline}`,
     borderTop: 0,
     borderLeft: 0,
     borderRight: 0,
     fontSize: '0.78rem',
-    letterSpacing: '0.02em',
-    textTransform: 'uppercase',
+    letterSpacing: '0',
     fontFamily: APPLE_FONT_STACK,
-    padding: '11px 14px',
+    padding: '10px 14px',
   };
 });
 
@@ -616,7 +621,7 @@ export const SelectCheckbox = styled(Checkbox)(({ theme }) => {
       padding: '10px',
     },
     '&.Mui-checked, &.MuiCheckbox-indeterminate': {
-      color: c.amber,
+      color: c.amberHover,
     },
   };
 });
@@ -631,45 +636,38 @@ export const MapRowTitleWrap = styled('div')({
 export const MapGlyphBadge = styled('span')(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
-    width: '32px',
-    height: '32px',
-    borderRadius: '10px',
+    width: '30px',
+    height: '30px',
+    borderRadius: RADIUS_MD,
     backgroundColor: c.amberSoft,
     color: c.amberText,
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
-    '& svg': {
-      fontSize: '18px',
-    },
   };
 });
 
 export const FolderGlyphBadge = styled('span')(({ theme }) => {
-  const isDark = isDarkTheme(theme);
-  const c = appleColors(isDark);
+  const c = appleColors(isDarkTheme(theme));
   return {
-    width: '32px',
-    height: '32px',
-    borderRadius: '10px',
-    backgroundColor: isDark ? 'rgba(255, 159, 10, 0.18)' : 'rgba(245, 158, 11, 0.16)',
-    color: c.amber,
+    width: '30px',
+    height: '30px',
+    borderRadius: RADIUS_MD,
+    backgroundColor: c.amberSoft,
+    color: c.amberHover,
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
-    '& svg': {
-      fontSize: '19px',
-    },
   };
 });
 
 export const TitleLink = styled(Link)(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
-    fontSize: '0.96rem',
-    fontWeight: 700,
+    fontSize: '0.9rem',
+    fontWeight: 600,
     letterSpacing: '-0.01em',
     fontFamily: APPLE_FONT_STACK,
     color: c.textPrimary,
@@ -685,8 +683,8 @@ export const TitleLink = styled(Link)(({ theme }) => {
 export const CellText = styled(Typography)(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
-    fontSize: '0.84rem',
-    fontWeight: 600,
+    fontSize: '0.82rem',
+    fontWeight: 400,
     fontVariantNumeric: 'tabular-nums',
     color: c.textSecondary,
     fontFamily: APPLE_FONT_STACK,
@@ -694,18 +692,38 @@ export const CellText = styled(Typography)(({ theme }) => {
 });
 
 /**
- * The star of a map. `&&`: the theme's IconButton gives its icons `color: inherit` through a
- * descendant selector, which a single class would lose to.
+ * Star action glyph powered by Google Fonts Material Symbols Rounded (`FILL` transitions 0 -> 1).
+ * Preserves `data-testid="StarRateRoundedIcon"` for existing test selectors.
  */
-export const StarIcon = styled(StarRateRoundedIcon, {
+export const StarIcon = ({
+  starred,
+  fontSize = 'medium',
+}: {
+  starred: boolean;
+  color?: string;
+  fontSize?: 'small' | 'medium';
+}): React.ReactElement =>
+  React.createElement(
+    StarIconWrap,
+    { starred },
+    React.createElement(GoogleIcon, {
+      name: 'star',
+      filled: starred,
+      size: fontSize === 'small' ? 18 : 20,
+      testId: 'StarRateRoundedIcon',
+    }),
+  );
+
+const StarIconWrap = styled('span', {
   shouldForwardProp: (prop) => prop !== 'starred',
 })<{ starred: boolean }>(({ theme, starred }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
-    '&&': {
-      color: starred ? c.amber : c.textTertiary,
-      transition: 'transform 140ms cubic-bezier(0.2, 0.8, 0.2, 1), color 140ms ease',
-    },
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: starred ? c.amber : c.textTertiary,
+    transition: `color 140ms ease, transform 140ms ${EASE_OUT}`,
   };
 });
 
@@ -714,7 +732,7 @@ export const ActionIconButton = styled('span')(({ theme }) => {
   return {
     display: 'inline-flex',
     '& .MuiIconButton-root': {
-      borderRadius: '10px',
+      borderRadius: RADIUS_MD,
       color: c.textTertiary,
       ...applePressMixin,
       '@media (pointer: coarse)': {
@@ -735,12 +753,39 @@ export const CardTitle = styled(Typography)(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
     maxWidth: '100%',
-    fontSize: '0.96rem',
-    fontWeight: 700,
+    fontSize: '0.9rem',
+    fontWeight: 600,
     letterSpacing: '-0.01em',
     fontFamily: APPLE_FONT_STACK,
     color: c.textPrimary,
     overflowWrap: 'break-word',
+  };
+});
+
+export const CardSelectBox = styled('div')({
+  paddingLeft: '4px',
+  flexShrink: 0,
+});
+
+export const CardLink = styled(Link)({
+  flex: 1,
+  minWidth: 0,
+  display: 'block',
+});
+
+export const CardTitleStack = styled('div')({
+  display: 'flex',
+  flexDirection: 'column',
+  minWidth: 0,
+});
+
+export const CardMetaText = styled(Typography)(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    fontSize: '0.75rem',
+    fontWeight: 400,
+    fontVariantNumeric: 'tabular-nums',
+    color: c.textSecondary,
   };
 });
 
@@ -752,8 +797,10 @@ export const ViewModeGroup = styled('div')(({ theme }) => {
     position: 'relative',
     display: 'inline-flex',
     alignItems: 'center',
+    height: '34px',
+    boxSizing: 'border-box',
     padding: '3px',
-    borderRadius: '11px',
+    borderRadius: RADIUS_MD,
     backgroundColor: c.hoverFill,
     border: `1px solid ${c.hairline}`,
     gap: '2px',
@@ -769,15 +816,15 @@ export const ViewModeThumb = styled('span', {
     position: 'absolute',
     top: '3px',
     left: '3px',
-    width: '30px',
-    height: '28px',
-    borderRadius: '8px',
+    width: '28px',
+    height: '26px',
+    borderRadius: RADIUS_SM,
     backgroundColor: c.surface,
     boxShadow: c.shadowSubtle,
     pointerEvents: 'none',
     zIndex: 0,
-    transform: `translate3d(${activeIndex * 32}px, 0, 0)`,
-    transition: 'transform 260ms cubic-bezier(0.32, 0.72, 0, 1)',
+    transform: `translate3d(${activeIndex * 30}px, 0, 0)`,
+    transition: `transform 200ms ${EASE_DRAWER}`,
     '@media (prefers-reduced-motion: reduce)': {
       transition: 'none',
     },
@@ -798,18 +845,13 @@ export const ViewModeButton = styled('button', {
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
-    width: '30px',
-    height: '28px',
-    borderRadius: '8px',
+    width: '28px',
+    height: '26px',
+    borderRadius: RADIUS_SM,
     backgroundColor: 'transparent',
     color: active ? c.textPrimary : c.textSecondary,
-    transition: 'color 180ms ease, transform 110ms cubic-bezier(0.2, 0.8, 0.2, 1)',
+    transition: `color 140ms ease, transform 140ms ${EASE_OUT}`,
     ...applePressMixin,
-    '& svg': {
-      fontSize: '18px',
-      transform: active ? 'scale(1.06)' : 'scale(0.96)',
-      transition: 'transform 220ms cubic-bezier(0.32, 0.72, 0, 1), color 180ms ease',
-    },
     '&:hover': {
       color: c.textPrimary,
     },
@@ -818,45 +860,29 @@ export const ViewModeButton = styled('button', {
     },
     '@media (prefers-reduced-motion: reduce)': {
       transition: 'none',
-      '& svg': {
-        transform: 'none',
-        transition: 'none',
-      },
     },
   };
 });
 
+/** Instant stage wrapper without translateY slide on frequent tab/view toggles (Emil Design Engineering). */
 export const ViewTransitionStage = styled('div')({
-  animation: 'mapsViewFadeSlideIn 190ms cubic-bezier(0.22, 1, 0.36, 1)',
-  '@keyframes mapsViewFadeSlideIn': {
-    from: {
-      opacity: 0.68,
-      transform: 'translateY(4px)',
-    },
-    to: {
-      opacity: 1,
-      transform: 'translateY(0)',
-    },
-  },
-  '@media (prefers-reduced-motion: reduce)': {
-    animation: 'none',
-  },
+  minWidth: 0,
 });
 
 export const SortTriggerButton = styled(Button)(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
-    minWidth: '36px',
-    height: '36px',
-    borderRadius: '11px',
+    minWidth: '34px',
+    height: '34px',
+    borderRadius: RADIUS_MD,
     padding: '0 10px',
-    fontSize: '0.82rem',
-    fontWeight: 700,
+    fontSize: '0.84rem',
+    fontWeight: 500,
     fontFamily: APPLE_FONT_STACK,
     backgroundColor: c.surface,
     color: c.textPrimary,
     border: `1px solid ${c.hairline}`,
-    boxShadow: c.shadowSubtle,
+    boxShadow: 'none',
     textTransform: 'none',
     flexShrink: 0,
     ...applePressMixin,
@@ -873,8 +899,8 @@ export const SortTriggerButton = styled(Button)(({ theme }) => {
 
 export const MapsGrid = styled('div')({
   display: 'grid',
-  gridTemplateColumns: 'repeat(auto-fill, minmax(224px, 1fr))',
-  gap: '18px',
+  gridTemplateColumns: 'repeat(auto-fill, minmax(236px, 1fr))',
+  gap: '16px',
   width: '100%',
 });
 
@@ -884,22 +910,29 @@ export const GridCardRoot = styled('div', {
   const c = appleColors(isDarkTheme(theme));
   return {
     position: 'relative',
-    borderRadius: '14px',
-    padding: '8px',
-    backgroundColor: c.surfaceElevated,
-    border: `1px solid ${selected ? c.amber : c.hairline}`,
-    boxShadow: selected ? `0 0 0 2px ${c.amberRing}` : 'none',
+    display: 'flex',
+    flexDirection: 'column',
+    borderRadius: RADIUS_LG,
+    padding: 0,
+    backgroundColor: c.surface,
+    border: `1px solid ${selected ? c.amberHover : c.hairline}`,
+    boxShadow: selected ? `0 0 0 2px ${c.amberRing}` : c.shadowSubtle,
     overflow: 'hidden',
-    transition:
-      'transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 160ms ease, border-color 160ms ease',
+    contentVisibility: 'auto',
+    containIntrinsicSize: '236px 240px',
+    transition: `border-color 140ms ease, box-shadow 140ms ease, transform 140ms ${EASE_OUT}`,
     cursor: 'pointer',
-    '&:hover': {
-      transform: 'translateY(-2px)',
-      boxShadow: c.shadowSubtle,
-      borderColor: selected ? c.amber : c.hairlineStrong,
-      '& .grid-card-overlay': {
-        opacity: 1,
+    '@media (hover: hover) and (pointer: fine)': {
+      '&:hover': {
+        borderColor: selected ? c.amberHover : c.hairlineStrong,
+        boxShadow: selected ? `0 0 0 2px ${c.amberRing}` : c.shadowFloat,
+        '& .grid-card-overlay': {
+          opacity: 1,
+        },
       },
+    },
+    '&:active': {
+      transform: 'scale(0.988)',
     },
     '&:focus-within .grid-card-overlay': {
       opacity: 1,
@@ -911,11 +944,19 @@ export const GridCardRoot = styled('div', {
     },
     '@media (prefers-reduced-motion: reduce)': {
       transition: 'none',
-      '&:hover': {
+      '&:active': {
         transform: 'none',
       },
     },
   };
+});
+
+export const GridCardLink = styled(Link)({
+  display: 'flex',
+  flexDirection: 'column',
+  height: '100%',
+  color: 'inherit',
+  textDecoration: 'none',
 });
 
 export const GridCardPreview = styled('div')(({ theme }) => {
@@ -925,9 +966,8 @@ export const GridCardPreview = styled('div')(({ theme }) => {
     width: '100%',
     aspectRatio: '16 / 10',
     overflow: 'hidden',
-    borderRadius: '10px',
-    border: `1px solid ${c.hairline}`,
-    backgroundColor: isDarkTheme(theme) ? '#18181B' : '#FFFFFF',
+    borderBottom: `1px solid ${c.hairline}`,
+    backgroundColor: c.surfaceElevated,
   };
 });
 
@@ -940,9 +980,8 @@ export const GridCardCheckboxOverlay = styled('div', {
     top: '8px',
     left: '8px',
     zIndex: 2,
-    borderRadius: '9px',
-    backgroundColor: isDarkTheme(theme) ? 'rgba(28, 28, 32, 0.82)' : 'rgba(255, 255, 255, 0.88)',
-    backdropFilter: 'blur(8px)',
+    borderRadius: RADIUS_MD,
+    backgroundColor: isDarkTheme(theme) ? 'rgba(26, 26, 30, 0.88)' : 'rgba(255, 255, 255, 0.92)',
     border: `1px solid ${c.hairline}`,
     opacity: visible ? 1 : 0,
     transition: 'opacity 140ms ease',
@@ -969,13 +1008,11 @@ export const GridCardActionsOverlay = styled('div', {
     alignItems: 'center',
     gap: '2px',
     padding: '2px',
-    borderRadius: '10px',
-    backgroundColor: isDarkTheme(theme) ? 'rgba(28, 28, 32, 0.82)' : 'rgba(255, 255, 255, 0.88)',
-    backdropFilter: 'blur(8px)',
+    borderRadius: RADIUS_MD,
+    backgroundColor: isDarkTheme(theme) ? 'rgba(26, 26, 30, 0.88)' : 'rgba(255, 255, 255, 0.92)',
     border: `1px solid ${c.hairline}`,
     opacity: alwaysVisibleStar ? 1 : 0,
     transition: 'opacity 140ms ease',
-    '.MuiBox-root:hover &, .grid-card-overlay': {},
     '@media (hover: none), (pointer: coarse)': {
       opacity: 1,
     },
@@ -983,10 +1020,10 @@ export const GridCardActionsOverlay = styled('div', {
 });
 
 export const GridCardBody = styled('div')({
-  padding: '10px 6px 4px 6px',
+  padding: '12px 14px',
   display: 'flex',
   flexDirection: 'column',
-  gap: '4px',
+  gap: '6px',
   minWidth: 0,
   flex: 1,
 });
@@ -995,15 +1032,22 @@ export const GridCardTitle = styled('div')(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
     fontFamily: APPLE_FONT_STACK,
-    fontSize: '0.92rem',
-    fontWeight: 700,
-    lineHeight: 1.35,
+    fontSize: '0.88rem',
+    fontWeight: 600,
+    lineHeight: 1.4,
     letterSpacing: '-0.01em',
     color: c.textPrimary,
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     whiteSpace: 'nowrap',
   };
+});
+
+export const GridCardFolderSlot = styled('div')({
+  minHeight: '16px',
+  display: 'flex',
+  alignItems: 'center',
+  minWidth: 0,
 });
 
 export const GridCardMeta = styled('div')(({ theme }) => {
@@ -1013,11 +1057,30 @@ export const GridCardMeta = styled('div')(({ theme }) => {
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: '8px',
-    marginTop: '2px',
+    marginTop: 'auto',
+    paddingTop: '2px',
     fontFamily: APPLE_FONT_STACK,
     fontSize: '0.75rem',
-    fontWeight: 600,
+    fontWeight: 400,
     color: c.textSecondary,
     minWidth: 0,
   };
+});
+
+export const GridMetaTime = styled('span')({
+  fontSize: 'inherit',
+  fontWeight: 'inherit',
+  color: 'inherit',
+  fontVariantNumeric: 'tabular-nums',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+});
+
+export const GridMetaSize = styled('span')({
+  fontSize: 'inherit',
+  fontWeight: 500,
+  color: 'inherit',
+  fontVariantNumeric: 'tabular-nums',
+  flexShrink: 0,
 });

@@ -28,22 +28,25 @@ import Box from '@mui/material/Box';
 import { styled, useTheme as useMuiTheme } from '@mui/material/styles';
 import React, { use } from 'react';
 import { FormattedMessage } from 'react-intl';
-import DarkModeRoundedIcon from '@mui/icons-material/DarkModeRounded';
-import LightModeRoundedIcon from '@mui/icons-material/LightModeRounded';
-import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
-import StorageRoundedIcon from '@mui/icons-material/StorageRounded';
-import UnfoldMoreRoundedIcon from '@mui/icons-material/UnfoldMoreRounded';
 import { useFetchAccount } from '../../../classes/middleware';
 import { ClientContext } from '../../../classes/provider/client-context';
 import JwtTokenConfig from '../../../classes/jwt-token-config';
 import { useOptionalTheme } from '../../../contexts/ThemeContext';
-import { APPLE_FONT_STACK, appleColors, applePressMixin, isDarkTheme } from '../appleDesign';
+import { GoogleIcon } from '../../common/google-symbol';
+import {
+  APPLE_FONT_STACK,
+  RADIUS_LG,
+  RADIUS_MD,
+  appleColors,
+  applePressMixin,
+  isDarkTheme,
+} from '../appleDesign';
 import StorageQuotaDialog from './StorageQuotaDialog';
 
 declare const VITE_APP_VERSION: string | undefined;
 declare const VITE_BUILD_TIME: string | undefined;
 
-const APP_VERSION = typeof VITE_APP_VERSION !== 'undefined' ? VITE_APP_VERSION : '6.0.28';
+const APP_VERSION = typeof VITE_APP_VERSION !== 'undefined' ? VITE_APP_VERSION : '6.0.29';
 const BUILD_TIME = typeof VITE_BUILD_TIME !== 'undefined' ? VITE_BUILD_TIME : '';
 
 const AvatarTrigger = styled(IconButton)(({ theme }) => {
@@ -61,19 +64,18 @@ const AvatarTrigger = styled(IconButton)(({ theme }) => {
 });
 
 const SidebarAccountButton = styled('button')(({ theme }) => {
-  const isDark = isDarkTheme(theme);
-  const c = appleColors(isDark);
+  const c = appleColors(isDarkTheme(theme));
   return {
     appearance: 'none',
-    width: 'calc(100% - 20px)',
-    margin: 'auto 10px 10px 10px',
-    padding: '9px 10px',
-    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
-    borderRadius: '12px',
+    width: 'calc(100% - 16px)',
+    margin: 'auto 8px 10px 8px',
+    padding: '8px 10px',
+    backgroundColor: c.hoverFill,
+    borderRadius: RADIUS_MD,
     border: `1px solid ${c.hairline}`,
     display: 'flex',
     alignItems: 'center',
-    gap: '10px',
+    gap: '9px',
     cursor: 'pointer',
     textAlign: 'left',
     fontFamily: APPLE_FONT_STACK,
@@ -81,7 +83,7 @@ const SidebarAccountButton = styled('button')(({ theme }) => {
     boxSizing: 'border-box',
     ...applePressMixin,
     '&:hover': {
-      backgroundColor: c.hoverFill,
+      backgroundColor: c.activeFill,
       borderColor: c.hairlineStrong,
     },
     '&:focus-visible': {
@@ -96,71 +98,21 @@ const SidebarQuickGrid = styled('div', {
 })<{ columns: number }>(({ columns }) => ({
   display: 'grid',
   gridTemplateColumns: columns > 1 ? 'repeat(2, minmax(0, 1fr))' : '1fr',
-  gap: '8px',
-  width: 'calc(100% - 20px)',
-  margin: '0 10px 8px 10px',
+  gap: '6px',
+  width: 'calc(100% - 16px)',
+  margin: '0 8px 6px 8px',
 }));
 
-const QuickIconBadge = styled('span', {
-  shouldForwardProp: (prop) => prop !== 'variant',
-})<{ variant: 'theme' | 'storage' }>(({ theme, variant }) => {
-  const isDark = isDarkTheme(theme);
-  const isTheme = variant === 'theme';
-
-  return {
-    width: '26px',
-    height: '26px',
-    borderRadius: '8px',
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexShrink: 0,
-    transition: 'transform 0.16s ease, box-shadow 0.16s ease',
-    ...(isTheme
-      ? {
-          background: isDark
-            ? 'linear-gradient(135deg, rgba(251, 191, 36, 0.3) 0%, rgba(217, 119, 6, 0.18) 100%)'
-            : 'linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%)',
-          color: isDark ? '#FDE047' : '#D97706',
-          boxShadow: isDark
-            ? '0 2px 4px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.18)'
-            : '0 2px 4px rgba(217, 119, 6, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
-          '& svg': {
-            fontSize: '16px',
-            filter: isDark
-              ? 'drop-shadow(0 1px 2px rgba(251, 191, 36, 0.5))'
-              : 'drop-shadow(0 1px 1px rgba(217, 119, 6, 0.35))',
-          },
-        }
-      : {
-          background: isDark
-            ? 'linear-gradient(135deg, rgba(99, 102, 241, 0.3) 0%, rgba(79, 70, 229, 0.18) 100%)'
-            : 'linear-gradient(135deg, #E0E7FF 0%, #C7D2FE 100%)',
-          color: isDark ? '#A5B4FC' : '#4F46E5',
-          boxShadow: isDark
-            ? '0 2px 4px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.18)'
-            : '0 2px 4px rgba(79, 70, 229, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
-          '& svg': {
-            fontSize: '16px',
-            filter: isDark
-              ? 'drop-shadow(0 1px 2px rgba(129, 140, 248, 0.5))'
-              : 'drop-shadow(0 1px 1px rgba(79, 70, 229, 0.35))',
-          },
-        }),
-  };
-});
-
 const SidebarQuickButton = styled('button')(({ theme }) => {
-  const isDark = isDarkTheme(theme);
-  const c = appleColors(isDark);
+  const c = appleColors(isDarkTheme(theme));
   return {
     appearance: 'none',
     minWidth: 0,
-    minHeight: '42px',
-    height: '42px',
+    minHeight: '34px',
+    height: '34px',
     padding: '0 8px',
-    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
-    borderRadius: '12px',
+    backgroundColor: c.surface,
+    borderRadius: RADIUS_MD,
     border: `1px solid ${c.hairline}`,
     display: 'inline-flex',
     alignItems: 'center',
@@ -169,8 +121,8 @@ const SidebarQuickButton = styled('button')(({ theme }) => {
     cursor: 'pointer',
     fontFamily: APPLE_FONT_STACK,
     fontSize: '12.5px',
-    fontWeight: 600,
-    color: c.textPrimary,
+    fontWeight: 500,
+    color: c.textSecondary,
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
@@ -179,9 +131,7 @@ const SidebarQuickButton = styled('button')(({ theme }) => {
     '&:hover': {
       backgroundColor: c.hoverFill,
       borderColor: c.hairlineStrong,
-      '& .quick-icon-badge': {
-        transform: 'scale(1.05)',
-      },
+      color: c.textPrimary,
     },
     '&:focus-visible': {
       outline: 'none',
@@ -191,23 +141,20 @@ const SidebarQuickButton = styled('button')(({ theme }) => {
 });
 
 const CollapsedQuickIconButton = styled(IconButton)(({ theme }) => {
-  const isDark = isDarkTheme(theme);
-  const c = appleColors(isDark);
+  const c = appleColors(isDarkTheme(theme));
   return {
-    width: '38px',
-    height: '38px',
+    width: '36px',
+    height: '36px',
     padding: 0,
-    borderRadius: '11px',
+    borderRadius: RADIUS_MD,
     border: `1px solid ${c.hairline}`,
-    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+    backgroundColor: c.surface,
     color: c.textSecondary,
     ...applePressMixin,
     '&:hover': {
       backgroundColor: c.hoverFill,
       borderColor: c.hairlineStrong,
-      '& .quick-icon-badge': {
-        transform: 'scale(1.06)',
-      },
+      color: c.textPrimary,
     },
     '&:focus-visible': {
       outline: 'none',
@@ -338,9 +285,7 @@ const AccountMenu = ({
                   aria-label={themeToggleLabel}
                   onClick={() => themeCtx?.toggleMode()}
                 >
-                  <QuickIconBadge variant="theme" className="quick-icon-badge">
-                    {isDark ? <LightModeRoundedIcon /> : <DarkModeRoundedIcon />}
-                  </QuickIconBadge>
+                  <GoogleIcon name={isDark ? 'light_mode' : 'dark_mode'} size={16} />
                   <span>{themeShortLabel}</span>
                 </SidebarQuickButton>
               </Tooltip>
@@ -351,9 +296,7 @@ const AccountMenu = ({
                     aria-label="存储空间管理"
                     onClick={() => setStorageOpen(true)}
                   >
-                    <QuickIconBadge variant="storage" className="quick-icon-badge">
-                      <StorageRoundedIcon />
-                    </QuickIconBadge>
+                    <GoogleIcon name="storage" size={16} />
                     <span>存储空间</span>
                   </SidebarQuickButton>
                 </Tooltip>
@@ -371,8 +314,8 @@ const AccountMenu = ({
                 <Typography
                   variant="body2"
                   sx={{
-                    fontWeight: 700,
-                    fontSize: '13.5px',
+                    fontWeight: 600,
+                    fontSize: '13px',
                     lineHeight: 1.25,
                     color: 'text.primary',
                     overflow: 'hidden',
@@ -386,7 +329,7 @@ const AccountMenu = ({
                   variant="caption"
                   sx={{
                     fontSize: '11px',
-                    fontWeight: 500,
+                    fontWeight: 400,
                     lineHeight: 1.25,
                     color: 'text.secondary',
                     overflow: 'hidden',
@@ -397,7 +340,7 @@ const AccountMenu = ({
                   {email}
                 </Typography>
               </Box>
-              <UnfoldMoreRoundedIcon sx={{ fontSize: 16, color: 'text.secondary', flexShrink: 0 }} />
+              <GoogleIcon name="unfold_more" size={16} />
             </SidebarAccountButton>
           </>
         ) : (
@@ -408,9 +351,7 @@ const AccountMenu = ({
                 aria-label={themeToggleLabel}
                 onClick={() => themeCtx?.toggleMode()}
               >
-                <QuickIconBadge variant="theme" className="quick-icon-badge">
-                  {isDark ? <LightModeRoundedIcon fontSize="small" /> : <DarkModeRoundedIcon fontSize="small" />}
-                </QuickIconBadge>
+                <GoogleIcon name={isDark ? 'light_mode' : 'dark_mode'} size={18} />
               </CollapsedQuickIconButton>
             </Tooltip>
             {hasStorageManager && (
@@ -420,9 +361,7 @@ const AccountMenu = ({
                   aria-label="存储空间管理"
                   onClick={() => setStorageOpen(true)}
                 >
-                  <QuickIconBadge variant="storage" className="quick-icon-badge">
-                    <StorageRoundedIcon fontSize="small" />
-                  </QuickIconBadge>
+                  <GoogleIcon name="storage" size={18} />
                 </CollapsedQuickIconButton>
               </Tooltip>
             )}
@@ -464,12 +403,18 @@ const AccountMenu = ({
                 mt: variant === 'sidebar' ? 0 : 1,
                 mb: variant === 'sidebar' ? 1 : 0,
                 minWidth: '210px',
-                borderRadius: '14px',
+                borderRadius: RADIUS_LG,
                 border: `1px solid ${c.hairline}`,
                 boxShadow: c.shadowFloat,
                 backgroundColor: c.headerGlass,
-                backdropFilter: 'blur(20px) saturate(180%)',
-                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                backdropFilter: 'blur(18px) saturate(160%)',
+                WebkitBackdropFilter: 'blur(18px) saturate(160%)',
+                '& .MuiMenuItem-root': {
+                  borderRadius: RADIUS_MD,
+                  margin: '2px 6px',
+                  fontSize: '0.84rem',
+                  fontWeight: 500,
+                },
                 '@media (prefers-reduced-transparency: reduce)': {
                   backgroundColor: c.surface,
                   backdropFilter: 'none',
@@ -482,7 +427,7 @@ const AccountMenu = ({
         <MenuItem disabled sx={{ opacity: '1 !important' }}>
           <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
             {fullName && (
-              <Typography variant="body2" sx={{ fontWeight: 700, color: 'text.primary', lineHeight: 1.3 }}>
+              <Typography variant="body2" sx={{ fontWeight: 600, color: 'text.primary', lineHeight: 1.3 }}>
                 {fullName}
               </Typography>
             )}
@@ -497,10 +442,9 @@ const AccountMenu = ({
             onClick={() => {
               themeCtx?.toggleMode();
             }}
-            sx={{ fontWeight: 600 }}
           >
-            <ListItemIcon>
-              {isDark ? <LightModeRoundedIcon fontSize="small" /> : <DarkModeRoundedIcon fontSize="small" />}
+            <ListItemIcon sx={{ minWidth: 28 }}>
+              <GoogleIcon name={isDark ? 'light_mode' : 'dark_mode'} size={18} />
             </ListItemIcon>
             {themeToggleLabel}
           </MenuItem>
@@ -511,17 +455,16 @@ const AccountMenu = ({
               handleClose();
               setStorageOpen(true);
             }}
-            sx={{ fontWeight: 600 }}
           >
-            <ListItemIcon>
-              <StorageRoundedIcon fontSize="small" />
+            <ListItemIcon sx={{ minWidth: 28 }}>
+              <GoogleIcon name="storage" size={18} />
             </ListItemIcon>
             存储空间管理
           </MenuItem>
         )}
-        <MenuItem onClick={handleLogout} sx={{ fontWeight: 600 }}>
-          <ListItemIcon>
-            <LogoutRoundedIcon fontSize="small" />
+        <MenuItem onClick={handleLogout}>
+          <ListItemIcon sx={{ minWidth: 28 }}>
+            <GoogleIcon name="logout" size={18} />
           </ListItemIcon>
           <FormattedMessage id="menu.signout" defaultMessage="Sign Out" />
         </MenuItem>

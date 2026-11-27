@@ -22,21 +22,19 @@ import Tooltip from '@mui/material/Tooltip';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import ListItemText from '@mui/material/ListItemText';
-import ArrowDownwardRoundedIcon from '@mui/icons-material/ArrowDownwardRounded';
-import ArrowUpwardRoundedIcon from '@mui/icons-material/ArrowUpwardRounded';
-import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
-import DriveFileMoveRoundedIcon from '@mui/icons-material/DriveFileMoveRounded';
-import FolderRoundedIcon from '@mui/icons-material/FolderRounded';
-import FormatListBulletedRoundedIcon from '@mui/icons-material/FormatListBulletedRounded';
-import GridViewRoundedIcon from '@mui/icons-material/GridViewRounded';
-import LabelRoundedIcon from '@mui/icons-material/LabelRounded';
-import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
-import SwapVertRoundedIcon from '@mui/icons-material/SwapVertRounded';
 import type { MapInfo } from '../../../classes/client';
 import type { Filter } from '..';
+import { GoogleIcon } from '../../common/google-symbol';
 import { isFolderFilter, isLabelFilter, type Order } from './model';
 import type { MapsViewMode } from './useMapsListState';
-import { APPLE_FONT_STACK, appleColors, glassMaterialMixin, isDarkTheme } from '../appleDesign';
+import {
+  APPLE_FONT_STACK,
+  RADIUS_LG,
+  RADIUS_MD,
+  appleColors,
+  glassMaterialMixin,
+  isDarkTheme,
+} from '../appleDesign';
 import {
   BulkActionButton,
   CountPill,
@@ -218,7 +216,7 @@ export const MapsListToolbar = ({
                 type="button"
                 disableElevation={true}
                 onClick={onDeleteSelected}
-                startIcon={<DeleteRoundedIcon sx={{ color: '#EF4444' }} />}
+                startIcon={<GoogleIcon name="delete" size={18} color="#EF4444" testId="DeleteRoundedIcon" />}
               >
                 <span className="button-text">
                   <FormattedMessage id="action.delete" defaultMessage="Delete" />
@@ -238,7 +236,7 @@ export const MapsListToolbar = ({
                 variant="text"
                 type="button"
                 disableElevation={true}
-                startIcon={<LabelRoundedIcon />}
+                startIcon={<GoogleIcon name="label" size={18} />}
                 onClick={onLabelSelected}
               >
                 <span className="button-text">
@@ -260,7 +258,7 @@ export const MapsListToolbar = ({
                   variant="text"
                   type="button"
                   disableElevation={true}
-                  startIcon={<DriveFileMoveRoundedIcon />}
+                  startIcon={<GoogleIcon name="drive_file_move" size={18} />}
                   onClick={onMoveSelected}
                 >
                   <span className="button-text">
@@ -291,7 +289,7 @@ export const MapsListToolbar = ({
               active={!isFolderActive}
               onClick={() => onFilterChange?.({ type: 'all' })}
             >
-              <GridViewRoundedIcon />
+              <GoogleIcon name="grid_view" size={17} filled={!isFolderActive} />
               <span>{intl.formatMessage({ id: 'maps.nav-all', defaultMessage: '全部导图' })}</span>
               {typeof allMapsCount === 'number' && <CountPill>{allMapsCount}</CountPill>}
             </WorkspaceSegmentedButton>
@@ -304,7 +302,7 @@ export const MapsListToolbar = ({
               active={isFolderActive}
               onClick={() => onFilterChange?.({ type: 'folder', folderId: null })}
             >
-              <FolderRoundedIcon />
+              <GoogleIcon name="folder" size={17} filled={isFolderActive} />
               <span>
                 {intl.formatMessage({ id: 'folder.section-title', defaultMessage: '文件夹' })}
               </span>
@@ -323,7 +321,7 @@ export const MapsListToolbar = ({
         <SearchContainer>
           <SearchBox>
             <SearchIconWrapper>
-              <SearchRoundedIcon />
+              <GoogleIcon name="search" size={17} />
             </SearchIconWrapper>
             <SearchInput
               inputRef={searchInputRef}
@@ -366,7 +364,7 @@ export const MapsListToolbar = ({
                 aria-pressed={viewMode === 'list'}
                 onClick={() => onViewModeChange('list')}
               >
-                <FormatListBulletedRoundedIcon />
+                <GoogleIcon name="format_list_bulleted" size={17} />
               </ViewModeButton>
             </Tooltip>
             <Tooltip arrow={true} title="栅格视图">
@@ -377,7 +375,7 @@ export const MapsListToolbar = ({
                 aria-pressed={viewMode === 'grid'}
                 onClick={() => onViewModeChange('grid')}
               >
-                <GridViewRoundedIcon />
+                <GoogleIcon name="grid_view" size={17} filled={viewMode === 'grid'} />
               </ViewModeButton>
             </Tooltip>
           </ViewModeGroup>
@@ -391,7 +389,7 @@ export const MapsListToolbar = ({
                 aria-label="排序方式"
                 aria-haspopup="menu"
                 aria-expanded={Boolean(sortMenuAnchor)}
-                startIcon={<SwapVertRoundedIcon sx={{ fontSize: 18 }} />}
+                startIcon={<GoogleIcon name="swap_vert" size={17} />}
                 onClick={(e) => setSortMenuAnchor(e.currentTarget)}
               >
                 {SORT_OPTIONS.find((opt) => opt.key === orderBy)?.label ?? '排序'}
@@ -410,19 +408,19 @@ export const MapsListToolbar = ({
                     const c = appleColors(isDarkTheme(theme));
                     return {
                       mt: 0.75,
-                      borderRadius: '14px',
-                      minWidth: 168,
-                      p: 0.6,
+                      borderRadius: RADIUS_LG,
+                      minWidth: 164,
+                      p: 0.5,
                       color: c.textPrimary,
                       boxShadow: c.shadowFloat,
                       border: `1px solid ${c.hairline}`,
                       fontFamily: APPLE_FONT_STACK,
-                      ...glassMaterialMixin(c.sidebarGlass, c.surfaceElevated, 24),
+                      ...glassMaterialMixin(c.sidebarGlass, c.surfaceElevated, 18),
                       '& .MuiMenuItem-root': {
-                        borderRadius: '8px',
-                        minHeight: '36px',
-                        fontSize: '0.86rem',
-                        fontWeight: 600,
+                        borderRadius: RADIUS_MD,
+                        minHeight: '34px',
+                        fontSize: '0.84rem',
+                        fontWeight: 500,
                         '&:hover': {
                           backgroundColor: c.hoverFill,
                         },
@@ -437,10 +435,10 @@ export const MapsListToolbar = ({
                 sx={{
                   opacity: '1 !important',
                   fontSize: '0.75rem !important',
-                  fontWeight: '700 !important',
+                  fontWeight: '600 !important',
                   color: 'text.secondary',
-                  minHeight: '28px !important',
-                  py: '4px',
+                  minHeight: '26px !important',
+                  py: '3px',
                 }}
               >
                 排序
@@ -467,19 +465,19 @@ export const MapsListToolbar = ({
                       slotProps={{
                         primary: {
                           sx: {
-                            fontSize: '0.86rem',
-                            fontWeight: isActive ? 700 : 500,
+                            fontSize: '0.84rem',
+                            fontWeight: isActive ? 600 : 400,
                             fontFamily: APPLE_FONT_STACK,
                           },
                         },
                       }}
                     />
-                    {isActive &&
-                      (order === 'asc' ? (
-                        <ArrowUpwardRoundedIcon sx={{ fontSize: 16, opacity: 0.85 }} />
-                      ) : (
-                        <ArrowDownwardRoundedIcon sx={{ fontSize: 16, opacity: 0.85 }} />
-                      ))}
+                    {isActive && (
+                      <GoogleIcon
+                        name={order === 'asc' ? 'arrow_upward' : 'arrow_downward'}
+                        size={16}
+                      />
+                    )}
                   </MenuItem>
                 );
               })}

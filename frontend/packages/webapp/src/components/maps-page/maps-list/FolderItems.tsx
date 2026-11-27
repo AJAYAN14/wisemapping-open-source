@@ -27,20 +27,18 @@ import MenuItem from '@mui/material/MenuItem';
 import TableRow from '@mui/material/TableRow';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
-import ArrowBackRoundedIcon from '@mui/icons-material/ArrowBackRounded';
-import CreateNewFolderRoundedIcon from '@mui/icons-material/CreateNewFolderRounded';
-import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
-import DriveFileMoveRoundedIcon from '@mui/icons-material/DriveFileMoveRounded';
-import EditRoundedIcon from '@mui/icons-material/EditRounded';
-import FolderRoundedIcon from '@mui/icons-material/FolderRounded';
-import HomeRoundedIcon from '@mui/icons-material/HomeRounded';
-import MoreHorizRoundedIcon from '@mui/icons-material/MoreHorizRounded';
-import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
-import NavigateNextRoundedIcon from '@mui/icons-material/NavigateNextRounded';
 import type { Folder } from '../../../classes/client';
 import { useDate } from '../../../classes/app-i18n/dates';
+import { GoogleIcon } from '../../common/google-symbol';
 import { MAP_IDS_DRAG_MIME, getFolderBreadcrumbs } from '../folderTree';
-import { APPLE_FONT_STACK, appleColors, glassMaterialMixin, isDarkTheme } from '../appleDesign';
+import {
+  APPLE_FONT_STACK,
+  RADIUS_LG,
+  RADIUS_MD,
+  appleColors,
+  glassMaterialMixin,
+  isDarkTheme,
+} from '../appleDesign';
 import type { FolderDirectCount } from './model';
 import {
   ActionIconButton,
@@ -203,7 +201,7 @@ const FolderRowComponent = ({
       <BodyCell>
         <MapRowTitleWrap>
           <FolderGlyphBadge aria-hidden="true">
-            <FolderRoundedIcon />
+            <GoogleIcon name="folder" size={18} filled />
           </FolderGlyphBadge>
           <Box
             component="button"
@@ -223,8 +221,8 @@ const FolderRowComponent = ({
                 cursor: 'pointer',
                 textAlign: 'left',
                 fontFamily: APPLE_FONT_STACK,
-                fontSize: '0.96rem',
-                fontWeight: 700,
+                fontSize: '0.9rem',
+                fontWeight: 600,
                 letterSpacing: '-0.01em',
                 color: c.textPrimary,
                 transition: 'color 120ms ease',
@@ -262,7 +260,7 @@ const FolderRowComponent = ({
               size="small"
               onClick={handleOpenMenu}
             >
-              <MoreHorizRoundedIcon color="action" />
+              <GoogleIcon name="more_horiz" size={19} />
             </IconButton>
           </ActionIconButton>
         </Tooltip>
@@ -316,24 +314,22 @@ const FolderGridCardComponent = ({
     >
       <GridCardPreview
         sx={(theme) => {
-          const isDark = isDarkTheme(theme);
+          const c = appleColors(isDarkTheme(theme));
           return {
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
             gap: '6px',
-            background: isDark
-              ? 'linear-gradient(135deg, rgba(255, 159, 10, 0.14) 0%, rgba(255, 159, 10, 0.04) 100%)'
-              : 'linear-gradient(135deg, rgba(245, 158, 11, 0.14) 0%, rgba(245, 158, 11, 0.04) 100%)',
+            backgroundColor: c.surfaceElevated,
           };
         }}
       >
-        <FolderRoundedIcon
-          sx={(theme) => ({
-            fontSize: 44,
-            color: appleColors(isDarkTheme(theme)).amber,
-          })}
+        <GoogleIcon
+          name="folder"
+          size={40}
+          filled
+          style={{ color: '#D97706' }}
         />
         <GridCardActionsOverlay className="grid-card-overlay">
           <Tooltip arrow={true} title="文件夹操作">
@@ -343,7 +339,7 @@ const FolderGridCardComponent = ({
                 aria-label={`操作文件夹 ${folder.name}`}
                 onClick={handleOpenMenu}
               >
-                <MoreHorizRoundedIcon color="action" fontSize="small" />
+                <GoogleIcon name="more_horiz" size={18} />
               </IconButton>
             </ActionIconButton>
           </Tooltip>
@@ -409,7 +405,7 @@ const FolderCardComponent = ({
       <CompactCardHeader
         avatar={
           <FolderGlyphBadge aria-hidden="true">
-            <FolderRoundedIcon />
+            <GoogleIcon name="folder" size={18} filled />
           </FolderGlyphBadge>
         }
         action={
@@ -419,14 +415,14 @@ const FolderCardComponent = ({
                 aria-label={`操作文件夹 ${folder.name}`}
                 onClick={handleOpenMenu}
               >
-                <MoreVertRoundedIcon color="action" />
+                <GoogleIcon name="more_vert" size={20} />
               </IconButton>
             </ActionIconButton>
           </Tooltip>
         }
         title={<CardTitle noWrap>{folder.name}</CardTitle>}
         subheader={
-          <Typography variant="subtitle2" sx={{ fontSize: '0.76rem', fontWeight: 600 }}>
+          <Typography variant="subtitle2" sx={{ fontSize: '0.75rem', fontWeight: 400 }}>
             {formatFolderSummary(count)}
           </Typography>
         }
@@ -495,7 +491,7 @@ export const FolderBreadcrumbsBar = ({
         onClick={() => onNavigate(parentFolderId)}
         aria-label="返回上级"
       >
-        <ArrowBackRoundedIcon sx={{ fontSize: 15 }} />
+        <GoogleIcon name="arrow_back" size={15} />
         <span>返回上级</span>
       </BreadcrumbChip>
 
@@ -507,7 +503,7 @@ export const FolderBreadcrumbsBar = ({
       <BreadcrumbDropItem
         folderId={null}
         label="根目录"
-        icon={<HomeRoundedIcon sx={{ fontSize: 15 }} />}
+        icon={<GoogleIcon name="home" size={15} />}
         onNavigate={onNavigate}
         onDropMaps={onDropMaps}
       />
@@ -516,10 +512,10 @@ export const FolderBreadcrumbsBar = ({
         const isLast = index === chain.length - 1;
         return (
           <React.Fragment key={crumb.id}>
-            <NavigateNextRoundedIcon sx={{ fontSize: 15, opacity: 0.55 }} />
+            <GoogleIcon name="chevron_right" size={15} style={{ opacity: 0.55 }} />
             {isLast ? (
               <BreadcrumbChip type="button" active disabled>
-                <FolderRoundedIcon sx={{ fontSize: 15, opacity: 0.85 }} />
+                <GoogleIcon name="folder" size={15} filled style={{ opacity: 0.85 }} />
                 <span>{crumb.name}</span>
               </BreadcrumbChip>
             ) : (
@@ -569,16 +565,17 @@ export const FolderActionMenu = ({
           sx: (theme) => {
             const c = appleColors(isDarkTheme(theme));
             return {
-              borderRadius: '14px',
+              borderRadius: RADIUS_LG,
               border: `1px solid ${c.hairline}`,
               boxShadow: c.shadowFloat,
               fontFamily: APPLE_FONT_STACK,
-              ...glassMaterialMixin(c.sidebarGlass, c.surfaceElevated, 24),
+              ...glassMaterialMixin(c.sidebarGlass, c.surfaceElevated, 18),
               '& .MuiMenuItem-root': {
-                fontWeight: 600,
-                fontSize: '0.86rem',
-                borderRadius: '8px',
+                fontWeight: 500,
+                fontSize: '0.84rem',
+                borderRadius: RADIUS_MD,
                 margin: '2px 6px',
+                minHeight: '34px',
                 '&:hover': {
                   backgroundColor: c.hoverFill,
                 },
@@ -598,8 +595,8 @@ export const FolderActionMenu = ({
             }
           }}
         >
-          <ListItemIcon>
-            <CreateNewFolderRoundedIcon fontSize="small" />
+          <ListItemIcon sx={{ minWidth: 28 }}>
+            <GoogleIcon name="create_new_folder" size={18} />
           </ListItemIcon>
           <ListItemText
             primary={intl.formatMessage({
@@ -619,8 +616,8 @@ export const FolderActionMenu = ({
             }
           }}
         >
-          <ListItemIcon>
-            <EditRoundedIcon fontSize="small" />
+          <ListItemIcon sx={{ minWidth: 28 }}>
+            <GoogleIcon name="edit" size={18} />
           </ListItemIcon>
           <ListItemText
             primary={intl.formatMessage({
@@ -640,8 +637,8 @@ export const FolderActionMenu = ({
             }
           }}
         >
-          <ListItemIcon>
-            <DriveFileMoveRoundedIcon fontSize="small" />
+          <ListItemIcon sx={{ minWidth: 28 }}>
+            <GoogleIcon name="drive_file_move" size={18} />
           </ListItemIcon>
           <ListItemText
             primary={intl.formatMessage({
@@ -662,8 +659,8 @@ export const FolderActionMenu = ({
             }
           }}
         >
-          <ListItemIcon sx={{ color: 'inherit' }}>
-            <DeleteRoundedIcon fontSize="small" />
+          <ListItemIcon sx={{ minWidth: 28, color: 'inherit' }}>
+            <GoogleIcon name="delete" size={18} />
           </ListItemIcon>
           <ListItemText
             primary={intl.formatMessage({
