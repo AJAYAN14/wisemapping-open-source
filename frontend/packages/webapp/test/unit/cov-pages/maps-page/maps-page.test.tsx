@@ -116,9 +116,10 @@ describe('MapsPage', () => {
     renderPage();
 
     const nav = desktopNav();
-    for (const name of ['All', 'Starred', '未分类']) {
+    for (const name of ['All', 'Starred']) {
       expect(within(nav).getByText(name)).toBeTruthy();
     }
+    expect(within(nav).queryByText('未分类')).toBeNull();
     expect(await within(nav).findByText('Research')).toBeTruthy();
     expect(within(nav).getByText('Travel')).toBeTruthy();
   });
@@ -127,13 +128,21 @@ describe('MapsPage', () => {
     const { client, queryClient } = renderPage();
     const invalidate = jest.spyOn(queryClient, 'invalidateQueries');
 
-    fireEvent.click(within(desktopNav()).getByText('未分类'));
-    expect(listFilter()).toBe('uncategorized');
+    fireEvent.click(within(desktopNav()).getByText('Starred'));
+    expect(listFilter()).toBe('starred');
     expect(invalidate).toHaveBeenCalledWith({ queryKey: ['maps'] });
 
     fireEvent.click(await within(desktopNav()).findByText('Research'));
     expect(listFilter()).toBe('label:Research');
     expect(client.fetchLabels).toHaveBeenCalled();
+  });
+
+  test('starts in folder view when mapsMainTab was remembered as folders', () => {
+    localStorage.setItem('mapsMainTab', 'folders');
+    renderPage();
+
+    expect(listFilter()).toBe('folder');
+    expect(screen.getByTestId('create-folder')).toBeTruthy();
   });
 
   test('"New map" opens create dialog and "Import" opens import menu', async () => {

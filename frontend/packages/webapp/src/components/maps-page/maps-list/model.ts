@@ -16,7 +16,7 @@
  *   limitations under the License.
  */
 
-import Client, { Label, MapInfo } from '../../../classes/client';
+import Client, { Folder, Label, MapInfo } from '../../../classes/client';
 import type { Filter, FolderFilter, LabelFilter } from '..';
 
 /**
@@ -76,7 +76,7 @@ export const mapsFilter =
           mapInfo.labels.some((label) => label.id === (filter as LabelFilter).label.id);
         break;
       case 'folder':
-        result = (mapInfo.folderId ?? null) === (filter as FolderFilter).folderId;
+        result = (mapInfo.folderId ?? null) === ((filter as FolderFilter).folderId ?? null);
         break;
       case 'uncategorized':
         result = (mapInfo.folderId ?? null) === null;
@@ -93,6 +93,86 @@ export const mapsFilter =
     }
     return result;
   };
+
+export interface FolderDirectCount {
+  subfolderCount: number;
+  mapCount: number;
+  totalCount: number;
+}
+
+/**
+ * Returns direct subfolders of `parentId` matching `search`, sorted by name (respecting
+ * descending order when sorting by title; ascending otherwise). Orphan folders whose parent
+ * no longer exists are treated as top-level (`null`) to match `buildFolderTree`.
+ */
+export const getChildFolders = (
+  folders: Folder[],
+  parentId: number | null,
+  search: string,
+  order: Order = 'asc',
+  orderBy: keyof MapInfo = 'lastModificationTime',
+): Folder[] => {
+  const validIds = new Set(folders.map((f) => f.id));
+  const query = search.trim().toLowerCase();
+
+  const matching = folders.filter((folder) => {
+    const effectiveParentId =
+      folder.parentId !== null && folder.parentId !== folder.id && validIds.has(folder.parentId)
+        ? folder.parentId
+        : null;
+    if (effectiveParentId !== parentId) {
+      return false;
+    }
+    if (query && !folder.name.toLowerCase().includes(query)) {
+      return false;
+    }
+    return true;
+  });
+
+  const direction = orderBy === 'title' && order === 'desc' ? -1 : 1;
+  return [...matching].sort(
+    (a, b) =>
+      direction *
+        a.name.localeCompare(b.name, 'zh-Hans-CN', { numeric: true, sensitivity: 'base' }) ||
+      a.id - b.id,
+  );
+};
+
+/** Computes direct subfolder and map counts for every folder in one linear pass. */
+export const getFolderDirectItemCounts = (
+  folders: Folder[],
+  maps: MapInfo[],
+): Map<number, FolderDirectCount> => {
+  const result = new Map<number, FolderDirectCount>();
+  const ensure = (id: number): FolderDirectCount => {
+    let entry = result.get(id);
+    if (!entry) {
+      entry = { subfolderCount: 0, mapCount: 0, totalCount: 0 };
+      result.set(id, entry);
+    }
+    return entry;
+  };
+
+  for (const folder of folders) {
+    ensure(folder.id);
+    if (folder.parentId !== null && folder.parentId !== folder.id) {
+      const parentEntry = ensure(folder.parentId);
+      parentEntry.subfolderCount += 1;
+      parentEntry.totalCount += 1;
+    }
+  }
+
+  for (const mapInfo of maps) {
+    const fid = mapInfo.folderId ?? null;
+    if (fid !== null) {
+      const entry = ensure(fid);
+      entry.mapCount += 1;
+      entry.totalCount += 1;
+    }
+  }
+
+  return result;
+};
 
 export type ChangeLabelMutationFunctionParam = { maps: MapInfo[]; label: Label; checked: boolean };
 

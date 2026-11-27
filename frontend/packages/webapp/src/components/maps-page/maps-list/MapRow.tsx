@@ -24,7 +24,6 @@ import TableRow from '@mui/material/TableRow';
 import Tooltip from '@mui/material/Tooltip';
 import CheckBoxOutlineBlankRoundedIcon from '@mui/icons-material/CheckBoxOutlineBlankRounded';
 import CheckBoxRoundedIcon from '@mui/icons-material/CheckBoxRounded';
-import FolderRoundedIcon from '@mui/icons-material/FolderRounded';
 import HubRoundedIcon from '@mui/icons-material/HubRounded';
 import MoreHorizRoundedIcon from '@mui/icons-material/MoreHorizRounded';
 import { Label, MapInfo } from '../../../classes/client';
@@ -32,6 +31,7 @@ import { useDate } from '../../../classes/app-i18n/dates';
 import { buildMapEditPath } from '../../../utils/mapPath';
 import { formatMapSize } from '../../../utils/mapPreview';
 import { LabelsCell } from './labels-cell';
+import { MapFolderPathBadge } from './MapFolderPathBadge';
 import {
   ActionIconButton,
   BodyCell,
@@ -60,8 +60,10 @@ interface MapRowProps extends MapItemHandlers {
   map: MapInfo;
   selected: boolean;
   timeField?: 'lastModificationTime' | 'lastOpenTime';
+  showFolderPath?: boolean;
   onToggleSelected: (mapId: number) => void;
   onRemoveLabel: (mapId: number, labelId: number) => void;
+  onOpenFolder?: ((folderId: number) => void) | undefined;
   onContextMenu?: (mapId: number, event: React.MouseEvent<HTMLTableRowElement>) => void;
   onDragStart?: (mapId: number, event: React.DragEvent<HTMLTableRowElement>) => void;
 }
@@ -71,10 +73,12 @@ const MapRowComponent = ({
   map,
   selected,
   timeField = 'lastModificationTime',
+  showFolderPath = true,
   onToggleSelected,
   onStar,
   onOpenMenu,
   onRemoveLabel,
+  onOpenFolder,
   onContextMenu,
   onDragStart,
 }: MapRowProps): React.ReactElement => {
@@ -133,26 +137,12 @@ const MapRowComponent = ({
             <HubRoundedIcon />
           </MapGlyphBadge>
           <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 0, justifyContent: 'center' }}>
-            {map.folderPath && (
-              <Box
-                sx={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 0.4,
-                  fontSize: '0.74rem',
-                  fontWeight: 500,
-                  color: 'text.secondary',
-                  opacity: 0.85,
-                  lineHeight: 1.2,
-                  mb: 0.3,
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                <FolderRoundedIcon sx={{ fontSize: 13, opacity: 0.75, flexShrink: 0 }} />
-                <span>{map.folderPath}</span>
-              </Box>
+            {showFolderPath && (
+              <MapFolderPathBadge
+                folderPath={map.folderPath}
+                folderId={map.folderId}
+                onOpenFolder={onOpenFolder}
+              />
             )}
             <Tooltip
               arrow={true}

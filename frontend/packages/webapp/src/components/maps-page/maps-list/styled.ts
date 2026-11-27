@@ -141,6 +141,116 @@ export const CountPill = styled('span')(({ theme }) => {
   };
 });
 
+export const WorkspaceSegmentedGroup = styled('div')(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    display: 'inline-flex',
+    alignItems: 'center',
+    padding: '3px',
+    borderRadius: '13px',
+    backgroundColor: c.hoverFill,
+    border: `1px solid ${c.hairline}`,
+    gap: '3px',
+    flexShrink: 0,
+  };
+});
+
+export const WorkspaceSegmentedButton = styled('button', {
+  shouldForwardProp: (prop) => prop !== 'active',
+})<{ active: boolean }>(({ theme, active }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    appearance: 'none',
+    border: 'none',
+    outline: 'none',
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '7px',
+    padding: '6px 13px',
+    borderRadius: '10px',
+    fontFamily: APPLE_FONT_STACK,
+    fontSize: '0.94rem',
+    fontWeight: active ? 700 : 600,
+    letterSpacing: '-0.015em',
+    lineHeight: 1.2,
+    backgroundColor: active ? c.surface : 'transparent',
+    color: active ? c.textPrimary : c.textSecondary,
+    boxShadow: active ? c.shadowSubtle : 'none',
+    transition: 'background-color 140ms ease, color 140ms ease, box-shadow 140ms ease',
+    ...applePressMixin,
+    '& svg': {
+      fontSize: '18px',
+      color: active ? c.amber : c.textTertiary,
+      transition: 'color 140ms ease',
+    },
+    '&:hover': {
+      color: c.textPrimary,
+    },
+    '&:focus-visible': {
+      boxShadow: `0 0 0 2px ${c.amberRing}`,
+    },
+  };
+});
+
+export const BreadcrumbBar = styled('div')(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    display: 'flex',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '4px',
+    padding: '6px 10px',
+    marginBottom: '12px',
+    borderRadius: '12px',
+    backgroundColor: c.hoverFill,
+    border: `1px solid ${c.hairline}`,
+    fontFamily: APPLE_FONT_STACK,
+    fontSize: '0.82rem',
+    fontWeight: 600,
+    color: c.textSecondary,
+    [theme.breakpoints.down('sm')]: {
+      marginLeft: '12px',
+      marginRight: '12px',
+    },
+  };
+});
+
+export const BreadcrumbChip = styled('button', {
+  shouldForwardProp: (prop) => prop !== 'active' && prop !== 'dragTarget',
+})<{ active?: boolean; dragTarget?: boolean }>(({ theme, active, dragTarget }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    appearance: 'none',
+    border: 'none',
+    outline: dragTarget ? `2px dashed ${c.amber}` : 'none',
+    outlineOffset: '-2px',
+    backgroundColor: dragTarget ? c.amberSoft : active ? c.surface : 'transparent',
+    color: dragTarget ? c.amberText : active ? c.textPrimary : c.textSecondary,
+    fontFamily: APPLE_FONT_STACK,
+    fontSize: '0.82rem',
+    fontWeight: active ? 700 : 600,
+    padding: '4px 9px',
+    borderRadius: '8px',
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '5px',
+    cursor: active ? 'default' : 'pointer',
+    boxShadow: active ? c.shadowSubtle : 'none',
+    transition: 'background-color 120ms ease, color 120ms ease',
+    ...(!active && applePressMixin),
+    '&:hover': active
+      ? undefined
+      : {
+          backgroundColor: c.surface,
+          color: c.textPrimary,
+        },
+    '&:focus-visible': {
+      boxShadow: `0 0 0 2px ${c.amberRing}`,
+    },
+  };
+});
+
 export const BulkActionButton = styled(Button)(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
@@ -495,6 +605,25 @@ export const MapGlyphBadge = styled('span')(({ theme }) => {
     flexShrink: 0,
     '& svg': {
       fontSize: '18px',
+    },
+  };
+});
+
+export const FolderGlyphBadge = styled('span')(({ theme }) => {
+  const isDark = isDarkTheme(theme);
+  const c = appleColors(isDark);
+  return {
+    width: '32px',
+    height: '32px',
+    borderRadius: '10px',
+    backgroundColor: isDark ? 'rgba(255, 159, 10, 0.18)' : 'rgba(245, 158, 11, 0.16)',
+    color: c.amber,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+    '& svg': {
+      fontSize: '19px',
     },
   };
 });

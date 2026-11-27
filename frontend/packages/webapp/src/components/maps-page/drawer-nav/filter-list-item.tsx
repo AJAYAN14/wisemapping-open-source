@@ -51,11 +51,14 @@ const StyleListItem = (props: ListItemProps): ReactElement => {
   const onDeleteLabel = props.onDelete;
   const [isDragTarget, setIsDragTarget] = useState(false);
 
-  const isSelected =
+  const isSelected = Boolean(
     activeFilter &&
-    activeFilter.type == filter.type &&
-    (activeFilter.type != 'label' ||
-      (activeFilter as LabelFilter).label == (filter as LabelFilter).label);
+      ((filter.type === 'all' &&
+        (activeFilter.type === 'all' || activeFilter.type === 'folder')) ||
+        (activeFilter.type === filter.type &&
+          (activeFilter.type !== 'label' ||
+            (activeFilter as LabelFilter).label === (filter as LabelFilter).label))),
+  );
   const handleOnClick = (event: React.MouseEvent<HTMLDivElement, MouseEvent>, filter: Filter) => {
     event.stopPropagation();
     onClick(filter);

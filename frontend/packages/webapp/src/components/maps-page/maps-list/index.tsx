@@ -16,7 +16,7 @@
  *   limitations under the License.
  */
 
-import React, { use, useCallback, useEffect, useRef, useState } from 'react';
+import React, { use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useQuery } from '@tanstack/react-query';
 import Card from '@mui/material/Card';
@@ -32,6 +32,14 @@ import { Filter } from '..';
 import { MAP_IDS_DRAG_MIME } from '../folderTree';
 import ActionChooser, { ActionType } from '../action-chooser';
 import ActionDispatcher from '../action-dispatcher';
+import {
+  FolderActionMenu,
+  FolderBreadcrumbsBar,
+  FolderCard,
+  FolderGridCard,
+  FolderMenuState,
+  FolderRow,
+} from './FolderItems';
 import { CardSkeleton, GridCardSkeleton, MapsListSkeleton } from './MapsListSkeleton';
 import { MapCard } from './MapCard';
 import { MapGridCard } from './MapGridCard';
@@ -41,6 +49,7 @@ import { MapsTableHead } from './MapsTableHead';
 import {
   ChangeLabelMutationFunctionParam,
   getChangeLabelMutationFunction,
+  getFolderDirectItemCounts,
   isFolderFilter,
 } from './model';
 import {
@@ -77,6 +86,11 @@ interface MapsListProps {
   filter: Filter;
   folders?: Folder[];
   onFilterChange?: ((filter: Filter) => void) | undefined;
+  onCreateFolder?: ((parentId: number | null) => void) | undefined;
+  onRenameFolder?: ((folder: Folder) => void) | undefined;
+  onMoveFolder?: ((folder: Folder) => void) | undefined;
+  onDeleteFolder?: ((folder: Folder) => void) | undefined;
+  onDropMapsToFolder?: ((mapIds: number[], folderId: number | null) => void) | undefined;
   toolbarActions?: React.ReactNode;
 }
 
@@ -84,6 +98,11 @@ export const MapsList = ({
   filter,
   folders = [],
   onFilterChange,
+  onCreateFolder,
+  onRenameFolder,
+  onMoveFolder,
+  onDeleteFolder,
+  onDropMapsToFolder,
   toolbarActions,
 }: MapsListProps): React.ReactElement => {
   const client = use(ClientContext);
@@ -126,9 +145,12 @@ export const MapsList = ({
     order,
     orderBy,
     viewMode,
+    search,
     page,
     rowsPerPage,
     selected,
+    childFolders,
+    pagedFolders,
     filteredMaps,
     pagedMaps,
     requestSort,
@@ -140,9 +162,16 @@ export const MapsList = ({
     toggleSelected,
     selectAll,
     clearSelection,
-  } = useMapsListState(filter, maps);
+  } = useMapsListState(filter, maps, folders);
+
+  const isFolderView = isFolderFilter(filter);
+  const folderCounts = useMemo(
+    () => (isFolderView ? getFolderDirectItemCounts(folders, maps) : undefined),
+    [isFolderView, folders, maps],
+  );
 
   const [rowMenu, setRowMenu] = useState<RowMenu | undefined>(undefined);
+  const [folderMenu, setFolderMenu] = useState<FolderMenuState | null>(null);
   const [activeDialog, setActiveDialog] = useState<ActiveDialog | undefined>(undefined);
 
   // Every row gets these same functions: see MapItemHandlers.
@@ -168,6 +197,31 @@ export const MapsList = ({
     },
     [],
   );
+  const handleOpenFolder = useCallback(
+    (folderId: number) => {
+      onFilterChange?.({ type: 'folder', folderId });
+    },
+    [onFilterChange],
+  );
+  const handleNavigateBreadcrumb = useCallback(
+    (folderId: number | null) => {
+      onFilterChange?.({ type: 'folder', folderId });
+    },
+    [onFilterChange],
+  );
+  const handleOpenFolderMenu = useCallback((folder: Folder, anchor: HTMLElement) => {
+    setFolderMenu({ folder, anchor });
+  }, []);
+  const handleFolderContextMenu = useCallback(
+    (folder: Folder, event: React.MouseEvent<HTMLElement>) => {
+      event.preventDefault();
+      event.stopPropagation();
+      setFolderMenu({ folder, anchorPosition: { top: event.clientY, left: event.clientX } });
+    },
+    [],
+  );
+  const mapOpenFolderHandler = onFilterChange && !isFolderView ? handleOpenFolder : undefined;
+
   const selectedRef = useRef(selected);
   useEffect(() => {
     selectedRef.current = selected;
@@ -201,23 +255,31 @@ export const MapsList = ({
       defaultMessage="Your maps could not be loaded. Please try again later."
     />
   );
-  const emptyMessage = (
-    <FormattedMessage
-      id="maps.empty-result"
-      defaultMessage="No matching mindmap found with the current filter criteria."
-    />
-  );
+  const emptyMessage =
+    isFolderView && !search ? (
+      <FormattedMessage
+        id="folder.empty-content"
+        defaultMessage="此文件夹为空，可新建子文件夹、新建导图或从「全部导图」拖入导图"
+      />
+    ) : (
+      <FormattedMessage
+        id="maps.empty-result"
+        defaultMessage="No matching mindmap found with the current filter criteria."
+      />
+    );
+
+  const totalItemCount = childFolders.length + filteredMaps.length;
   // While loading, or when loading failed, the list is empty, but "no maps" would be wrong.
   const message = mapsLoadFailed
     ? loadFailedMessage
-    : filteredMaps.length === 0
+    : totalItemCount === 0
       ? emptyMessage
       : undefined;
 
-  const pagination = (filteredMaps.length > rowsPerPage || filteredMaps.length > 10) && (
+  const pagination = (totalItemCount > rowsPerPage || totalItemCount > 10) && (
     <ListPagination
-      count={filteredMaps.length}
-      rowsPerPageOptions={filteredMaps.length > 10 ? [10, 20, 50] : []}
+      count={totalItemCount}
+      rowsPerPageOptions={totalItemCount > 10 ? [10, 20, 50] : []}
       labelRowsPerPage="每页"
       rowsPerPage={rowsPerPage}
       page={page}
@@ -244,16 +306,31 @@ export const MapsList = ({
       <CardContent sx={{ textAlign: 'center', py: 4, fontWeight: 600 }}>{message}</CardContent>
     </Card>
   ) : (
-    pagedMaps.map((map) => (
-      <MapCard
-        key={map.id}
-        map={map}
-        selected={selected.includes(map.id)}
-        onToggleSelected={toggleSelected}
-        onStar={handleStar}
-        onOpenMenu={handleOpenMenu}
-      />
-    ))
+    <>
+      {pagedFolders.map((folder) => (
+        <FolderCard
+          key={`folder-${folder.id}`}
+          folder={folder}
+          count={folderCounts?.get(folder.id)}
+          onOpenFolder={handleOpenFolder}
+          onOpenMenu={handleOpenFolderMenu}
+          onContextMenu={handleFolderContextMenu}
+          onDropMaps={onDropMapsToFolder}
+        />
+      ))}
+      {pagedMaps.map((map) => (
+        <MapCard
+          key={map.id}
+          map={map}
+          selected={selected.includes(map.id)}
+          showFolderPath={!isFolderView}
+          onToggleSelected={toggleSelected}
+          onStar={handleStar}
+          onOpenMenu={handleOpenMenu}
+          onOpenFolder={mapOpenFolderHandler}
+        />
+      ))}
+    </>
   );
 
   const timeField: 'lastModificationTime' | 'lastOpenTime' =
@@ -279,6 +356,17 @@ export const MapsList = ({
     </Card>
   ) : (
     <MapsGrid data-testid="maps-grid">
+      {pagedFolders.map((folder) => (
+        <FolderGridCard
+          key={`folder-${folder.id}`}
+          folder={folder}
+          count={folderCounts?.get(folder.id)}
+          onOpenFolder={handleOpenFolder}
+          onOpenMenu={handleOpenFolderMenu}
+          onContextMenu={handleFolderContextMenu}
+          onDropMaps={onDropMapsToFolder}
+        />
+      ))}
       {pagedMaps.map((map) => (
         <MapGridCard
           key={map.id}
@@ -286,9 +374,11 @@ export const MapsList = ({
           selected={selected.includes(map.id)}
           hasAnySelected={selected.length > 0}
           timeField={timeField}
+          showFolderPath={!isFolderView}
           onToggleSelected={toggleSelected}
           onStar={handleStar}
           onOpenMenu={handleOpenMenu}
+          onOpenFolder={mapOpenFolderHandler}
           onContextMenu={handleContextMenu}
           onDragStart={handleDragStart}
         />
@@ -319,20 +409,35 @@ export const MapsList = ({
             </TableCell>
           </TableRow>
         ) : (
-          pagedMaps.map((map) => (
-            <MapRow
-              key={map.id}
-              map={map}
-              selected={selected.includes(map.id)}
-              timeField={timeField}
-              onToggleSelected={toggleSelected}
-              onStar={handleStar}
-              onOpenMenu={handleOpenMenu}
-              onRemoveLabel={handleRemoveLabel}
-              onContextMenu={handleContextMenu}
-              onDragStart={handleDragStart}
-            />
-          ))
+          <>
+            {pagedFolders.map((folder) => (
+              <FolderRow
+                key={`folder-${folder.id}`}
+                folder={folder}
+                count={folderCounts?.get(folder.id)}
+                onOpenFolder={handleOpenFolder}
+                onOpenMenu={handleOpenFolderMenu}
+                onContextMenu={handleFolderContextMenu}
+                onDropMaps={onDropMapsToFolder}
+              />
+            ))}
+            {pagedMaps.map((map) => (
+              <MapRow
+                key={map.id}
+                map={map}
+                selected={selected.includes(map.id)}
+                timeField={timeField}
+                showFolderPath={!isFolderView}
+                onToggleSelected={toggleSelected}
+                onStar={handleStar}
+                onOpenMenu={handleOpenMenu}
+                onRemoveLabel={handleRemoveLabel}
+                onOpenFolder={mapOpenFolderHandler}
+                onContextMenu={handleContextMenu}
+                onDragStart={handleDragStart}
+              />
+            ))}
+          </>
         )}
       </TableBody>
     </ListTable>
@@ -348,11 +453,20 @@ export const MapsList = ({
           mapId={rowMenu.mapId}
         />
       )}
+      <FolderActionMenu
+        menuState={folderMenu}
+        onClose={() => setFolderMenu(null)}
+        onCreateFolder={onCreateFolder}
+        onRenameFolder={onRenameFolder}
+        onMoveFolder={onMoveFolder}
+        onDeleteFolder={onDeleteFolder}
+      />
       <ListPaper ref={listPaperRef} elevation={0}>
         <MapsListToolbar
           filter={filter}
-          folders={folders}
           totalCount={filteredMaps.length}
+          allMapsCount={maps.length}
+          foldersCount={folders.length}
           selectedCount={selected.length}
           onDeleteSelected={() => openBulkDialog('delete')}
           onLabelSelected={() => openBulkDialog('label')}
@@ -367,6 +481,15 @@ export const MapsList = ({
           onSortChange={changeSort}
           toolbarActions={toolbarActions}
         />
+
+        {isFolderView && filter.folderId !== null && onFilterChange && (
+          <FolderBreadcrumbsBar
+            folders={folders}
+            currentFolderId={filter.folderId}
+            onNavigate={handleNavigateBreadcrumb}
+            onDropMaps={onDropMapsToFolder}
+          />
+        )}
 
         {useCardView ? (
           <ListTableContainer>

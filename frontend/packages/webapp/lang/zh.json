@@ -194,6 +194,9 @@
   "folder.empty": {
     "defaultMessage": "暂无文件夹"
   },
+  "folder.empty-content": {
+    "defaultMessage": "此文件夹为空，可新建子文件夹、新建导图或从「全部导图」拖入导图"
+  },
   "folder.move": {
     "defaultMessage": "移动到..."
   },

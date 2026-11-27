@@ -19,8 +19,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import Tooltip from '@mui/material/Tooltip';
-import Box from '@mui/material/Box';
-import Link from '@mui/material/Link';
 import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import ListItemText from '@mui/material/ListItemText';
@@ -28,15 +26,14 @@ import ArrowDownwardRoundedIcon from '@mui/icons-material/ArrowDownwardRounded';
 import ArrowUpwardRoundedIcon from '@mui/icons-material/ArrowUpwardRounded';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
 import DriveFileMoveRoundedIcon from '@mui/icons-material/DriveFileMoveRounded';
+import FolderRoundedIcon from '@mui/icons-material/FolderRounded';
 import FormatListBulletedRoundedIcon from '@mui/icons-material/FormatListBulletedRounded';
 import GridViewRoundedIcon from '@mui/icons-material/GridViewRounded';
 import LabelRoundedIcon from '@mui/icons-material/LabelRounded';
-import NavigateNextRoundedIcon from '@mui/icons-material/NavigateNextRounded';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
 import SwapVertRoundedIcon from '@mui/icons-material/SwapVertRounded';
-import type { Folder, MapInfo } from '../../../classes/client';
+import type { MapInfo } from '../../../classes/client';
 import type { Filter } from '..';
-import { getFolderBreadcrumbs } from '../folderTree';
 import { isFolderFilter, isLabelFilter, type Order } from './model';
 import type { MapsViewMode } from './useMapsListState';
 import { APPLE_FONT_STACK, appleColors, glassMaterialMixin, isDarkTheme } from '../appleDesign';
@@ -56,13 +53,16 @@ import {
   ViewModeButton,
   ViewModeGroup,
   WorkspaceHeading,
+  WorkspaceSegmentedButton,
+  WorkspaceSegmentedGroup,
   WorkspaceTitle,
 } from './styled';
 
 interface MapsListToolbarProps {
   filter?: Filter;
-  folders?: Folder[];
   totalCount?: number;
+  allMapsCount?: number | undefined;
+  foldersCount?: number | undefined;
   selectedCount: number;
   onDeleteSelected: () => void;
   onLabelSelected: () => void;
@@ -91,11 +91,12 @@ const SORT_OPTIONS: Array<{
   { key: 'lastModificationTime', label: '最近修改', defaultOrder: 'desc' },
 ];
 
-/** Above the list: workspace heading / bulk actions, Spotlight search, view switcher and sort menu. */
+/** Above the list: segmented view switcher / heading / bulk actions, Spotlight search, view switcher and sort menu. */
 export const MapsListToolbar = ({
   filter,
-  folders = [],
   totalCount,
+  allMapsCount,
+  foldersCount,
   selectedCount,
   onDeleteSelected,
   onLabelSelected,
@@ -128,8 +129,9 @@ export const MapsListToolbar = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const folderBreadcrumbs =
-    filter && isFolderFilter(filter) ? getFolderBreadcrumbs(folders, filter.folderId) : [];
+  const showPrimaryTabs = Boolean(
+    onFilterChange && (!filter || filter.type === 'all' || filter.type === 'folder'),
+  );
 
   const headingText = (() => {
     if (!filter || filter.type === 'all') {
@@ -145,7 +147,7 @@ export const MapsListToolbar = ({
       return filter.label.title;
     }
     if (filter && isFolderFilter(filter)) {
-      return folderBreadcrumbs[folderBreadcrumbs.length - 1]?.name ?? '文件夹';
+      return intl.formatMessage({ id: 'folder.section-title', defaultMessage: '文件夹' });
     }
     return intl.formatMessage({ id: 'maps.nav-all', defaultMessage: 'All' });
   })();
@@ -220,63 +222,38 @@ export const MapsListToolbar = ({
               </Tooltip>
             )}
           </>
+        ) : showPrimaryTabs ? (
+          <WorkspaceSegmentedGroup role="tablist" aria-label="主视图切换">
+            <WorkspaceSegmentedButton
+              type="button"
+              role="tab"
+              aria-selected={!filter || filter.type === 'all'}
+              active={!filter || filter.type === 'all'}
+              onClick={() => onFilterChange?.({ type: 'all' })}
+            >
+              <GridViewRoundedIcon />
+              <span>{intl.formatMessage({ id: 'maps.nav-all', defaultMessage: '全部导图' })}</span>
+              {typeof allMapsCount === 'number' && <CountPill>{allMapsCount}</CountPill>}
+            </WorkspaceSegmentedButton>
+            <WorkspaceSegmentedButton
+              type="button"
+              role="tab"
+              aria-selected={Boolean(filter && filter.type === 'folder')}
+              active={Boolean(filter && filter.type === 'folder')}
+              onClick={() => onFilterChange?.({ type: 'folder', folderId: null })}
+            >
+              <FolderRoundedIcon />
+              <span>
+                {intl.formatMessage({ id: 'folder.section-title', defaultMessage: '文件夹' })}
+              </span>
+              {typeof foldersCount === 'number' && <CountPill>{foldersCount}</CountPill>}
+            </WorkspaceSegmentedButton>
+          </WorkspaceSegmentedGroup>
         ) : (
-          <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 0, gap: '2px' }}>
-            {folderBreadcrumbs.length > 0 && onFilterChange && (
-              <Box
-                aria-label="文件夹路径"
-                sx={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  flexWrap: 'wrap',
-                  gap: '2px',
-                  fontFamily: APPLE_FONT_STACK,
-                  fontSize: '0.76rem',
-                  fontWeight: 600,
-                  color: 'text.secondary',
-                }}
-              >
-                <Link
-                  component="button"
-                  type="button"
-                  underline="hover"
-                  color="inherit"
-                  onClick={() => onFilterChange({ type: 'all' })}
-                  sx={{ fontFamily: APPLE_FONT_STACK, fontSize: '0.76rem', fontWeight: 600 }}
-                >
-                  {intl.formatMessage({ id: 'maps.nav-all', defaultMessage: '所有' })}
-                </Link>
-                {folderBreadcrumbs.map((crumb, idx) => {
-                  const isLast = idx === folderBreadcrumbs.length - 1;
-                  return (
-                    <React.Fragment key={crumb.id}>
-                      <NavigateNextRoundedIcon sx={{ fontSize: 14, opacity: 0.55 }} />
-                      {isLast ? (
-                        <Box component="span" sx={{ color: 'text.primary', fontWeight: 700 }}>
-                          {crumb.name}
-                        </Box>
-                      ) : (
-                        <Link
-                          component="button"
-                          type="button"
-                          underline="hover"
-                          color="inherit"
-                          onClick={() => onFilterChange({ type: 'folder', folderId: crumb.id })}
-                          sx={{ fontFamily: APPLE_FONT_STACK, fontSize: '0.76rem', fontWeight: 600 }}
-                        >
-                          {crumb.name}
-                        </Link>
-                      )}
-                    </React.Fragment>
-                  );
-                })}
-              </Box>
-            )}
-            <WorkspaceHeading>
-              <WorkspaceTitle>{headingText}</WorkspaceTitle>
-              {typeof totalCount === 'number' && <CountPill>{totalCount}</CountPill>}
-            </WorkspaceHeading>
-          </Box>
+          <WorkspaceHeading>
+            <WorkspaceTitle>{headingText}</WorkspaceTitle>
+            {typeof totalCount === 'number' && <CountPill>{totalCount}</CountPill>}
+          </WorkspaceHeading>
         )}
       </ToolbarActions>
 

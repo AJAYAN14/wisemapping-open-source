@@ -40,7 +40,7 @@ import { MapsList } from './maps-list';
 import { ImportProgressDialog, ImportStage } from './import-progress';
 import { createIntl, FormattedMessage, IntlProvider } from 'react-intl';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Folder, Label, MapInfo } from '../../classes/client';
+import { Folder, Label } from '../../classes/client';
 import ActionDispatcher from './action-dispatcher';
 import { ActionType } from './action-chooser';
 import AccountMenu from './account-menu';
@@ -53,12 +53,12 @@ import MenuRoundedIcon from '@mui/icons-material/MenuRounded';
 
 import AddCircleRoundedIcon from '@mui/icons-material/AddCircleRounded';
 import CloudUploadRoundedIcon from '@mui/icons-material/CloudUploadRounded';
+import CreateNewFolderRoundedIcon from '@mui/icons-material/CreateNewFolderRounded';
 import FolderRoundedIcon from '@mui/icons-material/FolderRounded';
 import InsertDriveFileRoundedIcon from '@mui/icons-material/InsertDriveFileRounded';
 import KeyboardArrowDownRoundedIcon from '@mui/icons-material/KeyboardArrowDownRounded';
 import LabelRoundedIcon from '@mui/icons-material/LabelRounded';
 import GridViewRoundedIcon from '@mui/icons-material/GridViewRounded';
-import InboxRoundedIcon from '@mui/icons-material/InboxRounded';
 import StarRateRoundedIcon from '@mui/icons-material/StarRateRounded';
 import Tooltip from '@mui/material/Tooltip';
 
@@ -91,7 +91,7 @@ export interface LabelFilter {
 
 export interface FolderFilter {
   type: 'folder';
-  folderId: number;
+  folderId: number | null;
 }
 
 type FolderDialogState =
@@ -107,8 +107,14 @@ type ToastState = {
   severity: 'success' | 'error';
 };
 
+const MAPS_MAIN_TAB_STORAGE_KEY = 'mapsMainTab';
+
 const MapsPage = (): ReactElement => {
-  const [filter, setFilter] = React.useState<Filter>({ type: 'all' });
+  const [filter, setFilter] = React.useState<Filter>(() =>
+    readStorage(MAPS_MAIN_TAB_STORAGE_KEY) === 'folders'
+      ? { type: 'folder', folderId: null }
+      : { type: 'all' },
+  );
   const client = use(ClientContext);
   const queryClient = useQueryClient();
   const [activeDialog, setActiveDialog] = React.useState<ActionType | undefined>(undefined);
@@ -655,6 +661,11 @@ const MapsPage = (): ReactElement => {
 
   const handleMenuClick = (nextFilter: Filter) => {
     queryClient.invalidateQueries({ queryKey: ['maps'] });
+    if (nextFilter.type === 'all') {
+      writeStorage(MAPS_MAIN_TAB_STORAGE_KEY, 'all');
+    } else if (nextFilter.type === 'folder') {
+      writeStorage(MAPS_MAIN_TAB_STORAGE_KEY, 'folders');
+    }
     setFilter(nextFilter);
     if (mobileDrawerOpen) {
       setMobileDrawerOpen(false);
@@ -671,24 +682,6 @@ const MapsPage = (): ReactElement => {
   });
   const folders: Folder[] = foldersData ?? [];
   const activeFolderId = filter.type === 'folder' ? filter.folderId : null;
-
-  const { data: mapsData } = useQuery<unknown, ErrorInfo, MapInfo[]>({
-    queryKey: ['maps'],
-    queryFn: () => client.fetchAllMaps(),
-  });
-  const { folderCounts, uncategorizedCount } = useMemo(() => {
-    const counts = new Map<number, number>();
-    let uncat = 0;
-    for (const m of mapsData ?? []) {
-      const fid = m.folderId ?? null;
-      if (fid === null) {
-        uncat += 1;
-      } else {
-        counts.set(fid, (counts.get(fid) ?? 0) + 1);
-      }
-    }
-    return { folderCounts: counts, uncategorizedCount: uncat };
-  }, [mapsData]);
 
   const moveMapsDropMutation = useMutation<
     void,
@@ -740,13 +733,6 @@ const MapsPage = (): ReactElement => {
       label: intl.formatMessage({ id: 'maps.nav-starred', defaultMessage: 'Starred' }),
       icon: <StarRateRoundedIcon />,
     },
-    {
-      filter: { type: 'uncategorized' },
-      label: intl.formatMessage({ id: 'maps.nav-uncategorized', defaultMessage: '未分类' }),
-      icon: <InboxRoundedIcon />,
-      count: uncategorizedCount,
-      acceptDropToRoot: true,
-    },
   ];
 
   labels.forEach((l) =>
@@ -762,16 +748,9 @@ const MapsPage = (): ReactElement => {
       account={account}
       drawerOpen={includeDesktopToggle ? desktopDrawerOpen : true}
       filterButtons={filterButtons}
-      folders={folders}
-      folderCounts={folderCounts}
       activeFilter={filter}
       onFilterClick={handleMenuClick}
       onLabelDelete={setLabelToDelete}
-      onCreateFolder={(parentId) => setFolderDialog({ mode: 'create', parentId })}
-      onRenameFolder={(folder) => setFolderDialog({ mode: 'rename', folder })}
-      onMoveFolder={(folder) => setFolderDialog({ mode: 'move', folder })}
-      onDeleteFolder={(folder) => setFolderDialog({ mode: 'delete', folder })}
-      onDropMapsToFolder={(mapIds, folderId) => moveMapsDropMutation.mutate({ mapIds, folderId })}
       onToggleDesktopDrawer={includeDesktopToggle ? handleDesktopDrawerToggle : undefined}
       userMenu={
         <AccountMenu
@@ -806,6 +785,30 @@ const MapsPage = (): ReactElement => {
           </span>
         </PrimaryToolbarButton>
       </Tooltip>
+
+      {filter.type === 'folder' && (
+        <Tooltip
+          arrow={true}
+          title={intl.formatMessage({
+            id: 'folder.new',
+            defaultMessage: '新建文件夹',
+          })}
+        >
+          <SecondaryToolbarButton
+            data-testid="create-folder"
+            size="medium"
+            variant="text"
+            type="button"
+            disableElevation={true}
+            startIcon={<CreateNewFolderRoundedIcon />}
+            onClick={() => setFolderDialog({ mode: 'create', parentId: activeFolderId })}
+          >
+            <span className="message">
+              <FormattedMessage id="folder.new" defaultMessage="新建文件夹" />
+            </span>
+          </SecondaryToolbarButton>
+        </Tooltip>
+      )}
 
       <Tooltip
         arrow={true}
@@ -1044,6 +1047,13 @@ const MapsPage = (): ReactElement => {
               filter={filter}
               folders={folders}
               onFilterChange={handleMenuClick}
+              onCreateFolder={(parentId) => setFolderDialog({ mode: 'create', parentId })}
+              onRenameFolder={(folder) => setFolderDialog({ mode: 'rename', folder })}
+              onMoveFolder={(folder) => setFolderDialog({ mode: 'move', folder })}
+              onDeleteFolder={(folder) => setFolderDialog({ mode: 'delete', folder })}
+              onDropMapsToFolder={(mapIds, folderId) =>
+                moveMapsDropMutation.mutate({ mapIds, folderId })
+              }
               toolbarActions={toolbarActions}
             />
           </section>
@@ -1059,8 +1069,8 @@ const MapsPage = (): ReactElement => {
           }
           onClose={() => setFolderDialog(undefined)}
           onCreated={(created) => {
-            if (folderDialog.parentId === null) {
-              setFilter({ type: 'folder', folderId: created.id });
+            if (filter.type !== 'folder') {
+              handleMenuClick({ type: 'folder', folderId: created.parentId ?? null });
             }
           }}
         />
@@ -1091,7 +1101,8 @@ const MapsPage = (): ReactElement => {
           onClose={() => setFolderDialog(undefined)}
           onDeleted={(deletedId) => {
             if (filter.type === 'folder' && filter.folderId === deletedId) {
-              setFilter({ type: 'all' });
+              const deletedFolder = folders.find((f) => f.id === deletedId);
+              setFilter({ type: 'folder', folderId: deletedFolder?.parentId ?? null });
             }
           }}
         />

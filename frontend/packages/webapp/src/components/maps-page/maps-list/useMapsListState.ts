@@ -17,13 +17,22 @@
  */
 
 import { useCallback, useMemo, useState } from 'react';
-import { MapInfo } from '../../../classes/client';
+import { Folder, MapInfo } from '../../../classes/client';
 import { readStorage, writeStorage } from '../../../utils/storage';
 import type { Filter } from '..';
-import { Order, getComparator, isFolderFilter, isLabelFilter, mapsFilter, stableSort } from './model';
+import {
+  Order,
+  getChildFolders,
+  getComparator,
+  isFolderFilter,
+  isLabelFilter,
+  mapsFilter,
+  stableSort,
+} from './model';
 
 export type MapsViewMode = 'list' | 'grid';
 
+const NO_FOLDERS: Folder[] = [];
 const VIEW_MODE_STORAGE_KEY = 'mapsListViewMode';
 const ORDER_BY_STORAGE_KEY = 'mapsListOrderBy';
 const ORDER_STORAGE_KEY = 'mapsListOrder';
@@ -50,26 +59,14 @@ const readStoredOrder = (): Order => {
   return stored === 'asc' ? 'asc' : 'desc';
 };
 
-/** What identifies the sidebar entry: choosing the same entry again hands over a new object. */
+/** What identifies the sidebar or folder entry: choosing the same entry again hands over a new object. */
 const entryKey = (filter: Filter): string =>
   isLabelFilter(filter)
     ? `label:${filter.label.id}`
     : isFolderFilter(filter)
-      ? `folder:${filter.folderId}`
+      ? `folder:${filter.folderId ?? 'root'}`
       : filter.type;
 
-/**
- * The state of the map list: what the sidebar and the search narrow it to, how it is sorted and
- * paged, and which rows are selected. The lists are derived from the maps and that state.
- *
- * Two rules that used to be effects and handlers scattered through the component live here:
- * - Choosing another sidebar entry clears the selection and goes back to the first page.
- * - The page is always one that exists: deleting the last map of the last page, or a search with
- *   fewer matches, no longer leaves an empty table.
- *
- * The handlers the rows and the search box use keep their identity across renders, so the
- * memoized rows are not re-rendered by a change that is not theirs.
- */
 export interface MapsListState {
   order: Order;
   orderBy: keyof MapInfo;
@@ -79,8 +76,14 @@ export interface MapsListState {
   page: number;
   rowsPerPage: number;
   selected: number[];
+  /** Direct subfolders of the active folder matching search, in display sort order. */
+  childFolders: Folder[];
+  /** The subfolders shown on the current page. */
+  pagedFolders: Folder[];
   /** The maps the entry and the search list, on every page. */
   filteredMaps: MapInfo[];
+  /** The filtered maps in display sort order. */
+  sortedMaps: MapInfo[];
   /** The maps of the page shown, sorted. */
   pagedMaps: MapInfo[];
   requestSort: (property: keyof MapInfo) => void;
@@ -116,7 +119,11 @@ const getMapComparator = (
   return getComparator<MapInfo>(order, orderBy);
 };
 
-export const useMapsListState = (filter: Filter, maps: MapInfo[]): MapsListState => {
+export const useMapsListState = (
+  filter: Filter,
+  maps: MapInfo[],
+  folders: Folder[] = NO_FOLDERS,
+): MapsListState => {
   const [order, setOrder] = useState<Order>(readStoredOrder);
   const [orderBy, setOrderBy] = useState<keyof MapInfo>(readStoredOrderBy);
   const [viewMode, setViewMode] = useState<MapsViewMode>(readStoredViewMode);
@@ -135,6 +142,14 @@ export const useMapsListState = (filter: Filter, maps: MapInfo[]): MapsListState
     setRequestedPage(0);
   }
 
+  const childFolders = useMemo(
+    () =>
+      isFolderFilter(filter)
+        ? getChildFolders(folders, filter.folderId ?? null, search, order, orderBy)
+        : NO_FOLDERS,
+    [filter, folders, search, order, orderBy],
+  );
+
   const filteredMaps = useMemo(
     () => maps.filter(mapsFilter(filter, search)),
     [maps, filter, search],
@@ -144,12 +159,22 @@ export const useMapsListState = (filter: Filter, maps: MapInfo[]): MapsListState
     [filteredMaps, order, orderBy],
   );
 
-  const lastPage = Math.max(0, Math.ceil(sortedMaps.length / rowsPerPage) - 1);
+  const totalItems = childFolders.length + sortedMaps.length;
+  const lastPage = Math.max(0, Math.ceil(totalItems / rowsPerPage) - 1);
   const page = Math.min(requestedPage, lastPage);
-  const pagedMaps = useMemo(
-    () => sortedMaps.slice(page * rowsPerPage, (page + 1) * rowsPerPage),
-    [sortedMaps, page, rowsPerPage],
+
+  const pagedFolders = useMemo(
+    () => childFolders.slice(page * rowsPerPage, (page + 1) * rowsPerPage),
+    [childFolders, page, rowsPerPage],
   );
+
+  const pagedMaps = useMemo(() => {
+    const start = page * rowsPerPage;
+    const end = start + rowsPerPage;
+    const mapStart = Math.max(0, start - childFolders.length);
+    const mapEnd = Math.max(0, end - childFolders.length);
+    return sortedMaps.slice(mapStart, mapEnd);
+  }, [sortedMaps, page, rowsPerPage, childFolders.length]);
 
   /** A selection kept across a search would include maps the search hides. */
   const changeSearch = useCallback((value: string): void => {
@@ -190,7 +215,10 @@ export const useMapsListState = (filter: Filter, maps: MapInfo[]): MapsListState
     page,
     rowsPerPage,
     selected,
+    childFolders,
+    pagedFolders,
     filteredMaps,
+    sortedMaps,
     pagedMaps,
 
     /** Sorts by the column, or reverses the order if it already is the sort column. */

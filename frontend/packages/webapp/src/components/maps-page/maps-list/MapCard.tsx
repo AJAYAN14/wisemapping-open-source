@@ -25,13 +25,13 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import CheckBoxOutlineBlankRoundedIcon from '@mui/icons-material/CheckBoxOutlineBlankRounded';
 import CheckBoxRoundedIcon from '@mui/icons-material/CheckBoxRounded';
-import FolderRoundedIcon from '@mui/icons-material/FolderRounded';
 import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
 import { MapInfo } from '../../../classes/client';
 import { useDate } from '../../../classes/app-i18n/dates';
 import { buildMapEditPath } from '../../../utils/mapPath';
 import { formatMapSize } from '../../../utils/mapPreview';
 import type { MapItemHandlers } from './MapRow';
+import { MapFolderPathBadge } from './MapFolderPathBadge';
 import {
   ActionIconButton,
   CardTitle,
@@ -44,16 +44,20 @@ import {
 interface MapCardProps extends MapItemHandlers {
   map: MapInfo;
   selected?: boolean;
+  showFolderPath?: boolean;
   onToggleSelected?: (mapId: number) => void;
+  onOpenFolder?: ((folderId: number) => void) | undefined;
 }
 
 /** A map on a narrow screen: the whole card opens the map in the editor. */
 const MapCardComponent = ({
   map,
   selected = false,
+  showFolderPath = true,
   onToggleSelected,
   onStar,
   onOpenMenu,
+  onOpenFolder,
 }: MapCardProps): React.ReactElement => {
   const intl = useIntl();
   const date = useDate();
@@ -156,25 +160,15 @@ const MapCardComponent = ({
             // Not a Typography itself, so the header wraps it in its title Typography.
             title={
               <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-                {map.folderPath && (
-                  <Box
-                    sx={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 0.4,
-                      fontSize: '0.72rem',
-                      fontWeight: 500,
-                      color: 'text.secondary',
-                      opacity: 0.85,
-                      mb: 0.2,
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    <FolderRoundedIcon sx={{ fontSize: 13, opacity: 0.7 }} />
-                    <span>{map.folderPath}</span>
-                  </Box>
+                {showFolderPath && (
+                  <MapFolderPathBadge
+                    folderPath={map.folderPath}
+                    folderId={map.folderId}
+                    onOpenFolder={onOpenFolder}
+                    fontSize="0.72rem"
+                    iconSize={13}
+                    mb={0.2}
+                  />
                 )}
                 <CardTitle noWrap>{map.title}</CardTitle>
               </Box>

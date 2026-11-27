@@ -16,9 +16,11 @@
  *   limitations under the License.
  */
 
-import { Label, MapInfo } from '../../../src/classes/client';
+import { Folder, Label, MapInfo } from '../../../src/classes/client';
 import {
+  getChildFolders,
   getComparator,
+  getFolderDirectItemCounts,
   isLabelFilter,
   mapsFilter,
   stableSort,
@@ -97,6 +99,7 @@ describe('mapsFilter', () => {
   test.each([
     ['all', { type: 'all' as const }, [1, 2, 3, 4]],
     ['uncategorized', { type: 'uncategorized' as const }, [1, 4]],
+    ['folder root', { type: 'folder' as const, folderId: null }, [1, 4]],
     ['starred', { type: 'starred' as const }, [3]],
     ['folder', { type: 'folder' as const, folderId: 10 }, [2, 3]],
   ])('the %s entry', (_name, filter, expected) => {
@@ -125,5 +128,52 @@ describe('mapsFilter', () => {
   test('isLabelFilter tells the label entry from the others', () => {
     expect(isLabelFilter({ type: 'label', label: label(1) })).toBe(true);
     expect(isLabelFilter({ type: 'all' })).toBe(false);
+  });
+});
+
+describe('getChildFolders and getFolderDirectItemCounts', () => {
+  const folder = (id: number, name: string, parentId: number | null = null): Folder => ({
+    id,
+    name,
+    parentId,
+  });
+
+  const folders: Folder[] = [
+    folder(1, '2.10 章', null),
+    folder(2, '2.2 章', null),
+    folder(3, '2.2.1 小节', 2),
+    folder(4, '10.1 孤儿目录', 999),
+  ];
+
+  test('lists direct children sorted naturally and treats orphans as top-level', () => {
+    expect(getChildFolders(folders, null, '').map((f) => f.name)).toEqual([
+      '2.2 章',
+      '2.10 章',
+      '10.1 孤儿目录',
+    ]);
+    expect(getChildFolders(folders, 2, '').map((f) => f.name)).toEqual(['2.2.1 小节']);
+  });
+
+  test('filters child folders by search text and supports descending title sort', () => {
+    expect(getChildFolders(folders, null, '2.10').map((f) => f.name)).toEqual(['2.10 章']);
+    expect(getChildFolders(folders, null, '', 'desc', 'title').map((f) => f.name)).toEqual([
+      '10.1 孤儿目录',
+      '2.10 章',
+      '2.2 章',
+    ]);
+  });
+
+  test('computes direct subfolder and map counts per folder', () => {
+    const maps: MapInfo[] = [
+      map({ id: 10, folderId: 2 }),
+      map({ id: 11, folderId: 2 }),
+      map({ id: 12, folderId: 3 }),
+      map({ id: 13, folderId: null }),
+    ];
+
+    const counts = getFolderDirectItemCounts(folders, maps);
+    expect(counts.get(2)).toEqual({ subfolderCount: 1, mapCount: 2, totalCount: 3 });
+    expect(counts.get(1)).toEqual({ subfolderCount: 0, mapCount: 0, totalCount: 0 });
+    expect(counts.get(3)).toEqual({ subfolderCount: 0, mapCount: 1, totalCount: 1 });
   });
 });
