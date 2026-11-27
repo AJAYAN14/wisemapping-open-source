@@ -54,9 +54,9 @@ export interface AppleColorTokens {
 }
 
 export const appleColors = (isDark: boolean): AppleColorTokens => ({
-  canvas: isDark ? '#161618' : '#F5F5F7',
-  surface: isDark ? '#1F1F23' : '#FFFFFF',
-  surfaceElevated: isDark ? '#28282D' : '#FFFFFF',
+  canvas: isDark ? '#0D0D10' : '#EFEFF4',
+  surface: isDark ? '#1B1B1F' : '#FFFFFF',
+  surfaceElevated: isDark ? '#25252A' : '#F4F5F7',
   sidebarGlass: isDark ? 'rgba(28, 28, 32, 0.86)' : 'rgba(255, 255, 255, 0.88)',
   sidebarSolid: isDark ? '#1C1C20' : '#FFFFFF',
   headerGlass: isDark ? 'rgba(28, 28, 32, 0.78)' : 'rgba(250, 250, 252, 0.78)',

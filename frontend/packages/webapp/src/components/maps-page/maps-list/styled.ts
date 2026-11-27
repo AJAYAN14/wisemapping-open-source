@@ -41,8 +41,10 @@ export const ListRoot = styled('div')({
 });
 
 export const ListPaper = styled(Paper)(({ theme }) => ({
-  maxWidth: '1240px',
-  margin: '8px auto 24px auto',
+  maxWidth: 'none',
+  width: '100%',
+  boxSizing: 'border-box',
+  margin: '0 0 8px 0',
   paddingLeft: '28px',
   paddingRight: '28px',
   backgroundColor: 'transparent',
@@ -52,8 +54,8 @@ export const ListPaper = styled(Paper)(({ theme }) => ({
   },
   [theme.breakpoints.down('sm')]: {
     marginTop: 0,
-    paddingLeft: '4px',
-    paddingRight: '4px',
+    paddingLeft: '6px',
+    paddingRight: '6px',
   },
 }));
 
@@ -64,9 +66,9 @@ export const ListToolbar = styled(Toolbar)(({ theme }) => ({
   flexWrap: 'wrap',
   gap: '12px',
   padding: 0,
-  paddingTop: '14px',
+  paddingTop: '4px',
   paddingBottom: '18px',
-  minHeight: '56px',
+  minHeight: '52px',
   boxShadow: 'none',
   backgroundColor: 'transparent',
   [theme.breakpoints.down('sm')]: {
@@ -371,8 +373,8 @@ export const ListTableContainer = styled(TableContainer)(({ theme }) => {
   return {
     backgroundColor: c.surface,
     border: `1px solid ${c.hairline}`,
-    borderRadius: '18px',
-    boxShadow: c.shadowSubtle,
+    borderRadius: '14px',
+    boxShadow: 'none',
     overflowX: 'auto',
     overflowY: 'hidden',
     maxWidth: '100%',
@@ -665,17 +667,18 @@ export const GridCardRoot = styled('div', {
   const c = appleColors(isDarkTheme(theme));
   return {
     position: 'relative',
-    borderRadius: '16px',
-    backgroundColor: c.surface,
+    borderRadius: '14px',
+    padding: '8px',
+    backgroundColor: c.surfaceElevated,
     border: `1px solid ${selected ? c.amber : c.hairline}`,
-    boxShadow: selected ? `0 0 0 2px ${c.amberRing}` : c.shadowSubtle,
+    boxShadow: selected ? `0 0 0 2px ${c.amberRing}` : 'none',
     overflow: 'hidden',
     transition:
       'transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 160ms ease, border-color 160ms ease',
     cursor: 'pointer',
     '&:hover': {
       transform: 'translateY(-2px)',
-      boxShadow: c.shadowFloat,
+      boxShadow: c.shadowSubtle,
       borderColor: selected ? c.amber : c.hairlineStrong,
       '& .grid-card-overlay': {
         opacity: 1,
@@ -705,8 +708,9 @@ export const GridCardPreview = styled('div')(({ theme }) => {
     width: '100%',
     aspectRatio: '16 / 10',
     overflow: 'hidden',
-    borderBottom: `1px solid ${c.hairline}`,
-    backgroundColor: isDarkTheme(theme) ? '#18181B' : '#F8FAFC',
+    borderRadius: '10px',
+    border: `1px solid ${c.hairline}`,
+    backgroundColor: isDarkTheme(theme) ? '#18181B' : '#FFFFFF',
   };
 });
 
@@ -762,7 +766,7 @@ export const GridCardActionsOverlay = styled('div', {
 });
 
 export const GridCardBody = styled('div')({
-  padding: '12px 14px 13px 14px',
+  padding: '10px 6px 4px 6px',
   display: 'flex',
   flexDirection: 'column',
   gap: '4px',

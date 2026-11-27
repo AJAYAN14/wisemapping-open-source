@@ -74,21 +74,32 @@ const mobileAppbarButton: CSSObject = {
   },
 };
 
-/** The drawer's translucent macOS-style vibrancy surface. */
+/** The drawer's floating card surface on desktop, and full-height sheet on phones. */
 const drawerPaper = (theme: Theme, expanded: boolean): CSSObject => {
   const isDark = isDarkTheme(theme);
   const c = appleColors(isDark);
   return {
     ...glassMaterialMixin(c.sidebarGlass, c.sidebarSolid, 24),
+    backgroundColor: c.surface,
     color: c.textPrimary,
-    borderRight: `1px solid ${c.hairline}`,
-    borderTopRightRadius: 0,
-    borderBottomRightRadius: 0,
-    boxShadow: 'none',
+    border: `1px solid ${c.hairline}`,
+    borderRadius: '16px',
+    boxShadow: c.shadowSubtle,
+    top: '12px',
+    left: '12px',
+    bottom: '12px',
+    height: 'calc(100dvh - 24px)',
     width: `var(--drawer-width, ${drawerWidthOf(expanded)}px)`,
     paddingTop: 'env(safe-area-inset-top, 0px)',
     paddingBottom: 'env(safe-area-inset-bottom, 0px)',
     [theme.breakpoints.down('sm')]: {
+      top: 0,
+      left: 0,
+      bottom: 0,
+      borderRadius: 0,
+      border: 'none',
+      borderRight: `1px solid ${c.hairline}`,
+      boxShadow: 'none',
       width: 'min(240px, 80dvw, 100dvw - 24px)',
       height: '100svh',
       maxHeight: '100svh',
@@ -187,6 +198,11 @@ export const PageRoot = styled('div')(({ theme }) => {
     backgroundColor: c.canvas,
     color: c.textPrimary,
     fontFamily: APPLE_FONT_STACK,
+    boxSizing: 'border-box',
+    [theme.breakpoints.up('sm')]: {
+      padding: '12px',
+      gap: '12px',
+    },
   };
 });
 
@@ -383,29 +399,43 @@ export const DesktopDrawer = styled(Drawer, { shouldForwardProp: notExpanded })<
   ],
 );
 
-export const PageContent = styled('main')({
-  flexGrow: 1,
-  minWidth: 0,
-  containerType: 'inline-size',
-  containerName: 'maps-main',
-  paddingTop: 'env(safe-area-inset-top, 0px)',
-  paddingBottom: 'max(2.5rem, env(safe-area-inset-bottom, 0px))',
-  paddingInlineStart: 'env(safe-area-inset-left, 0px)',
-  paddingInlineEnd: 'env(safe-area-inset-right, 0px)',
+export const PageContent = styled('main')(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    flexGrow: 1,
+    minWidth: 0,
+    containerType: 'inline-size',
+    containerName: 'maps-main',
+    boxSizing: 'border-box',
+    [theme.breakpoints.up('sm')]: {
+      backgroundColor: c.surface,
+      borderRadius: '16px',
+      border: `1px solid ${c.hairline}`,
+      boxShadow: c.shadowSubtle,
+      minHeight: 'calc(100dvh - 24px)',
+      paddingBottom: '24px',
+    },
+    [theme.breakpoints.down('sm')]: {
+      paddingTop: 'env(safe-area-inset-top, 0px)',
+      paddingBottom: 'max(2.5rem, env(safe-area-inset-bottom, 0px))',
+      paddingInlineStart: 'env(safe-area-inset-left, 0px)',
+      paddingInlineEnd: 'env(safe-area-inset-right, 0px)',
+    },
+  };
 });
 
-/** Compact, borderless top utility strip inside the workspace (mobile drawer trigger + theme/account). */
+/** Compact, borderless top utility strip inside the floating main card (mobile drawer trigger + theme/account). */
 export const WorkspaceTopBar = styled('header')(({ theme }) => ({
-  maxWidth: '1240px',
-  margin: '0 auto',
+  width: '100%',
+  boxSizing: 'border-box',
   padding: '14px 28px 0 28px',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
   gap: '8px',
-  minHeight: '46px',
+  minHeight: '38px',
   [theme.breakpoints.down('md')]: {
-    padding: '12px 20px 0 20px',
+    padding: '14px 20px 0 20px',
   },
   [theme.breakpoints.down('sm')]: {
     padding: '10px 12px 0 12px',

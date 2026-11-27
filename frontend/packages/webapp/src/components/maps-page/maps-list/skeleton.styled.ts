@@ -93,6 +93,11 @@ export const LoadingContainer = styled('div')(({ theme }) => {
     minHeight: '100dvh',
     backgroundColor: c.canvas,
     fontFamily: APPLE_FONT_STACK,
+    boxSizing: 'border-box',
+    [theme.breakpoints.up('sm')]: {
+      padding: '12px',
+      gap: '12px',
+    },
   };
 });
 
@@ -104,8 +109,11 @@ export const LoadingDrawer = styled('div', { shouldForwardProp: notExpanded })<E
   return {
     width: drawerWidthOf(expanded),
     flexShrink: 0,
-    backgroundColor: c.sidebarSolid,
-    borderRight: `1px solid ${c.hairline}`,
+    backgroundColor: c.surface,
+    border: `1px solid ${c.hairline}`,
+    borderRadius: '16px',
+    boxShadow: c.shadowSubtle,
+    height: 'calc(100dvh - 24px)',
     display: 'flex',
     flexDirection: 'column',
     paddingTop: 'env(safe-area-inset-top, 0px)',
@@ -176,15 +184,29 @@ export const LoadingDrawerUserCard = styled('div')(({ theme }) => {
   };
 });
 
-export const LoadingMainContent = styled('main')({
-  flexGrow: 1,
-  minWidth: 0,
-  display: 'flex',
-  flexDirection: 'column',
-  paddingTop: '1.25rem',
-  paddingBottom: 'max(2.5rem, env(safe-area-inset-bottom, 0px))',
-  paddingInlineStart: 'env(safe-area-inset-left, 0px)',
-  paddingInlineEnd: 'env(safe-area-inset-right, 0px)',
+export const LoadingMainContent = styled('main')(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    flexGrow: 1,
+    minWidth: 0,
+    display: 'flex',
+    flexDirection: 'column',
+    boxSizing: 'border-box',
+    [theme.breakpoints.up('sm')]: {
+      backgroundColor: c.surface,
+      borderRadius: '16px',
+      border: `1px solid ${c.hairline}`,
+      boxShadow: c.shadowSubtle,
+      minHeight: 'calc(100dvh - 24px)',
+      paddingBottom: '24px',
+    },
+    [theme.breakpoints.down('sm')]: {
+      paddingTop: 'env(safe-area-inset-top, 0px)',
+      paddingBottom: 'max(2.5rem, env(safe-area-inset-bottom, 0px))',
+      paddingInlineStart: 'env(safe-area-inset-left, 0px)',
+      paddingInlineEnd: 'env(safe-area-inset-right, 0px)',
+    },
+  };
 });
 
 export const LoadingToolbarSpacer = styled('div')({
@@ -281,8 +303,9 @@ export const SkeletonText = styled(SkeletonBlock)({
 export const LoadingListPaper = styled(Paper)(({ theme }) => ({
   backgroundColor: 'transparent',
   width: '100%',
-  maxWidth: '1080px',
-  margin: '8px auto 24px auto',
+  maxWidth: 'none',
+  boxSizing: 'border-box',
+  margin: '0 0 8px 0',
   paddingLeft: '28px',
   paddingRight: '28px',
   [theme.breakpoints.down('md')]: {
@@ -291,8 +314,8 @@ export const LoadingListPaper = styled(Paper)(({ theme }) => ({
   },
   [theme.breakpoints.down('sm')]: {
     marginTop: 0,
-    paddingLeft: '4px',
-    paddingRight: '4px',
+    paddingLeft: '6px',
+    paddingRight: '6px',
   },
 }));
 

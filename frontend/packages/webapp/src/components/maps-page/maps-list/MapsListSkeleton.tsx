@@ -280,15 +280,13 @@ export const MapsPageLoading = (): React.ReactElement => {
         <Box
           component="header"
           sx={{
-            maxWidth: '1240px',
             width: '100%',
-            margin: '0 auto',
-            padding: { xs: '10px 12px 0 12px', sm: '12px 20px 0 20px', md: '14px 28px 0 28px' },
+            padding: { xs: '10px 12px 0 12px', sm: '14px 20px 0 20px', md: '14px 28px 0 28px' },
             display: 'flex',
             alignItems: 'center',
             justifyContent: isMobile ? 'space-between' : 'flex-end',
             gap: '8px',
-            minHeight: '46px',
+            minHeight: '38px',
             boxSizing: 'border-box',
           }}
         >
