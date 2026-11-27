@@ -551,7 +551,7 @@ export const ListTableContainer = styled(TableContainer)(({ theme }) => {
 export const ListTable = styled(Table)(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
-    minWidth: 680,
+    minWidth: 600,
     backgroundColor: c.surface,
     '& tbody tr': {
       background: 'transparent',

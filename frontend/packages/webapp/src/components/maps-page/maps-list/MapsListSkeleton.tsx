@@ -398,7 +398,7 @@ export const MapsPageLoading = (): React.ReactElement => {
             </LoadingGrid>
           ) : (
             <LoadingTableContainer>
-              <Table size="small" sx={{ minWidth: 680, backgroundColor: 'transparent' }}>
+              <Table size="small" sx={{ minWidth: 600, backgroundColor: 'transparent' }}>
                 <TableHead>
                   <TableRow>
                     <LoadingHeaderCell padding="checkbox" sx={{ width: '20px' }}>

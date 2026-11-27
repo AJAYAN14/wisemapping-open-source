@@ -6,7 +6,11 @@
 
 ---
 
-## Latest Fixes (v6.0.29)
+## Latest Fixes (v6.0.30)
+
+- **Narrow-Desktop Table Clipping Fix (`styled.ts`, `MapsListSkeleton.tsx`)**: Lowered `ListTable` and `MapsPageLoading` table `minWidth` from `680px` to `600px` so list view fits cleanly inside `~978px` viewports with expanded sidebar without horizontal scrollbar clipping on the rightmost action icon.
+
+## Previous Fixes (v6.0.29)
 
 - **Homepage Anti-Slop & Visual Unification (`appleDesign.ts`, `maps-page/`, `index.html`)**:
   - **Tokens & Layer Restraint**: Unified neutral canvas (`#F5F5F7` / `#0D0D10`), surface (`#FFFFFF` / `#1A1A1E`), strict 3-step border-radius scale (`12px` / `8px` / `6px`), and single charcoal primary CTA (`#18181B` / `#F4F4F5`) with high-contrast text, keeping warm amber solely for active/selected/starred states. Made desktop `PageContent` transparent so cards sit at most 2 layers deep on the canvas.
