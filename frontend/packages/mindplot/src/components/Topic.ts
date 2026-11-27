@@ -1793,21 +1793,12 @@ abstract class Topic extends NodeGraph {
 
       // Update topic color ...
       const innerShape = this.getInnerShape();
-      let borderColor = this.getBorderColor(variant);
+      const borderColor = this.getBorderColor(variant);
       const borderStyle = this.getBorderStyle() || 'solid';
       const strokeStyle = this.getStrokeStyle(borderStyle);
-
-      let bgColor = this.getBackgroundColor(variant);
-      if (hasImage) {
-        // High quality white card styling with crisp border for part photos
-        bgColor = this.getModel().getBackgroundColor() || '#FFFFFF';
-        borderColor = this.getModel().getBorderColor() || '#CBD5E1';
-        innerShape.setStroke(1.5, strokeStyle, borderColor);
-        innerShape.setFill(bgColor);
-      } else {
-        innerShape.setStroke(1.5, strokeStyle, borderColor);
-        innerShape.setFill(bgColor);
-      }
+      const bgColor = this.getBackgroundColor(variant);
+      innerShape.setStroke(1.5, strokeStyle, borderColor);
+      innerShape.setFill(bgColor);
       this._connector?.setColor(borderColor);
 
       // The measurement is only valid until the text changes ...

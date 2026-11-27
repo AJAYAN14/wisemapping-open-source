@@ -32,6 +32,25 @@ import LayoutEventBus from './layout/LayoutEventBus';
 import type PositionType from './PositionType';
 
 const DEFAULT_VISIBILITY_PADDING = 80;
+const VIEWPORT_CULL_STYLE_ID = 'wisemapping-viewport-cull-styles';
+
+const ensureViewportCullStyles = (container: HTMLElement): void => {
+  const root = container.getRootNode();
+  const targetRoot = root instanceof ShadowRoot ? root : container.ownerDocument;
+  if (!targetRoot || targetRoot.getElementById(VIEWPORT_CULL_STYLE_ID)) {
+    return;
+  }
+  const style = (container.ownerDocument ?? document).createElement('style');
+  style.id = VIEWPORT_CULL_STYLE_ID;
+  style.textContent = '[data-viewport-culled="true"] { display: none !important; }';
+  if (targetRoot instanceof ShadowRoot) {
+    targetRoot.appendChild(style);
+  } else if (targetRoot.head) {
+    targetRoot.head.appendChild(style);
+  } else {
+    targetRoot.documentElement?.appendChild(style);
+  }
+};
 
 /** Elements a map load adds to the canvas before it lets the browser paint (its spinner). */
 const RENDER_QUEUE_BATCH = 300;
@@ -96,6 +115,7 @@ class Canvas {
     this._isReadOnly = isReadOnly;
 
     const divContainer = screenManager.getContainer();
+    ensureViewportCullStyles(divContainer);
     this._containerSize = {
       width: screenManager.getContainerWidth(),
       height: screenManager.getContainerHeight(),

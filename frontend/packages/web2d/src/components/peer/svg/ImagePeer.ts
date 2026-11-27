@@ -18,6 +18,83 @@
 import type PositionType from '../../PositionType';
 import ElementPeer from './ElementPeer';
 
+const MAX_PREDECODED_IMAGES = 160;
+const PREDECODE_BATCH_SIZE = 4;
+const predecodedCache = new Map<string, HTMLImageElement>();
+const predecodeQueue: string[] = [];
+const queuedUrls = new Set<string>();
+let predecodeScheduled = false;
+
+const flushPredecodeQueue = (): void => {
+  predecodeScheduled = false;
+  if (typeof window === 'undefined' || typeof window.Image !== 'function') {
+    predecodeQueue.length = 0;
+    queuedUrls.clear();
+    return;
+  }
+
+  let processed = 0;
+  while (predecodeQueue.length > 0 && processed < PREDECODE_BATCH_SIZE) {
+    const url = predecodeQueue.shift()!;
+    queuedUrls.delete(url);
+    if (predecodedCache.has(url)) {
+      continue;
+    }
+    processed += 1;
+    const img = new window.Image();
+    img.decoding = 'async';
+    img.src = url;
+    if (typeof img.decode === 'function') {
+      img.decode().catch(() => undefined);
+    }
+    if (predecodedCache.size >= MAX_PREDECODED_IMAGES) {
+      const oldestKey = predecodedCache.keys().next().value;
+      if (oldestKey !== undefined) {
+        predecodedCache.delete(oldestKey);
+      }
+    }
+    predecodedCache.set(url, img);
+  }
+
+  if (predecodeQueue.length > 0) {
+    schedulePredecodeFlush();
+  }
+};
+
+const schedulePredecodeFlush = (): void => {
+  if (predecodeScheduled || typeof window === 'undefined') {
+    return;
+  }
+  predecodeScheduled = true;
+  const win = window as Window & {
+    requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+  };
+  if (typeof win.requestIdleCallback === 'function') {
+    win.requestIdleCallback(flushPredecodeQueue, { timeout: 200 });
+  } else {
+    window.setTimeout(flushPredecodeQueue, 16);
+  }
+};
+
+const enqueueImagePredecode = (url: string): void => {
+  if (!url || typeof window === 'undefined' || typeof window.Image !== 'function') {
+    return;
+  }
+  if (predecodedCache.has(url)) {
+    // Refresh LRU position so active map assets stay warm across long sessions.
+    const existing = predecodedCache.get(url)!;
+    predecodedCache.delete(url);
+    predecodedCache.set(url, existing);
+    return;
+  }
+  if (queuedUrls.has(url)) {
+    return;
+  }
+  queuedUrls.add(url);
+  predecodeQueue.push(url);
+  schedulePredecodeFlush();
+};
+
 class ImagePeer extends ElementPeer<SVGImageElement> {
   private _position: PositionType;
 
@@ -50,6 +127,7 @@ class ImagePeer extends ElementPeer<SVGImageElement> {
   setHref(url: string): void {
     this._native.setAttributeNS(ElementPeer.linkNamespace, 'href', url);
     this._href = url;
+    enqueueImagePredecode(url);
   }
 
   getHref(): string {

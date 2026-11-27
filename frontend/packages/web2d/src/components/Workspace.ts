@@ -133,6 +133,7 @@ class Workspace extends WorkspaceElement<WorkspacePeer> {
     container.style.position = 'relative';
     container.style.top = '0px';
     container.style.left = '0px';
+    container.style.contain = 'layout style';
 
     return container;
   }
@@ -184,6 +185,29 @@ class Workspace extends WorkspaceElement<WorkspacePeer> {
     this.peer.setCoordOrigin(x, y);
   }
 
+  private resolvePanOverscanMargin(marginPx?: number): number {
+    if (marginPx !== undefined) {
+      return marginPx;
+    }
+    const size = this.peer.getSize();
+    const minDim = Math.min(size.width, size.height);
+    if (minDim <= 0) {
+      return 360;
+    }
+    if (minDim <= 800) {
+      return Math.min(400, Math.max(320, Math.round(minDim * 0.4)));
+    }
+    const dpr =
+      typeof window !== 'undefined' && Number.isFinite(window.devicePixelRatio)
+        ? Math.max(1, window.devicePixelRatio)
+        : 1;
+    const maxDim = Math.max(size.width, size.height);
+    // Keep backing store within 6144px so expanded GPU textures stay safe across high-DPI screens.
+    const maxSafeMargin = Math.max(320, Math.floor((6144 / dpr - maxDim) / 2));
+    const desired = Math.min(640, Math.max(320, Math.round(minDim * 0.55)));
+    return Math.min(desired, maxSafeMargin);
+  }
+
   /**
    * Enables a persistent overscan SVG buffer so pan previews translate the pre-expanded `<svg>`
    * directly on the GPU without resizing the SVG element on drag start or commit.
@@ -193,22 +217,14 @@ class Workspace extends WorkspaceElement<WorkspacePeer> {
       this.peer.setPanOverscanMargin(0);
       return;
     }
-    const size = this.peer.getSize();
-    const minDim = Math.min(size.width, size.height);
-    const resolvedMargin =
-      marginPx ?? (minDim > 0 ? Math.min(400, Math.max(320, Math.round(minDim * 0.4))) : 360);
-    this.peer.setPanOverscanMargin(resolvedMargin);
+    this.peer.setPanOverscanMargin(this.resolvePanOverscanMargin(marginPx));
   }
 
   /**
    * Enters GPU-composited pan preview on the SVG element.
    */
   beginPanPreview(marginPx?: number): boolean {
-    const size = this.peer.getSize();
-    const minDim = Math.min(size.width, size.height);
-    const resolvedMargin =
-      marginPx ?? (minDim > 0 ? Math.min(400, Math.max(320, Math.round(minDim * 0.4))) : 360);
-    return this.peer.beginPanPreview(resolvedMargin);
+    return this.peer.beginPanPreview(this.resolvePanOverscanMargin(marginPx));
   }
 
   /**

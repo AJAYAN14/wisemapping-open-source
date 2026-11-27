@@ -59,6 +59,9 @@ class SVGExporter extends Exporter {
     }
     svgElement.setAttribute('style', `background-color:${this.backgroundColor}`);
     svgElement.setAttribute('focusable', 'false');
+    svgElement
+      .querySelectorAll('[data-viewport-culled]')
+      .forEach((el) => el.removeAttribute('data-viewport-culled'));
 
     // Inline external CDN images on the cloned SVG document so standalone SVG and
     // SVG-as-<img> raster exports (PNG/JPEG) do not drop remote Storage assets.

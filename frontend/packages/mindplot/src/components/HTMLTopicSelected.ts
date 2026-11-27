@@ -185,6 +185,8 @@ const isTouchOrMobileDevice = (): boolean => {
 class HTMLTopicSelected {
   private _overlayContainer: HTMLDivElement | undefined;
 
+  private _pillsContainer: HTMLDivElement | undefined;
+
   private _overlay: HTMLDivElement | undefined;
 
   private _rightPlus: ActionPillElement | undefined;
@@ -800,7 +802,6 @@ class HTMLTopicSelected {
     pill.style.setProperty('-webkit-backdrop-filter', 'blur(8px)');
     pill.style.transition = 'background-color 0.16s ease, border-color 0.16s ease';
     pill.style.transformOrigin = '0 0';
-    pill.style.transform = 'translate3d(var(--wise-pan-x, 0px), var(--wise-pan-y, 0px), 0)';
 
     const badge = document.createElement('span');
     badge.style.width = isTouch ? '22px' : '18px';
@@ -844,6 +845,25 @@ class HTMLTopicSelected {
     return pill;
   }
 
+  private ensurePillsContainer(): HTMLDivElement {
+    if (this._pillsContainer && this._pillsContainer.parentElement === this._containerElement) {
+      return this._pillsContainer;
+    }
+    const container = document.createElement('div');
+    container.className = 'wise-topic-pills-layer';
+    container.style.position = 'absolute';
+    container.style.top = '0';
+    container.style.left = '0';
+    container.style.width = '100%';
+    container.style.height = '100%';
+    container.style.pointerEvents = 'none';
+    container.style.zIndex = CANVAS_AFFORDANCE_Z_INDEX;
+    container.style.overflow = 'visible';
+    this._containerElement.appendChild(container);
+    this._pillsContainer = container;
+    return container;
+  }
+
   private ensurePlusButtons(): void {
     if (this._rightPlus && !this._rightPlus.parentElement) {
       this._rightPlus = undefined;
@@ -852,11 +872,13 @@ class HTMLTopicSelected {
       this._bottomPlus = undefined;
     }
 
+    const pillsContainer = this.ensurePillsContainer();
+
     if (!this._rightPlus) {
       const rightPlus = this.createActionPill(() => {
         this._createChild();
       });
-      this._containerElement.appendChild(rightPlus);
+      pillsContainer.appendChild(rightPlus);
       this._rightPlus = rightPlus;
       this.updateColors();
       this.updatePlusButtonTooltips();
@@ -866,7 +888,7 @@ class HTMLTopicSelected {
       const bottomPlus = this.createActionPill(() => {
         this._createSibling();
       });
-      this._containerElement.appendChild(bottomPlus);
+      pillsContainer.appendChild(bottomPlus);
       this._bottomPlus = bottomPlus;
       this.updateColors();
       this.updatePlusButtonTooltips();
@@ -906,8 +928,7 @@ class HTMLTopicSelected {
     button.style.cursor = 'zoom-in';
     button.style.zIndex = CANVAS_AFFORDANCE_Z_INDEX;
     button.style.transformOrigin = '0 0';
-    button.style.transform =
-      'translate3d(var(--wise-pan-x, 0px), var(--wise-pan-y, 0px), 0) translate(-100%, 0)';
+    button.style.transform = 'translate(-100%, 0)';
     button.setAttribute('title', '查看大图');
     button.setAttribute('aria-label', '查看大图');
 
@@ -924,7 +945,7 @@ class HTMLTopicSelected {
       });
     });
 
-    this._containerElement.appendChild(button);
+    this.ensurePillsContainer().appendChild(button);
     this._imagePreviewButton = button;
   }
 
@@ -954,7 +975,7 @@ class HTMLTopicSelected {
     this._imagePreviewButton.style.height = isTouch ? '30px' : '24px';
     this._imagePreviewButton.style.left = `${geometry.topicRight - 6 * buttonScale}px`;
     this._imagePreviewButton.style.top = `${geometry.topicTop + 6 * buttonScale}px`;
-    this._imagePreviewButton.style.transform = `translate3d(var(--wise-pan-x, 0px), var(--wise-pan-y, 0px), 0) ${scalePrefix}translate(-100%, 0)`;
+    this._imagePreviewButton.style.transform = `${scalePrefix}translate(-100%, 0)`;
     this._imagePreviewButton.style.display = 'flex';
     this._imagePreviewButton.style.pointerEvents = 'auto';
   }
@@ -1008,12 +1029,12 @@ class HTMLTopicSelected {
       if (geometry.isOnLeft) {
         this._rightPlus.style.left = `${geometry.topicLeft - rightPillDistance}px`;
         this._rightPlus.style.right = 'auto';
-        this._rightPlus.style.transform = `translate3d(var(--wise-pan-x, 0px), var(--wise-pan-y, 0px), 0) ${scalePrefix}translate(-100%, -50%)`;
+        this._rightPlus.style.transform = `${scalePrefix}translate(-100%, -50%)`;
         this._rightPlus.style.flexDirection = 'row-reverse';
       } else {
         this._rightPlus.style.left = `${geometry.topicRight + rightPillDistance}px`;
         this._rightPlus.style.right = 'auto';
-        this._rightPlus.style.transform = `translate3d(var(--wise-pan-x, 0px), var(--wise-pan-y, 0px), 0) ${scalePrefix}translate(0, -50%)`;
+        this._rightPlus.style.transform = `${scalePrefix}translate(0, -50%)`;
         this._rightPlus.style.flexDirection = 'row';
       }
       this._rightPlus.style.top = `${geometry.topicCenterY}px`;
@@ -1032,7 +1053,7 @@ class HTMLTopicSelected {
       this._bottomPlus.style.setProperty('--wise-pill-scale', String(pillScale));
       this._bottomPlus.style.left = `${geometry.topicCenterX}px`;
       this._bottomPlus.style.top = `${geometry.topicBottom + bottomPillDistance}px`;
-      this._bottomPlus.style.transform = `translate3d(var(--wise-pan-x, 0px), var(--wise-pan-y, 0px), 0) ${scalePrefix}translate(-50%, 0)`;
+      this._bottomPlus.style.transform = `${scalePrefix}translate(-50%, 0)`;
       this._bottomPlus.style.flexDirection = 'row';
       const shouldDisplay = !isCentral;
 
@@ -1056,22 +1077,27 @@ class HTMLTopicSelected {
     if (!this._isVisible && active) {
       return;
     }
+    const nextTransform = active && (dx !== 0 || dy !== 0) ? `translate3d(${dx}px, ${dy}px, 0)` : '';
+    const nextWillChange = active ? 'transform' : '';
     if (this._overlayContainer) {
-      this._overlayContainer.style.transform =
-        active && (dx !== 0 || dy !== 0) ? `translate3d(${dx}px, ${dy}px, 0)` : '';
-      this._overlayContainer.style.willChange = active ? 'transform' : '';
+      this._overlayContainer.style.transform = nextTransform;
+      this._overlayContainer.style.willChange = nextWillChange;
     }
-    const pills = [this._rightPlus, this._bottomPlus, this._imagePreviewButton];
-    for (const pill of pills) {
+    if (this._pillsContainer) {
+      this._pillsContainer.style.transform = nextTransform;
+      this._pillsContainer.style.willChange = nextWillChange;
+    }
+    const pills: Array<[HTMLElement | undefined, string]> = [
+      [this._rightPlus, 'blur(8px)'],
+      [this._bottomPlus, 'blur(8px)'],
+      [this._imagePreviewButton, 'blur(6px)'],
+    ];
+    for (const [pill, blur] of pills) {
       if (!pill) continue;
-      if (active) {
-        pill.style.setProperty('--wise-pan-x', `${dx}px`);
-        pill.style.setProperty('--wise-pan-y', `${dy}px`);
-        pill.style.willChange = 'transform';
-      } else {
-        pill.style.removeProperty('--wise-pan-x');
-        pill.style.removeProperty('--wise-pan-y');
-        pill.style.willChange = '';
+      const targetBlur = active ? 'none' : blur;
+      if (pill.style.backdropFilter !== targetBlur) {
+        pill.style.backdropFilter = targetBlur;
+        pill.style.setProperty('-webkit-backdrop-filter', targetBlur);
       }
     }
   }
@@ -1251,7 +1277,7 @@ class HTMLTopicSelected {
     this._overlayContainer = undefined;
     this._overlay = undefined;
 
-    // Remove plus buttons from main container
+    // Remove plus buttons and wrapper from main container
     if (this._rightPlus && this._rightPlus.parentElement) {
       this._rightPlus.parentElement.removeChild(this._rightPlus);
     }
@@ -1264,7 +1290,12 @@ class HTMLTopicSelected {
       this._imagePreviewButton.parentElement.removeChild(this._imagePreviewButton);
     }
 
+    if (this._pillsContainer && this._pillsContainer.parentElement) {
+      this._pillsContainer.parentElement.removeChild(this._pillsContainer);
+    }
+
     // Clear references
+    this._pillsContainer = undefined;
     this._rightPlus = undefined;
     this._bottomPlus = undefined;
     this._imagePreviewButton = undefined;

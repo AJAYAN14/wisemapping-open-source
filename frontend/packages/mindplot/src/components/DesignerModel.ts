@@ -86,6 +86,11 @@ class DesignerModel {
     return this._selectedTopics.size;
   }
 
+  /** Whether `topic` is selected, without calling `isOnFocus()` across every topic. */
+  isTopicSelected(topic: Topic): boolean {
+    return this._selectedTopics.has(topic);
+  }
+
   /**
    * Records that a topic of this model was selected or unselected.
    * @internal Called by Topic.setOnFocus.

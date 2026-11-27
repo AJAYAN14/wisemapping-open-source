@@ -163,6 +163,10 @@ class Designer extends EventDispispatcher<DesignerEvents> {
 
   private _fontLoadFrame: number | undefined;
 
+  private _unsubscribeViewportCulling: (() => void) | undefined;
+
+  private _culledNodes = new Set<Element>();
+
   private _keyboard: DesignerKeyboard | undefined;
 
   private _disposed = false;
@@ -221,6 +225,7 @@ class Designer extends EventDispispatcher<DesignerEvents> {
     });
 
     this._registerAutoPanOnFocus();
+    this._registerViewportCulling();
     this._canvas.setResizeHandler(() => this._onContainerResize());
 
     // Init layout manager ...
@@ -1957,6 +1962,171 @@ class Designer extends EventDispispatcher<DesignerEvents> {
     this._layoutEventBus.addEvent('topicSelected', this._autoPanOnFocusListener);
   }
 
+  private _setNodeCulled(node: Element | undefined, culled: boolean): void {
+    if (!node) {
+      return;
+    }
+    const alreadyCulled = this._culledNodes.has(node);
+    if (culled === alreadyCulled) {
+      return;
+    }
+    if (culled) {
+      node.setAttribute('data-viewport-culled', 'true');
+      this._culledNodes.add(node);
+    } else {
+      node.removeAttribute('data-viewport-culled');
+      this._culledNodes.delete(node);
+    }
+  }
+
+  private _clearViewportCulling(): void {
+    if (this._culledNodes.size === 0) {
+      return;
+    }
+    this._culledNodes.forEach((node) => {
+      node.removeAttribute('data-viewport-culled');
+    });
+    this._culledNodes.clear();
+  }
+
+  private _updateViewportCulling(): void {
+    if (this._disposed || !this._mindmap) {
+      return;
+    }
+    const topics = this.getModel().getTopics();
+    if (topics.length <= 120) {
+      this._clearViewportCulling();
+      return;
+    }
+
+    const origin = this._canvas.getCoordOrigin();
+    const coordSize = this._canvas.getSize();
+    const zoom = this._canvas.getZoom();
+    if (
+      !Number.isFinite(origin.x) ||
+      !Number.isFinite(origin.y) ||
+      !Number.isFinite(coordSize.width) ||
+      !Number.isFinite(coordSize.height) ||
+      coordSize.width <= 0 ||
+      coordSize.height <= 0
+    ) {
+      return;
+    }
+
+    // Pad generously past the GPU overscan margin so panning inside the overscan buffer never exposes culled nodes.
+    const padX = Math.max(coordSize.width * 0.85, 900 * zoom);
+    const padY = Math.max(coordSize.height * 0.85, 900 * zoom);
+    const minX = origin.x - padX;
+    const maxX = origin.x + coordSize.width + padX;
+    const minY = origin.y - padY;
+    const maxY = origin.y + coordSize.height + padY;
+
+    const model = this.getModel();
+    const visibleSet = new Set<Topic>();
+    for (let i = 0; i < topics.length; i += 1) {
+      const topic = topics[i]!;
+      const keepVisible =
+        topic.isCentralTopic() ||
+        model.isTopicSelected(topic) ||
+        (this._topicEventDispatcher?.isEditingTopic(topic) ?? false);
+
+      let inViewport = keepVisible;
+      if (!inViewport) {
+        const pos = topic.getPosition();
+        const size = topic.getSize();
+        const halfW = size.width / 2;
+        const halfH = size.height / 2;
+        inViewport =
+          pos.x + halfW >= minX &&
+          pos.x - halfW <= maxX &&
+          pos.y + halfH >= minY &&
+          pos.y - halfH <= maxY;
+      }
+
+      if (inViewport) {
+        visibleSet.add(topic);
+      }
+
+      let topicNode: Element | undefined;
+      try {
+        topicNode = topic.get2DElement().getNode();
+      } catch {
+        topicNode = undefined;
+      }
+      this._setNodeCulled(topicNode, !inViewport);
+    }
+
+    for (let i = 0; i < topics.length; i += 1) {
+      const topic = topics[i]!;
+      const line = topic.getOutgoingLine();
+      if (!line) {
+        continue;
+      }
+      const parent = topic.getParent();
+      let lineVisible = visibleSet.has(topic) || (parent !== undefined && visibleSet.has(parent));
+      if (!lineVisible && parent) {
+        const p1 = topic.getPosition();
+        const p2 = parent.getPosition();
+        const lineMinX = Math.min(p1.x, p2.x);
+        const lineMaxX = Math.max(p1.x, p2.x);
+        const lineMinY = Math.min(p1.y, p2.y);
+        const lineMaxY = Math.max(p1.y, p2.y);
+        lineVisible =
+          lineMaxX >= minX && lineMinX <= maxX && lineMaxY >= minY && lineMinY <= maxY;
+      }
+      let lineNode: Element | undefined;
+      try {
+        lineNode = line.getLine().getElementClass().getNode();
+      } catch {
+        lineNode = undefined;
+      }
+      this._setNodeCulled(lineNode, !lineVisible);
+    }
+  }
+
+  private _unCullTopic(nodeModel: NodeModel): void {
+    if (this._disposed || this._culledNodes.size === 0) {
+      return;
+    }
+    const topic = this.getModel().findTopicByModel(nodeModel);
+    if (!topic) {
+      return;
+    }
+    try {
+      this._setNodeCulled(topic.get2DElement().getNode(), false);
+    } catch {
+      // Topic may not have a 2D element yet.
+    }
+    const line = topic.getOutgoingLine();
+    if (line) {
+      try {
+        this._setNodeCulled(line.getLine().getElementClass().getNode(), false);
+      } catch {
+        // Line may not have a 2D element yet.
+      }
+    }
+  }
+
+  private _registerViewportCulling(): void {
+    const update = () => this._updateViewportCulling();
+    const onTopicSelected = (nodeModel: NodeModel) => this._unCullTopic(nodeModel);
+    const bus = this._layoutEventBus;
+    bus.addEvent('canvasPanned', update);
+    bus.addEvent('canvasZoomed', update);
+    bus.addEvent('forceLayout', update);
+    bus.addEvent('topicMoved', update);
+    bus.addEvent('topicResize', update);
+    bus.addEvent('topicSelected', onTopicSelected);
+    this._unsubscribeViewportCulling = () => {
+      bus.removeEvent('canvasPanned', update);
+      bus.removeEvent('canvasZoomed', update);
+      bus.removeEvent('forceLayout', update);
+      bus.removeEvent('topicMoved', update);
+      bus.removeEvent('topicResize', update);
+      bus.removeEvent('topicSelected', onTopicSelected);
+    };
+  }
+
   /**
    * Releases what the designer registered outside its own objects: the handlers on its
    * LayoutEventBus (a topic or the host may still hold the bus), the keyboard, a topic drag in
@@ -1988,6 +2158,11 @@ class Designer extends EventDispispatcher<DesignerEvents> {
       this._layoutEventBus.removeEvent('topicSelected', this._autoPanOnFocusListener);
       this._autoPanOnFocusListener = undefined;
     }
+    if (this._unsubscribeViewportCulling) {
+      this._unsubscribeViewportCulling();
+      this._unsubscribeViewportCulling = undefined;
+    }
+    this._culledNodes.clear();
     this._eventBussDispatcher.dispose();
 
     if (this._keyboard) {
