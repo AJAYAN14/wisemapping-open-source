@@ -6,7 +6,12 @@
 
 ---
 
-## Latest Fixes (v6.0.33)
+## Latest Fixes (v6.0.34)
+
+- **Solid Mindmap Row Badge (`MapGlyphBadge`)**: Updated the non-folder mindmap row badge (`hub` icon) from translucent light blue to the identical solid iOS blue (`#007AFF` / `#0A84FF`) with a pure white Google icon (`#FFFFFF`), unifying all list item row icons.
+- **Removed Stroke/Border on Segmented Controls (`WorkspaceSegmentedGroup`, `ViewModeGroup`)**: Removed the outer `1px solid hairline` border on both the workspace segmented switch ("全部导图 5 / 文件夹 1") and the view mode group ("列表 / 栅格"), restoring native Apple segmented control style (clean track recessed background without outline).
+
+## Previous Fixes (v6.0.33)
 
 - **Modern Homepage Corner Radius Overhaul (`appleDesign.ts`)**: Upgraded homepage border-radius scale from dated 2010s values (`12px` / `8px` / `6px`) to modern Apple squircle proportions (`RADIUS_LG: 18px`, `RADIUS_MD: 12px`, `RADIUS_SM: 8px`, `RADIUS_XL: 24px`), giving all grid cards, table containers, popover menus, toolbar inputs, and action buttons generous, smooth, high-end rounded corners.
 - **Pure White Homepage Popover Menus (`account-menu`, `action-chooser`, `MapsListToolbar`, `index.tsx`, `FolderItems`)**: Replaced translucent off-white `headerGlass` / `sidebarGlass` backgrounds on the homepage dropdowns (account menu, 3-dots action menu, sort dropdown, new map menu, folder action menu) with crisp 100% solid pure white (`#FFFFFF`) in light mode and clean `#1C1C1E` in dark mode.
