@@ -414,6 +414,7 @@ export const PageContent = styled('main')(({ theme }) => {
       border: `1px solid ${c.hairline}`,
       boxShadow: c.shadowSubtle,
       minHeight: 'calc(100dvh - 24px)',
+      overflowX: 'hidden',
       paddingTop: '14px',
       paddingBottom: '24px',
     },

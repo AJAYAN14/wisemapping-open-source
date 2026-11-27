@@ -273,8 +273,11 @@ export const BulkActionButton = styled(Button)(({ theme }) => {
 export const ToolbarRightCluster = styled('div')(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
+  flexWrap: 'wrap',
   gap: '10px',
   marginLeft: 'auto',
+  minWidth: 0,
+  maxWidth: '100%',
   [theme.breakpoints.down('sm')]: {
     flexBasis: '100%',
     width: '100%',
@@ -361,7 +364,7 @@ export const SearchInput = styled(InputBase)(({ theme }) => {
     '& .MuiInputBase-input': {
       padding: '7px 38px 7px 34px',
       border: 'none',
-      width: '21ch',
+      width: '17ch',
       transition: 'width 200ms cubic-bezier(0.2, 0.8, 0.2, 1)',
       '&::placeholder': {
         color: c.textTertiary,
@@ -369,7 +372,7 @@ export const SearchInput = styled(InputBase)(({ theme }) => {
         fontWeight: 500,
       },
       '&:focus': {
-        width: '28ch',
+        width: '22ch',
       },
       [theme.breakpoints.down('sm')]: {
         width: '100%',

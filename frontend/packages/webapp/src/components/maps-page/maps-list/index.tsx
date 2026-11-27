@@ -78,6 +78,9 @@ const NO_MAPS: MapInfo[] = [];
 
 /** Below `sm` the list shows cards; the styles of both views switch at the same breakpoint. */
 const narrowScreen = (theme: Theme): string => theme.breakpoints.down('sm');
+/** Hysteresis band prevents scrollbar-width deltas (~16px) from oscillating between views. */
+const NARROW_CONTAINER_ENTER_PX = 600;
+const NARROW_CONTAINER_EXIT_PX = 660;
 
 type RowMenu = {
   anchor?: HTMLElement | undefined;
@@ -126,7 +129,9 @@ export const MapsList = ({
     const observer = new ResizeObserver((entries) => {
       const width = entries[0]?.contentRect.width ?? 0;
       if (width > 0) {
-        setIsNarrowContainer(width < 680);
+        setIsNarrowContainer((prev) =>
+          prev ? width < NARROW_CONTAINER_EXIT_PX : width < NARROW_CONTAINER_ENTER_PX,
+        );
       }
     });
     observer.observe(element);

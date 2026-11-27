@@ -660,7 +660,9 @@ const MapsPage = (): ReactElement => {
   });
 
   const handleMenuClick = (nextFilter: Filter) => {
-    queryClient.invalidateQueries({ queryKey: ['maps'] });
+    if (!(nextFilter.type === 'folder' && filter.type === 'folder')) {
+      queryClient.invalidateQueries({ queryKey: ['maps'] });
+    }
     if (nextFilter.type === 'all') {
       writeStorage(MAPS_MAIN_TAB_STORAGE_KEY, 'all');
     } else if (nextFilter.type === 'folder') {

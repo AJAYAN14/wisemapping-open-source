@@ -210,6 +210,32 @@ describe('MapsList rows are memoized', () => {
 
       expect(screen.getByTestId('maps-cards')).toBeTruthy();
       expect(screen.queryByRole('table')).toBeNull();
+
+      // Hysteresis: staying within the 600..660 deadband keeps card view (prevents scrollbar flicker).
+      act(() => {
+        observerCallback!(
+          [{ contentRect: { width: 640 } } as ResizeObserverEntry],
+          {} as ResizeObserver,
+        );
+      });
+      expect(screen.getByTestId('maps-cards')).toBeTruthy();
+
+      // Crossing above 660 returns cleanly to table view, and dropping to 620 stays in table view.
+      act(() => {
+        observerCallback!(
+          [{ contentRect: { width: 680 } } as ResizeObserverEntry],
+          {} as ResizeObserver,
+        );
+      });
+      expect(screen.getByRole('table')).toBeTruthy();
+
+      act(() => {
+        observerCallback!(
+          [{ contentRect: { width: 620 } } as ResizeObserverEntry],
+          {} as ResizeObserver,
+        );
+      });
+      expect(screen.getByRole('table')).toBeTruthy();
     } finally {
       globalThis.ResizeObserver = originalResizeObserver;
     }
