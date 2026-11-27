@@ -58,3 +58,18 @@ export const leaveTo = (url: string): void => {
 export const reloadPage = (): void => {
   window.location.reload();
 };
+
+/** Returns true when an error object represents an unauthenticated / expired-session response. */
+export const isAuthErrorInfo = (error: unknown): boolean => {
+  if (!error || typeof error !== 'object') {
+    return false;
+  }
+  const candidate = error as { isAuth?: unknown; status?: unknown };
+  return candidate.isAuth === true || candidate.status === 401 || candidate.status === 403;
+};
+
+/** Builds the login URL preserving the current path + query as the post-login redirect target. */
+export const buildLoginRedirectUrl = (): string => {
+  const current = `${window.location.pathname}${window.location.search}`;
+  return `/c/login?redirect=${encodeURIComponent(current)}`;
+};

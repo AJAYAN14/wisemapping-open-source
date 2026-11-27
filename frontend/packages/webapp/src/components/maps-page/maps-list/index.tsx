@@ -19,15 +19,19 @@
 import React, { use, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { useQuery } from '@tanstack/react-query';
+import Box from '@mui/material/Box';
+import Button from '@mui/material/Button';
 import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import TableBody from '@mui/material/TableBody';
 import TableCell from '@mui/material/TableCell';
 import TableRow from '@mui/material/TableRow';
+import LoginRoundedIcon from '@mui/icons-material/LoginRounded';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import type { Theme } from '@mui/material/styles';
 import { ErrorInfo, Folder, MapInfo } from '../../../classes/client';
 import { ClientContext } from '../../../classes/provider/client-context';
+import { buildLoginRedirectUrl, isAuthErrorInfo, leaveTo } from '../../../utils/redirect';
 import { Filter } from '..';
 import { MAP_IDS_DRAG_MIME } from '../folderTree';
 import ActionChooser, { ActionType } from '../action-chooser';
@@ -136,10 +140,18 @@ export const MapsList = ({
     // Only until the first list arrives: a background refetch keeps showing the maps.
     isPending: isLoadingMaps,
     isError: mapsLoadFailed,
+    error: mapsError,
   } = useQuery<unknown, ErrorInfo, MapInfo[]>({
     queryKey: ['maps'],
     queryFn: () => client.fetchAllMaps(),
   });
+
+  const isAuthFailed = mapsLoadFailed && isAuthErrorInfo(mapsError);
+  useEffect(() => {
+    if (isAuthFailed) {
+      leaveTo(buildLoginRedirectUrl());
+    }
+  }, [isAuthFailed]);
 
   const {
     order,
@@ -249,7 +261,21 @@ export const MapsList = ({
     setActiveDialog({ actionType, mapsId: selected });
   };
 
-  const loadFailedMessage = (
+  const loadFailedMessage = isAuthFailed ? (
+    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1.5 }}>
+      <span>请先登录后查看您的思维导图</span>
+      <Button
+        variant="contained"
+        color="primary"
+        size="small"
+        startIcon={<LoginRoundedIcon />}
+        onClick={() => leaveTo(buildLoginRedirectUrl())}
+        sx={{ borderRadius: '10px', fontWeight: 700 }}
+      >
+        前往登录
+      </Button>
+    </Box>
+  ) : (
     <FormattedMessage
       id="maps.load-error"
       defaultMessage="Your maps could not be loaded. Please try again later."

@@ -21,12 +21,15 @@ jest.mock('../../../src/components/maps-page', () => ({ __esModule: true, defaul
 import AppConfig from '../../../src/classes/app-config';
 import Client from '../../../src/classes/client';
 import queryClient from '../../../src/queryClient';
+import * as redirectUtils from '../../../src/utils/redirect';
 import { mapsPageLoader } from '../../../src/components/maps-page/loader';
 
 describe('mapsPageLoader', () => {
   beforeEach(() => {
     queryClient.clear();
+    jest.restoreAllMocks();
     jest.spyOn(AppConfig, 'initialize').mockResolvedValue({} as never);
+    window.history.pushState({}, '', '/c/maps/');
   });
 
   test('loads the maps and labels before the page renders', async () => {
@@ -39,13 +42,13 @@ describe('mapsPageLoader', () => {
       fetchLabels: jest.fn().mockResolvedValue(labels),
     } as unknown as Client);
 
-    await mapsPageLoader();
+    await expect(mapsPageLoader()).resolves.toBeNull();
 
     expect(queryClient.getQueryData(['maps'])).toEqual(maps);
     expect(queryClient.getQueryData(['labels'])).toEqual(labels);
   });
 
-  test('a failed load does not keep the page from rendering, which shows the error', async () => {
+  test('a failed non-auth load does not keep the page from rendering, which shows the error', async () => {
     const fetchAllMaps = jest.fn().mockRejectedValue({ status: 500, msg: 'down' });
     jest.spyOn(AppConfig, 'getClient').mockReturnValue({
       fetchAllMaps,
@@ -57,5 +60,23 @@ describe('mapsPageLoader', () => {
     // Not retried here: the page decides, instead of the skeleton staying up for the retries.
     expect(fetchAllMaps).toHaveBeenCalledTimes(1);
     expect(queryClient.getQueryState(['maps'])?.status).toBe('error');
+  });
+
+  test('redirects to /c/login when maps or labels return 401/isAuth', async () => {
+    const leaveSpy = jest.spyOn(redirectUtils, 'leaveTo').mockImplementation(() => undefined);
+    jest.spyOn(AppConfig, 'getClient').mockReturnValue({
+      fetchAllMaps: jest.fn().mockRejectedValue({ status: 401, isAuth: true }),
+      fetchLabels: jest.fn().mockRejectedValue({ status: 401, isAuth: true }),
+    } as unknown as Client);
+
+    const result = await mapsPageLoader();
+    if (typeof Response !== 'undefined') {
+      expect(result).toBeInstanceOf(Response);
+      expect(result?.status).toBe(302);
+      expect(result?.headers.get('Location')).toBe('/c/login?redirect=%2Fc%2Fmaps%2F');
+    } else {
+      expect(result).toBeNull();
+      expect(leaveSpy).toHaveBeenCalledWith('/c/login?redirect=%2Fc%2Fmaps%2F');
+    }
   });
 });

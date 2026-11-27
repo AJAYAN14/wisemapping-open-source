@@ -18,16 +18,15 @@
 
 import AppConfig from '../../classes/app-config';
 import queryClient from '../../queryClient';
+import { buildLoginRedirectUrl, isAuthErrorInfo, leaveTo } from '../../utils/redirect';
 
 /**
  * Loads the map list and the labels together with the page's code, so that /c/maps/ renders
- * once, with its maps: rendered first and fetching after, it showed the loading skeleton, then
- * the page with placeholder rows, then the maps.
- *
- * Failures are left in the cache for the page to show, and not retried here: retries would keep
- * the skeleton up for seconds.
+ * once, with its maps. Authentication failures (401/403/isAuth) redirect immediately to
+ * /c/login so unauthenticated visitors never land on an empty error shell. Other failures
+ * remain in the cache for the page to surface.
  */
-export const mapsPageLoader = async (): Promise<null> => {
+export const mapsPageLoader = async (): Promise<Response | null> => {
   await AppConfig.initialize();
   const client = AppConfig.getClient();
   await Promise.all([
@@ -43,5 +42,21 @@ export const mapsPageLoader = async (): Promise<null> => {
       retry: false,
     }),
   ]);
+
+  const mapsError = queryClient.getQueryState(['maps'])?.error;
+  const labelsError = queryClient.getQueryState(['labels'])?.error;
+  if (isAuthErrorInfo(mapsError) || isAuthErrorInfo(labelsError)) {
+    const loginUrl = buildLoginRedirectUrl();
+    if (typeof Response !== 'undefined') {
+      return new Response('Sign in required, redirect to login.', {
+        status: 302,
+        headers: {
+          Location: loginUrl,
+        },
+      });
+    }
+    leaveTo(loginUrl);
+  }
+
   return null;
 };

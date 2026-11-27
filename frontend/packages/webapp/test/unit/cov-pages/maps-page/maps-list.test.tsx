@@ -222,6 +222,19 @@ describe('MapsList', () => {
     expect(screen.queryByTestId('maps-loading')).toBeNull();
   });
 
+  test('shows a login CTA and redirects to /c/login when loading fails with 401', async () => {
+    const redirectUtils = await import('../../../../src/utils/redirect');
+    const leaveSpy = jest.spyOn(redirectUtils, 'leaveTo').mockImplementation(() => undefined);
+    const client = buildClient();
+    client.fetchAllMaps.mockRejectedValue({ status: 401, isAuth: true });
+    renderList({ type: 'all' }, client);
+
+    const loginButton = await screen.findByRole('button', { name: '前往登录' });
+    expect(loginButton).toBeTruthy();
+    await waitFor(() => expect(leaveSpy).toHaveBeenCalledWith(expect.stringContaining('/c/login?redirect=')));
+    leaveSpy.mockRestore();
+  });
+
   test('shows the empty message when there are no maps', async () => {
     const client = buildClient([]);
     renderList({ type: 'all' }, client);
