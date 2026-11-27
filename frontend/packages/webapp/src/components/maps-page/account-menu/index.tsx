@@ -43,7 +43,7 @@ import StorageQuotaDialog from './StorageQuotaDialog';
 declare const VITE_APP_VERSION: string | undefined;
 declare const VITE_BUILD_TIME: string | undefined;
 
-const APP_VERSION = typeof VITE_APP_VERSION !== 'undefined' ? VITE_APP_VERSION : '6.0.24';
+const APP_VERSION = typeof VITE_APP_VERSION !== 'undefined' ? VITE_APP_VERSION : '6.0.25';
 const BUILD_TIME = typeof VITE_BUILD_TIME !== 'undefined' ? VITE_BUILD_TIME : '';
 
 const AvatarTrigger = styled(IconButton)(({ theme }) => {
@@ -87,6 +87,78 @@ const SidebarAccountButton = styled('button')(({ theme }) => {
     '&:focus-visible': {
       outline: 'none',
       boxShadow: `0 0 0 2px ${c.amberRing}`,
+    },
+  };
+});
+
+const SidebarQuickGrid = styled('div', {
+  shouldForwardProp: (prop) => prop !== 'columns',
+})<{ columns: number }>(({ columns }) => ({
+  display: 'grid',
+  gridTemplateColumns: columns > 1 ? 'repeat(2, minmax(0, 1fr))' : '1fr',
+  gap: '8px',
+  width: 'calc(100% - 20px)',
+  margin: '0 10px 8px 10px',
+}));
+
+const SidebarQuickButton = styled('button')(({ theme }) => {
+  const isDark = isDarkTheme(theme);
+  const c = appleColors(isDark);
+  return {
+    appearance: 'none',
+    minWidth: 0,
+    padding: '8px 8px',
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+    borderRadius: '11px',
+    border: `1px solid ${c.hairline}`,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '5px',
+    cursor: 'pointer',
+    fontFamily: APPLE_FONT_STACK,
+    fontSize: '12px',
+    fontWeight: 600,
+    color: c.textPrimary,
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    boxSizing: 'border-box',
+    ...applePressMixin,
+    '& svg': {
+      fontSize: '16px',
+      color: c.textSecondary,
+      flexShrink: 0,
+    },
+    '&:hover': {
+      backgroundColor: c.hoverFill,
+      borderColor: c.hairlineStrong,
+      '& svg': {
+        color: c.amber,
+      },
+    },
+    '&:focus-visible': {
+      outline: 'none',
+      boxShadow: `0 0 0 2px ${c.amberRing}`,
+    },
+  };
+});
+
+const CollapsedQuickIconButton = styled(IconButton)(({ theme }) => {
+  const isDark = isDarkTheme(theme);
+  const c = appleColors(isDark);
+  return {
+    width: '34px',
+    height: '34px',
+    borderRadius: '10px',
+    border: `1px solid ${c.hairline}`,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+    color: c.textSecondary,
+    ...applePressMixin,
+    '&:hover': {
+      backgroundColor: c.hoverFill,
+      borderColor: c.hairlineStrong,
+      color: c.amber,
     },
   };
 });
@@ -184,6 +256,10 @@ const AccountMenu = ({
       <AvatarCircle>{initial}</AvatarCircle>
     );
 
+  const hasStorageManager = Boolean(client.fetchAssetStorageStats);
+  const themeToggleLabel = isDark ? '切换到浅色模式' : '切换到深色模式';
+  const themeShortLabel = isDark ? '浅色模式' : '深色模式';
+
   return (
     <Box
       sx={
@@ -191,7 +267,8 @@ const AccountMenu = ({
           ? {
               mt: 'auto',
               display: 'flex',
-              justifyContent: 'center',
+              flexDirection: 'column',
+              alignItems: 'center',
               width: '100%',
               flexShrink: 0,
             }
@@ -200,57 +277,100 @@ const AccountMenu = ({
     >
       {variant === 'sidebar' ? (
         drawerOpen ? (
-          <SidebarAccountButton
-            type="button"
-            onClick={handleMenu}
-            aria-label={displayName}
-            aria-haspopup="menu"
-            aria-expanded={open}
-          >
-            {avatarNode}
-            <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
-              <Typography
-                variant="body2"
-                sx={{
-                  fontWeight: 700,
-                  fontSize: '13.5px',
-                  lineHeight: 1.25,
-                  color: 'text.primary',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {displayName}
-              </Typography>
-              <Typography
-                variant="caption"
-                sx={{
-                  fontSize: '11px',
-                  fontWeight: 500,
-                  lineHeight: 1.25,
-                  color: 'text.secondary',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                {email}
-              </Typography>
-            </Box>
-            <UnfoldMoreRoundedIcon sx={{ fontSize: 16, color: 'text.secondary', flexShrink: 0 }} />
-          </SidebarAccountButton>
-        ) : (
-          <Tooltip arrow={true} placement="right" title={avatarTooltip}>
-            <AvatarTrigger
+          <>
+            <SidebarQuickGrid columns={hasStorageManager ? 2 : 1}>
+              <Tooltip arrow={true} title={themeToggleLabel}>
+                <SidebarQuickButton
+                  type="button"
+                  aria-label={themeToggleLabel}
+                  onClick={() => themeCtx?.toggleMode()}
+                >
+                  {isDark ? <LightModeRoundedIcon /> : <DarkModeRoundedIcon />}
+                  <span>{themeShortLabel}</span>
+                </SidebarQuickButton>
+              </Tooltip>
+              {hasStorageManager && (
+                <Tooltip arrow={true} title="存储空间管理">
+                  <SidebarQuickButton
+                    type="button"
+                    aria-label="存储空间管理"
+                    onClick={() => setStorageOpen(true)}
+                  >
+                    <StorageRoundedIcon />
+                    <span>存储空间</span>
+                  </SidebarQuickButton>
+                </Tooltip>
+              )}
+            </SidebarQuickGrid>
+            <SidebarAccountButton
+              type="button"
               onClick={handleMenu}
-              size="small"
               aria-label={displayName}
-              sx={{ mb: 1.25 }}
+              aria-haspopup="menu"
+              aria-expanded={open}
             >
               {avatarNode}
-            </AvatarTrigger>
-          </Tooltip>
+              <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
+                <Typography
+                  variant="body2"
+                  sx={{
+                    fontWeight: 700,
+                    fontSize: '13.5px',
+                    lineHeight: 1.25,
+                    color: 'text.primary',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {displayName}
+                </Typography>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    fontSize: '11px',
+                    fontWeight: 500,
+                    lineHeight: 1.25,
+                    color: 'text.secondary',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {email}
+                </Typography>
+              </Box>
+              <UnfoldMoreRoundedIcon sx={{ fontSize: 16, color: 'text.secondary', flexShrink: 0 }} />
+            </SidebarAccountButton>
+          </>
+        ) : (
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0.75, mb: 1.25 }}>
+            <Tooltip arrow={true} placement="right" title={themeToggleLabel}>
+              <CollapsedQuickIconButton
+                size="small"
+                aria-label={themeToggleLabel}
+                onClick={() => themeCtx?.toggleMode()}
+              >
+                {isDark ? <LightModeRoundedIcon fontSize="small" /> : <DarkModeRoundedIcon fontSize="small" />}
+              </CollapsedQuickIconButton>
+            </Tooltip>
+            {hasStorageManager && (
+              <Tooltip arrow={true} placement="right" title="存储空间管理">
+                <CollapsedQuickIconButton
+                  size="small"
+                  aria-label="存储空间管理"
+                  onClick={() => setStorageOpen(true)}
+                >
+                  <StorageRoundedIcon fontSize="small" />
+                </CollapsedQuickIconButton>
+              </Tooltip>
+            )}
+            <Tooltip arrow={true} placement="right" title={avatarTooltip}>
+              <AvatarTrigger onClick={handleMenu} size="small" aria-label={displayName}>
+                {avatarNode}
+              </AvatarTrigger>
+            </Tooltip>
+          </Box>
         )
       ) : (
         <Tooltip arrow={true} title={avatarTooltip}>
@@ -311,18 +431,20 @@ const AccountMenu = ({
           </Box>
         </MenuItem>
         <Divider />
-        <MenuItem
-          onClick={() => {
-            themeCtx?.toggleMode();
-          }}
-          sx={{ fontWeight: 600 }}
-        >
-          <ListItemIcon>
-            {isDark ? <LightModeRoundedIcon fontSize="small" /> : <DarkModeRoundedIcon fontSize="small" />}
-          </ListItemIcon>
-          {isDark ? '切换到浅色模式' : '切换到深色模式'}
-        </MenuItem>
-        {client.fetchAssetStorageStats && (
+        {variant !== 'sidebar' && (
+          <MenuItem
+            onClick={() => {
+              themeCtx?.toggleMode();
+            }}
+            sx={{ fontWeight: 600 }}
+          >
+            <ListItemIcon>
+              {isDark ? <LightModeRoundedIcon fontSize="small" /> : <DarkModeRoundedIcon fontSize="small" />}
+            </ListItemIcon>
+            {themeToggleLabel}
+          </MenuItem>
+        )}
+        {variant !== 'sidebar' && hasStorageManager && (
           <MenuItem
             onClick={() => {
               handleClose();

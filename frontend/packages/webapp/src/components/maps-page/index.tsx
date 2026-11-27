@@ -980,7 +980,7 @@ const MapsPage = (): ReactElement => {
               <FolderRoundedIcon fontSize="small" />
             </ListItemIcon>
             <ListItemText
-              primary="导入文件夹 (含子目录)"
+              primary="导入文件夹"
               slotProps={{ primary: { sx: { fontSize: '13.5px', fontWeight: 500 } } }}
             />
           </MenuItem>

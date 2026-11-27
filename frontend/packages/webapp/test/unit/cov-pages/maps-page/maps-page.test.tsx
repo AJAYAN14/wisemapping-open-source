@@ -155,7 +155,7 @@ describe('MapsPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Import from other tools' }));
     expect(await screen.findByRole('menuitem', { name: '导入文件' })).toBeTruthy();
-    expect(screen.getByRole('menuitem', { name: '导入文件夹 (含子目录)' })).toBeTruthy();
+    expect(screen.getByRole('menuitem', { name: '导入文件夹' })).toBeTruthy();
   });
 
   test('the desktop drawer toggle remembers its state', () => {

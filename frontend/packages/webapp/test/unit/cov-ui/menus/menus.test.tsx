@@ -86,4 +86,28 @@ describe('AccountMenu', () => {
     expect(client.logout).toHaveBeenCalledTimes(1);
     consoleError.mockRestore();
   });
+
+  test('sidebar variant renders theme and storage quick buttons in a 2-column row above account card', async () => {
+    const fetchAssetStorageStats = jest.fn().mockResolvedValue({
+      usedBytes: 0,
+      quotaBytes: 1024,
+      assetCount: 0,
+    });
+    const client = {
+      fetchAccountInfo: jest.fn(() => Promise.resolve(account())),
+      logout: jest.fn(() => Promise.resolve()),
+      fetchAssetStorageStats,
+    };
+    renderWithProviders(<AccountMenu variant="sidebar" drawerOpen={true} />, {
+      client: client as unknown as Client,
+    });
+
+    const themeBtn = await screen.findByRole('button', { name: '切换到深色模式' });
+    const storageBtn = screen.getByRole('button', { name: '存储空间管理' });
+    expect(themeBtn).toBeTruthy();
+    expect(storageBtn).toBeTruthy();
+
+    fireEvent.click(storageBtn);
+    expect(await screen.findByRole('dialog')).toBeTruthy();
+  });
 });
