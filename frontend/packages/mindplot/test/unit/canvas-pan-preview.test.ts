@@ -101,8 +101,11 @@ describe('Canvas GPU pan preview', () => {
 
     flushRaf();
 
-    // Only the latest delta (60, 30) was applied via GPU translate3d
-    expect(workspace._getHtmlContainer().style.transform).toBe('translate3d(60px, 30px, 0)');
+    // Only the latest delta (60, 30) was applied via GPU translate3d directly on <svg> behind an O(1) drag shield
+    const shield = divContainer.querySelector<HTMLDivElement>('[data-pan-shield="true"]');
+    expect(shield?.style.display).toBe('block');
+    expect(shield?.style.cursor).toBe('move');
+    expect(workspace.getSVGElement().style.transform).toBe('translate3d(60px, 30px, 0)');
     expect(previewEvents).toEqual([{ active: true, dx: 60, dy: 30 }]);
     // Update fired once on drag start to close editors; canvasPanned deferred until commit/reanchor
     expect(updateSpy).toHaveBeenCalledTimes(1);
@@ -114,8 +117,9 @@ describe('Canvas GPU pan preview', () => {
     );
     window.document.dispatchEvent(new MouseEvent('mouseup', { button: 1, bubbles: true }));
 
-    expect(workspace._getHtmlContainer().style.transform).toBe('');
-    expect(workspace.getSVGElement().getAttribute('width')).toBe('1000');
+    expect(shield?.style.display).toBe('none');
+    expect(workspace.getSVGElement().style.transform).toBe('');
+    expect(workspace.getSVGElement().getAttribute('width')).toBe('1640');
     expect(canvas.getCoordOrigin()).toEqual({
       x: startOrigin.x - 90,
       y: startOrigin.y - 50,

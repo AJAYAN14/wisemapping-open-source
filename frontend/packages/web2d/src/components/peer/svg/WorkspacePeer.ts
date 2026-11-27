@@ -24,6 +24,7 @@ import { viewBoxMatrix, type Matrix } from '../../geometry/matrix';
 type ViewBox = readonly [x: number, y: number, width: number, height: number];
 
 type PanPreviewState = {
+  persistent: boolean;
   logicalWidth: number;
   logicalHeight: number;
   logicalOriginX: number;
@@ -40,10 +41,19 @@ type PanPreviewState = {
   prevPosition: string;
   prevLeft: string;
   prevTop: string;
+  prevWillChange: string;
 };
 
 class WorkspacePeer extends ElementPeer<SVGSVGElement> {
   private _panPreview: PanPreviewState | undefined;
+
+  private _overscanMargin = 0;
+
+  private _logicalWidth = 0;
+
+  private _logicalHeight = 0;
+
+  private _logicalViewBox: ViewBox = [0, 0, 0, 0];
 
   constructor() {
     super(ElementPeer.createNode('svg'));
@@ -68,6 +78,12 @@ class WorkspacePeer extends ElementPeer<SVGSVGElement> {
         height: this._panPreview.logicalHeight,
       };
     }
+    if (this._overscanMargin > 0) {
+      return {
+        width: this._logicalWidth,
+        height: this._logicalHeight,
+      };
+    }
     const { width, height } = super.getSize();
     return {
       width: this.sizeAttribute('width', width),
@@ -78,6 +94,16 @@ class WorkspacePeer extends ElementPeer<SVGSVGElement> {
   override setSize(width?: number, height?: number): void {
     if (this._panPreview) {
       this.commitPanPreview();
+    }
+    if (this._overscanMargin > 0) {
+      if (width !== undefined) {
+        this._logicalWidth = width;
+      }
+      if (height !== undefined) {
+        this._logicalHeight = height;
+      }
+      this.applyStaticOverscanDom();
+      return;
     }
     super.setSize(width, height);
   }
@@ -108,6 +134,12 @@ class WorkspacePeer extends ElementPeer<SVGSVGElement> {
     if (this._panPreview) {
       this.commitPanPreview();
     }
+    if (this._overscanMargin > 0) {
+      const [x, y] = this._logicalViewBox;
+      this._logicalViewBox = [x, y, width, height];
+      this.applyStaticOverscanDom();
+      return;
+    }
     const [x, y] = this.viewBox() ?? [0, 0, 0, 0];
     this.writeViewBox([x, y, width, height]);
   }
@@ -119,6 +151,12 @@ class WorkspacePeer extends ElementPeer<SVGSVGElement> {
         height: this._panPreview.logicalCoordHeight,
       };
     }
+    if (this._overscanMargin > 0) {
+      return {
+        width: this._logicalViewBox[2],
+        height: this._logicalViewBox[3],
+      };
+    }
     const [, , width, height] = this.viewBox() ?? [1, 1, 1, 1];
     return { width, height };
   }
@@ -126,6 +164,12 @@ class WorkspacePeer extends ElementPeer<SVGSVGElement> {
   setCoordOrigin(x: number, y: number): void {
     if (this._panPreview) {
       this.commitPanPreview();
+    }
+    if (this._overscanMargin > 0) {
+      const [currentX, currentY, width, height] = this._logicalViewBox;
+      this._logicalViewBox = [x ?? currentX, y ?? currentY, width, height];
+      this.applyStaticOverscanDom();
+      return;
     }
     // ViewBox min-x ,min-y by default initializated with 0 and 0.
     const [currentX, currentY, width, height] = this.viewBox() ?? [0, 0, 0, 0];
@@ -140,6 +184,12 @@ class WorkspacePeer extends ElementPeer<SVGSVGElement> {
         y: p.logicalOriginY - p.localDy * p.scaleY,
       };
     }
+    if (this._overscanMargin > 0) {
+      return {
+        x: this._logicalViewBox[0],
+        y: this._logicalViewBox[1],
+      };
+    }
     const [x, y] = this.viewBox() ?? [0, 0, 0, 0];
     return { x, y };
   }
@@ -148,24 +198,100 @@ class WorkspacePeer extends ElementPeer<SVGSVGElement> {
     return this._panPreview !== undefined;
   }
 
+  setPanOverscanMargin(marginPx: number): void {
+    const resolved = Number.isFinite(marginPx) && marginPx > 0 ? Math.round(marginPx) : 0;
+    if (resolved === this._overscanMargin) {
+      return;
+    }
+    if (this._panPreview) {
+      this.commitPanPreview();
+    }
+    const { width, height } = this.getSize();
+    const currentViewBox =
+      this._overscanMargin > 0 ? this._logicalViewBox : (this.viewBox() ?? [0, 0, width, height]);
+    this._logicalWidth = width;
+    this._logicalHeight = height;
+    this._logicalViewBox = currentViewBox;
+    this._overscanMargin = resolved;
+
+    if (resolved > 0) {
+      this.applyStaticOverscanDom();
+    } else {
+      this._native.style.position = '';
+      this._native.style.left = '';
+      this._native.style.top = '';
+      this._native.style.willChange = '';
+      this._native.style.transform = '';
+      super.setSize(this._logicalWidth, this._logicalHeight);
+      this.writeViewBox(this._logicalViewBox);
+    }
+  }
+
+  private applyStaticOverscanDom(): void {
+    const marginPx = this._overscanMargin;
+    if (marginPx <= 0) {
+      return;
+    }
+    const width = this._logicalWidth;
+    const height = this._logicalHeight;
+    if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+      return;
+    }
+    const targetWidth = width + marginPx * 2;
+    const targetHeight = height + marginPx * 2;
+    const { width: currentWidth, height: currentHeight } = super.getSize();
+    if (currentWidth !== targetWidth || currentHeight !== targetHeight) {
+      super.setSize(targetWidth, targetHeight);
+    }
+    if (this._native.style.position !== 'relative') {
+      this._native.style.position = 'relative';
+    }
+    const offset = `${-marginPx}px`;
+    if (this._native.style.left !== offset) {
+      this._native.style.left = offset;
+    }
+    if (this._native.style.top !== offset) {
+      this._native.style.top = offset;
+    }
+    if (this._native.style.willChange !== 'transform') {
+      this._native.style.willChange = 'transform';
+    }
+    const [originX, originY, coordWidth, coordHeight] = this._logicalViewBox;
+    if (
+      Number.isFinite(coordWidth) &&
+      Number.isFinite(coordHeight) &&
+      coordWidth > 0 &&
+      coordHeight > 0
+    ) {
+      this.writeOverscanViewBox(
+        originX,
+        originY,
+        coordWidth,
+        coordHeight,
+        marginPx,
+        coordWidth / width,
+        coordHeight / height,
+      );
+    }
+  }
+
   beginPanPreview(marginPx: number): boolean {
     if (this._panPreview) {
       return true;
     }
+    const persistent = this._overscanMargin > 0;
+    const effectiveMargin = persistent ? this._overscanMargin : marginPx;
     const { width: logicalWidth, height: logicalHeight } = this.getSize();
-    const [logicalOriginX, logicalOriginY, logicalCoordWidth, logicalCoordHeight] = this.viewBox() ?? [
-      0,
-      0,
-      logicalWidth,
-      logicalHeight,
-    ];
+    const [logicalOriginX, logicalOriginY, logicalCoordWidth, logicalCoordHeight] = persistent
+      ? this._logicalViewBox
+      : (this.viewBox() ?? [0, 0, logicalWidth, logicalHeight]);
     if (
       !Number.isFinite(logicalWidth) ||
       !Number.isFinite(logicalHeight) ||
       logicalWidth <= 0 ||
       logicalHeight <= 0 ||
-      !Number.isFinite(marginPx) ||
-      marginPx <= 0 ||
+      !Number.isFinite(effectiveMargin) ||
+      effectiveMargin <= 0 ||
       !Number.isFinite(logicalCoordWidth) ||
       !Number.isFinite(logicalCoordHeight) ||
       logicalCoordWidth <= 0 ||
@@ -179,8 +305,10 @@ class WorkspacePeer extends ElementPeer<SVGSVGElement> {
     const prevPosition = this._native.style.position;
     const prevLeft = this._native.style.left;
     const prevTop = this._native.style.top;
+    const prevWillChange = this._native.style.willChange;
 
     this._panPreview = {
+      persistent,
       logicalWidth,
       logicalHeight,
       logicalOriginX,
@@ -189,7 +317,7 @@ class WorkspacePeer extends ElementPeer<SVGSVGElement> {
       logicalCoordHeight,
       scaleX,
       scaleY,
-      marginPx,
+      marginPx: effectiveMargin,
       anchorDx: 0,
       anchorDy: 0,
       localDx: 0,
@@ -197,13 +325,27 @@ class WorkspacePeer extends ElementPeer<SVGSVGElement> {
       prevPosition,
       prevLeft,
       prevTop,
+      prevWillChange,
     };
 
-    super.setSize(logicalWidth + marginPx * 2, logicalHeight + marginPx * 2);
-    this._native.style.position = 'relative';
-    this._native.style.left = `${-marginPx}px`;
-    this._native.style.top = `${-marginPx}px`;
-    this.writeOverscanViewBox(this._panPreview);
+    if (!persistent) {
+      super.setSize(logicalWidth + effectiveMargin * 2, logicalHeight + effectiveMargin * 2);
+      this._native.style.position = 'relative';
+      this._native.style.left = `${-effectiveMargin}px`;
+      this._native.style.top = `${-effectiveMargin}px`;
+      this.writeOverscanViewBox(
+        logicalOriginX,
+        logicalOriginY,
+        logicalCoordWidth,
+        logicalCoordHeight,
+        effectiveMargin,
+        scaleX,
+        scaleY,
+      );
+    }
+
+    this._native.style.willChange = 'transform';
+    this._native.style.transform = 'translate3d(0px, 0px, 0)';
     return true;
   }
 
@@ -224,11 +366,21 @@ class WorkspacePeer extends ElementPeer<SVGSVGElement> {
       p.anchorDy = totalDy;
       p.localDx = 0;
       p.localDy = 0;
-      this.writeOverscanViewBox(p);
+      this.writeOverscanViewBox(
+        p.logicalOriginX,
+        p.logicalOriginY,
+        p.logicalCoordWidth,
+        p.logicalCoordHeight,
+        p.marginPx,
+        p.scaleX,
+        p.scaleY,
+      );
+      this._native.style.transform = 'translate3d(0px, 0px, 0)';
       return { localDx: 0, localDy: 0, reanchored: true };
     }
     p.localDx = localDx;
     p.localDy = localDy;
+    this._native.style.transform = `translate3d(${localDx}px, ${localDy}px, 0)`;
     return { localDx, localDy, reanchored: false };
   }
 
@@ -240,32 +392,65 @@ class WorkspacePeer extends ElementPeer<SVGSVGElement> {
     const finalOriginX = p.logicalOriginX - p.localDx * p.scaleX;
     const finalOriginY = p.logicalOriginY - p.localDy * p.scaleY;
     const {
+      persistent,
       logicalWidth,
       logicalHeight,
       logicalCoordWidth,
       logicalCoordHeight,
+      marginPx,
+      scaleX,
+      scaleY,
+      localDx,
+      localDy,
       prevPosition,
       prevLeft,
       prevTop,
+      prevWillChange,
     } = p;
 
     this._panPreview = undefined;
-    this._native.style.position = prevPosition;
-    this._native.style.left = prevLeft;
-    this._native.style.top = prevTop;
-    super.setSize(logicalWidth, logicalHeight);
-    this.writeViewBox([finalOriginX, finalOriginY, logicalCoordWidth, logicalCoordHeight]);
+    this._native.style.transform = '';
+
+    if (persistent) {
+      this._logicalViewBox = [finalOriginX, finalOriginY, logicalCoordWidth, logicalCoordHeight];
+      if (localDx !== 0 || localDy !== 0) {
+        this.writeOverscanViewBox(
+          finalOriginX,
+          finalOriginY,
+          logicalCoordWidth,
+          logicalCoordHeight,
+          marginPx,
+          scaleX,
+          scaleY,
+        );
+      }
+    } else {
+      this._native.style.position = prevPosition;
+      this._native.style.left = prevLeft;
+      this._native.style.top = prevTop;
+      this._native.style.willChange = prevWillChange;
+      super.setSize(logicalWidth, logicalHeight);
+      this.writeViewBox([finalOriginX, finalOriginY, logicalCoordWidth, logicalCoordHeight]);
+    }
     return true;
   }
 
-  private writeOverscanViewBox(p: PanPreviewState): void {
-    const marginCoordX = p.marginPx * p.scaleX;
-    const marginCoordY = p.marginPx * p.scaleY;
+  private writeOverscanViewBox(
+    logicalOriginX: number,
+    logicalOriginY: number,
+    logicalCoordWidth: number,
+    logicalCoordHeight: number,
+    marginPx: number,
+    scaleX: number,
+    scaleY: number,
+  ): void {
+    const marginCoordX = marginPx * scaleX;
+    const marginCoordY = marginPx * scaleY;
     this.writeViewBox([
-      p.logicalOriginX - marginCoordX,
-      p.logicalOriginY - marginCoordY,
-      p.logicalCoordWidth + marginCoordX * 2,
-      p.logicalCoordHeight + marginCoordY * 2,
+      logicalOriginX - marginCoordX,
+      logicalOriginY - marginCoordY,
+      logicalCoordWidth + marginCoordX * 2,
+      logicalCoordHeight + marginCoordY * 2,
     ]);
   }
 

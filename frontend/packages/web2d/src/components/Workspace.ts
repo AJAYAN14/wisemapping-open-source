@@ -185,44 +185,48 @@ class Workspace extends WorkspaceElement<WorkspacePeer> {
   }
 
   /**
-   * Enters GPU-composited pan preview with an overscanned SVG buffer so panning translates the
-   * pre-rendered layer via `translate3d` without re-rasterizing the SVG on every frame.
+   * Enables a persistent overscan SVG buffer so pan previews translate the pre-expanded `<svg>`
+   * directly on the GPU without resizing the SVG element on drag start or commit.
    */
-  beginPanPreview(marginPx?: number): boolean {
-    const size = this.peer.getSize();
-    const resolvedMargin =
-      marginPx ??
-      Math.min(360, Math.max(220, Math.round(Math.min(size.width, size.height) * 0.35)));
-    if (!this.peer.beginPanPreview(resolvedMargin)) {
-      return false;
+  setPanOverscan(enabled: boolean, marginPx?: number): void {
+    if (!enabled) {
+      this.peer.setPanOverscanMargin(0);
+      return;
     }
-    this._htmlContainer.style.willChange = 'transform';
-    this._htmlContainer.style.transform = 'translate3d(0px, 0px, 0)';
-    return true;
+    const size = this.peer.getSize();
+    const minDim = Math.min(size.width, size.height);
+    const resolvedMargin =
+      marginPx ?? (minDim > 0 ? Math.min(400, Math.max(320, Math.round(minDim * 0.4))) : 360);
+    this.peer.setPanOverscanMargin(resolvedMargin);
   }
 
   /**
-   * Updates the GPU `translate3d` pan preview offset, re-anchoring the overscanned SVG viewBox
-   * only when the drag reaches the overscan margin.
+   * Enters GPU-composited pan preview on the SVG element.
+   */
+  beginPanPreview(marginPx?: number): boolean {
+    const size = this.peer.getSize();
+    const minDim = Math.min(size.width, size.height);
+    const resolvedMargin =
+      marginPx ?? (minDim > 0 ? Math.min(400, Math.max(320, Math.round(minDim * 0.4))) : 360);
+    return this.peer.beginPanPreview(resolvedMargin);
+  }
+
+  /**
+   * Updates the GPU `translate3d` pan preview offset directly on `<svg>`, re-anchoring the
+   * overscanned SVG viewBox only when the drag reaches the overscan margin.
    */
   updatePanPreview(
     totalDx: number,
     totalDy: number,
   ): { localDx: number; localDy: number; reanchored: boolean } {
-    const result = this.peer.updatePanPreview(totalDx, totalDy);
-    this._htmlContainer.style.transform = `translate3d(${result.localDx}px, ${result.localDy}px, 0)`;
-    return result;
+    return this.peer.updatePanPreview(totalDx, totalDy);
   }
 
   /**
-   * Commits the active pan preview offset into the SVG viewBox and clears the temporary
-   * GPU `transform` and `will-change` hint.
+   * Commits the active pan preview offset into the SVG viewBox and clears the temporary transform.
    */
   commitPanPreview(): boolean {
-    const committed = this.peer.commitPanPreview();
-    this._htmlContainer.style.transform = '';
-    this._htmlContainer.style.willChange = '';
-    return committed;
+    return this.peer.commitPanPreview();
   }
 
   /**

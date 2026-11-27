@@ -463,7 +463,7 @@ describe('Workspace.observeResize (W5)', () => {
 });
 
 describe('Workspace GPU pan preview', () => {
-  it('enters overscan, translates via translate3d, and commits back to logical viewBox', () => {
+  it('enters dynamic overscan, translates <svg> via translate3d with pointer-events disabled, and restores on commit', () => {
     const workspace = new Workspace();
     workspace.setSize('1000px', '800px');
     workspace.setCoordSize(2000, 1600);
@@ -472,9 +472,9 @@ describe('Workspace GPU pan preview', () => {
     const started = workspace.beginPanPreview(300);
     expect(started).toBe(true);
 
-    const container = workspace._getHtmlContainer();
     const svg = workspace.getSVGElement();
-    expect(container.style.willChange).toBe('transform');
+    expect(svg.style.willChange).toBe('transform');
+    expect(svg.style.transform).toBe('translate3d(0px, 0px, 0)');
     expect(svg.getAttribute('width')).toBe('1600');
     expect(svg.getAttribute('height')).toBe('1400');
     expect(svg.style.left).toBe('-300px');
@@ -485,7 +485,7 @@ describe('Workspace GPU pan preview', () => {
 
     const step1 = workspace.updatePanPreview(50, 20);
     expect(step1).toEqual({ localDx: 50, localDy: 20, reanchored: false });
-    expect(container.style.transform).toBe('translate3d(50px, 20px, 0)');
+    expect(svg.style.transform).toBe('translate3d(50px, 20px, 0)');
     // Logical origin shifts opposite the pan scaled by zoom (2.0).
     expect(workspace.getCoordOrigin()).toEqual({ x: -1100, y: -840 });
     // Physical viewBox was NOT rewritten during in-buffer pan.
@@ -494,21 +494,58 @@ describe('Workspace GPU pan preview', () => {
     // Crossing the 300px margin re-anchors the overscan viewBox and resets local translate3d.
     const step2 = workspace.updatePanPreview(320, 40);
     expect(step2).toEqual({ localDx: 0, localDy: 0, reanchored: true });
-    expect(container.style.transform).toBe('translate3d(0px, 0px, 0)');
+    expect(svg.style.transform).toBe('translate3d(0px, 0px, 0)');
     expect(workspace.getCoordOrigin()).toEqual({ x: -1640, y: -880 });
     expect(svg.getAttribute('viewBox')).toBe('-2240 -1480 3200 2800');
 
     // Drag further within the new overscan window and commit.
     workspace.updatePanPreview(350, 60);
     expect(workspace.commitPanPreview()).toBe(true);
-    expect(container.style.transform).toBe('');
-    expect(container.style.willChange).toBe('');
+    expect(svg.style.transform).toBe('');
+    expect(svg.style.willChange).toBe('');
     expect(svg.getAttribute('width')).toBe('1000');
     expect(svg.getAttribute('height')).toBe('800');
     expect(svg.style.left).toBe('');
     expect(svg.style.top).toBe('');
     expect(workspace.getCoordOrigin()).toEqual({ x: -1700, y: -920 });
     expect(svg.getAttribute('viewBox')).toBe('-1700 -920 2000 1600');
+  });
+
+  it('keeps static overscan geometry invariant across begin/commit when setPanOverscan is enabled', () => {
+    const workspace = new Workspace();
+    workspace.setSize('1000px', '800px');
+    workspace.setCoordSize(2000, 1600);
+    workspace.setCoordOrigin(-1000, -800);
+    workspace.setPanOverscan(true, 320);
+
+    const svg = workspace.getSVGElement();
+    expect(svg.getAttribute('width')).toBe('1640');
+    expect(svg.getAttribute('height')).toBe('1440');
+    expect(svg.style.left).toBe('-320px');
+    expect(svg.style.top).toBe('-320px');
+    expect(svg.style.willChange).toBe('transform');
+    expect(svg.getAttribute('viewBox')).toBe('-1640 -1440 3280 2880');
+    expect(workspace.peer.getSize()).toEqual({ width: 1000, height: 800 });
+    expect(workspace.getCoordOrigin()).toEqual({ x: -1000, y: -800 });
+
+    const setAttributeSpy = jest.spyOn(svg, 'setAttribute');
+    expect(workspace.beginPanPreview()).toBe(true);
+    // Static overscan must not mutate width, height, or viewBox on drag start.
+    expect(setAttributeSpy).not.toHaveBeenCalled();
+    expect(svg.style.transform).toBe('translate3d(0px, 0px, 0)');
+
+    workspace.updatePanPreview(50, 20);
+    expect(svg.style.transform).toBe('translate3d(50px, 20px, 0)');
+    expect(setAttributeSpy).not.toHaveBeenCalled();
+
+    expect(workspace.commitPanPreview()).toBe(true);
+    expect(svg.style.transform).toBe('');
+    expect(svg.style.willChange).toBe('transform');
+    expect(svg.getAttribute('width')).toBe('1640');
+    expect(svg.getAttribute('height')).toBe('1440');
+    expect(workspace.getCoordOrigin()).toEqual({ x: -1100, y: -840 });
+    expect(svg.getAttribute('viewBox')).toBe('-1740 -1480 3280 2880');
+    setAttributeSpy.mockRestore();
   });
 
   it('auto-commits active preview when setSize, setCoordSize, or setCoordOrigin is called', () => {

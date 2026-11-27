@@ -106,6 +106,13 @@ class Canvas {
 
     // Append to the workspace...
     workspace.addItAsChildTo(divContainer);
+    // Keep the SVG overscanned persistently so drag start/commit never triggers an SVG resize layout.
+    const panWorkspace = workspace as Workspace2D & {
+      setPanOverscan?: (enabled: boolean, marginPx?: number) => void;
+    };
+    if (typeof panWorkspace.setPanOverscan === 'function') {
+      panWorkspace.setPanOverscan(true);
+    }
     // Mouse positions map through the workspace screen matrix ...
     screenManager.setWorkspace(workspace);
 
@@ -473,6 +480,30 @@ class Canvas {
     };
     const screenManager = this._screenManager;
     const mWorkspace = this;
+    const panContainer = screenManager.getContainer();
+    let panShield: HTMLDivElement | undefined;
+    // Use a single O(1) childless overlay shield instead of mutating body cursor or SVG
+    // pointer-events, which would otherwise trigger inherited style recalc on every SVG child.
+    const setPanShieldVisible = (visible: boolean) => {
+      if (visible) {
+        if (!panShield) {
+          panShield = panContainer.ownerDocument.createElement('div');
+          panShield.setAttribute('data-pan-shield', 'true');
+          panShield.style.position = 'absolute';
+          panShield.style.top = '0';
+          panShield.style.right = '0';
+          panShield.style.bottom = '0';
+          panShield.style.left = '0';
+          panShield.style.zIndex = '1000';
+          panShield.style.cursor = 'move';
+          panShield.style.background = 'transparent';
+          panContainer.appendChild(panShield);
+        }
+        panShield.style.display = 'block';
+      } else if (panShield) {
+        panShield.style.display = 'none';
+      }
+    };
     let panUpdateScheduled = false;
     const schedulePanUpdate = () => {
       if (!panUpdateScheduled) {
@@ -621,7 +652,7 @@ class Canvas {
               panInitialized = true;
               // Close any active inline text editor once when drag starts instead of on every mousemove.
               screenManager.fireEvent('update');
-              window.document.body.style.cursor = 'move';
+              setPanShieldVisible(true);
               usingPanPreview =
                 typeof workspace.beginPanPreview === 'function' && workspace.beginPanPreview();
             }
@@ -725,7 +756,7 @@ class Canvas {
             this._mouseUpListener = undefined;
             this._mouseMoveListener = undefined;
             this._cancelPan = undefined;
-            window.document.body.style.cursor = 'default';
+            setPanShieldVisible(false);
 
             if (wasDragged) {
               if (
