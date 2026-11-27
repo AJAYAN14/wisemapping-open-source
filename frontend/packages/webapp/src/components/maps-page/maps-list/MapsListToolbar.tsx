@@ -16,7 +16,7 @@
  *   limitations under the License.
  */
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
 import Tooltip from '@mui/material/Tooltip';
 import Menu from '@mui/material/Menu';
@@ -46,12 +46,14 @@ import {
   SearchIconWrapper,
   SearchInput,
   SearchShortcutHint,
+  SegmentedPillThumb,
   SortTriggerButton,
   ToolbarActions,
   ToolbarEnd,
   ToolbarRightCluster,
   ViewModeButton,
   ViewModeGroup,
+  ViewModeThumb,
   WorkspaceHeading,
   WorkspaceSegmentedButton,
   WorkspaceSegmentedGroup,
@@ -114,9 +116,55 @@ export const MapsListToolbar = ({
 }: MapsListToolbarProps): React.ReactElement => {
   const intl = useIntl();
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const allTabRef = useRef<HTMLButtonElement>(null);
+  const folderTabRef = useRef<HTMLButtonElement>(null);
   const [searchValue, setSearchValue] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
   const [sortMenuAnchor, setSortMenuAnchor] = useState<HTMLElement | null>(null);
+  const [thumbStyle, setThumbStyle] = useState<{ left: number; width: number; ready: boolean }>({
+    left: 0,
+    width: 0,
+    ready: false,
+  });
+  const [animateThumb, setAnimateThumb] = useState(false);
+
+  const isFolderActive = Boolean(filter && filter.type === 'folder');
+  const isMacPlatform =
+    typeof navigator !== 'undefined' &&
+    /Mac|iPhone|iPad|iPod/i.test(navigator.platform || navigator.userAgent);
+  const shortcutLabel = isMacPlatform ? '⌘K' : 'Ctrl K';
+
+  const measureThumb = useCallback(() => {
+    const activeEl = isFolderActive ? folderTabRef.current : allTabRef.current;
+    if (!activeEl || activeEl.offsetWidth === 0) {
+      return;
+    }
+    const nextLeft = activeEl.offsetLeft;
+    const nextWidth = activeEl.offsetWidth;
+    setThumbStyle((prev) => {
+      if (prev.ready && prev.left === nextLeft && prev.width === nextWidth) {
+        return prev;
+      }
+      if (prev.ready) {
+        setAnimateThumb(true);
+      }
+      return { left: nextLeft, width: nextWidth, ready: true };
+    });
+  }, [isFolderActive]);
+
+  useLayoutEffect(() => {
+    measureThumb();
+  }, [measureThumb, allMapsCount, foldersCount]);
+
+  useEffect(() => {
+    if (typeof ResizeObserver === 'undefined') {
+      return undefined;
+    }
+    const observer = new ResizeObserver(() => measureThumb());
+    if (allTabRef.current) observer.observe(allTabRef.current);
+    if (folderTabRef.current) observer.observe(folderTabRef.current);
+    return () => observer.disconnect();
+  }, [measureThumb]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent): void => {
@@ -224,11 +272,23 @@ export const MapsListToolbar = ({
           </>
         ) : showPrimaryTabs ? (
           <WorkspaceSegmentedGroup role="tablist" aria-label="主视图切换">
+            {thumbStyle.ready && (
+              <SegmentedPillThumb
+                aria-hidden="true"
+                animate={animateThumb}
+                style={{
+                  width: `${thumbStyle.width}px`,
+                  transform: `translate3d(${thumbStyle.left}px, 0, 0)`,
+                }}
+              />
+            )}
             <WorkspaceSegmentedButton
+              ref={allTabRef}
               type="button"
               role="tab"
-              aria-selected={!filter || filter.type === 'all'}
-              active={!filter || filter.type === 'all'}
+              hasThumb={thumbStyle.ready}
+              aria-selected={!isFolderActive}
+              active={!isFolderActive}
               onClick={() => onFilterChange?.({ type: 'all' })}
             >
               <GridViewRoundedIcon />
@@ -236,10 +296,12 @@ export const MapsListToolbar = ({
               {typeof allMapsCount === 'number' && <CountPill>{allMapsCount}</CountPill>}
             </WorkspaceSegmentedButton>
             <WorkspaceSegmentedButton
+              ref={folderTabRef}
               type="button"
               role="tab"
-              aria-selected={Boolean(filter && filter.type === 'folder')}
-              active={Boolean(filter && filter.type === 'folder')}
+              hasThumb={thumbStyle.ready}
+              aria-selected={isFolderActive}
+              active={isFolderActive}
               onClick={() => onFilterChange?.({ type: 'folder', folderId: null })}
             >
               <FolderRoundedIcon />
@@ -286,7 +348,7 @@ export const MapsListToolbar = ({
               }}
             />
             {!searchFocused && searchValue.length === 0 && (
-              <SearchShortcutHint aria-hidden="true">⌘K</SearchShortcutHint>
+              <SearchShortcutHint aria-hidden="true">{shortcutLabel}</SearchShortcutHint>
             )}
           </SearchBox>
         </SearchContainer>
@@ -295,6 +357,7 @@ export const MapsListToolbar = ({
 
         {onViewModeChange && showViewToggle && (
           <ViewModeGroup role="group" aria-label="视图切换">
+            <ViewModeThumb aria-hidden="true" activeIndex={viewMode === 'grid' ? 1 : 0} />
             <Tooltip arrow={true} title="列表视图">
               <ViewModeButton
                 type="button"

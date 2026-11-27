@@ -65,6 +65,7 @@ import {
   MapsGrid,
   PaginationDesktop,
   PaginationMobile,
+  ViewTransitionStage,
 } from './styled';
 import { useRemoveLabel, useStarMap } from './useMapMutations';
 import { useMapsListState } from './useMapsListState';
@@ -526,22 +527,34 @@ export const MapsList = ({
           <ListTableContainer>
             <div data-testid="maps-cards">{cards}</div>
           </ListTableContainer>
-        ) : viewMode === 'grid' ? (
-          <div
-            tabIndex={0}
-            role="region"
-            aria-label={intl.formatMessage({ id: 'common.maps-list', defaultMessage: 'Maps list' })}
-          >
-            {gridView}
-          </div>
         ) : (
-          <ListTableContainer
-            tabIndex={0}
-            role="region"
-            aria-label={intl.formatMessage({ id: 'common.maps-list', defaultMessage: 'Maps list' })}
+          <ViewTransitionStage
+            key={`${viewMode}:${isFolderView ? `folder:${filter.folderId ?? 'root'}` : filter.type}`}
           >
-            {table}
-          </ListTableContainer>
+            {viewMode === 'grid' ? (
+              <div
+                tabIndex={0}
+                role="region"
+                aria-label={intl.formatMessage({
+                  id: 'common.maps-list',
+                  defaultMessage: 'Maps list',
+                })}
+              >
+                {gridView}
+              </div>
+            ) : (
+              <ListTableContainer
+                tabIndex={0}
+                role="region"
+                aria-label={intl.formatMessage({
+                  id: 'common.maps-list',
+                  defaultMessage: 'Maps list',
+                })}
+              >
+                {table}
+              </ListTableContainer>
+            )}
+          </ViewTransitionStage>
         )}
 
         {pagination &&

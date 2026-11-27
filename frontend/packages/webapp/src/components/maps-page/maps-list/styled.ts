@@ -144,6 +144,7 @@ export const CountPill = styled('span')(({ theme }) => {
 export const WorkspaceSegmentedGroup = styled('div')(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
+    position: 'relative',
     display: 'inline-flex',
     alignItems: 'center',
     padding: '3px',
@@ -155,11 +156,36 @@ export const WorkspaceSegmentedGroup = styled('div')(({ theme }) => {
   };
 });
 
-export const WorkspaceSegmentedButton = styled('button', {
-  shouldForwardProp: (prop) => prop !== 'active',
-})<{ active: boolean }>(({ theme, active }) => {
+export const SegmentedPillThumb = styled('span', {
+  shouldForwardProp: (prop) => prop !== 'animate',
+})<{ animate?: boolean }>(({ theme, animate }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
+    position: 'absolute',
+    top: '3px',
+    bottom: '3px',
+    left: 0,
+    borderRadius: '10px',
+    backgroundColor: c.surface,
+    boxShadow: c.shadowSubtle,
+    pointerEvents: 'none',
+    zIndex: 0,
+    transition: animate
+      ? 'transform 280ms cubic-bezier(0.32, 0.72, 0, 1), width 280ms cubic-bezier(0.32, 0.72, 0, 1)'
+      : 'none',
+    '@media (prefers-reduced-motion: reduce)': {
+      transition: 'none',
+    },
+  };
+});
+
+export const WorkspaceSegmentedButton = styled('button', {
+  shouldForwardProp: (prop) => prop !== 'active' && prop !== 'hasThumb',
+})<{ active: boolean; hasThumb?: boolean }>(({ theme, active, hasThumb }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    position: 'relative',
+    zIndex: 1,
     appearance: 'none',
     border: 'none',
     outline: 'none',
@@ -174,21 +200,29 @@ export const WorkspaceSegmentedButton = styled('button', {
     fontWeight: active ? 700 : 600,
     letterSpacing: '-0.015em',
     lineHeight: 1.2,
-    backgroundColor: active ? c.surface : 'transparent',
+    backgroundColor: !hasThumb && active ? c.surface : 'transparent',
     color: active ? c.textPrimary : c.textSecondary,
-    boxShadow: active ? c.shadowSubtle : 'none',
-    transition: 'background-color 140ms ease, color 140ms ease, box-shadow 140ms ease',
+    boxShadow: !hasThumb && active ? c.shadowSubtle : 'none',
+    transition: 'color 180ms ease, transform 110ms cubic-bezier(0.2, 0.8, 0.2, 1)',
     ...applePressMixin,
     '& svg': {
       fontSize: '18px',
       color: active ? c.amber : c.textTertiary,
-      transition: 'color 140ms ease',
+      transform: active ? 'scale(1.06)' : 'scale(1)',
+      transition: 'color 180ms ease, transform 220ms cubic-bezier(0.32, 0.72, 0, 1)',
     },
     '&:hover': {
       color: c.textPrimary,
     },
     '&:focus-visible': {
       boxShadow: `0 0 0 2px ${c.amberRing}`,
+    },
+    '@media (prefers-reduced-motion: reduce)': {
+      transition: 'none',
+      '& svg': {
+        transform: 'none',
+        transition: 'none',
+      },
     },
   };
 });
@@ -362,7 +396,7 @@ export const SearchInput = styled(InputBase)(({ theme }) => {
       width: '100%',
     },
     '& .MuiInputBase-input': {
-      padding: '7px 38px 7px 34px',
+      padding: '7px 54px 7px 34px',
       border: 'none',
       width: '17ch',
       transition: 'width 200ms cubic-bezier(0.2, 0.8, 0.2, 1)',
@@ -715,6 +749,7 @@ export const CardTitle = styled(Typography)(({ theme }) => {
 export const ViewModeGroup = styled('div')(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
+    position: 'relative',
     display: 'inline-flex',
     alignItems: 'center',
     padding: '3px',
@@ -726,11 +761,36 @@ export const ViewModeGroup = styled('div')(({ theme }) => {
   };
 });
 
+export const ViewModeThumb = styled('span', {
+  shouldForwardProp: (prop) => prop !== 'activeIndex',
+})<{ activeIndex: number }>(({ theme, activeIndex }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    position: 'absolute',
+    top: '3px',
+    left: '3px',
+    width: '30px',
+    height: '28px',
+    borderRadius: '8px',
+    backgroundColor: c.surface,
+    boxShadow: c.shadowSubtle,
+    pointerEvents: 'none',
+    zIndex: 0,
+    transform: `translate3d(${activeIndex * 32}px, 0, 0)`,
+    transition: 'transform 260ms cubic-bezier(0.32, 0.72, 0, 1)',
+    '@media (prefers-reduced-motion: reduce)': {
+      transition: 'none',
+    },
+  };
+});
+
 export const ViewModeButton = styled('button', {
   shouldForwardProp: (prop) => prop !== 'active',
 })<{ active: boolean }>(({ theme, active }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
+    position: 'relative',
+    zIndex: 1,
     appearance: 'none',
     border: 'none',
     outline: 'none',
@@ -741,13 +801,14 @@ export const ViewModeButton = styled('button', {
     width: '30px',
     height: '28px',
     borderRadius: '8px',
-    backgroundColor: active ? c.surface : 'transparent',
+    backgroundColor: 'transparent',
     color: active ? c.textPrimary : c.textSecondary,
-    boxShadow: active ? c.shadowSubtle : 'none',
-    transition: 'background-color 140ms ease, color 140ms ease, box-shadow 140ms ease',
+    transition: 'color 180ms ease, transform 110ms cubic-bezier(0.2, 0.8, 0.2, 1)',
     ...applePressMixin,
     '& svg': {
       fontSize: '18px',
+      transform: active ? 'scale(1.06)' : 'scale(0.96)',
+      transition: 'transform 220ms cubic-bezier(0.32, 0.72, 0, 1), color 180ms ease',
     },
     '&:hover': {
       color: c.textPrimary,
@@ -755,7 +816,31 @@ export const ViewModeButton = styled('button', {
     '&:focus-visible': {
       boxShadow: `0 0 0 2px ${c.amberRing}`,
     },
+    '@media (prefers-reduced-motion: reduce)': {
+      transition: 'none',
+      '& svg': {
+        transform: 'none',
+        transition: 'none',
+      },
+    },
   };
+});
+
+export const ViewTransitionStage = styled('div')({
+  animation: 'mapsViewFadeSlideIn 190ms cubic-bezier(0.22, 1, 0.36, 1)',
+  '@keyframes mapsViewFadeSlideIn': {
+    from: {
+      opacity: 0.68,
+      transform: 'translateY(4px)',
+    },
+    to: {
+      opacity: 1,
+      transform: 'translateY(0)',
+    },
+  },
+  '@media (prefers-reduced-motion: reduce)': {
+    animation: 'none',
+  },
 });
 
 export const SortTriggerButton = styled(Button)(({ theme }) => {
