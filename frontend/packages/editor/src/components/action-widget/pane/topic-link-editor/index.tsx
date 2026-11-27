@@ -114,7 +114,7 @@ const TopicLinkEditor = (props: {
           },
         }}
       />
-      <Box sx={{ mt: 1.5 }}>
+      <Box sx={{ mt: 2 }}>
         <SaveAndDelete
           model={props.urlModel as NodeProperty<string | undefined>}
           closeModal={props.closeModal}

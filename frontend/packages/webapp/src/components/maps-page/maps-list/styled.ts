@@ -649,17 +649,23 @@ export const MapGlyphBadge = styled('span')(({ theme }) => {
 });
 
 export const FolderGlyphBadge = styled('span')(({ theme }) => {
-  const c = appleColors(isDarkTheme(theme));
+  const isDark = isDarkTheme(theme);
   return {
     width: '30px',
     height: '30px',
     borderRadius: RADIUS_MD,
-    backgroundColor: c.amberSoft,
-    color: c.amberHover,
+    backgroundColor: isDark ? '#0A84FF' : '#007AFF',
+    color: '#FFFFFF',
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
+    boxShadow: isDark
+      ? '0 1px 3px rgba(0, 0, 0, 0.45)'
+      : '0 1px 3px rgba(0, 122, 255, 0.3)',
+    '& svg, & .material-symbols-rounded': {
+      color: '#FFFFFF !important',
+    },
   };
 });
 

@@ -168,11 +168,7 @@ export const WidgetPopover = ({
                       : 'rgba(60, 60, 67, 0.12)'
                   }`,
                 backgroundColor: (theme) =>
-                  theme.palette.mode === 'dark'
-                    ? 'rgba(28, 28, 30, 0.94)'
-                    : 'rgba(255, 255, 255, 0.95)',
-                backdropFilter: 'blur(20px) saturate(180%)',
-                WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+                  theme.palette.mode === 'dark' ? '#1C1C1E' : '#FFFFFF',
               },
             },
           }}

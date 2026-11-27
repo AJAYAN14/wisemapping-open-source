@@ -34,9 +34,7 @@ export const PaneCard = styled(Box)(({ theme }) => {
     paddingBottom: '14px',
     minWidth: 'min(290px, calc(100dvw - 32px))',
     maxWidth: 'min(340px, calc(100dvw - 24px))',
-    backgroundColor: isDark ? 'rgba(28, 28, 30, 0.92)' : 'rgba(255, 255, 255, 0.95)',
-    backdropFilter: 'blur(20px) saturate(180%)',
-    WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+    backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF',
     borderRadius: '14px',
     border: `1px solid ${isDark ? 'rgba(84, 84, 86, 0.45)' : 'rgba(60, 60, 67, 0.12)'}`,
     boxShadow: isDark
@@ -44,11 +42,6 @@ export const PaneCard = styled(Box)(({ theme }) => {
       : '0 12px 32px rgba(0, 0, 0, 0.09), 0 2px 6px rgba(0, 0, 0, 0.04)',
     position: 'relative',
     color: theme.palette.text.primary,
-    '@media (prefers-reduced-transparency: reduce)': {
-      backgroundColor: theme.palette.background.paper,
-      backdropFilter: 'none',
-      WebkitBackdropFilter: 'none',
-    },
   };
 });
 

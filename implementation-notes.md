@@ -6,7 +6,13 @@
 
 ---
 
-## Latest Fixes (v6.0.31)
+## Latest Fixes (v6.0.32)
+
+- **Solid Opaque Editor Popups (`StyledPane.ts`, `styled.ts`, `widgetPopover`, `find-in-map`)**: Switched all editor floating cards (`PaneCard`, `NoteEditorFrame`, `WidgetPopover`, `FindInMap`) to 100% solid opaque backgrounds (`#FFFFFF` in light mode, `#1C1C1E` in dark mode) and removed `backdropFilter`, completely preventing canvas topics, text, and lines from showing through ("透底").
+- **Solid Folder Badge with Pure White Icon (`maps-list/styled.ts`)**: Upgraded `FolderGlyphBadge` on the maps page from a faint translucent tint to a solid iOS/macOS blue fill (`#007AFF` / `#0A84FF`) with a crisp pure white Google icon (`#FFFFFF`).
+- **Comfortable Note & Link Button Metrics (`save-and-delete/index.tsx`, `rich-text-note-editor/styled.ts`, `topic-link-editor/index.tsx`)**: Expanded `SaveAndDelete` "接受" (Accept) button height from 30px to 34px with `px: 2.5` (min-width 72px) and increased footer/link-editor spacing; widened `NoteEditorFrame` to `min(620px, calc(100dvw - 32px))` and enlarged toolbar buttons/select to 32px with 8px gaps and hidden horizontal scrollbars to eliminate button crowding.
+
+## Previous Fixes (v6.0.31)
 
 - **Clean HIG Color Palette Alignment (`appleDesign.ts`, `MindmapMiniPreview.tsx`, `FolderItems.tsx`, `editor/src/theme/index.ts`)**: Aligned homepage canvas (`#F2F2F7` / `#000000`), elevated cards (`#FFFFFF` / `#1C1C1E`), primary tint (`#007AFF` / `#0A84FF`), and star highlight (`#FF9500` / `#FF9F0A`) strictly to `color-palette` tokens, removing muddy grays/browns.
 - **Pure White Mindmap Canvas (`prism-default.json`, `prism-light.json`, `editor-loading-skeleton/styled.ts`)**: Switched light-mode mindmap editor canvas and loading skeleton background from ceramic white (`#F2F2F7` / `#f5f5f5`) to pure white (`#FFFFFF`), keeping dark mode `#000000`.

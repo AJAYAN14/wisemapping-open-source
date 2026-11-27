@@ -30,11 +30,9 @@ export const NoteEditorFrame = styled(Box)(({ theme }) => {
   return {
     display: 'flex',
     flexDirection: 'column',
-    width: 'min(560px, calc(100dvw - 32px))',
-    height: 'min(430px, calc(100dvh - 110px))',
-    backgroundColor: isDark ? 'rgba(28, 28, 30, 0.94)' : 'rgba(255, 255, 255, 0.96)',
-    backdropFilter: 'blur(20px) saturate(180%)',
-    WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+    width: 'min(620px, calc(100dvw - 32px))',
+    height: 'min(450px, calc(100dvh - 110px))',
+    backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF',
     borderRadius: '14px',
     border: `1px solid ${isDark ? 'rgba(84, 84, 86, 0.45)' : 'rgba(60, 60, 67, 0.12)'}`,
     boxShadow: isDark
@@ -68,14 +66,14 @@ export const ToolbarFrame = styled(Box)(({ theme }) => {
   const isDark = theme.palette.mode === 'dark';
   return {
     flexShrink: 0,
-    minHeight: '50px',
-    padding: `${theme.spacing(1)} ${theme.spacing(1.5)}`,
+    minHeight: '52px',
+    padding: `${theme.spacing(1)} ${theme.spacing(1.75)}`,
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: theme.spacing(1),
+    gap: theme.spacing(1.25),
     borderBottom: `1px solid ${theme.palette.divider}`,
-    backgroundColor: isDark ? 'rgba(44, 44, 46, 0.72)' : '#F2F2F7',
+    backgroundColor: isDark ? '#2C2C2E' : '#F2F2F7',
   };
 });
 
@@ -84,19 +82,23 @@ export const ToolbarRow = styled(Box)(({ theme }) => ({
   flex: 1,
   minWidth: 0,
   display: 'flex',
-  gap: theme.spacing(0.75),
+  gap: theme.spacing(1),
   alignItems: 'center',
   flexWrap: 'nowrap',
   overflowX: 'auto',
+  scrollbarWidth: 'none',
+  '&::-webkit-scrollbar': {
+    display: 'none',
+  },
 }));
 
 export const HeaderControl = styled(FormControl)({
-  minWidth: 120,
+  minWidth: 124,
   flexShrink: 0,
 });
 
 export const HeaderSelect = styled(Select)(({ theme }) => ({
-  height: '30px',
+  height: '32px',
   fontSize: '13px',
   borderRadius: '7px',
   backgroundColor: theme.palette.background.paper,
@@ -120,12 +122,15 @@ export const HeaderSelect = styled(Select)(({ theme }) => ({
 
 export const ToolGroup = styled(ButtonGroup)({
   flexShrink: 0,
+  '& .MuiButtonGroup-grouped:not(:last-of-type)': {
+    borderRightColor: 'transparent',
+  },
 });
 
 export const ToolButton = styled(Button)(({ theme }) => ({
-  minWidth: '30px',
-  height: '30px',
-  padding: '4px',
+  minWidth: '32px',
+  height: '32px',
+  padding: '4px 6px',
   color: theme.palette.text.primary,
   borderColor: theme.palette.divider,
   backgroundColor: theme.palette.background.paper,
@@ -134,7 +139,7 @@ export const ToolButton = styled(Button)(({ theme }) => ({
     backgroundColor: theme.palette.action.hover,
   },
   '& .MuiSvgIcon-root': {
-    fontSize: '17px',
+    fontSize: '18px',
   },
 }));
 
@@ -193,9 +198,9 @@ export const FooterBar = styled(Box)(({ theme }) => {
     justifyContent: 'space-between',
     paddingLeft: theme.spacing(2),
     paddingRight: theme.spacing(2),
-    paddingTop: theme.spacing(1.25),
-    paddingBottom: theme.spacing(1.25),
+    paddingTop: theme.spacing(1.5),
+    paddingBottom: theme.spacing(1.5),
     borderTop: `1px solid ${theme.palette.divider}`,
-    backgroundColor: isDark ? 'rgba(44, 44, 46, 0.72)' : '#F9F9FB',
+    backgroundColor: isDark ? '#2C2C2E' : '#F9F9FB',
   };
 });

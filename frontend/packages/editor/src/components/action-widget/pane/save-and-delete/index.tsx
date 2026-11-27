@@ -68,8 +68,9 @@ const SaveAndDelete = ({
             sx={{
               borderRadius: '8px',
               fontWeight: 500,
-              fontSize: '0.8rem',
-              px: 1.5,
+              fontSize: '0.85rem',
+              px: 1.75,
+              minHeight: '34px',
             }}
           >
             <FormattedMessage id="action.delete" defaultMessage="Delete" />
@@ -103,9 +104,10 @@ const SaveAndDelete = ({
         sx={{
           borderRadius: '8px',
           fontWeight: 600,
-          fontSize: '0.8rem',
-          px: 2,
-          minHeight: '30px',
+          fontSize: '0.85rem',
+          px: 2.5,
+          minHeight: '34px',
+          minWidth: '72px',
         }}
       >
         <FormattedMessage id="action.accept" defaultMessage="Accept" />
