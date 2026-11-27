@@ -141,13 +141,6 @@ const MapRowComponent = ({
             <GoogleIcon name="hub" size={18} />
           </MapGlyphBadge>
           <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 0, justifyContent: 'center' }}>
-            {showFolderPath && (
-              <MapFolderPathBadge
-                folderPath={map.folderPath}
-                folderId={map.folderId}
-                onOpenFolder={onOpenFolder}
-              />
-            )}
             <Tooltip
               arrow={true}
               title={intl.formatMessage({
@@ -174,6 +167,16 @@ const MapRowComponent = ({
                 {map.title}
               </TitleLink>
             </Tooltip>
+            {showFolderPath && (
+              <Box sx={{ mt: 0.25 }}>
+                <MapFolderPathBadge
+                  folderPath={map.folderPath}
+                  folderId={map.folderId}
+                  onOpenFolder={onOpenFolder}
+                  mb={0}
+                />
+              </Box>
+            )}
           </Box>
         </MapRowTitleWrap>
       </BodyCell>

@@ -16,7 +16,7 @@
  *   limitations under the License.
  */
 
-import React, { memo, useCallback, useState } from 'react';
+import React, { memo, useCallback, useEffect, useId, useRef, useState } from 'react';
 import { useIntl } from 'react-intl';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
@@ -44,14 +44,15 @@ import {
   BodyCell,
   BreadcrumbBar,
   BreadcrumbChip,
+  BreadcrumbTrail,
   CardTitle,
   CellText,
   CompactCardHeader,
   FolderGlyphBadge,
+  FolderGridCardPreview,
   GridCardActionsOverlay,
   GridCardBody,
   GridCardMeta,
-  GridCardPreview,
   GridCardRoot,
   GridCardTitle,
   LabelsBodyCell,
@@ -270,6 +271,70 @@ const FolderRowComponent = ({
 
 export const FolderRow = memo(FolderRowComponent);
 
+/** Layered sky-blue macOS folder SVG used exclusively inside grid view folder cards. */
+const GridFolderSvgIcon = (): React.ReactElement => {
+  const svgInstanceId = useId().replace(/:/g, '');
+  const backId = `folder-back-${svgInstanceId}`;
+  const frontId = `folder-front-${svgInstanceId}`;
+  const edgeId = `folder-edge-${svgInstanceId}`;
+
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="112"
+      height="112"
+      viewBox="0 0 128 128"
+      aria-hidden="true"
+      data-testid="folder-grid-svg-icon"
+      style={{ display: 'block', flexShrink: 0 }}
+    >
+      <defs>
+        <linearGradient id={backId} x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#7BD0F7" />
+          <stop offset="100%" stopColor="#299FD9" />
+        </linearGradient>
+
+        <linearGradient id={frontId} x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#98DFFF" />
+          <stop offset="45%" stopColor="#70CEF8" />
+          <stop offset="100%" stopColor="#42B5ED" />
+        </linearGradient>
+
+        <linearGradient id={edgeId} x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stopColor="#D7F4FF" stopOpacity="0.85" />
+          <stop offset="25%" stopColor="#C1EDFF" stopOpacity="0.3" />
+          <stop offset="50%" stopColor="#75CFF6" stopOpacity="0" />
+          <stop offset="100%" stopColor="#218DC8" stopOpacity="0.3" />
+        </linearGradient>
+      </defs>
+
+      {/* 背板 */}
+      <path
+        d="M9 34 Q9 23 20 23 H43 Q48 23 52 28 L56 32 Q59 35 64 35 H108 Q119 35 119 46 V95 Q119 105 108 105 H20 Q9 105 9 94 Z"
+        fill={`url(#${backId})`}
+      />
+
+      {/* 夹层 */}
+      <rect x="14" y="40" width="100" height="54" rx="7" fill="#DDF3FF" />
+
+      {/* 前板 */}
+      <rect x="7" y="47" width="114" height="61" rx="11" fill={`url(#${frontId})`} />
+
+      {/* 连续渐变边缘 */}
+      <rect
+        x="7.65"
+        y="47.65"
+        width="112.7"
+        height="59.7"
+        rx="10.35"
+        fill="none"
+        stroke={`url(#${edgeId})`}
+        strokeWidth="1.3"
+      />
+    </svg>
+  );
+};
+
 const FolderGridCardComponent = ({
   folder,
   count,
@@ -294,43 +359,16 @@ const FolderGridCardComponent = ({
   return (
     <GridCardRoot
       selected={isDragTarget}
+      dragTarget={isDragTarget}
       onClick={() => onOpenFolder(folder.id)}
       onContextMenu={(e) => onContextMenu(folder, e)}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}
       data-testid={`folder-grid-card-${folder.id}`}
-      sx={(theme) => {
-        const c = appleColors(isDarkTheme(theme));
-        return isDragTarget
-          ? {
-              backgroundColor: c.amberSoft,
-              outline: `2px dashed ${c.amber}`,
-              outlineOffset: '-2px',
-            }
-          : {};
-      }}
     >
-      <GridCardPreview
-        sx={(theme) => {
-          const c = appleColors(isDarkTheme(theme));
-          return {
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '6px',
-            backgroundColor: isDarkTheme(theme) ? '#2C2C2E' : '#F2F2F7',
-            borderBottom: `1px solid ${c.hairline}`,
-          };
-        }}
-      >
-        <GoogleIcon
-          name="folder"
-          size={40}
-          filled
-          style={{ color: '#007AFF' }}
-        />
+      <FolderGridCardPreview>
+        <GridFolderSvgIcon />
         <GridCardActionsOverlay className="grid-card-overlay">
           <Tooltip arrow={true} title="文件夹操作">
             <ActionIconButton>
@@ -344,7 +382,7 @@ const FolderGridCardComponent = ({
             </ActionIconButton>
           </Tooltip>
         </GridCardActionsOverlay>
-      </GridCardPreview>
+      </FolderGridCardPreview>
 
       <GridCardBody>
         <Tooltip title={folder.name} enterDelay={500} placement="top-start">
@@ -483,6 +521,14 @@ export const FolderBreadcrumbsBar = ({
 }: FolderBreadcrumbsBarProps): React.ReactElement => {
   const chain = getFolderBreadcrumbs(folders, currentFolderId);
   const parentFolderId = chain.length > 1 ? chain[chain.length - 2]!.id : null;
+  const trailRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = trailRef.current;
+    if (el) {
+      el.scrollLeft = el.scrollWidth;
+    }
+  }, [currentFolderId, chain.length]);
 
   return (
     <BreadcrumbBar aria-label="文件夹路径">
@@ -497,38 +543,55 @@ export const FolderBreadcrumbsBar = ({
 
       <Box
         aria-hidden="true"
-        sx={{ width: '1px', height: '14px', backgroundColor: 'divider', mx: '2px' }}
+        sx={{
+          width: '1px',
+          height: '16px',
+          backgroundColor: 'divider',
+          mx: '2px',
+          flexShrink: 0,
+        }}
       />
 
-      <BreadcrumbDropItem
-        folderId={null}
-        label="根目录"
-        icon={<GoogleIcon name="home" size={15} />}
-        onNavigate={onNavigate}
-        onDropMaps={onDropMaps}
-      />
+      <BreadcrumbTrail
+        ref={trailRef}
+        role="region"
+        tabIndex={0}
+        aria-label="文件夹路径层级"
+      >
+        <BreadcrumbDropItem
+          folderId={null}
+          label="根目录"
+          icon={<GoogleIcon name="home" size={15} />}
+          onNavigate={onNavigate}
+          onDropMaps={onDropMaps}
+        />
 
-      {chain.map((crumb, index) => {
-        const isLast = index === chain.length - 1;
-        return (
-          <React.Fragment key={crumb.id}>
-            <GoogleIcon name="chevron_right" size={15} style={{ opacity: 0.55 }} />
-            {isLast ? (
-              <BreadcrumbChip type="button" active disabled>
-                <GoogleIcon name="folder" size={15} filled style={{ opacity: 0.85 }} />
-                <span>{crumb.name}</span>
-              </BreadcrumbChip>
-            ) : (
-              <BreadcrumbDropItem
-                folderId={crumb.id}
-                label={crumb.name}
-                onNavigate={onNavigate}
-                onDropMaps={onDropMaps}
+        {chain.map((crumb, index) => {
+          const isLast = index === chain.length - 1;
+          return (
+            <React.Fragment key={crumb.id}>
+              <GoogleIcon
+                name="chevron_right"
+                size={15}
+                style={{ opacity: 0.55, flexShrink: 0 }}
               />
-            )}
-          </React.Fragment>
-        );
-      })}
+              {isLast ? (
+                <BreadcrumbChip type="button" active disabled>
+                  <GoogleIcon name="folder" size={15} filled style={{ opacity: 0.85 }} />
+                  <span>{crumb.name}</span>
+                </BreadcrumbChip>
+              ) : (
+                <BreadcrumbDropItem
+                  folderId={crumb.id}
+                  label={crumb.name}
+                  onNavigate={onNavigate}
+                  onDropMaps={onDropMaps}
+                />
+              )}
+            </React.Fragment>
+          );
+        })}
+      </BreadcrumbTrail>
     </BreadcrumbBar>
   );
 };

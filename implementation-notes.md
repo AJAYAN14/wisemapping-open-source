@@ -6,7 +6,18 @@
 
 ---
 
-## Latest Fixes (v6.0.38)
+## Latest Fixes (v6.0.39)
+
+- **Map List Row Hierarchy (`MapRow.tsx`)**: Placed `TitleLink` above `MapFolderPathBadge` (`mb={0}` with `mt={0.25}`), matching `MapGridCard` and `MapCard` so users scan map titles before secondary directory metadata.
+- **Borderless Quick Action Buttons Contrast (`account-menu/index.tsx`)**: Switched `SidebarQuickButton` (theme toggle / shortcuts) and `CollapsedQuickIconButton` to tonal fills (`backgroundColor: c.hoverFill`, `color: c.textPrimary`, hover `c.activeFill`) while remaining borderless (`border: 'none'`).
+- **Mobile-Friendly Breadcrumbs & Touch Targets (`FolderItems.tsx`, `maps-list/styled.ts`)**:
+  - Pinned `返回上级` on the left outside a keyboard-scrollable `BreadcrumbTrail` (`role="region"`, `tabIndex={0}`, `aria-label="文件夹路径层级"`) that wraps on desktop, stays single-row horizontally scrollable on `< sm`, and auto-scrolls to the active rightmost folder.
+  - Enlarged `BreadcrumbChip` hit targets (`minBlockSize: '40px'` on `< sm`, `'44px'` + `minInlineSize: '44px'` on `@media (pointer: coarse)`) with tonal fill backgrounds for clear affordance without borders.
+- **Grid Folder Card Visual Upgrade (`FolderItems.tsx`)**:
+  - Replaced the flat folder glyph inside `FolderGridCard` **only** (leaving list, mobile card, sidebar, and breadcrumb folder icons untouched) with the layered gradient SVG folder icon (`GridFolderSvgIcon` using per-instance `useId()` gradient IDs).
+  - Updated `FolderGridCard`'s `GridCardPreview` background from `#F2F2F7` (which blended into `appleColors.canvas`) with a `borderBottom` to pure card surface (`#FFFFFF` / `#1C1C1E` with a subtle sky radial spotlight and `borderBottom: 'none'`), separating cards sharply from the window canvas.
+
+## Previous Fixes (v6.0.38)
 
 - **Scoped Editor `aria-pressed` Rule & Unified Blue View Switcher (`editor/src/components/app-bar/styles.css`, `maps-list/styled.ts`)**:
   - Scoped `button[aria-pressed='true']` inside `editor/src/components/app-bar/styles.css` to `.material-menubar button[aria-pressed='true']` (with `#007AFF` fallback), preventing the editor's `#0284c7 !important` style from leaking onto the homepage's `视图切换` buttons after SPA back-navigation.

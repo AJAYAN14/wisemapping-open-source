@@ -19,12 +19,21 @@
 import React from 'react';
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { IntlProvider } from 'react-intl';
+import Table from '@mui/material/Table';
+import TableBody from '@mui/material/TableBody';
 import { ThemeProvider } from '@mui/material/styles';
 import { createAppTheme } from '../../../src/theme';
 import { MapsListToolbar } from '../../../src/components/maps-page/maps-list/MapsListToolbar';
 import { MapsPageLoading } from '../../../src/components/maps-page/maps-list/MapsListSkeleton';
+import { MapRow } from '../../../src/components/maps-page/maps-list/MapRow';
+import {
+  FolderBreadcrumbsBar,
+  FolderGridCard,
+  FolderRow,
+} from '../../../src/components/maps-page/maps-list/FolderItems';
 import { useSpringValue } from '../../../src/components/maps-page/useSpringValue';
 import { appleColors } from '../../../src/components/maps-page/appleDesign';
+import type { Folder, MapInfo } from '../../../src/classes/client';
 
 const SpringProbe = ({ target }: { target: number }): React.ReactElement => {
   const current = useSpringValue(target);
@@ -134,5 +143,116 @@ describe('Apple Design homepage refinements', () => {
     expect(container.querySelector('table')).toBeNull();
     expect(container.querySelectorAll('.MuiSkeleton-root').length).toBeGreaterThan(20);
     localStorage.removeItem('mapsListViewMode');
+  });
+
+  test('MapRow renders map title link before folder path badge', () => {
+    const map: MapInfo = {
+      id: 42,
+      title: '2.3、材料的表面处理与热处理',
+      folderId: 7,
+      folderPath: '第二章、非标机械设计基础',
+      createdBy: 'owner',
+      creationTime: '2026-01-01T00:00:00.000Z',
+      lastModificationBy: 'owner',
+      lastModificationTime: '2026-01-02T00:00:00.000Z',
+      description: '',
+      public: false,
+      starred: false,
+      labels: [],
+      role: 'owner',
+    };
+
+    render(
+      <ThemeProvider theme={createAppTheme('light')}>
+        <IntlProvider locale="en" defaultLocale="en" messages={{}}>
+          <Table>
+            <TableBody>
+              <MapRow
+                map={map}
+                selected={false}
+                showFolderPath={true}
+                onToggleSelected={jest.fn()}
+                onStar={jest.fn()}
+                onOpenMenu={jest.fn()}
+                onRemoveLabel={jest.fn()}
+              />
+            </TableBody>
+          </Table>
+        </IntlProvider>
+      </ThemeProvider>,
+    );
+
+    const titleEl = screen.getByText('2.3、材料的表面处理与热处理');
+    const folderEl = screen.getByText('第二章、非标机械设计基础');
+    expect(
+      titleEl.compareDocumentPosition(folderEl) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  test('FolderBreadcrumbsBar pins back button outside keyboard-scrollable trail region', () => {
+    const folders: Folder[] = [
+      { id: 1, name: '一级目录', parentId: null },
+      { id: 2, name: '二级目录', parentId: 1 },
+    ];
+    const onNavigate = jest.fn();
+
+    render(
+      <ThemeProvider theme={createAppTheme('light')}>
+        <IntlProvider locale="en" defaultLocale="en" messages={{}}>
+          <FolderBreadcrumbsBar
+            folders={folders}
+            currentFolderId={2}
+            onNavigate={onNavigate}
+          />
+        </IntlProvider>
+      </ThemeProvider>,
+    );
+
+    const backButton = screen.getByRole('button', { name: '返回上级' });
+    const trailRegion = screen.getByRole('region', { name: '文件夹路径层级' });
+    expect(trailRegion.getAttribute('tabindex')).toBe('0');
+    expect(trailRegion.contains(backButton)).toBe(false);
+    expect(within(trailRegion).getByText('根目录')).toBeTruthy();
+    expect(within(trailRegion).getByText('一级目录')).toBeTruthy();
+    expect(within(trailRegion).getByText('二级目录')).toBeTruthy();
+
+    fireEvent.click(backButton);
+    expect(onNavigate).toHaveBeenCalledWith(1);
+  });
+
+  test('FolderGridCard uses layered folder SVG icon only in grid view while FolderRow keeps Material symbol', () => {
+    const folder: Folder = {
+      id: 3,
+      name: '第二章、非标机械设计基础',
+      parentId: null,
+    };
+
+    render(
+      <ThemeProvider theme={createAppTheme('light')}>
+        <IntlProvider locale="en" defaultLocale="en" messages={{}}>
+          <FolderGridCard
+            folder={folder}
+            onOpenFolder={jest.fn()}
+            onOpenMenu={jest.fn()}
+            onContextMenu={jest.fn()}
+          />
+          <Table>
+            <TableBody>
+              <FolderRow
+                folder={folder}
+                onOpenFolder={jest.fn()}
+                onOpenMenu={jest.fn()}
+                onContextMenu={jest.fn()}
+              />
+            </TableBody>
+          </Table>
+        </IntlProvider>
+      </ThemeProvider>,
+    );
+
+    const gridCard = screen.getByTestId('folder-grid-card-3');
+    const rowEl = screen.getByRole('row');
+    expect(within(gridCard).getByTestId('folder-grid-svg-icon')).toBeTruthy();
+    expect(within(rowEl).queryByTestId('folder-grid-svg-icon')).toBeNull();
   });
 });

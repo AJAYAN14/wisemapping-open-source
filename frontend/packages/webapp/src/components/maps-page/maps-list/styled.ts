@@ -251,8 +251,38 @@ export const BreadcrumbBar = styled('div')(({ theme }) => {
     fontWeight: 500,
     color: c.textSecondary,
     [theme.breakpoints.down('sm')]: {
+      flexWrap: 'nowrap',
+      gap: '6px',
+      padding: '6px 8px',
       marginLeft: '12px',
       marginRight: '12px',
+    },
+  };
+});
+
+export const BreadcrumbTrail = styled('div')(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    display: 'flex',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: '4px',
+    minWidth: 0,
+    borderRadius: RADIUS_SM,
+    '&:focus-visible': {
+      outline: 'none',
+      boxShadow: `0 0 0 2px ${c.amberRing}`,
+    },
+    [theme.breakpoints.down('sm')]: {
+      flex: 1,
+      flexWrap: 'nowrap',
+      overflowX: 'auto',
+      overflowY: 'hidden',
+      WebkitOverflowScrolling: 'touch',
+      scrollbarWidth: 'none',
+      '&::-webkit-scrollbar': {
+        display: 'none',
+      },
     },
   };
 });
@@ -266,27 +296,41 @@ export const BreadcrumbChip = styled('button', {
     border: 'none',
     outline: dragTarget ? `2px dashed ${c.amber}` : 'none',
     outlineOffset: '-2px',
-    backgroundColor: dragTarget ? c.amberSoft : active ? c.hoverFill : 'transparent',
-    color: dragTarget ? c.amberText : active ? c.textPrimary : c.textSecondary,
+    backgroundColor: dragTarget ? c.amberSoft : active ? c.activeFill : c.hoverFill,
+    color: dragTarget ? c.amberText : c.textPrimary,
     fontFamily: APPLE_FONT_STACK,
     fontSize: '0.82rem',
     fontWeight: active ? 600 : 500,
-    padding: '4px 8px',
+    minBlockSize: '32px',
+    padding: '4px 10px',
     borderRadius: RADIUS_SM,
     display: 'inline-flex',
     alignItems: 'center',
     gap: '5px',
+    whiteSpace: 'nowrap',
+    flexShrink: 0,
     cursor: active ? 'default' : 'pointer',
     transition: 'background-color 120ms ease, color 120ms ease',
     ...(!active && applePressMixin),
     '&:hover': active
       ? undefined
       : {
-          backgroundColor: c.hoverFill,
+          backgroundColor: c.activeFill,
           color: c.textPrimary,
         },
     '&:focus-visible': {
+      outline: 'none',
       boxShadow: `0 0 0 2px ${c.amberRing}`,
+    },
+    [theme.breakpoints.down('sm')]: {
+      minBlockSize: '40px',
+      padding: '6px 12px',
+      fontSize: '0.85rem',
+    },
+    '@media (pointer: coarse)': {
+      minBlockSize: '44px',
+      minInlineSize: '44px',
+      padding: '8px 12px',
     },
   };
 });
@@ -912,8 +956,8 @@ export const MapsGrid = styled('div')({
 });
 
 export const GridCardRoot = styled('div', {
-  shouldForwardProp: (prop) => prop !== 'selected',
-})<{ selected?: boolean }>(({ theme, selected }) => {
+  shouldForwardProp: (prop) => prop !== 'selected' && prop !== 'dragTarget',
+})<{ selected?: boolean; dragTarget?: boolean }>(({ theme, selected, dragTarget }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
     position: 'relative',
@@ -921,8 +965,10 @@ export const GridCardRoot = styled('div', {
     flexDirection: 'column',
     borderRadius: RADIUS_LG,
     padding: 0,
-    backgroundColor: c.surface,
+    backgroundColor: dragTarget ? c.amberSoft : c.surface,
     border: 'none',
+    outline: dragTarget ? `2px dashed ${c.amber}` : 'none',
+    outlineOffset: dragTarget ? '-2px' : undefined,
     boxShadow: selected ? `0 0 0 2px ${c.amberRing}` : c.shadowSubtle,
     overflow: 'hidden',
     contentVisibility: 'auto',
@@ -974,6 +1020,22 @@ export const GridCardPreview = styled('div')(({ theme }) => {
     overflow: 'hidden',
     borderBottom: 'none',
     backgroundColor: c.surfaceElevated,
+  };
+});
+
+export const FolderGridCardPreview = styled(GridCardPreview)(({ theme }) => {
+  const isDark = isDarkTheme(theme);
+  return {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: '6px',
+    backgroundColor: isDark ? '#1C1C1E' : '#FFFFFF',
+    backgroundImage: isDark
+      ? 'radial-gradient(circle at 50% 50%, rgba(66, 181, 237, 0.14) 0%, #1C1C1E 74%)'
+      : 'radial-gradient(circle at 50% 50%, rgba(123, 208, 247, 0.15) 0%, #FFFFFF 74%)',
+    borderBottom: 'none',
   };
 });
 

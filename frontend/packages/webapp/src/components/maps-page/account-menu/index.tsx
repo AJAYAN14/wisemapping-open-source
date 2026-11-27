@@ -46,7 +46,7 @@ import StorageQuotaDialog from './StorageQuotaDialog';
 declare const VITE_APP_VERSION: string | undefined;
 declare const VITE_BUILD_TIME: string | undefined;
 
-const APP_VERSION = typeof VITE_APP_VERSION !== 'undefined' ? VITE_APP_VERSION : '6.0.38';
+const APP_VERSION = typeof VITE_APP_VERSION !== 'undefined' ? VITE_APP_VERSION : '6.0.39';
 const BUILD_TIME = typeof VITE_BUILD_TIME !== 'undefined' ? VITE_BUILD_TIME : '';
 
 const AvatarTrigger = styled(IconButton)(({ theme }) => {
@@ -109,7 +109,7 @@ const SidebarQuickButton = styled('button')(({ theme }) => {
     minHeight: '34px',
     height: '34px',
     padding: '0 8px',
-    backgroundColor: c.surface,
+    backgroundColor: c.hoverFill,
     borderRadius: RADIUS_MD,
     border: 'none',
     boxShadow: c.shadowSubtle,
@@ -121,14 +121,14 @@ const SidebarQuickButton = styled('button')(({ theme }) => {
     fontFamily: APPLE_FONT_STACK,
     fontSize: '12.5px',
     fontWeight: 500,
-    color: c.textSecondary,
+    color: c.textPrimary,
     whiteSpace: 'nowrap',
     overflow: 'hidden',
     textOverflow: 'ellipsis',
     boxSizing: 'border-box',
     ...applePressMixin,
     '&:hover': {
-      backgroundColor: c.hoverFill,
+      backgroundColor: c.activeFill,
       color: c.textPrimary,
     },
     '&:focus-visible': {
@@ -147,11 +147,11 @@ const CollapsedQuickIconButton = styled(IconButton)(({ theme }) => {
     borderRadius: RADIUS_MD,
     border: 'none',
     boxShadow: c.shadowSubtle,
-    backgroundColor: c.surface,
-    color: c.textSecondary,
+    backgroundColor: c.hoverFill,
+    color: c.textPrimary,
     ...applePressMixin,
     '&:hover': {
-      backgroundColor: c.hoverFill,
+      backgroundColor: c.activeFill,
       color: c.textPrimary,
     },
     '&:focus-visible': {
