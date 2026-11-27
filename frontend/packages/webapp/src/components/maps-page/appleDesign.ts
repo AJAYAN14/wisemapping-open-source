@@ -31,10 +31,11 @@ export const APPLE_FONT_STACK =
 export const EASE_OUT = 'cubic-bezier(0.23, 1, 0.32, 1)';
 export const EASE_DRAWER = 'cubic-bezier(0.32, 0.72, 0, 1)';
 
-/** Strict 3-step border-radius scale across the entire workspace. */
-export const RADIUS_LG = '12px';
-export const RADIUS_MD = '8px';
-export const RADIUS_SM = '6px';
+/** Modern squircle border-radius scale across the entire homepage workspace (HIG & modern macOS). */
+export const RADIUS_XL = '24px';
+export const RADIUS_LG = '18px';
+export const RADIUS_MD = '12px';
+export const RADIUS_SM = '8px';
 
 export interface AppleColorTokens {
   canvas: string;

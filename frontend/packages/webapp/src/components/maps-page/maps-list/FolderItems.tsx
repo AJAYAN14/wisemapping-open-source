@@ -36,7 +36,6 @@ import {
   RADIUS_LG,
   RADIUS_MD,
   appleColors,
-  glassMaterialMixin,
   isDarkTheme,
 } from '../appleDesign';
 import type { FolderDirectCount } from './model';
@@ -570,7 +569,7 @@ export const FolderActionMenu = ({
               border: `1px solid ${c.hairline}`,
               boxShadow: c.shadowFloat,
               fontFamily: APPLE_FONT_STACK,
-              ...glassMaterialMixin(c.sidebarGlass, c.surfaceElevated, 18),
+              backgroundColor: isDarkTheme(theme) ? '#1C1C1E' : '#FFFFFF',
               '& .MuiMenuItem-root': {
                 fontWeight: 500,
                 fontSize: '0.84rem',

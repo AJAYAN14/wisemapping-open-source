@@ -46,7 +46,7 @@ import StorageQuotaDialog from './StorageQuotaDialog';
 declare const VITE_APP_VERSION: string | undefined;
 declare const VITE_BUILD_TIME: string | undefined;
 
-const APP_VERSION = typeof VITE_APP_VERSION !== 'undefined' ? VITE_APP_VERSION : '6.0.32';
+const APP_VERSION = typeof VITE_APP_VERSION !== 'undefined' ? VITE_APP_VERSION : '6.0.33';
 const BUILD_TIME = typeof VITE_BUILD_TIME !== 'undefined' ? VITE_BUILD_TIME : '';
 
 const AvatarTrigger = styled(IconButton)(({ theme }) => {
@@ -406,18 +406,12 @@ const AccountMenu = ({
                 borderRadius: RADIUS_LG,
                 border: `1px solid ${c.hairline}`,
                 boxShadow: c.shadowFloat,
-                backgroundColor: c.headerGlass,
-                backdropFilter: 'blur(18px) saturate(160%)',
-                WebkitBackdropFilter: 'blur(18px) saturate(160%)',
+                backgroundColor: isDarkTheme(theme) ? '#1C1C1E' : '#FFFFFF',
                 '& .MuiMenuItem-root': {
                   borderRadius: RADIUS_MD,
                   margin: '2px 6px',
                   fontSize: '0.84rem',
                   fontWeight: 500,
-                },
-                '@media (prefers-reduced-transparency: reduce)': {
-                  backgroundColor: c.surface,
-                  backdropFilter: 'none',
                 },
               };
             },

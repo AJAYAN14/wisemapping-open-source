@@ -74,9 +74,7 @@ const ActionChooser = (props: ActionProps): React.ReactElement => {
               borderRadius: RADIUS_LG,
               border: `1px solid ${c.hairline}`,
               boxShadow: c.shadowFloat,
-              backgroundColor: c.sidebarGlass,
-              backdropFilter: 'blur(18px) saturate(160%)',
-              WebkitBackdropFilter: 'blur(18px) saturate(160%)',
+              backgroundColor: isDarkTheme(theme) ? '#1C1C1E' : '#FFFFFF',
               fontFamily: APPLE_FONT_STACK,
               '& .MuiMenuItem-root': {
                 fontWeight: 500,

@@ -32,7 +32,6 @@ import {
   RADIUS_LG,
   RADIUS_MD,
   appleColors,
-  glassMaterialMixin,
   isDarkTheme,
 } from '../appleDesign';
 import {
@@ -415,7 +414,7 @@ export const MapsListToolbar = ({
                       boxShadow: c.shadowFloat,
                       border: `1px solid ${c.hairline}`,
                       fontFamily: APPLE_FONT_STACK,
-                      ...glassMaterialMixin(c.sidebarGlass, c.surfaceElevated, 18),
+                      backgroundColor: isDarkTheme(theme) ? '#1C1C1E' : '#FFFFFF',
                       '& .MuiMenuItem-root': {
                         borderRadius: RADIUS_MD,
                         minHeight: '34px',

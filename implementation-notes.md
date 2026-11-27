@@ -6,7 +6,12 @@
 
 ---
 
-## Latest Fixes (v6.0.32)
+## Latest Fixes (v6.0.33)
+
+- **Modern Homepage Corner Radius Overhaul (`appleDesign.ts`)**: Upgraded homepage border-radius scale from dated 2010s values (`12px` / `8px` / `6px`) to modern Apple squircle proportions (`RADIUS_LG: 18px`, `RADIUS_MD: 12px`, `RADIUS_SM: 8px`, `RADIUS_XL: 24px`), giving all grid cards, table containers, popover menus, toolbar inputs, and action buttons generous, smooth, high-end rounded corners.
+- **Pure White Homepage Popover Menus (`account-menu`, `action-chooser`, `MapsListToolbar`, `index.tsx`, `FolderItems`)**: Replaced translucent off-white `headerGlass` / `sidebarGlass` backgrounds on the homepage dropdowns (account menu, 3-dots action menu, sort dropdown, new map menu, folder action menu) with crisp 100% solid pure white (`#FFFFFF`) in light mode and clean `#1C1C1E` in dark mode.
+
+## Previous Fixes (v6.0.32)
 
 - **Solid Opaque Editor Popups (`StyledPane.ts`, `styled.ts`, `widgetPopover`, `find-in-map`)**: Switched all editor floating cards (`PaneCard`, `NoteEditorFrame`, `WidgetPopover`, `FindInMap`) to 100% solid opaque backgrounds (`#FFFFFF` in light mode, `#1C1C1E` in dark mode) and removed `backdropFilter`, completely preventing canvas topics, text, and lines from showing through ("透底").
 - **Solid Folder Badge with Pure White Icon (`maps-list/styled.ts`)**: Upgraded `FolderGlyphBadge` on the maps page from a faint translucent tint to a solid iOS/macOS blue fill (`#007AFF` / `#0A84FF`) with a crisp pure white Google icon (`#FFFFFF`).

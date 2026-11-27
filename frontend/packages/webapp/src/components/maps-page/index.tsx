@@ -909,7 +909,7 @@ const MapsPage = (): ReactElement => {
                   boxShadow: c.shadowFloat,
                   border: `1px solid ${c.hairline}`,
                   fontFamily: APPLE_FONT_STACK,
-                  ...glassMaterialMixin(c.sidebarGlass, c.surfaceElevated, 18),
+                  backgroundColor: isDarkTheme(theme) ? '#1C1C1E' : '#FFFFFF',
                   '@media (forced-colors: active)': {
                     backgroundColor: 'Canvas',
                     color: 'CanvasText',
