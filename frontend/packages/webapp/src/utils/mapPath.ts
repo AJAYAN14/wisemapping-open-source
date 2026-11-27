@@ -42,18 +42,18 @@ function encodeMapSegments(folderPath: string | null | undefined, title: string)
   return segments.map((segment) => encodeURIComponent(segment)).join('/');
 }
 
-/** Builds `/c/maps/<folderPath...>/<title>/edit` with per-segment URI encoding. */
+/** Builds `/<folderPath...>/<title>/edit` with per-segment URI encoding. */
 export function buildMapEditPath(folderPath: string | null | undefined, title: string): string {
-  return `/c/maps/${encodeMapSegments(folderPath, title)}/edit`;
+  return `/${encodeMapSegments(folderPath, title)}/edit`;
 }
 
-/** Builds `/c/maps/<folderPath...>/<title>/history/<hid>/view` with per-segment URI encoding. */
+/** Builds `/<folderPath...>/<title>/history/<hid>/view` with per-segment URI encoding. */
 export function buildMapHistoryViewPath(
   folderPath: string | null | undefined,
   title: string,
   hid: number,
 ): string {
-  return `/c/maps/${encodeMapSegments(folderPath, title)}/history/${hid}/view`;
+  return `/${encodeMapSegments(folderPath, title)}/history/${hid}/view`;
 }
 
 function decodeMapSegments(rawSegments: string[]): { folderPath: string; title: string } | null {
@@ -89,7 +89,10 @@ export function parseMapRouteSplat(splat: string | undefined): ParsedMapRoute | 
   if (!splat) {
     return null;
   }
-  const trimmed = splat.replace(/^\/+|\/+$/g, '');
+  let trimmed = splat.replace(/^\/+|\/+$/g, '');
+  if (trimmed.startsWith('c/maps/')) {
+    trimmed = trimmed.slice('c/maps/'.length).replace(/^\/+/, '');
+  }
   if (!trimmed) {
     return null;
   }

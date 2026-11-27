@@ -93,7 +93,7 @@ describe('MapsPage', () => {
   beforeEach(() => {
     localStorage.clear();
     // The account is only fetched on private pages, which "/" is not.
-    window.history.pushState({}, '', '/c/maps/');
+    window.history.pushState({}, '', '/');
     // jsdom does not implement scrolling; the page scrolls to the top on mount.
     jest.spyOn(window, 'scrollTo').mockImplementation(() => undefined);
   });

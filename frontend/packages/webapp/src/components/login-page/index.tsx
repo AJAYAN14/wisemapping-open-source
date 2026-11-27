@@ -58,7 +58,7 @@ const LoginPage = (): React.ReactElement => {
     const authUrl = AppConfig.getGoogleOauth2Url();
     if (AppConfig.isMockEnv()) {
       client.login({ email: 'a.jian0629@gmail.com', password: '' });
-      leaveTo(safeRedirectPath(redirectUrl ?? '/c/maps'));
+      leaveTo(safeRedirectPath(redirectUrl ?? '/'));
       return;
     }
 

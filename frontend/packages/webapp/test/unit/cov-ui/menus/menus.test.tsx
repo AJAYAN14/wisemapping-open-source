@@ -38,7 +38,7 @@ const account = (extra: Partial<AccountInfo> = {}): AccountInfo => ({
 
 beforeEach(() => {
   resetRouter();
-  setLocation('/c/maps');
+  setLocation('/');
   localStorage.clear();
 });
 

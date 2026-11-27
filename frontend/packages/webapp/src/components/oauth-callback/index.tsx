@@ -190,7 +190,7 @@ const OAuthCallbackPage = (): React.ReactElement => {
   const callbackResult = exchangedResult ?? tokenResult;
 
   const navigateAfterOAuth = (): void => {
-    leaveTo(`/c/login?redirect=${encodeURIComponent(redirectTarget)}`);
+    leaveTo(`/login?redirect=${encodeURIComponent(redirectTarget)}`);
   };
 
   const provider: OAuthProvider = 'google';
@@ -236,7 +236,7 @@ const OAuthCallbackPage = (): React.ReactElement => {
     // The sign-in mark is single-use (see oauth-flow).
     forgetOAuthFlow();
     if (arrival.kind === 'cancelled') {
-      navigate('/c/login');
+      navigate('/login');
       return;
     }
     if (arrival.kind === 'provider-error') {
@@ -364,7 +364,7 @@ const OAuthCallbackPage = (): React.ReactElement => {
               size="medium"
               variant="contained"
               component={RouterLink}
-              to="/c/login"
+              to="/login"
               disableElevation={true}
             >
               <FormattedMessage id="registration.callback.back" defaultMessage="Back to login" />
@@ -379,7 +379,7 @@ const OAuthCallbackPage = (): React.ReactElement => {
               size="medium"
               variant="contained"
               component={RouterLink}
-              to="/c/login"
+              to="/login"
               disableElevation={true}
             >
               <FormattedMessage id="registration.callback.back" defaultMessage="Back to login" />
@@ -406,7 +406,7 @@ const OAuthCallbackPage = (): React.ReactElement => {
               size="medium"
               variant="contained"
               component={RouterLink}
-              to="/c/login"
+              to="/login"
               disableElevation={true}
             >
               <FormattedMessage id="registration.callback.back" defaultMessage="Back to login" />

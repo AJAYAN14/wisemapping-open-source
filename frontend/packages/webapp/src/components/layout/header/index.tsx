@@ -31,7 +31,7 @@ export const Header = (): React.ReactElement => {
     <StyledNav>
       <StyledDiv>
         <Logo>
-          <Link to="/c/login" className="header-logo">
+          <Link to="/login" className="header-logo">
             <img
               src={theme.logo}
               alt={intl.formatMessage({ id: 'common.logo', defaultMessage: 'WiseMapping logo' })}

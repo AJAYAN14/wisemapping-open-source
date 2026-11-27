@@ -33,13 +33,21 @@ describe('mapPath utilities', () => {
   });
 
   test('builds encoded edit and history view paths for root and nested folders', () => {
-    expect(buildMapEditPath('', '项目计划')).toBe('/c/maps/%E9%A1%B9%E7%9B%AE%E8%AE%A1%E5%88%92/edit');
+    expect(buildMapEditPath('', '项目计划')).toBe('/%E9%A1%B9%E7%9B%AE%E8%AE%A1%E5%88%92/edit');
     expect(buildMapEditPath('工作/2026/', 'Q4 总结')).toBe(
-      '/c/maps/%E5%B7%A5%E4%BD%9C/2026/Q4%20%E6%80%BB%E7%BB%93/edit',
+      '/%E5%B7%A5%E4%BD%9C/2026/Q4%20%E6%80%BB%E7%BB%93/edit',
     );
     expect(buildMapHistoryViewPath('工作/', 'Q4 总结', 42)).toBe(
-      '/c/maps/%E5%B7%A5%E4%BD%9C/Q4%20%E6%80%BB%E7%BB%93/history/42/view',
+      '/%E5%B7%A5%E4%BD%9C/Q4%20%E6%80%BB%E7%BB%93/history/42/view',
     );
+  });
+
+  test('parses legacy c/maps/ splats for backward compatibility', () => {
+    expect(parseMapRouteSplat(`c/maps/${encodeURIComponent('项目计划')}/edit`)).toEqual({
+      pageMode: 'edit',
+      folderPath: '',
+      title: '项目计划',
+    });
   });
 
   test('parses valid edit and history view splats', () => {

@@ -150,7 +150,7 @@ const ErrorPage = (): React.ReactElement => {
     fallbackDetail;
 
   const handleGoHome = () => {
-    navigate('/c/maps/');
+    navigate('/');
   };
 
   const handleGoBack = () => {
@@ -266,7 +266,7 @@ const ErrorPage = (): React.ReactElement => {
               <ApplePrimaryButton
                 variant="contained"
                 component={RouterLink}
-                to={`/c/login?redirect=${encodeURIComponent(location.pathname + location.search)}`}
+                to={`/login?redirect=${encodeURIComponent(location.pathname + location.search)}`}
                 startIcon={<LoginRoundedIcon />}
               >
                 <FormattedMessage id="error.go-to-login" defaultMessage="Sign In" />

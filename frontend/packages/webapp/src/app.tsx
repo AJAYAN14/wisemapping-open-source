@@ -58,6 +58,11 @@ import { parseMapRouteSplat } from './utils/mapPath';
 const EditorPage = React.lazy(() => import('./components/editor-page'));
 const MapsPage = React.lazy(() => import('./components/maps-page'));
 
+const LegacyMapWildcardRedirect = (): ReactElement => {
+  const splat = useParams()['*'];
+  return <Redirect to={splat ? `/${splat}` : '/'} />;
+};
+
 const PageEditorWrapper = () => {
   const splat = useParams()['*'];
   const [searchParams] = useSearchParams();
@@ -119,14 +124,22 @@ const buildRouter = () =>
           }
           hydrateFallbackElement={<LoadingFallback />}
         >
-          <Route path="/" element={<Redirect to="/c/login" />} />
-          <Route path="/c/login" element={<LoginPage />} />
+          {/* Public Auth Routes */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/oauth-callback" element={<OAuthCallbackPage />} />
+          <Route path="/registration-google" element={<OAuthCallbackPage />} />
+
+          {/* Legacy /c/* redirects & aliases for backward compatibility */}
+          <Route path="/c/login" element={<Redirect to="/login" />} />
           <Route path="/c/oauth-callback" element={<OAuthCallbackPage />} />
           <Route path="/c/registration-google" element={<OAuthCallbackPage />} />
+          <Route path="/c/maps" element={<Redirect to="/" />} />
+          <Route path="/c/maps/" element={<Redirect to="/" />} />
+          <Route path="/c/maps/*" element={<LegacyMapWildcardRedirect />} />
 
           <Route element={<CommonPage />}>
             <Route
-              path="/c/maps/"
+              path="/"
               loader={mapsPageLoader}
               hydrateFallbackElement={<MapsPageLoading />}
               element={
@@ -137,7 +150,7 @@ const buildRouter = () =>
               errorElement={<MapsPageErrorFallback />}
             />
             <Route
-              path="/c/maps/*"
+              path="/*"
               element={<PageEditorWrapper />}
               loader={mapLoader(true)}
               errorElement={

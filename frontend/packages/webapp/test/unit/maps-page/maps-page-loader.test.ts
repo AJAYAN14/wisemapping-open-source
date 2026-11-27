@@ -29,7 +29,7 @@ describe('mapsPageLoader', () => {
     queryClient.clear();
     jest.restoreAllMocks();
     jest.spyOn(AppConfig, 'initialize').mockResolvedValue({} as never);
-    window.history.pushState({}, '', '/c/maps/');
+    window.history.pushState({}, '', '/');
   });
 
   test('loads the maps and labels before the page renders', async () => {
@@ -62,7 +62,7 @@ describe('mapsPageLoader', () => {
     expect(queryClient.getQueryState(['maps'])?.status).toBe('error');
   });
 
-  test('redirects to /c/login when maps or labels return 401/isAuth', async () => {
+  test('redirects to /login when maps or labels return 401/isAuth', async () => {
     const leaveSpy = jest.spyOn(redirectUtils, 'leaveTo').mockImplementation(() => undefined);
     jest.spyOn(AppConfig, 'getClient').mockReturnValue({
       fetchAllMaps: jest.fn().mockRejectedValue({ status: 401, isAuth: true }),
@@ -73,10 +73,10 @@ describe('mapsPageLoader', () => {
     if (typeof Response !== 'undefined') {
       expect(result).toBeInstanceOf(Response);
       expect(result?.status).toBe(302);
-      expect(result?.headers.get('Location')).toBe('/c/login?redirect=%2Fc%2Fmaps%2F');
+      expect(result?.headers.get('Location')).toBe('/login?redirect=%2F');
     } else {
       expect(result).toBeNull();
-      expect(leaveSpy).toHaveBeenCalledWith('/c/login?redirect=%2Fc%2Fmaps%2F');
+      expect(leaveSpy).toHaveBeenCalledWith('/login?redirect=%2F');
     }
   });
 });

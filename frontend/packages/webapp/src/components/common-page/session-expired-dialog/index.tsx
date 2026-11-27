@@ -30,7 +30,7 @@ const SessionExpiredDialog = ({ open }: { open: boolean }): React.ReactElement =
   // Back to this page once signed in again (the login page only follows same-site paths).
   const handleOnClose = () => {
     const here = `${window.location.pathname}${window.location.search}`;
-    leaveTo(`/c/login?redirect=${encodeURIComponent(here)}`);
+    leaveTo(`/login?redirect=${encodeURIComponent(here)}`);
   };
 
   return (

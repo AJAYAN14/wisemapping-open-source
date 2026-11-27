@@ -28,7 +28,9 @@ export class Locale {
 
 export default abstract class AppI18n {
   private static readonly PUBLIC_AUTH_ROUTES = new Set<string>([
-    '/',
+    '/login',
+    '/registration-google',
+    '/oauth-callback',
     '/c/login',
     '/c/registration-google',
     '/c/oauth-callback',

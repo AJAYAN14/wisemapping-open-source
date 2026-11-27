@@ -90,7 +90,7 @@ const ActionDispatcher = ({
           break;
         }
         case 'back':
-          window.location.href = '/c/maps';
+          window.location.href = '/';
           onClose(true);
           break;
       }

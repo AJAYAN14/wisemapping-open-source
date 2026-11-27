@@ -16,7 +16,7 @@
  *   limitations under the License.
  */
 
-export const DEFAULT_REDIRECT = '/c/maps/';
+export const DEFAULT_REDIRECT = '/';
 
 /**
  * The path to go to after a login, taken from a `redirect` query parameter or an OAuth `state`.
@@ -71,5 +71,5 @@ export const isAuthErrorInfo = (error: unknown): boolean => {
 /** Builds the login URL preserving the current path + query as the post-login redirect target. */
 export const buildLoginRedirectUrl = (): string => {
   const current = `${window.location.pathname}${window.location.search}`;
-  return `/c/login?redirect=${encodeURIComponent(current)}`;
+  return `/login?redirect=${encodeURIComponent(current)}`;
 };

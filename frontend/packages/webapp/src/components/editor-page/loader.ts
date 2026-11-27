@@ -160,7 +160,7 @@ const loadMapFor = (bootstrap: boolean) => {
       result = new Response('Map could not be loaded, redirect to login.', {
         status: 302,
         headers: {
-          Location: `/c/login?redirect=${encodeURIComponent(url)}`,
+          Location: `/login?redirect=${encodeURIComponent(url)}`,
         },
       });
     }

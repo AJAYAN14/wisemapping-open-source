@@ -70,7 +70,7 @@ describe('LoginPage', () => {
     ['%2F%2Fevil.example'],
   ])('a signed-in user is not sent to redirect=%s', async (redirect) => {
     setup(`/c/login?redirect=${redirect}`, true);
-    await waitFor(() => expect(leaveTo).toHaveBeenCalledWith('/c/maps/'));
+    await waitFor(() => expect(leaveTo).toHaveBeenCalledWith('/'));
   });
 
   test('a sign-in that came back with an error forgets its mark', async () => {

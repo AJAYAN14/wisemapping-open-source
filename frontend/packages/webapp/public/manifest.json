@@ -2,7 +2,7 @@
   "name": "WiseMapping - 免费开源思维导图",
   "short_name": "WiseMapping",
   "description": "极简、高效的可视化思维导图工具",
-  "start_url": "/c/login?redirect=/c/maps/",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#000000",

@@ -108,7 +108,7 @@ describe('M1 repository restructuring, backup, frontend R1 & R4 integration', ()
     expect(appTsx).not.toContain('path="/:locale/c/registration"');
     expect(appTsx).not.toContain('path="/c/forgot-password"');
     expect(appTsx).not.toContain('path="/c/reset-password"');
-    expect(appTsx).toContain('<Redirect to="/c/login" />');
+    expect(appTsx).toContain('<Redirect to="/login" />');
   });
 
   it('implements R4 optimistic locking across mindplot, editor, and webapp', () => {

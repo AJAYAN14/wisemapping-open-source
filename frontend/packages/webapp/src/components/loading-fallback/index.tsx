@@ -32,22 +32,20 @@ const isEditorRoute = () => {
   }
 
   const pathname = window.location.pathname;
-  return (
-    pathname.startsWith('/c/maps/') &&
-    parseMapRouteSplat(pathname.slice('/c/maps/'.length)) !== null
-  );
+  return parseMapRouteSplat(pathname) !== null;
 };
 
 // The map list shows its own skeleton from the first paint, so that loading it is one skeleton
 // followed by the page.
 const isMapListRoute = () =>
-  typeof window !== 'undefined' && /^\/c\/maps\/?$/.test(window.location.pathname);
+  typeof window !== 'undefined' &&
+  (/^\/c\/maps\/?$/.test(window.location.pathname) || window.location.pathname === '/');
 
 // Signing in goes through these, with a full page load between the OAuth callback and the login
 // page: they load in the waiting screen they show, so the steps read as one screen.
 const isSignInRoute = () =>
   typeof window !== 'undefined' &&
-  /^(\/[a-z]{2}(-[A-Z]{2})?)?\/c\/(login|oauth-callback|registration-google)\/?$/.test(
+  /^(\/[a-z]{2}(-[A-Z]{2})?)?\/(c\/)?(login|oauth-callback|registration-google)\/?$/.test(
     window.location.pathname,
   );
 

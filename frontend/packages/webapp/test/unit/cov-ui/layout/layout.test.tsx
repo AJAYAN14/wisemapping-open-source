@@ -42,7 +42,7 @@ const hrefs = (name: string): (string | null)[] =>
 describe('Header', () => {
   test('shows only the logo linking to login', () => {
     renderWithProviders(<Header />);
-    expect(hrefs('WiseMapping logo')).toEqual(['/c/login']);
+    expect(hrefs('WiseMapping logo')).toEqual(['/login']);
     expect(hrefs('Sign In')).toEqual([]);
     expect(hrefs('Sign Up')).toEqual([]);
   });
@@ -54,7 +54,7 @@ describe('Header', () => {
         <Header />
       </ThemeProvider>,
     );
-    expect(hrefs('WiseMapping logo')).toEqual(['/c/login']);
+    expect(hrefs('WiseMapping logo')).toEqual(['/login']);
   });
 });
 
@@ -82,7 +82,7 @@ describe('LoadingFallback', () => {
     },
   );
 
-  test.each(['/c/maps', '/c/maps/'])('on the map list %s shows its skeleton', (path) => {
+  test.each(['/', '/c/maps', '/c/maps/'])('on the map list %s shows its skeleton', (path) => {
     // The same skeleton the map list keeps up while it loads: one skeleton, then the page.
     setLocation(path);
     renderWithProviders(<LoadingFallback />);
@@ -91,6 +91,9 @@ describe('LoadingFallback', () => {
   });
 
   test.each([
+    '/My%20map/edit',
+    '/Work/My%20map/edit',
+    '/My%20map/history/7/view',
     '/c/maps/My%20map/edit',
     '/c/maps/Work/My%20map/edit',
     '/c/maps/My%20map/history/7/view',

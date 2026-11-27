@@ -350,3 +350,15 @@
     - **Sidebar Item Optical Centering (`maps-page/styled.ts`, `filter-list-item.tsx`)**: Centered 44x44px squircle pill in 68px collapsed drawer, hidden list text and count badge in collapsed mode, and centered icons mathematically and visually.
     - **Classic Star Icon (`maps-page/index.tsx`)**: Replaced `StarRateRoundedIcon` with classic 5-point `StarRoundedIcon` for the starred filter button.
     - **Collapsed Logo / Expand Button Hover Transition (`drawer-nav/index.tsx`, `maps-page/styled.ts`)**: Rendered WiseMapping logo centered in collapsed drawer header; on mouse hover/focus, smoothly cross-fades into the `>` expand button in the exact same slot, eliminating mutual squeeze.
+62. **Option A Clean Root URL Migration (Removing `/c/maps` & Legacy Controller Prefix)**
+    - **Root Workspace Homepage (`app.tsx`, `maps-page/loader.ts`, `redirect.ts`, `manifest.json`)**:
+      - Root `/` now serves `MapsPage` directly under `CommonPage` for authenticated users; unauthenticated visitors are redirected to `/login?redirect=/`.
+      - `DEFAULT_REDIRECT` updated from `/c/maps/` to `/`, and PWA `start_url` in `manifest.json` updated to `/`.
+      - `AppI18n.PUBLIC_AUTH_ROUTES` updated to exclude `'/'` and include `/login`, ensuring `useFetchAccount()` executes on the root dashboard while auth pages remain public.
+    - **Direct Mindmap Paths (`mapPath.ts`, `loading-fallback/index.tsx`, `editor-page/`)**:
+      - Simplified `buildMapEditPath` to `/<folderPath>/<title>/edit` and `buildMapHistoryViewPath` to `/<folderPath>/<title>/history/<hid>/view`.
+      - `parseMapRouteSplat` updated to transparently strip legacy `c/maps/` prefixes, allowing legacy bookmarks and links to load the correct map without breaking.
+    - **Legacy Backward Compatibility & OAuth Redirections (`app.tsx`, `api/_core/oauth.ts`)**:
+      - Added legacy redirects: `/c/maps` and `/c/maps/` redirect to `/`, and `/c/maps/*` redirects to `/*` via `LegacyMapWildcardRedirect`.
+      - Added `/c/login` -> `/login` redirect while maintaining `/c/oauth-callback` and `/c/registration-google` route aliases so Google Cloud Console / Supabase authorized redirect URIs remain completely valid.
+    - **Verification**: Updated and passed all affected frontend unit test suites (`map-path.test.ts`, `redirect.test.ts`, `app.test.tsx`, `loaders.test.ts`, `hooks.test.tsx`, `maps-list.test.tsx`, `maps-page.test.tsx`, `map-dialogs.test.tsx`, `login-page.test.tsx`, `oauth-callback-flows.test.tsx`, `error-page.test.tsx`, `layout.test.tsx`, `menus.test.tsx`, `session-expired-dialog.test.tsx`, `maps-page-loader.test.ts`), root repository setup tests (`m1-repo-setup.test.ts`), root unit suite (`test:unit`, 64/64 passed), and confirmed clean Vite production build.

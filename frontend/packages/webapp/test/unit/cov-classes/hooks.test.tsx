@@ -47,7 +47,7 @@ const account = {
 
 // The account is only fetched on private pages; '/' itself counts as a public one.
 beforeEach(() => {
-  window.history.pushState({}, '', '/c/maps');
+  window.history.pushState({}, '', '/');
 });
 
 afterAll(() => {

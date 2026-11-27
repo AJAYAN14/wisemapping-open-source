@@ -58,7 +58,7 @@ describe('ErrorPage', () => {
     expect(document.title).toBe('Unexpected Error | WiseMapping');
 
     fireEvent.click(screen.getByRole('button', { name: 'Go to Home' }));
-    expect(routerState.navigate).toHaveBeenLastCalledWith('/c/maps/');
+    expect(routerState.navigate).toHaveBeenLastCalledWith('/');
     fireEvent.click(screen.getByRole('button', { name: 'Go Back' }));
     expect(routerState.navigate).toHaveBeenLastCalledWith(-1);
   });
@@ -87,7 +87,7 @@ describe('ErrorPage', () => {
     expect(screen.getByText('请先使用 Google 账号登录后再试。')).toBeTruthy();
     // Signing in comes back here: a private map's link would otherwise end on the map list.
     expect(screen.getByRole('link', { name: 'Sign In' }).getAttribute('href')).toBe(
-      `/c/login?redirect=${encodeURIComponent('/c/broken')}`,
+      `/login?redirect=${encodeURIComponent('/c/broken')}`,
     );
     expect(screen.queryByRole('button', { name: 'Go to Home' })).toBeNull();
     // Access errors are expected: they are not reported.
@@ -122,7 +122,7 @@ describe('ErrorPage', () => {
       expect.stringContaining('"message":"Cannot read properties of undefined"'),
     );
     fireEvent.click(screen.getByRole('button', { name: 'Go to Home' }));
-    expect(routerState.navigate).toHaveBeenCalledWith('/c/maps/');
+    expect(routerState.navigate).toHaveBeenCalledWith('/');
   });
 
   test('a thrown value without a message falls back to the generic text', () => {

@@ -173,7 +173,7 @@ describe('MapsList', () => {
     // Each map links to its editor by path + title.
     expect(within(rowFor('Alpha plan')).getAllByRole('link')[0]).toHaveProperty(
       'href',
-      expect.stringContaining('/c/maps/Alpha%20plan/edit'),
+      expect.stringContaining('/Alpha%20plan/edit'),
     );
     // The labels column is shown.
     expect(within(rowFor('Alpha plan')).getByText('Research')).toBeTruthy();
@@ -222,7 +222,7 @@ describe('MapsList', () => {
     expect(screen.queryByTestId('maps-loading')).toBeNull();
   });
 
-  test('shows a login CTA and redirects to /c/login when loading fails with 401', async () => {
+  test('shows a login CTA and redirects to /login when loading fails with 401', async () => {
     const redirectUtils = await import('../../../../src/utils/redirect');
     const leaveSpy = jest.spyOn(redirectUtils, 'leaveTo').mockImplementation(() => undefined);
     const client = buildClient();
@@ -231,7 +231,7 @@ describe('MapsList', () => {
 
     const loginButton = await screen.findByRole('button', { name: '前往登录' });
     expect(loginButton).toBeTruthy();
-    await waitFor(() => expect(leaveSpy).toHaveBeenCalledWith(expect.stringContaining('/c/login?redirect=')));
+    await waitFor(() => expect(leaveSpy).toHaveBeenCalledWith(expect.stringContaining('/login?redirect=')));
     leaveSpy.mockRestore();
   });
 

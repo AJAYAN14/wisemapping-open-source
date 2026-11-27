@@ -75,7 +75,7 @@ const MapsPageErrorFallback = (): ReactElement => {
     });
 
   const handleLoginClick = () => {
-    navigate('/c/login');
+    navigate('/login');
   };
 
   return (

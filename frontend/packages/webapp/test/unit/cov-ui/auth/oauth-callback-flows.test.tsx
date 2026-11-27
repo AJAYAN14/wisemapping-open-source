@@ -94,7 +94,7 @@ describe('OAuthCallbackPage flows', () => {
   test('a cancelled sign-in goes back to login', () => {
     const client = setup('/c/registration-google?error=access_denied');
 
-    expect(routerState.navigate).toHaveBeenCalledWith('/c/login');
+    expect(routerState.navigate).toHaveBeenCalledWith('/login');
     expect(client.processGoogleCallback).not.toHaveBeenCalled();
   });
 
@@ -103,7 +103,7 @@ describe('OAuthCallbackPage flows', () => {
 
     expect(screen.getByText('Scope not allowed')).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Back to login' }).getAttribute('href')).toBe(
-      '/c/login',
+      '/login',
     );
   });
 
@@ -204,7 +204,7 @@ describe('OAuthCallbackPage flows', () => {
       'Status: 401, Message: none',
     );
     expect(defined(jest.mocked(logCriticalError).mock.calls[0])[1]).toMatchObject({
-      context: { redirectTarget: '/c/maps/', path: '/c/registration-google' },
+      context: { redirectTarget: '/', path: '/c/registration-google' },
     });
   });
 
@@ -213,7 +213,7 @@ describe('OAuthCallbackPage flows', () => {
 
     setup(`/c/registration-google?jwtToken=${ANA}&email=ana%40wisemapping.com&oauthSync=true`);
 
-    expect(leaveTo).toHaveBeenCalledWith('/c/login?redirect=%2Fc%2Fmaps%2F');
+    expect(leaveTo).toHaveBeenCalledWith('/login?redirect=%2F');
   });
 
   test('the page the sign-in was started for is where it ends', () => {
@@ -226,7 +226,7 @@ describe('OAuthCallbackPage flows', () => {
       { redirect: '/c/maps/7/edit' },
     );
 
-    expect(leaveTo).toHaveBeenCalledWith('/c/login?redirect=%2Fc%2Fmaps%2F7%2Fedit');
+    expect(leaveTo).toHaveBeenCalledWith('/login?redirect=%2Fc%2Fmaps%2F7%2Fedit');
   });
 
   test.each([
@@ -240,7 +240,7 @@ describe('OAuthCallbackPage flows', () => {
     });
 
     await waitFor(() => expect(client.processGoogleCallback).toHaveBeenCalledWith('g-code'));
-    await waitFor(() => expect(leaveTo).toHaveBeenCalledWith('/c/login?redirect=%2Fc%2Fmaps%2F'));
+    await waitFor(() => expect(leaveTo).toHaveBeenCalledWith('/login?redirect=%2F'));
   });
 
   test('the token, code and email are removed from the address bar', () => {
@@ -269,13 +269,13 @@ describe('OAuthCallbackPage flows', () => {
     expect(store).not.toHaveBeenCalled();
     expect(leaveTo).not.toHaveBeenCalled();
     expect(screen.getByRole('link', { name: 'Back to login' }).getAttribute('href')).toBe(
-      '/c/login',
+      '/login',
     );
 
     fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
 
     expect(store).toHaveBeenCalledWith(MALLORY);
-    expect(leaveTo).toHaveBeenCalledWith('/c/login?redirect=%2Fc%2Fmaps%2F');
+    expect(leaveTo).toHaveBeenCalledWith('/login?redirect=%2F');
   });
 
   test('a code that was not started in this tab is exchanged only after confirming', async () => {

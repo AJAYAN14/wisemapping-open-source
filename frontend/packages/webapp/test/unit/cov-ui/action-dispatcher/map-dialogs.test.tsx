@@ -538,8 +538,8 @@ describe('HistoryDialog', () => {
     expect(screen.getByText('diego@wisemapping.com')).toBeTruthy();
     const views = screen.getAllByRole('link', { name: 'View' });
     expect(views.map((link) => link.getAttribute('href'))).toEqual([
-      '/c/maps/Travel%20plans/history/31/view',
-      '/c/maps/Travel%20plans/history/32/view',
+      '/Travel%20plans/history/31/view',
+      '/Travel%20plans/history/32/view',
     ]);
   });
 

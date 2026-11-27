@@ -149,24 +149,26 @@ describe('App', () => {
   test('"/" redirects to the login page', async () => {
     renderAt('/');
 
-    expect(await screen.findByText('redirect:/c/login')).toBeTruthy();
+    expect(await screen.findByText('maps-page')).toBeTruthy();
     // Every page sits below the configuration loader.
     expect(defined(lastMatch.current?.chain[1]).loader).toBe('config-loader');
-    expect(errorElementName(defined(lastMatch.current?.chain[1]))).toBe('error-page');
   });
 
   test.each([
-    ['/c/login', 'login-page'],
+    ['/login', 'login-page'],
+    ['/c/login', 'redirect:/login'],
+    ['/registration-google', 'oauth-callback-page'],
+    ['/oauth-callback', 'oauth-callback-page'],
     ['/c/registration-google', 'oauth-callback-page'],
     ['/c/oauth-callback', 'oauth-callback-page'],
-    ['/c/no-such-page', 'error-page'],
+    ['/no-such-page', 'error-page'],
   ])('%s renders the %s', async (url, page) => {
     renderAt(url);
     expect(await screen.findByText(page)).toBeTruthy();
   });
 
   test('the maps list is a lazy page inside the common page, with its own error fallback', async () => {
-    renderAt('/c/maps/');
+    renderAt('/');
 
     expect(await screen.findByText('maps-page')).toBeTruthy();
     expect(screen.getByTestId('common-page')).toBeTruthy();
@@ -176,19 +178,24 @@ describe('App', () => {
   });
 
   test.each([
-    ['/c/maps/My%20map/edit', { pageMode: 'edit' }],
-    ['/c/maps/Work/Project/My%20map/edit?zoom=1.5', { pageMode: 'edit', zoom: 1.5 }],
-    ['/c/maps/Work/My%20map/history/7/view', { pageMode: 'view-private', hid: 7 }],
-  ])('%s opens the editor with expected props', async (url, props) => {
+    ['/My%20map/edit', { pageMode: 'edit' }],
+    ['/Work/Project/My%20map/edit?zoom=1.5', { pageMode: 'edit', zoom: 1.5 }],
+    ['/Work/My%20map/history/7/view', { pageMode: 'view-private', hid: 7 }],
+    ['/c/maps/My%20map/edit', 'redirect:/My%20map/edit'],
+  ])('%s opens the expected page or redirects', async (url, propsOrRedirect) => {
     renderAt(url);
 
-    const editor = await screen.findByText(/^editor-page:/);
-    expect(JSON.parse(editor.textContent!.slice('editor-page:'.length))).toEqual(props);
-    expect(leaf().loader).toBe('map-loader:true');
-    expect(errorElementName(leaf())).toBe('error-page');
+    if (typeof propsOrRedirect === 'string') {
+      expect(await screen.findByText(propsOrRedirect)).toBeTruthy();
+    } else {
+      const editor = await screen.findByText(/^editor-page:/);
+      expect(JSON.parse(editor.textContent!.slice('editor-page:'.length))).toEqual(propsOrRedirect);
+      expect(leaf().loader).toBe('map-loader:true');
+      expect(errorElementName(leaf())).toBe('error-page');
+    }
   });
 
-  test.each(['/c/maps/12', '/c/maps/12/edit-invalid'])(
+  test.each(['/12', '/12/edit-invalid'])(
     '%s renders error-page for invalid map routes',
     async (url) => {
       renderAt(url);

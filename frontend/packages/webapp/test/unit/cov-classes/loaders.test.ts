@@ -220,14 +220,14 @@ describe('editor page loader', () => {
   });
 
   it('redirects to the login, keeping the current url, on an auth error', async () => {
-    window.history.pushState({}, '', '/c/maps/My%20map/edit?zoom=2');
+    window.history.pushState({}, '', '/My%20map/edit?zoom=2');
     stubClient(jest.fn().mockRejectedValue({ isAuth: true, status: 403 }));
 
     const response = await runLoader('My%20map/edit');
 
     expect(response.status).toBe(302);
     expect(response.headers.get('Location')).toBe(
-      `/c/login?redirect=${encodeURIComponent('/c/maps/My%20map/edit?zoom=2')}`,
+      `/login?redirect=${encodeURIComponent('/My%20map/edit?zoom=2')}`,
     );
     window.history.pushState({}, '', '/');
   });

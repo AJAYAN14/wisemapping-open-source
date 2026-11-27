@@ -31,13 +31,13 @@ describe('SessionExpiredDialog', () => {
   test('signing in again comes back to the page the session expired on', () => {
     // It went to the bare /c/login: after an expiry in the editor, the user landed on the
     // map list instead of the map.
-    window.history.pushState({}, '', '/c/maps/5/edit?zoom=2');
+    window.history.pushState({}, '', '/5/edit?zoom=2');
     renderWithProviders(<SessionExpiredDialog open={true} />);
 
     fireEvent.click(screen.getByRole('button', { name: 'Sign In' }));
 
     expect(leaveTo).toHaveBeenCalledWith(
-      `/c/login?redirect=${encodeURIComponent('/c/maps/5/edit?zoom=2')}`,
+      `/login?redirect=${encodeURIComponent('/5/edit?zoom=2')}`,
     );
     window.history.pushState({}, '', '/');
   });

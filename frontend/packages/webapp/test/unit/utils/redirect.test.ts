@@ -20,8 +20,10 @@ import { DEFAULT_REDIRECT, safeRedirectPath } from '../../../src/utils/redirect'
 
 describe('safeRedirectPath', () => {
   test.each([
+    ['/3/edit', '/3/edit'],
+    ['/3/edit?shared=true#top', '/3/edit?shared=true#top'],
+    ['/', '/'],
     ['/c/maps/3/edit', '/c/maps/3/edit'],
-    ['/c/maps/3/edit?shared=true#top', '/c/maps/3/edit?shared=true#top'],
     ['/c/maps/', '/c/maps/'],
   ])('keeps the path %s on this site', (value, expected) => {
     expect(safeRedirectPath(value)).toBe(expected);
@@ -51,6 +53,6 @@ describe('safeRedirectPath', () => {
   });
 
   test('uses the fallback it is given', () => {
-    expect(safeRedirectPath('https://evil.example', '/c/login')).toBe('/c/login');
+    expect(safeRedirectPath('https://evil.example', '/login')).toBe('/login');
   });
 });
