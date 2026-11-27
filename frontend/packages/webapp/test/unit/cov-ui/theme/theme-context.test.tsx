@@ -19,6 +19,7 @@
 import React from 'react';
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { AppThemeProvider, useTheme } from '../../../../src/contexts/ThemeContext';
+import { LocalStorageThemeVariantStorage } from '../../../../src/services/ThemeVariantStorage';
 import ThemeToggleButton from '../../../../src/components/common/theme-toggle-button';
 import { renderWithProviders } from '../../helpers/render';
 import { installMatchMedia } from '../helpers';
@@ -128,6 +129,37 @@ describe('AppThemeProvider', () => {
   test('useTheme outside the provider is an error', () => {
     jest.spyOn(console, 'error').mockImplementation(() => undefined);
     expect(() => render(<Probe />)).toThrow('useTheme must be used within an AppThemeProvider');
+  });
+
+  test('syncs with LocalStorageThemeVariantStorage in the same tab and across tabs', () => {
+    installMatchMedia(false);
+    renderProbe();
+    const storage = new LocalStorageThemeVariantStorage();
+    const storageListener = jest.fn();
+    storage.subscribe(storageListener);
+
+    try {
+      expect(mode()).toBe('light');
+
+      // Editor switches theme -> AppThemeProvider updates immediately in the same tab
+      act(() => storage.setThemeVariant('dark'));
+      expect(mode()).toBe('dark');
+      expect(storageListener).toHaveBeenCalledTimes(1);
+
+      // AppThemeProvider toggles theme -> LocalStorageThemeVariantStorage notifies editor subscribers
+      fireEvent.click(screen.getByText('toggle'));
+      expect(mode()).toBe('light');
+      expect(storageListener).toHaveBeenCalledWith('light');
+      expect(storageListener).toHaveBeenCalledTimes(2);
+
+      // Another tab updates localStorage -> AppThemeProvider updates via storage event
+      act(() => {
+        window.dispatchEvent(new StorageEvent('storage', { key: 'themeMode', newValue: 'dark' }));
+      });
+      expect(mode()).toBe('dark');
+    } finally {
+      storage.destroy();
+    }
   });
 });
 

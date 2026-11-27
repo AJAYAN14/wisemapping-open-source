@@ -30,6 +30,7 @@ import {
   FolderBreadcrumbsBar,
   FolderGridCard,
   FolderRow,
+  computeVisibleBreadcrumbStart,
 } from '../../../src/components/maps-page/maps-list/FolderItems';
 import { useSpringValue } from '../../../src/components/maps-page/useSpringValue';
 import { appleColors } from '../../../src/components/maps-page/appleDesign';
@@ -199,11 +200,7 @@ describe('Apple Design homepage refinements', () => {
     render(
       <ThemeProvider theme={createAppTheme('light')}>
         <IntlProvider locale="en" defaultLocale="en" messages={{}}>
-          <FolderBreadcrumbsBar
-            folders={folders}
-            currentFolderId={2}
-            onNavigate={onNavigate}
-          />
+          <FolderBreadcrumbsBar folders={folders} currentFolderId={2} onNavigate={onNavigate} />
         </IntlProvider>
       </ThemeProvider>,
     );
@@ -218,6 +215,113 @@ describe('Apple Design homepage refinements', () => {
 
     fireEvent.click(backButton);
     expect(onNavigate).toHaveBeenCalledWith(1);
+  });
+
+  test('computeVisibleBreadcrumbStart dynamically keeps 2 folders, 1 folder, or marquee for narrow widths', () => {
+    // [根目录, 一级目录, 二级目录, 最里层很长目录]
+    const widths = [70, 90, 95, 180];
+    const sep = 23;
+    const overflowBtn = 32;
+
+    // Plenty of room -> all 4 items visible
+    expect(computeVisibleBreadcrumbStart(widths, 600, sep, overflowBtn)).toEqual({
+      startIndex: 0,
+      marqueeLast: false,
+    });
+
+    // Enough for overflowBtn + sep + last 2 folders (95 + 23 + 180 = 298; reserved = 55)
+    expect(computeVisibleBreadcrumbStart(widths, 360, sep, overflowBtn)).toEqual({
+      startIndex: 2,
+      marqueeLast: false,
+    });
+
+    // Enough for overflowBtn + sep + last 1 folder (180 + 55 = 235)
+    expect(computeVisibleBreadcrumbStart(widths, 240, sep, overflowBtn)).toEqual({
+      startIndex: 3,
+      marqueeLast: false,
+    });
+
+    // Too narrow even for the innermost folder -> show innermost with marquee
+    expect(computeVisibleBreadcrumbStart(widths, 180, sep, overflowBtn)).toEqual({
+      startIndex: 3,
+      marqueeLast: true,
+    });
+  });
+
+  test('FolderBreadcrumbsBar collapses leading crumbs into Windows-style dropdown menu when constrained', () => {
+    const folders: Folder[] = [
+      { id: 1, name: '第一章、基础', parentId: null },
+      { id: 2, name: '第二章、非标机械设计基础', parentId: 1 },
+    ];
+    const onNavigate = jest.fn();
+
+    const originalClientWidth = Object.getOwnPropertyDescriptor(
+      HTMLElement.prototype,
+      'clientWidth',
+    );
+    Object.defineProperty(HTMLElement.prototype, 'clientWidth', {
+      configurable: true,
+      get() {
+        if ((this as HTMLElement).getAttribute?.('aria-label') === '文件夹路径层级') {
+          return 230;
+        }
+        return 0;
+      },
+    });
+    jest.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (
+      this: HTMLElement,
+    ) {
+      const text = this.textContent?.trim() ?? '';
+      let width = 32;
+      if (text === '根目录') width = 70;
+      else if (text === '第一章、基础') width = 100;
+      else if (text === '第二章、非标机械设计基础') width = 170;
+      else if (this.tagName === 'SPAN') width = 15;
+      return {
+        width,
+        height: 32,
+        top: 0,
+        left: 0,
+        right: width,
+        bottom: 32,
+        x: 0,
+        y: 0,
+        toJSON: () => ({}),
+      };
+    });
+
+    try {
+      render(
+        <ThemeProvider theme={createAppTheme('light')}>
+          <IntlProvider locale="en" defaultLocale="en" messages={{}}>
+            <FolderBreadcrumbsBar folders={folders} currentFolderId={2} onNavigate={onNavigate} />
+          </IntlProvider>
+        </ThemeProvider>,
+      );
+
+      const trailRegion = screen.getByRole('region', { name: '文件夹路径层级' });
+      // Only the innermost folder stays inline; 根目录 and 第一章、基础 move into the dropdown
+      expect(within(trailRegion).queryByText('根目录')).toBeNull();
+      expect(within(trailRegion).queryByText('第一章、基础')).toBeNull();
+      expect(within(trailRegion).getByText('第二章、非标机械设计基础')).toBeTruthy();
+
+      const overflowButton = within(trailRegion).getByRole('button', {
+        name: '展开上级文件夹路径',
+      });
+      fireEvent.click(overflowButton);
+
+      const rootMenuItem = screen.getByRole('menuitem', { name: '根目录' });
+      expect(screen.getByRole('menuitem', { name: '第一章、基础' })).toBeTruthy();
+      fireEvent.click(rootMenuItem);
+      expect(onNavigate).toHaveBeenCalledWith(null);
+    } finally {
+      jest.restoreAllMocks();
+      if (originalClientWidth) {
+        Object.defineProperty(HTMLElement.prototype, 'clientWidth', originalClientWidth);
+      } else {
+        delete (HTMLElement.prototype as { clientWidth?: number }).clientWidth;
+      }
+    }
   });
 
   test('FolderGridCard uses layered folder SVG icon only in grid view while FolderRow keeps Material symbol', () => {

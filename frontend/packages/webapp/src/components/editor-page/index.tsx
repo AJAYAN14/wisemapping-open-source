@@ -322,6 +322,9 @@ const LoadedEditorPage = ({
     }
   }, [mapTitle]);
 
+  const themeVariantStorage = useMemo(() => createThemeVariantStorage(), []);
+  useEffect(() => () => themeVariantStorage.destroy?.(), [themeVariantStorage]);
+
   return (
     <IntlProvider
       locale={intlLocale.locale}
@@ -333,7 +336,7 @@ const LoadedEditorPage = ({
       <Editor
         config={editorConfig}
         onAction={setActiveDialog}
-        themeVariantStorage={createThemeVariantStorage()}
+        themeVariantStorage={themeVariantStorage}
       />
       {activeDialog && (
         <Suspense fallback={<></>}>

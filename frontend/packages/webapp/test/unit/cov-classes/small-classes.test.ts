@@ -169,6 +169,17 @@ describe('LocalStorageThemeVariantStorage', () => {
     expect(storage.getThemeVariant()).toBe('dark');
   });
 
+  it('follows system dark mode when themeMode is not stored yet', () => {
+    const originalMatchMedia = window.matchMedia;
+    window.matchMedia = jest.fn().mockReturnValue({ matches: true }) as typeof window.matchMedia;
+    try {
+      const storage = create();
+      expect(storage.getThemeVariant()).toBe('dark');
+    } finally {
+      window.matchMedia = originalMatchMedia;
+    }
+  });
+
   it('saves the variant and notifies subscribers until they unsubscribe', () => {
     const storage = create();
     const listener = jest.fn();

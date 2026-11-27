@@ -1177,13 +1177,13 @@ class Designer extends EventDispispatcher<DesignerEvents> {
         nodesGraph.push(nodeGraph);
       });
 
-      // Place the focus on the Central Topic
       centralTopic = this.getModel().getCentralTopic();
     } catch (e) {
       dispatcher.endBatch();
       throw e;
     }
-    this.goToNode(centralTopic);
+    // Keep the central topic visible without selecting it on initial load.
+    this.ensureNodeVisible(centralTopic);
 
     const rendered = this._canvas.enableQueueRender(false).finally(() => dispatcher.endBatch());
     return rendered.then(() => {
@@ -1716,9 +1716,7 @@ class Designer extends EventDispispatcher<DesignerEvents> {
     }
   }
 
-  changeTopicImage(
-    image: { url: string; width: number; height: number } | undefined,
-  ): void {
+  changeTopicImage(image: { url: string; width: number; height: number } | undefined): void {
     const topicsIds = this.getModel()
       .filterSelectedTopics()
       .map((topic) => topic.getId());
@@ -2071,8 +2069,7 @@ class Designer extends EventDispispatcher<DesignerEvents> {
         const lineMaxX = Math.max(p1.x, p2.x);
         const lineMinY = Math.min(p1.y, p2.y);
         const lineMaxY = Math.max(p1.y, p2.y);
-        lineVisible =
-          lineMaxX >= minX && lineMinX <= maxX && lineMaxY >= minY && lineMinY <= maxY;
+        lineVisible = lineMaxX >= minX && lineMinX <= maxX && lineMaxY >= minY && lineMinY <= maxY;
       }
       let lineNode: Element | undefined;
       try {

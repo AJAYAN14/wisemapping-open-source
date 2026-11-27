@@ -19,6 +19,14 @@
 import type { ThemeVariant } from '@wisemapping/mindplot';
 import { ThemeVariantStorage } from '@wisemapping/editor';
 import { appLogger as log } from '../utils/logger';
+import {
+  THEME_MODE_CHANGE_EVENT,
+  THEME_MODE_STORAGE_KEY,
+  ThemeModeChangeDetail,
+  dispatchThemeModeChange,
+  isValidThemeMode,
+  resolveSystemThemeMode,
+} from '../utils/themeMode';
 
 /**
  * LocalStorage implementation of ThemeVariantStorage.
@@ -26,31 +34,34 @@ import { appLogger as log } from '../utils/logger';
  */
 export class LocalStorageThemeVariantStorage implements ThemeVariantStorage {
   private readonly listeners: Set<(variant: ThemeVariant) => void> = new Set();
-  // Bound once, so destroy() removes the same function the constructor added.
+  // Bound once, so destroy() removes the same functions the constructor added.
   private readonly storageListener = this.handleStorageChange.bind(this);
+  private readonly themeChangeListener = this.handleThemeModeChange.bind(this);
 
   constructor() {
-    // Listen for storage changes from other tabs/windows
+    // Listen for storage changes from other tabs/windows and same-tab AppThemeProvider switches
     window.addEventListener('storage', this.storageListener);
+    window.addEventListener(THEME_MODE_CHANGE_EVENT, this.themeChangeListener);
   }
 
   getThemeVariant(): ThemeVariant {
     try {
-      const stored = localStorage.getItem('themeMode');
-      if (stored && (stored === 'light' || stored === 'dark')) {
-        return stored as ThemeVariant;
+      const stored = localStorage.getItem(THEME_MODE_STORAGE_KEY);
+      if (isValidThemeMode(stored)) {
+        return stored;
       }
     } catch (error) {
       log.warn('Failed to read theme variant from localStorage:', error);
     }
-    return 'light';
+    return resolveSystemThemeMode();
   }
 
   setThemeVariant(variant: ThemeVariant): void {
     try {
-      localStorage.setItem('themeMode', variant);
-      // Notify all listeners
+      localStorage.setItem(THEME_MODE_STORAGE_KEY, variant);
+      // Notify all subscribers and sync AppThemeProvider in the same tab
       this.listeners.forEach((callback) => callback(variant));
+      dispatchThemeModeChange(variant, this);
     } catch (error) {
       log.warn('Failed to save theme variant to localStorage:', error);
     }
@@ -66,11 +77,17 @@ export class LocalStorageThemeVariantStorage implements ThemeVariantStorage {
   }
 
   private handleStorageChange(event: StorageEvent): void {
-    if (event.key === 'themeMode' && event.newValue) {
-      const variant = event.newValue as ThemeVariant;
-      if (variant === 'light' || variant === 'dark') {
-        this.listeners.forEach((callback) => callback(variant));
-      }
+    if (event.key === THEME_MODE_STORAGE_KEY && isValidThemeMode(event.newValue)) {
+      const variant = event.newValue;
+      this.listeners.forEach((callback) => callback(variant));
+    }
+  }
+
+  private handleThemeModeChange(event: Event): void {
+    const detail = (event as CustomEvent<ThemeModeChangeDetail>).detail;
+    if (detail && detail.source !== this && isValidThemeMode(detail.mode)) {
+      const variant = detail.mode;
+      this.listeners.forEach((callback) => callback(variant));
     }
   }
 
@@ -79,6 +96,7 @@ export class LocalStorageThemeVariantStorage implements ThemeVariantStorage {
    */
   destroy(): void {
     window.removeEventListener('storage', this.storageListener);
+    window.removeEventListener(THEME_MODE_CHANGE_EVENT, this.themeChangeListener);
     this.listeners.clear();
   }
 }

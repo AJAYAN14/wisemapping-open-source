@@ -19,6 +19,14 @@
 import React, { createContext, use, useState, useEffect, ReactNode, useMemo } from 'react';
 import type { PaletteMode } from '@mui/material/styles';
 import { readStorage, writeStorage } from '../utils/storage';
+import {
+  THEME_MODE_CHANGE_EVENT,
+  THEME_MODE_STORAGE_KEY,
+  ThemeModeChangeDetail,
+  dispatchThemeModeChange,
+  isValidThemeMode,
+  resolveSystemThemeMode,
+} from '../utils/themeMode';
 
 interface ThemeContextType {
   mode: PaletteMode;
@@ -32,36 +40,33 @@ interface ThemeProviderProps {
   children: ReactNode;
 }
 
+const APP_THEME_SOURCE = 'app-theme-provider';
+
 export const AppThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const [mode, setMode] = useState<PaletteMode>(() => {
     // Check localStorage first, then system preference
-    const savedMode = readStorage('themeMode') as PaletteMode | undefined;
-    if (savedMode) {
+    const savedMode = readStorage(THEME_MODE_STORAGE_KEY);
+    if (isValidThemeMode(savedMode)) {
       return savedMode;
     }
 
-    // Check system preference
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      return 'dark';
-    }
-
-    return 'light';
+    return resolveSystemThemeMode();
   });
 
   const toggleMode = () => {
     const newMode = mode === 'light' ? 'dark' : 'light';
     setMode(newMode);
-    writeStorage('themeMode', newMode);
+    writeStorage(THEME_MODE_STORAGE_KEY, newMode);
+    dispatchThemeModeChange(newMode, APP_THEME_SOURCE);
   };
 
   const initializeThemeFromSystem = () => {
     // Only initialize if no preference has been set
-    if (!readStorage('themeMode')) {
-      const systemPrefersDark =
-        window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-      const systemMode = systemPrefersDark ? 'dark' : 'light';
+    if (!readStorage(THEME_MODE_STORAGE_KEY)) {
+      const systemMode = resolveSystemThemeMode();
       setMode(systemMode);
-      writeStorage('themeMode', systemMode);
+      writeStorage(THEME_MODE_STORAGE_KEY, systemMode);
+      dispatchThemeModeChange(systemMode, APP_THEME_SOURCE);
     }
   };
 
@@ -70,18 +75,45 @@ export const AppThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => 
   // eslint-disable-next-line react-hooks/exhaustive-deps
   const value = useMemo(() => ({ mode, toggleMode, initializeThemeFromSystem }), [mode]);
 
-  // Listen for system theme changes
+  // Listen for system theme changes and theme switches made by the editor or other tabs
   useEffect(() => {
-    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-    const handleChange = (e: MediaQueryListEvent) => {
+    const mediaQuery =
+      typeof window.matchMedia === 'function'
+        ? window.matchMedia('(prefers-color-scheme: dark)')
+        : undefined;
+    const handleMediaChange = (e: MediaQueryListEvent) => {
       // Only auto-switch if user hasn't set a preference
-      if (!readStorage('themeMode')) {
+      if (!readStorage(THEME_MODE_STORAGE_KEY)) {
         setMode(e.matches ? 'dark' : 'light');
       }
     };
 
-    mediaQuery.addEventListener('change', handleChange);
-    return () => mediaQuery.removeEventListener('change', handleChange);
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key !== THEME_MODE_STORAGE_KEY) {
+        return;
+      }
+      if (isValidThemeMode(event.newValue)) {
+        setMode(event.newValue);
+      } else if (event.newValue === null) {
+        setMode(resolveSystemThemeMode());
+      }
+    };
+
+    const handleThemeModeChange = (event: Event) => {
+      const detail = (event as CustomEvent<ThemeModeChangeDetail>).detail;
+      if (detail && detail.source !== APP_THEME_SOURCE && isValidThemeMode(detail.mode)) {
+        setMode(detail.mode);
+      }
+    };
+
+    mediaQuery?.addEventListener('change', handleMediaChange);
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener(THEME_MODE_CHANGE_EVENT, handleThemeModeChange);
+    return () => {
+      mediaQuery?.removeEventListener('change', handleMediaChange);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener(THEME_MODE_CHANGE_EVENT, handleThemeModeChange);
+    };
   }, []);
 
   return <ThemeContext value={value}>{children}</ThemeContext>;

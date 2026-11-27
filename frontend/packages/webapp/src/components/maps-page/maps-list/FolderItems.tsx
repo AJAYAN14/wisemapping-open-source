@@ -16,7 +16,7 @@
  *   limitations under the License.
  */
 
-import React, { memo, useCallback, useEffect, useId, useRef, useState } from 'react';
+import React, { memo, useCallback, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useIntl } from 'react-intl';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
@@ -31,19 +31,17 @@ import type { Folder } from '../../../classes/client';
 import { useDate } from '../../../classes/app-i18n/dates';
 import { GoogleIcon } from '../../common/google-symbol';
 import { MAP_IDS_DRAG_MIME, getFolderBreadcrumbs } from '../folderTree';
-import {
-  APPLE_FONT_STACK,
-  RADIUS_LG,
-  RADIUS_MD,
-  appleColors,
-  isDarkTheme,
-} from '../appleDesign';
+import { APPLE_FONT_STACK, RADIUS_LG, RADIUS_MD, appleColors, isDarkTheme } from '../appleDesign';
 import type { FolderDirectCount } from './model';
 import {
   ActionIconButton,
   BodyCell,
   BreadcrumbBar,
   BreadcrumbChip,
+  BreadcrumbMarqueeText,
+  BreadcrumbMarqueeViewport,
+  BreadcrumbMeasureStrip,
+  BreadcrumbOverflowButton,
   BreadcrumbTrail,
   CardTitle,
   CellText,
@@ -449,10 +447,7 @@ const FolderCardComponent = ({
         action={
           <Tooltip arrow={true} title="文件夹操作">
             <ActionIconButton>
-              <IconButton
-                aria-label={`操作文件夹 ${folder.name}`}
-                onClick={handleOpenMenu}
-              >
+              <IconButton aria-label={`操作文件夹 ${folder.name}`} onClick={handleOpenMenu}>
                 <GoogleIcon name="more_vert" size={20} />
               </IconButton>
             </ActionIconButton>
@@ -512,7 +507,56 @@ interface FolderBreadcrumbsBarProps {
   onDropMaps?: ((mapIds: number[], folderId: number | null) => void) | undefined;
 }
 
-/** Compact path navigation shown inside subdirectories, supporting clicks and map drops. */
+export interface BreadcrumbFitResult {
+  startIndex: number;
+  marqueeLast: boolean;
+}
+
+/**
+ * Computes the earliest breadcrumb index that fits inside `availableWidth` from right to left.
+ * When `availableWidth <= 0` (e.g. unmeasured / jsdom), shows the full trail without collapsing.
+ */
+export function computeVisibleBreadcrumbStart(
+  itemWidths: number[],
+  availableWidth: number,
+  separatorWidth: number,
+  overflowButtonWidth: number,
+): BreadcrumbFitResult {
+  const count = itemWidths.length;
+  if (count === 0 || availableWidth <= 0) {
+    return { startIndex: 0, marqueeLast: false };
+  }
+
+  let totalAll = (count - 1) * separatorWidth;
+  for (let i = 0; i < count; i += 1) {
+    totalAll += itemWidths[i] ?? 0;
+  }
+  if (totalAll <= availableWidth + 1) {
+    return { startIndex: 0, marqueeLast: false };
+  }
+
+  const remaining = Math.max(0, availableWidth - overflowButtonWidth - separatorWidth);
+  for (let start = 1; start < count; start += 1) {
+    let width = (count - 1 - start) * separatorWidth;
+    for (let i = start; i < count; i += 1) {
+      width += itemWidths[i] ?? 0;
+    }
+    if (width <= remaining + 1) {
+      return { startIndex: start, marqueeLast: false };
+    }
+  }
+
+  return { startIndex: count - 1, marqueeLast: true };
+}
+
+interface BreadcrumbPathItem {
+  key: string;
+  folderId: number | null;
+  label: string;
+  isRoot: boolean;
+}
+
+/** Compact path navigation shown inside subdirectories, supporting clicks, map drops, and dynamic overflow. */
 export const FolderBreadcrumbsBar = ({
   folders,
   currentFolderId,
@@ -521,14 +565,103 @@ export const FolderBreadcrumbsBar = ({
 }: FolderBreadcrumbsBarProps): React.ReactElement => {
   const chain = getFolderBreadcrumbs(folders, currentFolderId);
   const parentFolderId = chain.length > 1 ? chain[chain.length - 2]!.id : null;
-  const trailRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const el = trailRef.current;
-    if (el) {
-      el.scrollLeft = el.scrollWidth;
+  const items = useMemo<BreadcrumbPathItem[]>(
+    () => [
+      { key: 'root', folderId: null, label: '根目录', isRoot: true },
+      ...chain.map((crumb) => ({
+        key: String(crumb.id),
+        folderId: crumb.id,
+        label: crumb.name,
+        isRoot: false,
+      })),
+    ],
+    [chain],
+  );
+
+  const trailRef = useRef<HTMLDivElement>(null);
+  const overflowMeasureRef = useRef<HTMLButtonElement>(null);
+  const chevronMeasureRef = useRef<HTMLSpanElement>(null);
+  const itemMeasureNodesRef = useRef<(HTMLButtonElement | null)[]>([]);
+  const lastViewportRef = useRef<HTMLSpanElement>(null);
+  const lastTextRef = useRef<HTMLSpanElement>(null);
+
+  const [fit, setFit] = useState<BreadcrumbFitResult>({ startIndex: 0, marqueeLast: false });
+  const [marqueeShift, setMarqueeShift] = useState(0);
+  const [menuAnchor, setMenuAnchor] = useState<HTMLElement | null>(null);
+
+  const measureFit = useCallback(() => {
+    const trailEl = trailRef.current;
+    if (!trailEl) {
+      return;
     }
-  }, [currentFolderId, chain.length]);
+    const availableWidth = trailEl.clientWidth;
+    if (availableWidth <= 0) {
+      setFit((prev) =>
+        prev.startIndex === 0 && !prev.marqueeLast ? prev : { startIndex: 0, marqueeLast: false },
+      );
+      return;
+    }
+
+    const styles = window.getComputedStyle(trailEl);
+    const gap = parseFloat(styles.columnGap || styles.gap || '4') || 4;
+    const chevronWidth = chevronMeasureRef.current?.getBoundingClientRect().width ?? 15;
+    const separatorWidth = chevronWidth + gap * 2;
+    const overflowWidth = overflowMeasureRef.current?.getBoundingClientRect().width ?? 32;
+    const itemWidths = items.map(
+      (_, index) => itemMeasureNodesRef.current[index]?.getBoundingClientRect().width ?? 0,
+    );
+
+    const next = computeVisibleBreadcrumbStart(
+      itemWidths,
+      availableWidth,
+      separatorWidth,
+      overflowWidth,
+    );
+    setFit((prev) =>
+      prev.startIndex === next.startIndex && prev.marqueeLast === next.marqueeLast ? prev : next,
+    );
+  }, [items]);
+
+  useLayoutEffect(() => {
+    measureFit();
+    const trailEl = trailRef.current;
+    if (!trailEl) {
+      return undefined;
+    }
+
+    if (typeof ResizeObserver !== 'undefined') {
+      const observer = new ResizeObserver(() => measureFit());
+      observer.observe(trailEl);
+      return () => observer.disconnect();
+    }
+
+    window.addEventListener('resize', measureFit);
+    return () => window.removeEventListener('resize', measureFit);
+  }, [measureFit]);
+
+  useLayoutEffect(() => {
+    if (!fit.marqueeLast) {
+      return undefined;
+    }
+    const rafId = window.requestAnimationFrame(() => {
+      const viewport = lastViewportRef.current;
+      const text = lastTextRef.current;
+      if (!viewport || !text) {
+        setMarqueeShift(0);
+        return;
+      }
+      const overflowPx = Math.max(0, Math.ceil(text.scrollWidth - viewport.clientWidth));
+      setMarqueeShift(overflowPx > 2 ? overflowPx : 0);
+    });
+    return () => window.cancelAnimationFrame(rafId);
+  }, [fit, items]);
+
+  const effectiveMarqueeShift = fit.marqueeLast ? marqueeShift : 0;
+  const clampedStart = Math.min(fit.startIndex, Math.max(0, items.length - 1));
+  const hiddenItems = items.slice(0, clampedStart);
+  const visibleItems = items.slice(clampedStart);
+  const marqueeDurationSec = Math.max(4, Math.min(12, 3 + effectiveMarqueeShift / 28));
 
   return (
     <BreadcrumbBar aria-label="文件夹路径">
@@ -552,38 +685,107 @@ export const FolderBreadcrumbsBar = ({
         }}
       />
 
-      <BreadcrumbTrail
-        ref={trailRef}
-        role="region"
-        tabIndex={0}
-        aria-label="文件夹路径层级"
-      >
-        <BreadcrumbDropItem
-          folderId={null}
-          label="根目录"
-          icon={<GoogleIcon name="home" size={15} />}
-          onNavigate={onNavigate}
-          onDropMaps={onDropMaps}
-        />
+      <BreadcrumbMeasureStrip aria-hidden="true">
+        <BreadcrumbOverflowButton ref={overflowMeasureRef} type="button" tabIndex={-1}>
+          <GoogleIcon name="expand_more" size={16} />
+        </BreadcrumbOverflowButton>
+        <span ref={chevronMeasureRef} style={{ display: 'inline-flex', flexShrink: 0 }}>
+          <GoogleIcon name="chevron_right" size={15} />
+        </span>
+        {items.map((item, index) => (
+          <BreadcrumbChip
+            key={item.key}
+            ref={(el) => {
+              itemMeasureNodesRef.current[index] = el;
+            }}
+            type="button"
+            active={index === items.length - 1}
+            tabIndex={-1}
+          >
+            <GoogleIcon
+              name={item.isRoot ? 'home' : 'folder'}
+              size={15}
+              filled={!item.isRoot && index === items.length - 1}
+            />
+            <span>{item.label}</span>
+          </BreadcrumbChip>
+        ))}
+      </BreadcrumbMeasureStrip>
 
-        {chain.map((crumb, index) => {
-          const isLast = index === chain.length - 1;
+      <BreadcrumbTrail ref={trailRef} role="region" tabIndex={0} aria-label="文件夹路径层级">
+        {hiddenItems.length > 0 && (
+          <>
+            <Tooltip title="展开隐藏路径" arrow>
+              <BreadcrumbOverflowButton
+                type="button"
+                open={Boolean(menuAnchor)}
+                aria-label="展开上级文件夹路径"
+                aria-expanded={Boolean(menuAnchor)}
+                aria-haspopup="menu"
+                onClick={(event) => setMenuAnchor(event.currentTarget)}
+              >
+                <GoogleIcon name="expand_more" size={16} />
+              </BreadcrumbOverflowButton>
+            </Tooltip>
+            <GoogleIcon name="chevron_right" size={15} style={{ opacity: 0.55, flexShrink: 0 }} />
+          </>
+        )}
+
+        {visibleItems.map((item, index) => {
+          const isLast = index === visibleItems.length - 1;
+          const showChevron = index > 0;
           return (
-            <React.Fragment key={crumb.id}>
-              <GoogleIcon
-                name="chevron_right"
-                size={15}
-                style={{ opacity: 0.55, flexShrink: 0 }}
-              />
+            <React.Fragment key={item.key}>
+              {showChevron && (
+                <GoogleIcon
+                  name="chevron_right"
+                  size={15}
+                  style={{ opacity: 0.55, flexShrink: 0 }}
+                />
+              )}
               {isLast ? (
-                <BreadcrumbChip type="button" active disabled>
-                  <GoogleIcon name="folder" size={15} filled style={{ opacity: 0.85 }} />
-                  <span>{crumb.name}</span>
-                </BreadcrumbChip>
+                <Tooltip
+                  title={item.label}
+                  arrow
+                  placement="top"
+                  enterDelay={fit.marqueeLast ? 150 : 450}
+                >
+                  <span
+                    className="breadcrumb-hover-wrap"
+                    style={{
+                      display: 'inline-flex',
+                      minWidth: 0,
+                      maxWidth: '100%',
+                      flexShrink: fit.marqueeLast ? 1 : 0,
+                    }}
+                  >
+                    <BreadcrumbChip type="button" active disabled allowShrink={fit.marqueeLast}>
+                      <GoogleIcon
+                        name="folder"
+                        size={15}
+                        filled
+                        style={{ opacity: 0.85, flexShrink: 0 }}
+                      />
+                      <BreadcrumbMarqueeViewport
+                        ref={lastViewportRef}
+                        marquee={fit.marqueeLast && effectiveMarqueeShift > 0}
+                      >
+                        <BreadcrumbMarqueeText
+                          ref={lastTextRef}
+                          marqueeShift={effectiveMarqueeShift}
+                          durationSec={marqueeDurationSec}
+                        >
+                          {item.label}
+                        </BreadcrumbMarqueeText>
+                      </BreadcrumbMarqueeViewport>
+                    </BreadcrumbChip>
+                  </span>
+                </Tooltip>
               ) : (
                 <BreadcrumbDropItem
-                  folderId={crumb.id}
-                  label={crumb.name}
+                  folderId={item.folderId}
+                  label={item.label}
+                  icon={item.isRoot ? <GoogleIcon name="home" size={15} /> : undefined}
                   onNavigate={onNavigate}
                   onDropMaps={onDropMaps}
                 />
@@ -592,6 +794,62 @@ export const FolderBreadcrumbsBar = ({
           );
         })}
       </BreadcrumbTrail>
+
+      <Menu
+        anchorEl={menuAnchor}
+        open={Boolean(menuAnchor) && hiddenItems.length > 0}
+        onClose={() => setMenuAnchor(null)}
+        elevation={0}
+        slotProps={{
+          paper: {
+            sx: (theme) => {
+              const c = appleColors(isDarkTheme(theme));
+              return {
+                borderRadius: RADIUS_LG,
+                border: 'none',
+                boxShadow: c.shadowFloat,
+                fontFamily: APPLE_FONT_STACK,
+                backgroundColor: isDarkTheme(theme) ? '#1C1C1E' : '#FFFFFF',
+                maxWidth: '280px',
+                '& .MuiMenuItem-root': {
+                  fontWeight: 500,
+                  fontSize: '0.84rem',
+                  borderRadius: RADIUS_MD,
+                  margin: '2px 6px',
+                  minHeight: '34px',
+                  '&:hover': {
+                    backgroundColor: c.hoverFill,
+                  },
+                },
+              };
+            },
+          },
+        }}
+      >
+        {hiddenItems.map((item, idx) => (
+          <MenuItem
+            key={item.key}
+            sx={{ pl: `${12 + Math.min(idx, 4) * 10}px` }}
+            onClick={() => {
+              setMenuAnchor(null);
+              onNavigate(item.folderId);
+            }}
+          >
+            <ListItemIcon sx={{ minWidth: 26 }}>
+              <GoogleIcon name={item.isRoot ? 'home' : 'folder'} size={17} />
+            </ListItemIcon>
+            <ListItemText
+              primary={item.label}
+              slotProps={{
+                primary: {
+                  noWrap: true,
+                  sx: { fontSize: '0.84rem', fontWeight: 500 },
+                },
+              }}
+            />
+          </MenuItem>
+        ))}
+      </Menu>
     </BreadcrumbBar>
   );
 };

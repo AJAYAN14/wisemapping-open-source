@@ -60,6 +60,16 @@ const open = async () => {
   return { ...harness, events, mouseDown };
 };
 
+describe('Designer initial selection on load', () => {
+  it('leaves no topic selected after loading a map', async () => {
+    const harness = await buildDesigner();
+    harnesses.push(harness);
+
+    expect(harness.designer.getModel().filterSelectedTopics()).toEqual([]);
+    expect(harness.topic(0).isOnFocus()).toBe(false);
+  });
+});
+
 describe('Designer selection events on a click', () => {
   it('a click on a topic of a multi-selection reports the one topic left selected', async () => {
     const { designer, events, mouseDown, topic } = await open();

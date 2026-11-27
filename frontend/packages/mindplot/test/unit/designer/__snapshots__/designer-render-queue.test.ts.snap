@@ -2,9 +2,9 @@
 
 exports[`Map load render queue adds the queued elements, and what they add, to the canvas in the same order 1`] = `
 {
-  "count": 2166,
-  "order": "22ba6875fb87",
+  "count": 2165,
+  "order": "9b27b1eae65b",
 }
 `;
 
-exports[`Map load render queue leaves the same canvas 1`] = `"761a77d5db22"`;
+exports[`Map load render queue leaves the same canvas 1`] = `"564a9fa6ce0b"`;

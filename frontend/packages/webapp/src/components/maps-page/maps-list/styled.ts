@@ -28,7 +28,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TablePagination from '@mui/material/TablePagination';
 import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
-import { styled } from '@mui/material/styles';
+import { keyframes, styled } from '@mui/material/styles';
 import { GoogleIcon } from '../../common/google-symbol';
 import {
   APPLE_FONT_STACK,
@@ -182,9 +182,7 @@ export const SegmentedPillThumb = styled('span', {
     boxShadow: c.shadowSubtle,
     pointerEvents: 'none',
     zIndex: 0,
-    transition: animate
-      ? `transform 220ms ${EASE_DRAWER}, width 220ms ${EASE_DRAWER}`
-      : 'none',
+    transition: animate ? `transform 220ms ${EASE_DRAWER}, width 220ms ${EASE_DRAWER}` : 'none',
     '@media (prefers-reduced-motion: reduce)': {
       transition: 'none',
     },
@@ -233,12 +231,25 @@ export const WorkspaceSegmentedButton = styled('button', {
   };
 });
 
+const breadcrumbMarquee = keyframes`
+  0%, 18% {
+    transform: translateX(0);
+  }
+  48%, 68% {
+    transform: translateX(calc(-1 * var(--marquee-shift, 0px)));
+  }
+  92%, 100% {
+    transform: translateX(0);
+  }
+`;
+
 export const BreadcrumbBar = styled('div')(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
+    position: 'relative',
     display: 'flex',
     alignItems: 'center',
-    flexWrap: 'wrap',
+    flexWrap: 'nowrap',
     gap: '4px',
     padding: '6px 10px',
     marginBottom: '12px',
@@ -260,36 +271,92 @@ export const BreadcrumbBar = styled('div')(({ theme }) => {
   };
 });
 
+export const BreadcrumbMeasureStrip = styled('div')({
+  position: 'absolute',
+  top: 0,
+  left: 0,
+  visibility: 'hidden',
+  pointerEvents: 'none',
+  display: 'flex',
+  alignItems: 'center',
+  flexWrap: 'nowrap',
+  gap: '4px',
+  whiteSpace: 'nowrap',
+  height: 0,
+  overflow: 'hidden',
+});
+
 export const BreadcrumbTrail = styled('div')(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
     display: 'flex',
     alignItems: 'center',
-    flexWrap: 'wrap',
+    flex: 1,
+    flexWrap: 'nowrap',
     gap: '4px',
     minWidth: 0,
+    overflow: 'hidden',
     borderRadius: RADIUS_SM,
     '&:focus-visible': {
       outline: 'none',
       boxShadow: `0 0 0 2px ${c.amberRing}`,
     },
+  };
+});
+
+export const BreadcrumbOverflowButton = styled('button', {
+  shouldForwardProp: (prop) => prop !== 'open',
+})<{ open?: boolean }>(({ theme, open }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    appearance: 'none',
+    border: 'none',
+    backgroundColor: open ? c.activeFill : c.hoverFill,
+    color: c.textPrimary,
+    fontFamily: APPLE_FONT_STACK,
+    minBlockSize: '32px',
+    minInlineSize: '30px',
+    padding: '4px 6px',
+    borderRadius: RADIUS_SM,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexShrink: 0,
+    cursor: 'pointer',
+    transition: 'background-color 120ms ease, color 120ms ease',
+    ...applePressMixin,
+    '& .material-symbols-rounded': {
+      transition: 'transform 160ms ease',
+      transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+    },
+    '&:hover': {
+      backgroundColor: c.activeFill,
+    },
+    '&:focus-visible': {
+      outline: 'none',
+      boxShadow: `0 0 0 2px ${c.amberRing}`,
+    },
     [theme.breakpoints.down('sm')]: {
-      flex: 1,
-      flexWrap: 'nowrap',
-      overflowX: 'auto',
-      overflowY: 'hidden',
-      WebkitOverflowScrolling: 'touch',
-      scrollbarWidth: 'none',
-      '&::-webkit-scrollbar': {
-        display: 'none',
-      },
+      minBlockSize: '40px',
+      minInlineSize: '36px',
+      padding: '6px 8px',
+    },
+    '@media (pointer: coarse)': {
+      minBlockSize: '44px',
+      minInlineSize: '40px',
+      padding: '8px',
     },
   };
 });
 
 export const BreadcrumbChip = styled('button', {
-  shouldForwardProp: (prop) => prop !== 'active' && prop !== 'dragTarget',
-})<{ active?: boolean; dragTarget?: boolean }>(({ theme, active, dragTarget }) => {
+  shouldForwardProp: (prop) => prop !== 'active' && prop !== 'dragTarget' && prop !== 'allowShrink',
+})<{ active?: boolean; dragTarget?: boolean; allowShrink?: boolean }>(({
+  theme,
+  active,
+  dragTarget,
+  allowShrink,
+}) => {
   const c = appleColors(isDarkTheme(theme));
   return {
     appearance: 'none',
@@ -308,8 +375,12 @@ export const BreadcrumbChip = styled('button', {
     alignItems: 'center',
     gap: '5px',
     whiteSpace: 'nowrap',
-    flexShrink: 0,
+    flexShrink: allowShrink ? 1 : 0,
+    minWidth: allowShrink ? 0 : undefined,
+    maxWidth: allowShrink ? '100%' : undefined,
+    overflow: allowShrink ? 'hidden' : undefined,
     cursor: active ? 'default' : 'pointer',
+    pointerEvents: active ? 'none' : undefined,
     transition: 'background-color 120ms ease, color 120ms ease',
     ...(!active && applePressMixin),
     '&:hover': active
@@ -334,6 +405,46 @@ export const BreadcrumbChip = styled('button', {
     },
   };
 });
+
+export const BreadcrumbMarqueeViewport = styled('span', {
+  shouldForwardProp: (prop) => prop !== 'marquee',
+})<{ marquee?: boolean }>(({ marquee }) => ({
+  display: 'inline-flex',
+  alignItems: 'center',
+  minWidth: 0,
+  overflow: 'hidden',
+  ...(marquee
+    ? {
+        flex: 1,
+        maskImage:
+          'linear-gradient(to right, transparent 0, #000 6px, #000 calc(100% - 8px), transparent 100%)',
+        WebkitMaskImage:
+          'linear-gradient(to right, transparent 0, #000 6px, #000 calc(100% - 8px), transparent 100%)',
+      }
+    : {}),
+}));
+
+export const BreadcrumbMarqueeText = styled('span', {
+  shouldForwardProp: (prop) => prop !== 'marqueeShift' && prop !== 'durationSec',
+})<{ marqueeShift?: number; durationSec?: number }>(({ marqueeShift = 0, durationSec = 6 }) => ({
+  display: 'inline-block',
+  whiteSpace: 'nowrap',
+  ...(marqueeShift > 0
+    ? {
+        '--marquee-shift': `${marqueeShift}px`,
+        animation: `${breadcrumbMarquee} ${durationSec}s ease-in-out infinite`,
+        '.breadcrumb-hover-wrap:hover &': {
+          animationPlayState: 'paused',
+        },
+        '@media (prefers-reduced-motion: reduce)': {
+          animation: 'none',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          maxWidth: '100%',
+        },
+      }
+    : {}),
+}));
 
 export const BulkActionButton = styled(Button)(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
@@ -685,9 +796,7 @@ export const MapGlyphBadge = styled('span')(({ theme }) => {
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
-    boxShadow: isDark
-      ? '0 1px 3px rgba(0, 0, 0, 0.45)'
-      : '0 1px 3px rgba(0, 122, 255, 0.3)',
+    boxShadow: isDark ? '0 1px 3px rgba(0, 0, 0, 0.45)' : '0 1px 3px rgba(0, 122, 255, 0.3)',
     '& svg, & .material-symbols-rounded': {
       color: '#FFFFFF !important',
     },
@@ -706,9 +815,7 @@ export const FolderGlyphBadge = styled('span')(({ theme }) => {
     alignItems: 'center',
     justifyContent: 'center',
     flexShrink: 0,
-    boxShadow: isDark
-      ? '0 1px 3px rgba(0, 0, 0, 0.45)'
-      : '0 1px 3px rgba(0, 122, 255, 0.3)',
+    boxShadow: isDark ? '0 1px 3px rgba(0, 0, 0, 0.45)' : '0 1px 3px rgba(0, 122, 255, 0.3)',
     '& svg, & .material-symbols-rounded': {
       color: '#FFFFFF !important',
     },

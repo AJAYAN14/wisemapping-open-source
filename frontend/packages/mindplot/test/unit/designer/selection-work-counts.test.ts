@@ -236,15 +236,15 @@ describe('Selection work', () => {
 
   it('selecting or unselecting one topic does not scan the topics', async () => {
     const { designer, topic } = await buildDesigner(buildMediumMap({ topics: TOPICS }));
+    designer.goToNode(designer.getModel().getCentralTopic());
     const fired = countEvents(designer);
     const focusReads = countCalls(NodeGraph.prototype, 'isOnFocus');
 
     topic(3).setOnFocus(true);
     topic(3).setOnFocus(false);
 
-    // One per change: the central topic, selected when the map loads, stays selected, so
-    // unselecting topic 3 is an 'onfocus' too. It used to fire nothing, which left the editor
-    // counting two topics (BL5-244).
+    // One per change: the central topic stays selected, so unselecting topic 3 is an 'onfocus'
+    // too. It used to fire nothing, which left the editor counting two topics (BL5-244).
     expect(fired['onfocus']).toBe(2);
     // Before: 1,005: the designer's handlers counted the selected topics by reading every topic.
     expect(focusReads.count).toBeLessThan(TOPICS / 5);
@@ -255,6 +255,7 @@ describe('Selection work', () => {
     const { designer, topic } = await buildDesigner(
       buildMediumMap({ topics: 50, relationships: RELATIONSHIPS }),
     );
+    designer.goToNode(designer.getModel().getCentralTopic());
     const relationships = designer.getModel().getRelationships();
     expect(relationships).toHaveLength(RELATIONSHIPS);
     const relationship = relationships[0]!;

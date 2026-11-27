@@ -46,7 +46,7 @@ import StorageQuotaDialog from './StorageQuotaDialog';
 declare const VITE_APP_VERSION: string | undefined;
 declare const VITE_BUILD_TIME: string | undefined;
 
-const APP_VERSION = typeof VITE_APP_VERSION !== 'undefined' ? VITE_APP_VERSION : '6.0.39';
+const APP_VERSION = typeof VITE_APP_VERSION !== 'undefined' ? VITE_APP_VERSION : '6.0.40';
 const BUILD_TIME = typeof VITE_BUILD_TIME !== 'undefined' ? VITE_BUILD_TIME : '';
 
 const AvatarTrigger = styled(IconButton)(({ theme }) => {
