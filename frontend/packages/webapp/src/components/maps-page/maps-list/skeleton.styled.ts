@@ -82,7 +82,7 @@ export const LoadingDrawer = styled('div', { shouldForwardProp: notExpanded })<E
     width: drawerWidthOf(expanded),
     flexShrink: 0,
     backgroundColor: c.surface,
-    border: `1px solid ${c.hairline}`,
+    border: 'none',
     borderRadius: RADIUS_LG,
     boxShadow: c.shadowSubtle,
     height: 'calc(100dvh - 24px)',
@@ -165,7 +165,7 @@ export const LoadingDrawerQuickPill = styled('div')(({ theme }) => {
   return {
     height: '34px',
     borderRadius: RADIUS_MD,
-    border: `1px solid ${c.hairline}`,
+    border: 'none',
     backgroundColor: c.surface,
     display: 'flex',
     alignItems: 'center',
@@ -182,7 +182,7 @@ export const LoadingDrawerUserCard = styled('div')(({ theme }) => {
     padding: '8px 10px',
     backgroundColor: c.hoverFill,
     borderRadius: RADIUS_MD,
-    border: `1px solid ${c.hairline}`,
+    border: 'none',
     display: 'flex',
     alignItems: 'center',
     gap: '9px',
@@ -240,7 +240,7 @@ export const LoadingSegmentedGroup = styled('div')(({ theme }) => {
     padding: '3px',
     borderRadius: RADIUS_MD,
     backgroundColor: c.hoverFill,
-    border: `1px solid ${c.hairline}`,
+    border: 'none',
     gap: '2px',
   };
 });
@@ -286,7 +286,7 @@ export const LoadingSearchBox = styled('div')(({ theme }) => {
     padding: '0 10px 0 11px',
     borderRadius: RADIUS_MD,
     backgroundColor: c.surface,
-    border: `1px solid ${c.hairline}`,
+    border: 'none',
     [theme.breakpoints.down('sm')]: {
       flex: 1,
       width: '100%',
@@ -301,7 +301,7 @@ export const LoadingToolbarPill = styled('div')(({ theme }) => {
     boxSizing: 'border-box',
     borderRadius: RADIUS_MD,
     backgroundColor: c.surface,
-    border: `1px solid ${c.hairline}`,
+    border: 'none',
     display: 'inline-flex',
     alignItems: 'center',
     padding: '0 10px',
@@ -361,7 +361,7 @@ export const LoadingTableContainer = styled(TableContainer)(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
     backgroundColor: c.surface,
-    border: `1px solid ${c.hairline}`,
+    border: 'none',
     borderRadius: RADIUS_LG,
     boxShadow: c.shadowSubtle,
     overflowX: 'auto',
@@ -374,7 +374,7 @@ export const LoadingHeaderCell = styled(TableCell)(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
     backgroundColor: c.surface,
-    borderBottom: `1px solid ${c.hairline}`,
+    borderBottom: 'none',
     borderTop: 0,
     borderLeft: 0,
     borderRight: 0,
@@ -396,7 +396,7 @@ export const LoadingGridCard = styled('div')(({ theme }) => {
     flexDirection: 'column',
     borderRadius: RADIUS_LG,
     backgroundColor: c.surface,
-    border: `1px solid ${c.hairline}`,
+    border: 'none',
     boxShadow: c.shadowSubtle,
     overflow: 'hidden',
   };
@@ -407,7 +407,7 @@ export const LoadingGridPreview = styled('div')(({ theme }) => {
   return {
     width: '100%',
     aspectRatio: '16 / 10',
-    borderBottom: `1px solid ${c.hairline}`,
+    borderBottom: 'none',
     backgroundColor: c.surfaceElevated,
   };
 });

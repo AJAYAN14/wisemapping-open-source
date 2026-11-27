@@ -843,7 +843,7 @@ const MapsPage = (): ReactElement => {
                   p: 4,
                   borderRadius: RADIUS_LG,
                   textAlign: 'center',
-                  border: `1px solid ${c.hairline}`,
+                  border: 'none',
                   boxShadow: c.shadowFloat,
                   ...glassMaterialMixin(c.sidebarGlass, c.surfaceElevated, 20),
                   display: 'flex',
@@ -911,7 +911,7 @@ const MapsPage = (): ReactElement => {
                   p: 0.5,
                   color: c.textPrimary,
                   boxShadow: c.shadowFloat,
-                  border: `1px solid ${c.hairline}`,
+                  border: 'none',
                   fontFamily: APPLE_FONT_STACK,
                   backgroundColor: isDarkTheme(theme) ? '#1C1C1E' : '#FFFFFF',
                   '@media (forced-colors: active)': {

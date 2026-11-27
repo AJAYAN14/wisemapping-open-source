@@ -244,7 +244,8 @@ export const BreadcrumbBar = styled('div')(({ theme }) => {
     marginBottom: '12px',
     borderRadius: RADIUS_MD,
     backgroundColor: c.surface,
-    border: `1px solid ${c.hairline}`,
+    border: 'none',
+    boxShadow: c.shadowSubtle,
     fontFamily: APPLE_FONT_STACK,
     fontSize: '0.82rem',
     fontWeight: 500,
@@ -301,12 +302,11 @@ export const BulkActionButton = styled(Button)(({ theme }) => {
     padding: '0 12px',
     backgroundColor: c.surface,
     color: c.textPrimary,
-    border: `1px solid ${c.hairline}`,
-    boxShadow: 'none',
+    border: 'none',
+    boxShadow: c.shadowSubtle,
     ...applePressMixin,
     '&:hover': {
       backgroundColor: c.hoverFill,
-      borderColor: c.hairlineStrong,
     },
   };
 });
@@ -355,20 +355,16 @@ export const SearchBox = styled('div')(({ theme }) => {
     boxSizing: 'border-box',
     borderRadius: RADIUS_MD,
     backgroundColor: c.surface,
-    border: `1px solid ${c.hairline}`,
-    boxShadow: 'none',
-    transition: 'border-color 140ms ease, box-shadow 140ms ease, background-color 140ms ease',
+    border: 'none',
+    boxShadow: c.shadowSubtle,
+    transition: 'box-shadow 140ms ease, background-color 140ms ease',
     [theme.breakpoints.down('sm')]: {
       width: '100%',
     },
     '@container maps-main (inline-size < 680px)': {
       width: '100%',
     },
-    '&:hover': {
-      borderColor: c.hairlineStrong,
-    },
     '&:focus-within': {
-      borderColor: c.amberHover,
       boxShadow: `0 0 0 2px ${c.amberRing}`,
     },
   };
@@ -448,7 +444,7 @@ export const SearchShortcutHint = styled('kbd')(({ theme }) => {
     fontFamily: APPLE_FONT_STACK,
     backgroundColor: c.hoverFill,
     color: c.textTertiary,
-    border: `1px solid ${c.hairline}`,
+    border: 'none',
     lineHeight: 1.2,
     [theme.breakpoints.down('sm')]: {
       display: 'none',
@@ -487,11 +483,11 @@ export const ListPagination = styled(TablePagination)(({ theme }) => {
     width: 'auto',
     display: 'inline-flex',
     backgroundColor: c.surface,
-    border: `1px solid ${c.hairline}`,
+    border: 'none',
     borderRadius: RADIUS_MD,
     padding: 0,
     margin: 0,
-    boxShadow: 'none',
+    boxShadow: c.shadowSubtle,
     fontFamily: APPLE_FONT_STACK,
     '& .MuiTablePagination-toolbar': {
       minHeight: '34px',
@@ -525,7 +521,7 @@ export const ListTableContainer = styled(TableContainer)(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
     backgroundColor: c.surface,
-    border: `1px solid ${c.hairline}`,
+    border: 'none',
     borderRadius: RADIUS_LG,
     boxShadow: c.shadowSubtle,
     overflowX: 'auto',
@@ -579,7 +575,7 @@ export const HeaderCell = styled(TableCell)(({ theme }) => {
     backgroundColor: c.surface,
     fontWeight: 600,
     color: c.textSecondary,
-    borderBottom: `1px solid ${c.hairline}`,
+    borderBottom: 'none',
     borderTop: 0,
     borderLeft: 0,
     borderRight: 0,
@@ -831,7 +827,7 @@ export const ViewModeThumb = styled('span', {
     width: '28px',
     height: '26px',
     borderRadius: RADIUS_SM,
-    backgroundColor: c.surface,
+    backgroundColor: c.ctaPrimary,
     boxShadow: c.shadowSubtle,
     pointerEvents: 'none',
     zIndex: 0,
@@ -861,11 +857,11 @@ export const ViewModeButton = styled('button', {
     height: '26px',
     borderRadius: RADIUS_SM,
     backgroundColor: 'transparent',
-    color: active ? c.textPrimary : c.textSecondary,
+    color: active ? c.ctaPrimaryText : c.textSecondary,
     transition: `color 140ms ease, transform 140ms ${EASE_OUT}`,
     ...applePressMixin,
     '&:hover': {
-      color: c.textPrimary,
+      color: active ? c.ctaPrimaryText : c.textPrimary,
     },
     '&:focus-visible': {
       boxShadow: `0 0 0 2px ${c.amberRing}`,
@@ -893,14 +889,13 @@ export const SortTriggerButton = styled(Button)(({ theme }) => {
     fontFamily: APPLE_FONT_STACK,
     backgroundColor: c.surface,
     color: c.textPrimary,
-    border: `1px solid ${c.hairline}`,
-    boxShadow: 'none',
+    border: 'none',
+    boxShadow: c.shadowSubtle,
     textTransform: 'none',
     flexShrink: 0,
     ...applePressMixin,
     '&:hover': {
       backgroundColor: c.hoverFill,
-      borderColor: c.hairlineStrong,
     },
     '& .MuiButton-startIcon': {
       marginRight: '4px',
@@ -927,16 +922,15 @@ export const GridCardRoot = styled('div', {
     borderRadius: RADIUS_LG,
     padding: 0,
     backgroundColor: c.surface,
-    border: `1px solid ${selected ? c.amberHover : c.hairline}`,
+    border: 'none',
     boxShadow: selected ? `0 0 0 2px ${c.amberRing}` : c.shadowSubtle,
     overflow: 'hidden',
     contentVisibility: 'auto',
     containIntrinsicSize: '236px 240px',
-    transition: `border-color 140ms ease, box-shadow 140ms ease, transform 140ms ${EASE_OUT}`,
+    transition: `box-shadow 140ms ease, transform 140ms ${EASE_OUT}`,
     cursor: 'pointer',
     '@media (hover: hover) and (pointer: fine)': {
       '&:hover': {
-        borderColor: selected ? c.amberHover : c.hairlineStrong,
         boxShadow: selected ? `0 0 0 2px ${c.amberRing}` : c.shadowFloat,
         '& .grid-card-overlay': {
           opacity: 1,
@@ -978,7 +972,7 @@ export const GridCardPreview = styled('div')(({ theme }) => {
     width: '100%',
     aspectRatio: '16 / 10',
     overflow: 'hidden',
-    borderBottom: `1px solid ${c.hairline}`,
+    borderBottom: 'none',
     backgroundColor: c.surfaceElevated,
   };
 });
@@ -986,7 +980,6 @@ export const GridCardPreview = styled('div')(({ theme }) => {
 export const GridCardCheckboxOverlay = styled('div', {
   shouldForwardProp: (prop) => prop !== 'visible',
 })<{ visible?: boolean }>(({ theme, visible }) => {
-  const c = appleColors(isDarkTheme(theme));
   return {
     position: 'absolute',
     top: '8px',
@@ -994,7 +987,7 @@ export const GridCardCheckboxOverlay = styled('div', {
     zIndex: 2,
     borderRadius: RADIUS_MD,
     backgroundColor: isDarkTheme(theme) ? 'rgba(26, 26, 30, 0.88)' : 'rgba(255, 255, 255, 0.92)',
-    border: `1px solid ${c.hairline}`,
+    border: 'none',
     opacity: visible ? 1 : 0,
     transition: 'opacity 140ms ease',
     display: 'inline-flex',
@@ -1010,7 +1003,6 @@ export const GridCardCheckboxOverlay = styled('div', {
 export const GridCardActionsOverlay = styled('div', {
   shouldForwardProp: (prop) => prop !== 'alwaysVisibleStar',
 })<{ alwaysVisibleStar?: boolean }>(({ theme, alwaysVisibleStar }) => {
-  const c = appleColors(isDarkTheme(theme));
   return {
     position: 'absolute',
     top: '8px',
@@ -1022,7 +1014,7 @@ export const GridCardActionsOverlay = styled('div', {
     padding: '2px',
     borderRadius: RADIUS_MD,
     backgroundColor: isDarkTheme(theme) ? 'rgba(26, 26, 30, 0.88)' : 'rgba(255, 255, 255, 0.92)',
-    border: `1px solid ${c.hairline}`,
+    border: 'none',
     opacity: alwaysVisibleStar ? 1 : 0,
     transition: 'opacity 140ms ease',
     '@media (hover: none), (pointer: coarse)': {

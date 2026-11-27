@@ -412,7 +412,7 @@ export const MapsListToolbar = ({
                       p: 0.5,
                       color: c.textPrimary,
                       boxShadow: c.shadowFloat,
-                      border: `1px solid ${c.hairline}`,
+                      border: 'none',
                       fontFamily: APPLE_FONT_STACK,
                       backgroundColor: isDarkTheme(theme) ? '#1C1C1E' : '#FFFFFF',
                       '& .MuiMenuItem-root': {

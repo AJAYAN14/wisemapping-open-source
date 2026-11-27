@@ -6,7 +6,15 @@
 
 ---
 
-## Latest Fixes (v6.0.37)
+## Latest Fixes (v6.0.38)
+
+- **Scoped Editor `aria-pressed` Rule & Unified Blue View Switcher (`editor/src/components/app-bar/styles.css`, `maps-list/styled.ts`)**:
+  - Scoped `button[aria-pressed='true']` inside `editor/src/components/app-bar/styles.css` to `.material-menubar button[aria-pressed='true']` (with `#007AFF` fallback), preventing the editor's `#0284c7 !important` style from leaking onto the homepage's `视图切换` buttons after SPA back-navigation.
+  - Updated `ViewModeThumb` to `c.ctaPrimary` (`#007AFF` / `#0A84FF`) and `ViewModeButton` active/hover icon color to `c.ctaPrimaryText` (`#FFFFFF`), giving the view toggle the exact clean Apple blue pill.
+- **Borderless Homepage Polish (`maps-page/`, `maps-list/`, `drawer-nav/`, `account-menu/`, `action-chooser/`, `skeleton.styled.ts`)**:
+  - Removed all `1px solid` hairline borders, `borderBottom` dividers, and hover `borderColor` strokes across the homepage sidebar, account pills, toolbar controls, search box, segmented tabs, sort button, list table container/headers/cells, grid cards/previews/overlays, mobile cards, label pills, popup menus, and loading skeletons (`border: 'none'`), relying cleanly on surface contrast and subtle elevation shadows.
+
+## Previous Fixes (v6.0.37)
 
 - **Instant Fresh-Tab & Back-to-Home Rendering (`homeCache.ts`, `maps-page/loader.ts`, `app.tsx`, `rest-client/index.ts`, `maps-list/index.tsx`)**:
   - Added user-scoped localStorage SWR snapshot hydration (`hydrateHomeCacheIntoQueryClient`, keyed by non-expired JWT subject `sub`, cleared on `logout` and auth errors) with `updatedAt: 0` so fresh browser tabs render the cached maps list, labels, folders, and account immediately while silently revalidating in the background.

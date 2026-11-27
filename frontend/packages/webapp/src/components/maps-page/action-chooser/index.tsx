@@ -72,7 +72,7 @@ const ActionChooser = (props: ActionProps): React.ReactElement => {
             const c = appleColors(isDarkTheme(theme));
             return {
               borderRadius: RADIUS_LG,
-              border: `1px solid ${c.hairline}`,
+              border: 'none',
               boxShadow: c.shadowFloat,
               backgroundColor: isDarkTheme(theme) ? '#1C1C1E' : '#FFFFFF',
               fontFamily: APPLE_FONT_STACK,

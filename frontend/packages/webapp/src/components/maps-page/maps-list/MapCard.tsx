@@ -88,7 +88,6 @@ const MapCardComponent = ({
       sx={
         selected
           ? {
-              borderColor: 'primary.main',
               boxShadow: (theme) => `0 0 0 2px ${theme.palette.primary.main}33`,
             }
           : undefined

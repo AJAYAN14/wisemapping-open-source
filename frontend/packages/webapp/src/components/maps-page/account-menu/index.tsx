@@ -46,7 +46,7 @@ import StorageQuotaDialog from './StorageQuotaDialog';
 declare const VITE_APP_VERSION: string | undefined;
 declare const VITE_BUILD_TIME: string | undefined;
 
-const APP_VERSION = typeof VITE_APP_VERSION !== 'undefined' ? VITE_APP_VERSION : '6.0.37';
+const APP_VERSION = typeof VITE_APP_VERSION !== 'undefined' ? VITE_APP_VERSION : '6.0.38';
 const BUILD_TIME = typeof VITE_BUILD_TIME !== 'undefined' ? VITE_BUILD_TIME : '';
 
 const AvatarTrigger = styled(IconButton)(({ theme }) => {
@@ -54,11 +54,10 @@ const AvatarTrigger = styled(IconButton)(({ theme }) => {
   return {
     padding: '3px',
     borderRadius: '999px',
-    border: `1px solid ${c.hairline}`,
+    border: 'none',
     ...applePressMixin,
     '&:hover': {
       backgroundColor: c.hoverFill,
-      borderColor: c.hairlineStrong,
     },
   };
 });
@@ -72,7 +71,7 @@ const SidebarAccountButton = styled('button')(({ theme }) => {
     padding: '8px 10px',
     backgroundColor: c.hoverFill,
     borderRadius: RADIUS_MD,
-    border: `1px solid ${c.hairline}`,
+    border: 'none',
     display: 'flex',
     alignItems: 'center',
     gap: '9px',
@@ -84,7 +83,6 @@ const SidebarAccountButton = styled('button')(({ theme }) => {
     ...applePressMixin,
     '&:hover': {
       backgroundColor: c.activeFill,
-      borderColor: c.hairlineStrong,
     },
     '&:focus-visible': {
       outline: 'none',
@@ -113,7 +111,8 @@ const SidebarQuickButton = styled('button')(({ theme }) => {
     padding: '0 8px',
     backgroundColor: c.surface,
     borderRadius: RADIUS_MD,
-    border: `1px solid ${c.hairline}`,
+    border: 'none',
+    boxShadow: c.shadowSubtle,
     display: 'inline-flex',
     alignItems: 'center',
     justifyContent: 'center',
@@ -130,7 +129,6 @@ const SidebarQuickButton = styled('button')(({ theme }) => {
     ...applePressMixin,
     '&:hover': {
       backgroundColor: c.hoverFill,
-      borderColor: c.hairlineStrong,
       color: c.textPrimary,
     },
     '&:focus-visible': {
@@ -147,13 +145,13 @@ const CollapsedQuickIconButton = styled(IconButton)(({ theme }) => {
     height: '36px',
     padding: 0,
     borderRadius: RADIUS_MD,
-    border: `1px solid ${c.hairline}`,
+    border: 'none',
+    boxShadow: c.shadowSubtle,
     backgroundColor: c.surface,
     color: c.textSecondary,
     ...applePressMixin,
     '&:hover': {
       backgroundColor: c.hoverFill,
-      borderColor: c.hairlineStrong,
       color: c.textPrimary,
     },
     '&:focus-visible': {
@@ -404,7 +402,7 @@ const AccountMenu = ({
                 mb: variant === 'sidebar' ? 1 : 0,
                 minWidth: '210px',
                 borderRadius: RADIUS_LG,
-                border: `1px solid ${c.hairline}`,
+                border: 'none',
                 boxShadow: c.shadowFloat,
                 backgroundColor: isDarkTheme(theme) ? '#1C1C1E' : '#FFFFFF',
                 '& .MuiMenuItem-root': {

@@ -395,7 +395,7 @@ const FolderCardComponent = ({
           cursor: 'pointer',
           ...(isDragTarget
             ? {
-                borderColor: c.amber,
+                boxShadow: `0 0 0 2px ${c.amberRing}`,
                 backgroundColor: c.amberSoft,
               }
             : {}),
@@ -566,7 +566,7 @@ export const FolderActionMenu = ({
             const c = appleColors(isDarkTheme(theme));
             return {
               borderRadius: RADIUS_LG,
-              border: `1px solid ${c.hairline}`,
+              border: 'none',
               boxShadow: c.shadowFloat,
               fontFamily: APPLE_FONT_STACK,
               backgroundColor: isDarkTheme(theme) ? '#1C1C1E' : '#FFFFFF',

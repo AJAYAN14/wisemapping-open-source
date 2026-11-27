@@ -34,7 +34,7 @@ export const LabelContainer = styled('div', {
     padding: '3px 9px',
     borderRadius: '999px',
     backgroundColor: pillTint,
-    border: `1px solid ${color ? alpha(color, 0.25) : c.hairline}`,
+    border: 'none',
     alignItems: 'center',
     fontSize: '0.76rem',
     fontWeight: 500,

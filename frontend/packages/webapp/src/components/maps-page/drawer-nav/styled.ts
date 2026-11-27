@@ -150,7 +150,7 @@ export const UserInfoBox = styled(Box)(({ theme }) => {
     margin: 'auto 8px 10px 8px',
     backgroundColor: c.hoverFill,
     borderRadius: RADIUS_MD,
-    border: `1px solid ${c.hairline}`,
+    border: 'none',
     display: 'flex',
     alignItems: 'center',
     gap: '10px',

@@ -336,7 +336,7 @@ export const MapsList = ({
   ) : message ? (
     <Card
       elevation={0}
-      sx={{ borderRadius: RADIUS_LG, margin: '10px 14px', border: '1px solid rgba(128,128,128,0.14)' }}
+      sx={{ borderRadius: RADIUS_LG, margin: '10px 14px', border: 'none' }}
     >
       <CardContent sx={{ textAlign: 'center', py: 4, fontWeight: 500 }}>{message}</CardContent>
     </Card>
@@ -383,7 +383,7 @@ export const MapsList = ({
   ) : message ? (
     <Card
       elevation={0}
-      sx={{ borderRadius: RADIUS_LG, border: '1px solid rgba(128,128,128,0.14)' }}
+      sx={{ borderRadius: RADIUS_LG, border: 'none' }}
     >
       <CardContent sx={{ textAlign: 'center', py: 6, fontWeight: 500, color: 'text.secondary' }}>
         {message}

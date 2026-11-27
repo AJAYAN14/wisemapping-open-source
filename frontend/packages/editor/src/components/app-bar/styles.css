@@ -24,8 +24,8 @@
   text-overflow: ellipsis;
 }
 
-button[aria-pressed='true'] {
-  background-color: var(--mui-palette-primary-main, #0284c7) !important;
+.material-menubar button[aria-pressed='true'] {
+  background-color: var(--mui-palette-primary-main, #007AFF) !important;
   color: #ffffff !important;
 }
 

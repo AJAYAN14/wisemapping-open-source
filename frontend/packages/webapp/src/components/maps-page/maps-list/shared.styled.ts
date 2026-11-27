@@ -31,13 +31,12 @@ import {
 // What the map list and its loading placeholder share: kept apart from styled.ts so that the
 // placeholder, which every page's loading screen shows, does not bring the list's styles along.
 
-export const BodyCell = styled(TableCell)(({ theme }) => {
-  const c = appleColors(isDarkTheme(theme));
+export const BodyCell = styled(TableCell)(() => {
   return {
     fontSize: '0.88rem',
     fontFamily: APPLE_FONT_STACK,
     padding: '11px 14px',
-    borderBottom: `1px solid ${c.hairline}`,
+    borderBottom: 'none',
   };
 });
 
@@ -52,7 +51,7 @@ export const MapCardRoot = styled(Card)(({ theme }) => {
     margin: '8px 12px',
     borderRadius: RADIUS_LG,
     backgroundColor: c.surface,
-    border: `1px solid ${c.hairline}`,
+    border: 'none',
     boxShadow: c.shadowSubtle,
     ...applePressMixin,
     '&:active': {
