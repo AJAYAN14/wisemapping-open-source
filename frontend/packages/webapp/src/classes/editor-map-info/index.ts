@@ -24,6 +24,7 @@ class MapInfoImpl implements MapInfo {
   private title: string;
   private locked: boolean;
   private starred: boolean | undefined;
+  private onTitleUpdated: ((newTitle: string) => void) | undefined;
 
   constructor(
     id: number,
@@ -34,12 +35,14 @@ class MapInfoImpl implements MapInfo {
     _lockedMsg: string | undefined,
     _zoom: number,
     starred?: boolean,
+    onTitleUpdated?: (newTitle: string) => void,
   ) {
     this.id = id;
     this.client = client;
     this.title = title;
     this.locked = locked;
     this.starred = starred;
+    this.onTitleUpdated = onTitleUpdated;
   }
 
   isStarred(): Promise<boolean> {
@@ -74,11 +77,20 @@ class MapInfoImpl implements MapInfo {
     const previousTitle = this.title;
     this.title = trimmedTitle;
 
-    return this.client.renameMap(this.id, { title: trimmedTitle }).catch((error) => {
-      // Roll back optimistic update if rename fails
-      this.title = previousTitle;
-      throw error;
-    });
+    return this.client
+      .renameMap(this.id, { title: trimmedTitle })
+      .then(() => {
+        this.onTitleUpdated?.(trimmedTitle);
+      })
+      .catch((error) => {
+        // Roll back optimistic update if rename fails
+        this.title = previousTitle;
+        throw error;
+      });
+  }
+
+  setOnTitleUpdated(callback: ((newTitle: string) => void) | undefined): void {
+    this.onTitleUpdated = callback;
   }
 
   isLocked(): boolean {

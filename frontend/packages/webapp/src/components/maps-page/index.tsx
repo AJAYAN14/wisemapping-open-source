@@ -83,6 +83,7 @@ import { useSpringValue } from './useSpringValue';
 import { ClientContext } from '../../classes/provider/client-context';
 import { ScannedMapFile, scanFileList, scanDataTransferItems } from './directoryScanner';
 import { readStorage, writeStorage, removeStorage } from '../../utils/storage';
+import { buildMapEditPath } from '../../utils/mapPath';
 
 export type Filter = GenericFilter | LabelFilter | FolderFilter;
 
@@ -182,6 +183,7 @@ const MapsPage = (): ReactElement => {
     progress?: number | undefined;
     detailText?: string | undefined;
     createdMapId?: number | undefined;
+    createdMapEditUrl?: string | undefined;
     isBatch?: boolean | undefined;
     totalCount?: number | undefined;
     currentCount?: number | undefined;
@@ -384,12 +386,14 @@ const MapsPage = (): ReactElement => {
 
         void queryClient.invalidateQueries({ queryKey: ['maps'] });
         void queryClient.invalidateQueries({ queryKey: ['folders'] });
+        const createdMeta = await client.fetchMapMetadata(mapId);
 
         setImportState((prev) => ({
           ...prev,
           stage: 'success',
           progress: 100,
           createdMapId: mapId,
+          createdMapEditUrl: buildMapEditPath(createdMeta.folderPath, createdMeta.title),
           detailText: '导图已存入云端，你可以立即打开编辑或留在列表继续其他操作。',
         }));
       } catch (err) {
@@ -1147,9 +1151,9 @@ const MapsPage = (): ReactElement => {
         onOverwrite={() => resolveDuplicateDecision('overwrite')}
         onSkipDuplicate={() => resolveDuplicateDecision('skip')}
         onOpenMap={
-          importState.createdMapId
+          importState.createdMapEditUrl
             ? () => {
-                window.location.href = `/c/maps/${importState.createdMapId}/edit`;
+                window.location.href = importState.createdMapEditUrl!;
               }
             : undefined
         }

@@ -1,5 +1,6 @@
 import type { DbClient, DbUserContext, PoolLike } from './db.js';
 import { withUserDb } from './db.js';
+import { normalizeFolderPath } from './validators.js';
 
 export interface LabelDto {
   id: number;
@@ -138,6 +139,7 @@ export interface MindmapRepository {
   listMaps(user: RepoUser, filter?: string): Promise<MindmapWithLabels[]>;
   createMap(user: RepoUser, input: CreateMapInput): Promise<MindmapRecord>;
   getMap(user: RepoUser, mapId: number): Promise<MindmapWithLabels>;
+  getMapByPath(user: RepoUser, folderPath: string, title: string): Promise<MindmapWithLabels>;
   getMapXml(user: RepoUser, mapId: number): Promise<{ xml: string; version: number }>;
   updateDocument(
     user: RepoUser,
@@ -590,6 +592,19 @@ export class PgMindmapRepository implements MindmapRepository {
     });
   }
 
+  private async attachLabelsToMap(
+    client: DbClient,
+    user: RepoUser,
+    row: RawMindmapRow,
+  ): Promise<MindmapWithLabels> {
+    const record = mapMindmapRow(row);
+    const labelMap = await this.fetchLabelsForMaps(client, user.uid, [record.id]);
+    return {
+      ...record,
+      labels: labelMap.get(record.id) ?? [],
+    };
+  }
+
   async getMap(user: RepoUser, mapId: number): Promise<MindmapWithLabels> {
     return this.runInTx(user, async (client) => {
       const res = await client.query<RawMindmapRow>(
@@ -604,12 +619,30 @@ export class PgMindmapRepository implements MindmapRepository {
       if (!row) {
         throw new NotFoundOrForbiddenError();
       }
-      const record = mapMindmapRow(row);
-      const labelMap = await this.fetchLabelsForMaps(client, user.uid, [record.id]);
-      return {
-        ...record,
-        labels: labelMap.get(record.id) ?? [],
-      };
+      return this.attachLabelsToMap(client, user, row);
+    });
+  }
+
+  async getMapByPath(user: RepoUser, folderPath: string, title: string): Promise<MindmapWithLabels> {
+    const normalizedTitle = title.trim();
+    if (!normalizedTitle) {
+      throw new NotFoundOrForbiddenError();
+    }
+    const normalizedPath = normalizeFolderPath(folderPath);
+    return this.runInTx(user, async (client) => {
+      const res = await client.query<RawMindmapRow>(
+        `SELECT id, owner_id, title, description, folder_id, folder_path, xml, properties, starred, version,
+                last_modification_by, creation_time, last_modification_time
+         FROM public.mindmaps
+         WHERE owner_id = $1 AND folder_path = $2 AND title = $3
+         LIMIT 1`,
+        [user.uid, normalizedPath, normalizedTitle],
+      );
+      const row = res.rows[0];
+      if (!row) {
+        throw new NotFoundOrForbiddenError();
+      }
+      return this.attachLabelsToMap(client, user, row);
     });
   }
 

@@ -75,6 +75,15 @@ const segments = (path: string): string[] => path.split('/').filter(Boolean);
 
 const matchPath = (pattern: string, pathname: string): Record<string, string> | undefined => {
   if (pattern === '*') return {};
+  if (pattern.endsWith('/*')) {
+    const prefix = segments(pattern.slice(0, -2));
+    const have = segments(pathname);
+    if (have.length < prefix.length) return undefined;
+    for (const [i, segment] of prefix.entries()) {
+      if (have[i] !== segment) return undefined;
+    }
+    return { '*': have.slice(prefix.length).join('/') };
+  }
   const want = segments(pattern);
   const have = segments(pathname);
   if (want.length !== have.length) return undefined;

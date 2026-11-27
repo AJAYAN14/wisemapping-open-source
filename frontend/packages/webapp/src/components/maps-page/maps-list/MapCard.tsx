@@ -29,6 +29,7 @@ import FolderRoundedIcon from '@mui/icons-material/FolderRounded';
 import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
 import { MapInfo } from '../../../classes/client';
 import { useDate } from '../../../classes/app-i18n/dates';
+import { buildMapEditPath } from '../../../utils/mapPath';
 import type { MapItemHandlers } from './MapRow';
 import {
   ActionIconButton,
@@ -102,7 +103,7 @@ const MapCardComponent = ({
           </Box>
         )}
         <Link
-          href={`/c/maps/${map.id}/edit`}
+          href={buildMapEditPath(map.folderPath, map.title)}
           underline="none"
           onClick={(e) => e.stopPropagation()}
           sx={{ flex: 1, minWidth: 0, display: 'block' }}

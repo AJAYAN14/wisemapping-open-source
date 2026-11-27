@@ -99,44 +99,68 @@ export default class RestClient implements Client {
     );
   }
 
-  fetchMapMetadata(id: number, includeXml = false): Promise<MapMetadata> {
-    const handler = (
-      success: (mapMetadata: MapMetadata) => void,
-      reject: (error: ErrorInfo) => void,
-    ) => {
-      const url = `${this.baseUrl}/api/restful/maps/${id}/metadata${includeXml ? '?xml=true' : ''}`;
+  private parseMapMetadataResponse(response: AxiosResponse, fallbackId?: number): MapMetadata {
+    const { locked, ...data } = response.data as Omit<MapMetadata, 'isLocked' | 'id'> & {
+      id?: number;
+      locked?: boolean;
+    };
+    const headerVersionRaw = response.headers?.['x-mindmap-version'];
+    const parsedHeaderVersion =
+      typeof headerVersionRaw === 'string' ? Number.parseInt(headerVersionRaw, 10) : NaN;
+    const version =
+      data.version !== undefined
+        ? data.version
+        : Number.isInteger(parsedHeaderVersion)
+          ? parsedHeaderVersion
+          : undefined;
+    const resolvedId = typeof data.id === 'number' ? data.id : fallbackId;
+    if (resolvedId === undefined) {
+      throw new Error('Map metadata response missing map id.');
+    }
+    return {
+      ...data,
+      id: resolvedId,
+      isLocked: Boolean(locked),
+      ...(version !== undefined ? { version } : {}),
+    };
+  }
+
+  private requestMapMetadata(url: string, fallbackId?: number): Promise<MapMetadata> {
+    return new Promise((success, reject) => {
       this.axios
         .get(url, {
           headers: { 'Content-Type': 'application/json' },
         })
         .then((response) => {
-          // The backend sends the lock as "locked" (RestMindmapMetadata) and no id.
-          const { locked, ...data } = response.data as Omit<MapMetadata, 'isLocked'> & {
-            locked?: boolean;
-          };
-          const headerVersionRaw = response.headers?.['x-mindmap-version'];
-          const parsedHeaderVersion =
-            typeof headerVersionRaw === 'string' ? Number.parseInt(headerVersionRaw, 10) : NaN;
-          const version =
-            data.version !== undefined
-              ? data.version
-              : Number.isInteger(parsedHeaderVersion)
-                ? parsedHeaderVersion
-                : undefined;
-          success({
-            ...data,
-            id,
-            isLocked: Boolean(locked),
-            ...(version !== undefined ? { version } : {}),
-          });
+          success(this.parseMapMetadataResponse(response, fallbackId));
         })
         .catch((error) => {
           const errorInfo = this.parseResponseOnError(error.response);
           reject(errorInfo);
         });
-    };
+    });
+  }
 
-    return new Promise(handler);
+  fetchMapMetadata(id: number, includeXml = false): Promise<MapMetadata> {
+    const query = includeXml ? '?xml=true' : '';
+    const url = `${this.baseUrl}/api/restful/maps/${id}/metadata${query}`;
+    return this.requestMapMetadata(url, id);
+  }
+
+  fetchMapMetadataByPath(
+    folderPath: string,
+    title: string,
+    includeXml = false,
+  ): Promise<MapMetadata> {
+    const params = new URLSearchParams({
+      folderPath,
+      title,
+    });
+    if (includeXml) {
+      params.set('xml', 'true');
+    }
+    const url = `${this.baseUrl}/api/restful/maps/by-path/metadata?${params.toString()}`;
+    return this.requestMapMetadata(url);
   }
 
   async logout(): Promise<void> {

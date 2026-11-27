@@ -16,12 +16,12 @@
  *   limitations under the License.
  */
 
-import React, { Suspense, useEffect } from 'react';
+import React, { Suspense, use, useEffect } from 'react';
 import RenameDialog from './rename-dialog';
 import DeleteDialog from './delete-dialog';
 import { ActionType } from '../action-chooser';
 import { PageModeType } from '../../editor-page/loader';
-import { QueryClient } from '@tanstack/react-query';
+import { QueryClient, useQueryClient } from '@tanstack/react-query';
 import DuplicateDialog from './duplicate-dialog';
 import CreateDialog from './create-dialog';
 import HistoryDialog from './history-dialog';
@@ -29,6 +29,10 @@ import DeleteMultiselectDialog from './delete-multiselect-dialog';
 import LabelDialog from './label-dialog';
 import MoveFolderDialog from './move-folder-dialog';
 import type { Designer } from '@wisemapping/editor';
+import { ClientContext } from '../../../classes/provider/client-context';
+import { MapInfo, MapMetadata } from '../../../classes/client';
+import { mapMetadataQueryKey } from '../../../classes/middleware';
+import { buildMapEditPath } from '../../../utils/mapPath';
 
 // Uses the editor's exporters: loaded lazily on demand.
 const ExportDialog = React.lazy(() => import('./export-dialog'));
@@ -58,20 +62,40 @@ const ActionDispatcher = ({
   designer,
   beforeRevert,
 }: ActionDialogProps): React.ReactElement => {
+  const client = use(ClientContext);
+  const queryClient = useQueryClient();
+
   useEffect(() => {
     if (action) {
       switch (action) {
-        case 'open':
-          window.location.href = `/c/maps/${mapsId}/edit`;
+        case 'open': {
+          const targetId = mapsId[0];
+          if (targetId !== undefined) {
+            const cachedListMap = queryClient
+              .getQueryData<MapInfo[]>(['maps'])
+              ?.find((item) => item.id === targetId);
+            const cachedMeta = queryClient.getQueryData<MapMetadata>(
+              mapMetadataQueryKey(targetId),
+            );
+            const known = cachedListMap ?? cachedMeta;
+            if (known) {
+              window.location.href = buildMapEditPath(known.folderPath, known.title);
+            } else if (client?.fetchMapMetadata) {
+              void client.fetchMapMetadata(targetId).then((meta) => {
+                window.location.href = buildMapEditPath(meta.folderPath, meta.title);
+              });
+            }
+          }
           onClose(true);
           break;
+        }
         case 'back':
           window.location.href = '/c/maps';
           onClose(true);
           break;
       }
     }
-  }, [action, mapsId, onClose]);
+  }, [action, client, mapsId, onClose, queryClient]);
 
   const handleOnClose = (success?: boolean): void => {
     onClose(success);

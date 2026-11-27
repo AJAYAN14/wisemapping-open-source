@@ -137,6 +137,27 @@ describe('RestClient maps', () => {
     expect(withoutVersion).not.toHaveProperty('version');
   });
 
+  it('fetchMapMetadataByPath queries by folderPath and title with URLSearchParams', async () => {
+    const { client, calls } = newClient([
+      {
+        data: { id: 19, title: '项目计划', folderPath: '工作/2026/', locked: false, version: 2 },
+      },
+    ]);
+
+    await expect(
+      client.fetchMapMetadataByPath('工作/2026/', '项目计划', true),
+    ).resolves.toMatchObject({
+      id: 19,
+      title: '项目计划',
+      folderPath: '工作/2026/',
+      version: 2,
+    });
+
+    expect(defined(calls[0]).url).toBe(
+      `${API}/api/restful/maps/by-path/metadata?folderPath=%E5%B7%A5%E4%BD%9C%2F2026%2F&title=%E9%A1%B9%E7%9B%AE%E8%AE%A1%E5%88%92&xml=true`,
+    );
+  });
+
   it('fetchAllMaps maps the server fields onto MapInfo', async () => {
     const { client, calls } = newClient([
       {

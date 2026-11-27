@@ -30,6 +30,7 @@ import BaseDialog from '../base-dialog';
 import FormControl from '@mui/material/FormControl';
 import { useFetchMapById } from '../../../../classes/middleware';
 import { ClientContext } from '../../../../classes/provider/client-context';
+import { validateMapTitleInput } from '../../../../utils/mapPath';
 
 export type RenameModel = {
   id: number;
@@ -86,7 +87,27 @@ const RenameDialog = ({ mapId, onClose }: SimpleDialogProps): React.ReactElement
     // changed are sent: the backend refuses the map's own, unchanged title as a duplicate.
     const validatedModel: RenameModel = { id: mapId };
     if (model.title !== undefined && model.title !== map?.title) {
-      validatedModel.title = model.title;
+      const titleErr = validateMapTitleInput(model.title);
+      if (titleErr === 'blank') {
+        setError({
+          fields: {
+            title: intl.formatMessage({
+              id: 'validation.title-required',
+              defaultMessage: 'Title is required',
+            }),
+          },
+        });
+        return;
+      }
+      if (titleErr === 'slash') {
+        setError({
+          fields: {
+            title: '导图名称不能包含斜杠（/ 或 \\）。',
+          },
+        });
+        return;
+      }
+      validatedModel.title = model.title.trim();
     }
     if (model.description !== undefined && model.description !== map?.description) {
       validatedModel.description = model.description;

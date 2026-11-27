@@ -22,7 +22,7 @@ import Client, { MapMetadata } from '../../../src/classes/client';
 import JwtTokenConfig from '../../../src/classes/jwt-token-config';
 import queryClient from '../../../src/queryClient';
 import { loader as rootLoader } from '../../../src/loader';
-import { loader as editorLoader, PageModeType } from '../../../src/components/editor-page/loader';
+import { loader as editorLoader } from '../../../src/components/editor-page/loader';
 import { appLogger } from '../../../src/utils/logger';
 import { getLoadedMessages } from '../../../src/classes/app-i18n/messages';
 import I18nMsg from '@wisemapping/editor/classes/i18n-msg';
@@ -32,6 +32,7 @@ import { installWebCrypto } from './helpers/axios-stub';
 const metadata = (overrides: Partial<MapMetadata> = {}): MapMetadata => ({
   id: 5,
   title: 'My map',
+  folderPath: '',
   creatorFullName: 'Ana',
   isLocked: false,
   jsonProps: '{ "zoom": 1.2 }',
@@ -39,20 +40,14 @@ const metadata = (overrides: Partial<MapMetadata> = {}): MapMetadata => ({
   ...overrides,
 });
 
-const fakeClient = (fetchMapMetadata: jest.Mock, fetchAccountInfo = jest.fn()): Client =>
-  ({ fetchMapMetadata, fetchAccountInfo }) as unknown as Client;
+const fakeClient = (
+  fetchMapMetadataByPath: jest.Mock,
+  fetchAccountInfo = jest.fn(),
+): Client => ({ fetchMapMetadataByPath, fetchAccountInfo }) as unknown as Client;
 
-const runLoader = (
-  pageMode: PageModeType,
-  id: string | undefined,
-  bootstrap = false,
-  hid?: string,
-) =>
-  editorLoader(
-    pageMode,
-    bootstrap,
-  )({
-    params: id === undefined ? {} : hid === undefined ? { id } : { id, hid },
+const runLoader = (splat: string | undefined, bootstrap = false) =>
+  editorLoader(bootstrap)({
+    params: splat === undefined ? {} : { '*': splat },
   } as unknown as LoaderFunctionArgs);
 
 let removeWebCrypto: () => void;
@@ -87,61 +82,71 @@ describe('root loader', () => {
 });
 
 describe('editor page loader', () => {
-  const stubClient = (fetchMapMetadata: jest.Mock) =>
-    jest.spyOn(AppConfig, 'getClient').mockReturnValue(fakeClient(fetchMapMetadata));
+  const stubClient = (fetchMapMetadataByPath: jest.Mock) =>
+    jest.spyOn(AppConfig, 'getClient').mockReturnValue(fakeClient(fetchMapMetadataByPath));
 
-  it.each([undefined, 'undefined'])('rejects a missing map id (%s) with a 400', async (id) => {
-    stubClient(jest.fn());
+  it.each([undefined, '', 'My map', '12', 'My map/unknown', 'My map/history/abc/view'])(
+    'rejects an invalid map route (%s) with a 404',
+    async (splat) => {
+      stubClient(jest.fn());
 
-    const response = await runLoader('edit', id);
+      const response = await runLoader(splat);
 
-    expect(response.status).toBe(400);
-    await expect(response.text()).resolves.toBe('Map ID is required');
-  });
+      expect(response.status).toBe(404);
+    },
+  );
 
   it("loads the editor's Chinese messages with the map", async () => {
     stubClient(jest.fn().mockResolvedValue(metadata()));
-    await runLoader('edit', '3');
+    await runLoader('My%20map/edit');
     expect(I18nMsg.getLoaded('zh')).toBeDefined();
   });
 
-  it('rejects a non-numeric map id with a 400', async () => {
-    stubClient(jest.fn());
+  it('opens an editable map in root with the role-based mode and the saved zoom', async () => {
+    const fetchMapMetadataByPath = jest.fn().mockResolvedValue(metadata());
+    stubClient(fetchMapMetadataByPath);
 
-    const response = await runLoader('edit', 'abc');
-
-    expect(response.status).toBe(400);
-    await expect(response.text()).resolves.toBe('Invalid map ID');
-  });
-
-  it('opens an editable map with the role-based mode and the saved zoom', async () => {
-    const fetchMapMetadata = jest.fn().mockResolvedValue(metadata());
-    stubClient(fetchMapMetadata);
-
-    const response = await runLoader('edit', '5');
+    const response = await runLoader('My%20map/edit');
 
     await expect(response.json()).resolves.toEqual({
       editorMode: 'edition-editor',
       mapMetadata: metadata(),
       zoom: 1.2,
     });
-    expect(fetchMapMetadata).toHaveBeenCalledWith(5, false);
+    expect(fetchMapMetadataByPath).toHaveBeenCalledWith('', 'My map', false);
   });
 
-  it('reuses the cached metadata for the same map', async () => {
-    const fetchMapMetadata = jest.fn().mockResolvedValue(metadata());
-    stubClient(fetchMapMetadata);
+  it('opens an editable map inside nested folders by folderPath and title', async () => {
+    const nestedMeta = metadata({ folderPath: '工作/2026/', title: '项目计划' });
+    const fetchMapMetadataByPath = jest.fn().mockResolvedValue(nestedMeta);
+    stubClient(fetchMapMetadataByPath);
 
-    await runLoader('edit', '5');
-    await runLoader('edit', '5');
+    const response = await runLoader(
+      `${encodeURIComponent('工作')}/2026/${encodeURIComponent('项目计划')}/edit`,
+      true,
+    );
 
-    expect(fetchMapMetadata).toHaveBeenCalledTimes(1);
+    await expect(response.json()).resolves.toMatchObject({
+      editorMode: 'edition-editor',
+      mapMetadata: nestedMeta,
+    });
+    expect(fetchMapMetadataByPath).toHaveBeenCalledWith('工作/2026/', '项目计划', true);
+  });
+
+  it('reuses the cached metadata for the same map path', async () => {
+    const fetchMapMetadataByPath = jest.fn().mockResolvedValue(metadata());
+    stubClient(fetchMapMetadataByPath);
+
+    await runLoader('My%20map/edit');
+    await runLoader('My%20map/edit');
+
+    expect(fetchMapMetadataByPath).toHaveBeenCalledTimes(1);
   });
 
   it('opens a locked map read-only', async () => {
     stubClient(jest.fn().mockResolvedValue(metadata({ isLocked: true })));
 
-    const response = await runLoader('edit', '5');
+    const response = await runLoader('My%20map/edit');
 
     await expect(response.json()).resolves.toMatchObject({ editorMode: 'viewonly-private' });
   });
@@ -149,7 +154,7 @@ describe('editor page loader', () => {
   it('opens a map in edition-owner mode when metadata role is none', async () => {
     stubClient(jest.fn().mockResolvedValue(metadata({ role: 'none' })));
 
-    const response = await runLoader('edit', '5');
+    const response = await runLoader('My%20map/edit');
 
     await expect(response.json()).resolves.toMatchObject({ editorMode: 'edition-owner' });
   });
@@ -157,36 +162,28 @@ describe('editor page loader', () => {
   it('opens a locked map read-only even when metadata role is none', async () => {
     stubClient(jest.fn().mockResolvedValue(metadata({ role: 'none', isLocked: true })));
 
-    const response = await runLoader('edit', '5');
+    const response = await runLoader('My%20map/edit');
 
     await expect(response.json()).resolves.toMatchObject({ editorMode: 'viewonly-private' });
   });
 
-  it("opens a revision through the private history endpoint", async () => {
+  it('opens a revision through the private history path', async () => {
     stubClient(jest.fn().mockResolvedValue(metadata({ role: 'none' })));
 
-    const response = await runLoader('view-private', '5', true, '55');
+    const response = await runLoader('My%20map/history/55/view', true);
 
     await expect(response.json()).resolves.toMatchObject({ editorMode: 'viewonly-private' });
   });
 
   it('does not bootstrap a history revision with the current map', async () => {
-    const fetchMapMetadata = jest.fn().mockResolvedValue(metadata({ xml: '<current/>' }));
-    stubClient(fetchMapMetadata);
+    const fetchMapMetadataByPath = jest.fn().mockResolvedValue(metadata({ xml: '<current/>' }));
+    stubClient(fetchMapMetadataByPath);
 
-    const data = await (await runLoader('view-private', '5', true, '55')).json();
+    const data = await (await runLoader('My%20map/history/55/view', true)).json();
 
     // The editor then loads revision 55 from its own URL.
     expect(data.bootstrapXML).toBeUndefined();
-    expect(fetchMapMetadata).toHaveBeenCalledWith(5, false);
-  });
-
-  it('opens the private view read-only', async () => {
-    stubClient(jest.fn().mockResolvedValue(metadata({ role: 'owner' })));
-
-    const response = await runLoader('view-private', '5');
-
-    await expect(response.json()).resolves.toMatchObject({ editorMode: 'viewonly-private' });
+    expect(fetchMapMetadataByPath).toHaveBeenCalledWith('', 'My map', false);
   });
 
   it.each([
@@ -199,38 +196,38 @@ describe('editor page loader', () => {
   ])('falls back to the default zoom for %s', async (_name, jsonProps) => {
     stubClient(jest.fn().mockResolvedValue(metadata({ jsonProps })));
 
-    const response = await runLoader('edit', '5');
+    const response = await runLoader('My%20map/edit');
 
     await expect(response.json()).resolves.toMatchObject({ zoom: 0.8 });
   });
 
   it('passes the map XML along when bootstrapping', async () => {
-    const fetchMapMetadata = jest.fn().mockResolvedValue(metadata({ xml: '<map/>' }));
-    stubClient(fetchMapMetadata);
+    const fetchMapMetadataByPath = jest.fn().mockResolvedValue(metadata({ xml: '<map/>' }));
+    stubClient(fetchMapMetadataByPath);
 
-    const response = await runLoader('edit', '5', true);
+    const response = await runLoader('My%20map/edit', true);
 
     await expect(response.json()).resolves.toMatchObject({ bootstrapXML: '<map/>' });
-    expect(fetchMapMetadata).toHaveBeenCalledWith(5, true);
+    expect(fetchMapMetadataByPath).toHaveBeenCalledWith('', 'My map', true);
   });
 
   it('bootstraps without XML when the server sends none', async () => {
     stubClient(jest.fn().mockResolvedValue(metadata()));
 
-    const data = await (await runLoader('edit', '5', true)).json();
+    const data = await (await runLoader('My%20map/edit', true)).json();
 
     expect(data.bootstrapXML).toBeUndefined();
   });
 
   it('redirects to the login, keeping the current url, on an auth error', async () => {
-    window.history.pushState({}, '', '/c/maps/5/edit?zoom=2');
+    window.history.pushState({}, '', '/c/maps/My%20map/edit?zoom=2');
     stubClient(jest.fn().mockRejectedValue({ isAuth: true, status: 403 }));
 
-    const response = await runLoader('edit', '5');
+    const response = await runLoader('My%20map/edit');
 
     expect(response.status).toBe(302);
     expect(response.headers.get('Location')).toBe(
-      `/c/login?redirect=${encodeURIComponent('/c/maps/5/edit?zoom=2')}`,
+      `/c/login?redirect=${encodeURIComponent('/c/maps/My%20map/edit?zoom=2')}`,
     );
     window.history.pushState({}, '', '/');
   });
@@ -239,12 +236,6 @@ describe('editor page loader', () => {
     const error = { msg: 'Not found', status: 404 };
     stubClient(jest.fn().mockRejectedValue(error));
 
-    await expect(runLoader('view-private', '5')).rejects.toEqual(error);
-  });
-
-  it('fails on an unknown page mode', async () => {
-    stubClient(jest.fn());
-
-    await expect(runLoader('other' as PageModeType, '5')).rejects.toThrow('other');
+    await expect(runLoader('My%20map/history/55/view')).rejects.toEqual(error);
   });
 });

@@ -247,6 +247,29 @@ export class InMemoryMindmapRepo implements MindmapRepository {
     return { ...map, labels: this.getLabelsForMap(mapId) };
   }
 
+  async getMapByPath(
+    user: RepoUser,
+    folderPath: string,
+    title: string,
+  ): Promise<MindmapWithLabels> {
+    const normalizedTitle = title.trim();
+    const segments = folderPath
+      .split('/')
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+    const normalizedPath = segments.length > 0 ? `${segments.join('/')}/` : '';
+    for (const map of this.maps.values()) {
+      if (
+        map.ownerId === user.uid &&
+        map.folderPath === normalizedPath &&
+        map.title === normalizedTitle
+      ) {
+        return { ...map, labels: this.getLabelsForMap(map.id) };
+      }
+    }
+    throw new NotFoundOrForbiddenError();
+  }
+
   async getMapXml(user: RepoUser, mapId: number): Promise<{ xml: string; version: number }> {
     const map = await this.getMap(user, mapId);
     return { xml: map.xml, version: map.version };

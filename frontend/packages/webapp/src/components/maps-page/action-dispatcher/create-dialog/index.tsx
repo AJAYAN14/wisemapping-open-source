@@ -30,6 +30,7 @@ import {
 import Input from '../../../form/input';
 import BaseDialog from '../base-dialog';
 import { ClientContext } from '../../../../classes/provider/client-context';
+import { buildMapEditPath, validateMapTitleInput } from '../../../../utils/mapPath';
 
 export type CreateModel = {
   title: string;
@@ -49,15 +50,17 @@ const CreateDialog = ({ onClose, folderId }: CreateProps): React.ReactElement =>
   const [error, setError] = React.useState<ErrorInfo>();
   const intl = useIntl();
 
-  const mutation = useMutation<number, ErrorInfo, CreateModel>({
-    mutationFn: (model: CreateModel) => {
-      return client.createMap({
+  const mutation = useMutation<{ folderPath: string; title: string }, ErrorInfo, CreateModel>({
+    mutationFn: async (model: CreateModel) => {
+      const mapId = await client.createMap({
         ...model,
         ...(folderId !== undefined ? { folderId } : {}),
       });
+      const meta = await client.fetchMapMetadata(mapId);
+      return { folderPath: meta.folderPath ?? '', title: meta.title };
     },
-    onSuccess: (mapId: number) => {
-      window.location.href = `/c/maps/${mapId}/edit`;
+    onSuccess: ({ folderPath, title }) => {
+      window.location.href = buildMapEditPath(folderPath, title);
     },
     onError: (error) => {
       setError(error);
@@ -73,12 +76,35 @@ const CreateDialog = ({ onClose, folderId }: CreateProps): React.ReactElement =>
   const handleOnSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
     setError(undefined);
-    mutation.mutate(model);
+
+    const titleErr = validateMapTitleInput(model.title);
+    if (titleErr === 'blank') {
+      setError({
+        fields: {
+          title: intl.formatMessage({
+            id: 'validation.title-required',
+            defaultMessage: 'Title is required',
+          }),
+        },
+      });
+      return;
+    }
+    if (titleErr === 'slash') {
+      setError({
+        fields: {
+          title: '导图名称不能包含斜杠（/ 或 \\）。',
+        },
+      });
+      return;
+    }
+
+    mutation.mutate({ ...model, title: model.title.trim() });
   };
 
   // Stable, so that a key re-renders only the field typed in (see Input).
   const handleOnChange = React.useCallback((event: React.ChangeEvent<HTMLInputElement>): void => {
     event.preventDefault();
+    setError(undefined);
 
     const name = event.target.name;
     const value = event.target.value;

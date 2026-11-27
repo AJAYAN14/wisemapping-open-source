@@ -45,6 +45,7 @@ import type { EditorConfiguration, UploadTopicImageFn } from '@wisemapping/edito
 import { createThemeVariantStorage } from '../../services/createThemeVariantStorage';
 import type { ActionType } from '../maps-page/action-chooser';
 import { uploadBlobToMapAssets } from '../../utils/mapAssets';
+import { buildMapEditPath } from '../../utils/mapPath';
 
 const escapeXmlAttr = (value: string): string =>
   value
@@ -111,7 +112,6 @@ const buildPersistenceManagerForEditor = (
 };
 
 export type EditorPropsType = {
-  mapId: number;
   hid?: number | undefined;
   pageMode: PageModeType;
   zoom?: number | undefined;
@@ -127,7 +127,13 @@ const EditorPage = (props: EditorPropsType): React.ReactElement => {
   if (navigation.state === 'loading' || !editorMetadata) {
     return <EditorLoadingSkeleton />;
   }
-  return <LoadedEditorPage {...props} editorMetadata={editorMetadata} />;
+  return (
+    <LoadedEditorPage
+      {...props}
+      mapId={editorMetadata.mapMetadata.id}
+      editorMetadata={editorMetadata}
+    />
+  );
 };
 
 const LoadedEditorPage = ({
@@ -136,7 +142,7 @@ const LoadedEditorPage = ({
   zoom,
   hid,
   editorMetadata,
-}: EditorPropsType & { editorMetadata: EditorMetadata }): React.ReactElement => {
+}: EditorPropsType & { mapId: number; editorMetadata: EditorMetadata }): React.ReactElement => {
   const [activeDialog, setActiveDialog] = useState<ActionType>();
   const [sessionExpired, setSessionExpired] = useState<boolean>(false);
   const [versionConflict, setVersionConflict] = useState<boolean>(false);
@@ -261,6 +267,20 @@ const LoadedEditorPage = ({
     ],
   );
 
+  const handleTitleUpdated = useCallback(
+    (newTitle: string) => {
+      const folderPath = editorMetadata.mapMetadata.folderPath ?? '';
+      editorMetadata.mapMetadata.title = newTitle;
+      if (pageMode === 'edit') {
+        const nextPath = buildMapEditPath(folderPath, newTitle);
+        const nextUrl = `${nextPath}${window.location.search}${window.location.hash}`;
+        window.history.replaceState(window.history.state, '', nextUrl);
+      }
+      queryClient.invalidateQueries({ queryKey: ['maps'] });
+    },
+    [editorMetadata, pageMode],
+  );
+
   const existingMapInfo = mapInfoRef.current;
   if (!existingMapInfo || existingMapInfo.getId() !== mapId.toString()) {
     mapInfoRef.current = new MapInfoImpl(
@@ -272,8 +292,10 @@ const LoadedEditorPage = ({
       editorMetadata.mapMetadata.isLockedBy,
       editorMetadata.zoom,
       editorMetadata.mapMetadata.starred,
+      handleTitleUpdated,
     );
   } else {
+    existingMapInfo.setOnTitleUpdated(handleTitleUpdated);
     existingMapInfo.updateMetadata({
       locked: editorMetadata.mapMetadata.isLocked,
       starred: editorMetadata.mapMetadata.starred,

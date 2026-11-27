@@ -43,7 +43,7 @@ import { MapsPageLoading } from './components/maps-page/maps-list/MapsListSkelet
 import { mapsPageLoader } from './components/maps-page/loader';
 import MapsPageErrorFallback from './components/maps-page/MapsPageErrorFallback';
 import EditorLoadingSkeleton from '@wisemapping/editor/components/editor-loading-skeleton';
-import { PageModeType, loader as mapLoader } from './components/editor-page/loader';
+import { loader as mapLoader } from './components/editor-page/loader';
 import { loader as configLoader } from './loader';
 import queryClient from './queryClient';
 
@@ -53,30 +53,30 @@ import CommonPage from './components/common-page';
 import Redirect from './components/redirect';
 import AppConfig from './classes/app-config';
 import { useFetchAccount } from './classes/middleware';
+import { parseMapRouteSplat } from './utils/mapPath';
 
 const EditorPage = React.lazy(() => import('./components/editor-page'));
 const MapsPage = React.lazy(() => import('./components/maps-page'));
 
-const PageEditorWrapper = ({ mode }: { mode: PageModeType }) => {
-  const id = useParams()['id'];
-  if (id === undefined) {
-    throw 'Map could not be loaded';
+const PageEditorWrapper = () => {
+  const splat = useParams()['*'];
+  const [searchParams] = useSearchParams();
+  const parsed = parseMapRouteSplat(splat);
+  if (!parsed) {
+    return (
+      <IntlProviderWrapper>
+        <ErrorPage />
+      </IntlProviderWrapper>
+    );
   }
 
   // Fetch zoom id from query param ...
-  const [searchParams] = useSearchParams();
   const zoomStr = searchParams.get('zoom');
   const zoom = zoomStr ? Number.parseFloat(zoomStr) : undefined;
 
-  const mapId: number = Number.parseInt(id);
-
-  // Is a history view ?
-  const hidStr = useParams()['hid'];
-  const hid = hidStr ? Number.parseInt(hidStr) : undefined;
-
   return (
     <Suspense fallback={<EditorLoadingSkeleton />}>
-      <EditorPage pageMode={mode} mapId={mapId} hid={hid} zoom={zoom} />
+      <EditorPage pageMode={parsed.pageMode} hid={parsed.hid} zoom={zoom} />
     </Suspense>
   );
 };
@@ -137,19 +137,9 @@ const buildRouter = () =>
               errorElement={<MapsPageErrorFallback />}
             />
             <Route
-              path="/c/maps/:id/edit"
-              element={<PageEditorWrapper mode="edit" />}
-              loader={mapLoader('edit', true)}
-              errorElement={
-                <IntlProviderWrapper>
-                  <ErrorPage />
-                </IntlProviderWrapper>
-              }
-            />
-            <Route
-              path="/c/maps/:id/:hid/view"
-              element={<PageEditorWrapper mode="view-private" />}
-              loader={mapLoader('view-private', true)}
+              path="/c/maps/*"
+              element={<PageEditorWrapper />}
+              loader={mapLoader(true)}
               errorElement={
                 <IntlProviderWrapper>
                   <ErrorPage />

@@ -23,10 +23,11 @@ import AppConfig from '../../classes/app-config';
 import queryClient from '../../queryClient';
 import Client from '../../classes/client';
 import { createJsonResponse } from '../../utils/response';
-import { mapMetadataQueryKey } from '../../classes/middleware';
+import { mapMetadataByPathQueryKey, mapMetadataQueryKey } from '../../classes/middleware';
 import AppI18n from '../../classes/app-i18n';
 import I18nMsg from '@wisemapping/editor/classes/i18n-msg';
 import { appLogger as log } from '../../utils/logger';
+import { parseMapRouteSplat } from '../../utils/mapPath';
 
 export type EditorMetadata = {
   editorMode: EditorRenderMode;
@@ -38,22 +39,24 @@ export type EditorMetadata = {
 export type PageModeType = 'edit' | 'view-private';
 
 /**
- * Fetches map metadata using React Query cache.
- * Will return cached data if available and not stale, otherwise fetches from API.
- * @param mapId - The ID of the map to fetch metadata for
- * @param client - The client instance to use for fetching
- * @param includeXml - Whether to include XML in the metadata response
- * @returns Promise resolving to MapMetadata
+ * Fetches map metadata by folderPath + title using React Query cache, and seeds the
+ * ID-keyed metadata cache so in-editor dialogs share the same record without refetching.
  */
-async function fetchMapMetadataWithCache(
-  mapId: number,
+async function fetchMapMetadataByPathWithCache(
+  folderPath: string,
+  title: string,
   client: Client,
   includeXml = false,
 ): Promise<MapMetadata> {
-  return queryClient.fetchQuery<MapMetadata, ErrorInfo>({
-    queryKey: mapMetadataQueryKey(mapId, includeXml),
-    queryFn: () => client.fetchMapMetadata(mapId, includeXml),
+  const metadata = await queryClient.fetchQuery<MapMetadata, ErrorInfo>({
+    queryKey: mapMetadataByPathQueryKey(folderPath, title, includeXml),
+    queryFn: () => client.fetchMapMetadataByPath(folderPath, title, includeXml),
   });
+  queryClient.setQueryData(mapMetadataQueryKey(metadata.id, includeXml), metadata);
+  if (!includeXml) {
+    queryClient.setQueryData(mapMetadataQueryKey(metadata.id, false), metadata);
+  }
+  return metadata;
 }
 
 // The editor's own messages, loaded with the map so that its chrome paints in Chinese.
@@ -63,34 +66,27 @@ const preloadEditorMessages = (): Promise<unknown> =>
     log.error('The editor messages could not be loaded', error),
   );
 
-export const loader = (pageMode: PageModeType, bootstrap = false) => {
-  const loadMap = loadMapFor(pageMode, bootstrap);
+export const loader = (bootstrap = false) => {
+  const loadMap = loadMapFor(bootstrap);
   return async (args: LoaderFunctionArgs): Promise<Response> => {
     const [result] = await Promise.all([loadMap(args), preloadEditorMessages()]);
     return result;
   };
 };
 
-const loadMapFor = (pageMode: PageModeType, bootstrap: boolean) => {
+const loadMapFor = (bootstrap: boolean) => {
   return async ({ params }: LoaderFunctionArgs): Promise<Response> => {
+    const parsed = parseMapRouteSplat(params['*']);
+    if (!parsed) {
+      return new Response('Map could not be found', {
+        status: 404,
+        statusText: 'Not Found',
+      });
+    }
+
     const client = AppConfig.getClient();
     let result: Response | undefined;
-
-    // Validate that params.id exists and is a valid number
-    if (!params['id'] || params['id'] === 'undefined') {
-      return new Response('Map ID is required', {
-        status: 400,
-        statusText: 'Bad Request',
-      });
-    }
-
-    const mapId = Number.parseInt(params['id'], 10);
-    if (Number.isNaN(mapId)) {
-      return new Response('Invalid map ID', {
-        status: 400,
-        statusText: 'Bad Request',
-      });
-    }
+    const { pageMode, folderPath, title } = parsed;
 
     switch (pageMode) {
       case 'edit':
@@ -98,8 +94,13 @@ const loadMapFor = (pageMode: PageModeType, bootstrap: boolean) => {
         try {
           // A history revision is loaded by the editor from its own URL: bootstrapping it with
           // the current map's XML would show today's map instead of the revision.
-          const bootstrapXml = bootstrap && !params['hid'];
-          const mapMetadata = await fetchMapMetadataWithCache(mapId, client, bootstrapXml);
+          const bootstrapXml = bootstrap && pageMode === 'edit';
+          const mapMetadata = await fetchMapMetadataByPathWithCache(
+            folderPath,
+            title,
+            client,
+            bootstrapXml,
+          );
 
           const editorMode: EditorRenderMode =
             mapMetadata.isLocked || pageMode === 'view-private'

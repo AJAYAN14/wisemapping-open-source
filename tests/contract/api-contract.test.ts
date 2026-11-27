@@ -753,4 +753,105 @@ describe('API Contract Tests (/api/restful/*)', () => {
       parentId,
     ]);
   });
+
+  it('resolves map metadata by folderPath + title and rejects slashes in map titles', async () => {
+    // Reject slash in map title on create
+    const slashCreate = await handler(
+      new Request('http://localhost:8888/api/restful/maps?title=2026%2FQ4', {
+        method: 'POST',
+        headers: authHeaders(),
+      }),
+    );
+    expect(slashCreate.status).toBe(400);
+
+    // Create folder hierarchy + map inside it + root map
+    const folderRes = await handler(
+      new Request('http://localhost:8888/api/restful/folders', {
+        method: 'POST',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ name: '工作' }),
+      }),
+    );
+    expect(folderRes.status).toBe(201);
+    const { folder } = (await folderRes.json()) as { folder: { id: number } };
+
+    const nestedCreate = await handler(
+      new Request(
+        `http://localhost:8888/api/restful/maps?title=${encodeURIComponent('项目计划')}&folderId=${folder.id}`,
+        {
+          method: 'POST',
+          headers: authHeaders(),
+        },
+      ),
+    );
+    expect(nestedCreate.status).toBe(201);
+    const nestedId = Number(nestedCreate.headers.get('ResourceId'));
+
+    const rootCreate = await handler(
+      new Request(
+        `http://localhost:8888/api/restful/maps?title=${encodeURIComponent('项目计划')}`,
+        {
+          method: 'POST',
+          headers: authHeaders(),
+        },
+      ),
+    );
+    expect(rootCreate.status).toBe(201);
+    const rootId = Number(rootCreate.headers.get('ResourceId'));
+
+    // Same title in different folders resolves distinctly
+    const byNestedPath = await handler(
+      new Request(
+        `http://localhost:8888/api/restful/maps/by-path/metadata?folderPath=${encodeURIComponent('工作/')}&title=${encodeURIComponent('项目计划')}&xml=true`,
+        { headers: authHeaders() },
+      ),
+    );
+    expect(byNestedPath.status).toBe(200);
+    const nestedMeta = (await byNestedPath.json()) as {
+      id: number;
+      title: string;
+      folderPath: string;
+      xml?: string;
+    };
+    expect(nestedMeta.id).toBe(nestedId);
+    expect(nestedMeta.folderPath).toBe('工作/');
+    expect(nestedMeta.xml).toContain('<map');
+
+    const byRootPath = await handler(
+      new Request(
+        `http://localhost:8888/api/restful/maps/by-path/metadata?folderPath=&title=${encodeURIComponent('项目计划')}`,
+        { headers: authHeaders() },
+      ),
+    );
+    expect(byRootPath.status).toBe(200);
+    const rootMeta = (await byRootPath.json()) as { id: number; folderPath: string };
+    expect(rootMeta.id).toBe(rootId);
+    expect(rootMeta.folderPath).toBe('');
+
+    // Reject slash on rename
+    const slashRename = await handler(
+      new Request(`http://localhost:8888/api/restful/maps/${rootId}/title`, {
+        method: 'PUT',
+        headers: authHeaders({ 'Content-Type': 'text/plain' }),
+        body: 'A/B',
+      }),
+    );
+    expect(slashRename.status).toBe(400);
+
+    // Missing title -> 400, unknown path -> 404
+    const missingTitle = await handler(
+      new Request('http://localhost:8888/api/restful/maps/by-path/metadata?folderPath=工作/', {
+        headers: authHeaders(),
+      }),
+    );
+    expect(missingTitle.status).toBe(400);
+
+    const notFound = await handler(
+      new Request(
+        `http://localhost:8888/api/restful/maps/by-path/metadata?folderPath=${encodeURIComponent('不存在/')}&title=${encodeURIComponent('项目计划')}`,
+        { headers: authHeaders() },
+      ),
+    );
+    expect(notFound.status).toBe(403);
+  });
 });

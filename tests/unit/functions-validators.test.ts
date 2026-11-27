@@ -40,6 +40,8 @@ describe('functions validators', () => {
   it('validates title, description, and label inputs', () => {
     expect(validateTitle('  My Map  ')).toEqual({ valid: true, value: 'My Map' });
     expect(validateTitle('   ').valid).toBe(false);
+    expect(validateTitle('a/b').valid).toBe(false);
+    expect(validateTitle('a\\b').valid).toBe(false);
     expect(validateTitle('a'.repeat(513)).valid).toBe(false);
 
     expect(validateDescription(undefined)).toEqual({ valid: true, value: '' });

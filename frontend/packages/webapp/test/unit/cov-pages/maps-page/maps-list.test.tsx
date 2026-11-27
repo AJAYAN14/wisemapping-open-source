@@ -169,10 +169,10 @@ describe('MapsList', () => {
     await screen.findAllByText('Alpha plan');
     expect(client.fetchAllMaps).toHaveBeenCalled();
     expect(tableTitles()).toEqual(['Beta notes', 'Gamma ideas', 'Alpha plan']);
-    // Each map links to its editor.
+    // Each map links to its editor by path + title.
     expect(within(rowFor('Alpha plan')).getAllByRole('link')[0]).toHaveProperty(
       'href',
-      expect.stringContaining('/c/maps/1/edit'),
+      expect.stringContaining('/c/maps/Alpha%20plan/edit'),
     );
     // The labels column is shown.
     expect(within(rowFor('Alpha plan')).getByText('Research')).toBeTruthy();

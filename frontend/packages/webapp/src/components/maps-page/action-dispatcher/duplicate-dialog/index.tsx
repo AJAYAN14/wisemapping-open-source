@@ -32,6 +32,7 @@ import { SimpleDialogProps } from '..';
 import BaseDialog from '../base-dialog';
 import { useFetchMapById } from '../../../../classes/middleware';
 import { ClientContext } from '../../../../classes/provider/client-context';
+import { buildMapEditPath, validateMapTitleInput } from '../../../../utils/mapPath';
 
 export type DuplicateModel = {
   id: number;
@@ -47,18 +48,29 @@ const DuplicateDialog = ({ mapId, onClose }: SimpleDialogProps): React.ReactElem
 
   const intl = useIntl();
 
-  const mutation = useMutation<number, ErrorInfo, DuplicateModel>({
-    mutationFn: (model: DuplicateModel) => {
+  const { data: map } = useFetchMapById(mapId);
+
+  const mutation = useMutation<
+    { folderPath: string; title: string },
+    ErrorInfo,
+    DuplicateModel
+  >({
+    mutationFn: async (model: DuplicateModel) => {
       const { id, title, description } = model;
       // Convert to BasicMapInfo format
       const basicInfo: BasicMapInfo = {
         title: title,
         ...(description !== undefined && { description }),
       };
-      return client.duplicateMap(id, basicInfo);
+      const newMapId = await client.duplicateMap(id, basicInfo);
+      if (map) {
+        return { folderPath: map.folderPath ?? '', title };
+      }
+      const meta = await client.fetchMapMetadata(newMapId);
+      return { folderPath: meta.folderPath ?? '', title: meta.title };
     },
-    onSuccess: (mapId) => {
-      window.location.href = `/c/maps/${mapId}/edit`;
+    onSuccess: ({ folderPath, title }) => {
+      window.location.href = buildMapEditPath(folderPath, title);
     },
     onError: (error) => {
       setError(error);
@@ -84,9 +96,9 @@ const DuplicateDialog = ({ mapId, onClose }: SimpleDialogProps): React.ReactElem
       return;
     }
 
-    // Validate that title is not empty or just whitespace
-    const trimmedTitle = model.title?.trim();
-    if (!trimmedTitle || trimmedTitle.length === 0) {
+    // Validate that title is not empty or contains slashes
+    const titleErr = validateMapTitleInput(model.title ?? '');
+    if (titleErr === 'blank') {
       setError({
         fields: {
           title: intl.formatMessage({
@@ -97,6 +109,15 @@ const DuplicateDialog = ({ mapId, onClose }: SimpleDialogProps): React.ReactElem
       });
       return;
     }
+    if (titleErr === 'slash') {
+      setError({
+        fields: {
+          title: '导图名称不能包含斜杠（/ 或 \\）。',
+        },
+      });
+      return;
+    }
+    const trimmedTitle = model.title.trim();
 
     // Ensure title is never undefined - use trimmed version
     // Use mapId from props, not model.id, to ensure it's always valid
@@ -125,8 +146,6 @@ const DuplicateDialog = ({ mapId, onClose }: SimpleDialogProps): React.ReactElem
       setModel((current) => ({ ...current, description: value }));
     }
   }, []);
-
-  const { data: map } = useFetchMapById(mapId);
 
   // An invalid id (0 is a valid one) is an error for as long as it is invalid: derived, so typing
   // in the form can not clear it.

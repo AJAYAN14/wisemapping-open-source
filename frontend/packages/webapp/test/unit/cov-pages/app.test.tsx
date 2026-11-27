@@ -49,7 +49,7 @@ jest.mock('@wisemapping/editor/components/editor-loading-skeleton', () => ({
   default: () => 'editor-loading',
 }));
 jest.mock('../../../src/components/editor-page/loader', () => ({
-  loader: (mode: string, bootstrap: boolean) => `map-loader:${mode}:${bootstrap}`,
+  loader: (bootstrap: boolean) => `map-loader:${bootstrap}`,
 }));
 jest.mock('../../../src/loader', () => ({ loader: 'config-loader' }));
 jest.mock('../../../src/components/maps-page/loader', () => ({ mapsPageLoader: 'maps-loader' }));
@@ -176,15 +176,23 @@ describe('App', () => {
   });
 
   test.each([
-    ['/c/maps/12/edit', 'edit', { pageMode: 'edit', mapId: 12 }],
-    ['/c/maps/12/edit?zoom=1.5', 'edit', { pageMode: 'edit', mapId: 12, zoom: 1.5 }],
-    ['/c/maps/12/7/view', 'view-private', { pageMode: 'view-private', mapId: 12, hid: 7 }],
-  ])('%s opens the editor in %s mode', async (url, mode, props) => {
+    ['/c/maps/My%20map/edit', { pageMode: 'edit' }],
+    ['/c/maps/Work/Project/My%20map/edit?zoom=1.5', { pageMode: 'edit', zoom: 1.5 }],
+    ['/c/maps/Work/My%20map/history/7/view', { pageMode: 'view-private', hid: 7 }],
+  ])('%s opens the editor with expected props', async (url, props) => {
     renderAt(url);
 
     const editor = await screen.findByText(/^editor-page:/);
     expect(JSON.parse(editor.textContent!.slice('editor-page:'.length))).toEqual(props);
-    expect(leaf().loader).toBe(`map-loader:${mode}:true`);
+    expect(leaf().loader).toBe('map-loader:true');
     expect(errorElementName(leaf())).toBe('error-page');
   });
+
+  test.each(['/c/maps/12', '/c/maps/12/edit-invalid'])(
+    '%s renders error-page for invalid map routes',
+    async (url) => {
+      renderAt(url);
+      expect(await screen.findByText('error-page')).toBeTruthy();
+    },
+  );
 });

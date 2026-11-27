@@ -55,7 +55,9 @@ jest.mock('react-router', () => ({
     editorMode: 'edition-owner',
     zoom: 1,
     mapMetadata: {
+      id: 42,
       title: 'My map',
+      folderPath: '',
       creatorFullName: 'Jane Doe',
       isLocked: false,
       isLockedBy: undefined,
@@ -85,7 +87,7 @@ const renderPage = (): (() => void) => {
   const Page = (): React.ReactElement => {
     const [, forceRender] = React.useReducer((renders: number) => renders + 1, 0);
     rerenderPage = () => act(() => forceRender());
-    return <EditorPage mapId={1} pageMode="edit" />;
+    return <EditorPage pageMode="edit" />;
   };
   renderWithProviders(<Page />, { client });
   return () => rerenderPage();
@@ -101,7 +103,7 @@ describe('EditorPage', () => {
   });
 
   test('passes hid and clean fallback XML to MockPersistenceManager', () => {
-    renderWithProviders(<EditorPage mapId={42} hid={99} pageMode="view-private" />, { client });
+    renderWithProviders(<EditorPage hid={99} pageMode="view-private" />, { client });
 
     expect(mockPersistenceConstructor).toHaveBeenCalledWith(
       expect.stringContaining('text="My map"'),

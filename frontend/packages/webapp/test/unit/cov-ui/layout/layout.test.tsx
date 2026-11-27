@@ -90,9 +90,11 @@ describe('LoadingFallback', () => {
     expect(document.querySelectorAll('.MuiSkeleton-root').length).toBeGreaterThan(0);
   });
 
-  test.each(['/c/maps/12', '/c/maps/12/edit'])(
-    'on the editor route %s shows the editor skeleton',
-    (path) => {
+  test.each([
+    '/c/maps/My%20map/edit',
+    '/c/maps/Work/My%20map/edit',
+    '/c/maps/My%20map/history/7/view',
+  ])('on the editor route %s shows the editor skeleton', (path) => {
       setLocation(path);
       renderWithProviders(<LoadingFallback />);
       expect(screen.getByText('editor skeleton')).toBeTruthy();

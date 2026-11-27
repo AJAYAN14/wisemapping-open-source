@@ -334,11 +334,14 @@ describe('DeleteMultiselectDialog', () => {
 describe('CreateDialog', () => {
   const setup = () => {
     const createMap = jest.fn<Promise<number>, [unknown]>(() => Promise.resolve(99));
+    const fetchMapMetadata = jest.fn(() =>
+      Promise.resolve({ id: 99, title: 'Roadmap', folderPath: 'Work/' }),
+    );
     const onClose = jest.fn();
     renderWithProviders(<CreateDialog onClose={onClose} />, {
-      client: { createMap } as unknown as Client,
+      client: { createMap, fetchMapMetadata } as unknown as Client,
     });
-    return { createMap, onClose };
+    return { createMap, fetchMapMetadata, onClose };
   };
 
   test('creates a map with the typed name and description', async () => {
@@ -535,8 +538,8 @@ describe('HistoryDialog', () => {
     expect(screen.getByText('diego@wisemapping.com')).toBeTruthy();
     const views = screen.getAllByRole('link', { name: 'View' });
     expect(views.map((link) => link.getAttribute('href'))).toEqual([
-      '/c/maps/7/31/view',
-      '/c/maps/7/32/view',
+      '/c/maps/Travel%20plans/history/31/view',
+      '/c/maps/Travel%20plans/history/32/view',
     ]);
   });
 

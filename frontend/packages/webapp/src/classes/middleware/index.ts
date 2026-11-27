@@ -31,6 +31,15 @@ import AppI18n from '../app-i18n';
 export const mapMetadataQueryKey = (id: number, withXml = false): unknown[] =>
   withXml ? ['maps', 'metadata', id, 'xml'] : ['maps', 'metadata', id];
 
+export const mapMetadataByPathQueryKey = (
+  folderPath: string,
+  title: string,
+  withXml = false,
+): unknown[] =>
+  withXml
+    ? ['maps', 'metadata-by-path', folderPath, title, 'xml']
+    : ['maps', 'metadata-by-path', folderPath, title];
+
 type MapLoadResult = {
   isLoading: boolean;
   error: ErrorInfo | undefined;

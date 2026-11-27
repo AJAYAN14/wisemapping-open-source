@@ -59,14 +59,26 @@ describe('MapInfoImpl', () => {
     await expect(info.isStarred()).resolves.toBe(true);
   });
 
-  it('updateTitle trims and saves the new title', async () => {
+  it('updateTitle trims, saves, and invokes onTitleUpdated', async () => {
     const renameMap = jest.fn().mockResolvedValue(undefined);
-    const info = build({ renameMap });
+    const onTitleUpdated = jest.fn();
+    const info = new MapInfoImpl(
+      4,
+      { renameMap } as unknown as Client,
+      'Title',
+      'Ana Li',
+      false,
+      undefined,
+      1.5,
+      false,
+      onTitleUpdated,
+    );
 
     await info.updateTitle('  New title  ');
 
     expect(renameMap).toHaveBeenCalledWith(4, { title: 'New title' });
     expect(info.getTitle()).toBe('New title');
+    expect(onTitleUpdated).toHaveBeenCalledWith('New title');
   });
 
   it('updateTitle restores the old title when saving fails', async () => {

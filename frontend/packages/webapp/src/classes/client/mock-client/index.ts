@@ -31,6 +31,7 @@ import Client, {
 import { LocaleCode, localeFromStr } from '../../app-i18n';
 import JwtTokenConfig from '../../jwt-token-config';
 import { appLogger as log } from '../../../utils/logger';
+import { normalizeFolderPath, validateMapTitleInput } from '../../../utils/mapPath';
 
 const MOCK_MAPS_KEY = 'wisemapping.mock.maps';
 const MOCK_LABELS_KEY = 'wisemapping.mock.labels';
@@ -300,6 +301,25 @@ class MockClient implements Client {
     return Promise.resolve(metadata);
   }
 
+  fetchMapMetadataByPath(
+    folderPath: string,
+    title: string,
+    includeXml = false,
+  ): Promise<MapMetadata> {
+    const normalizedPath = normalizeFolderPath(folderPath);
+    const normalizedTitle = title.trim();
+    const map = loadMockMaps().find(
+      (m) => normalizeFolderPath(m.folderPath) === normalizedPath && m.title === normalizedTitle,
+    );
+    if (!map) {
+      return Promise.reject({
+        msg: `Map could not be found: ${normalizedPath}${normalizedTitle}`,
+        status: 404,
+      });
+    }
+    return this.fetchMapMetadata(map.id, includeXml);
+  }
+
   logout(): Promise<void> {
     JwtTokenConfig.removeToken();
     return Promise.resolve();
@@ -472,6 +492,12 @@ class MockClient implements Client {
   }
 
   createMap(map: BasicMapInfo): Promise<number> {
+    if (validateMapTitleInput(map.title) === 'slash') {
+      return Promise.reject({
+        msg: '导图名称不能包含斜杠（/ 或 \\）。',
+        fields: { title: '导图名称不能包含斜杠（/ 或 \\）。' },
+      });
+    }
     const maps = loadMockMaps();
     const folders = loadMockFolders();
     const folderId = map.folderId ?? null;
@@ -529,6 +555,12 @@ class MockClient implements Client {
   }
 
   renameMap(id: number, basicInfo: Partial<BasicMapInfo>): Promise<void> {
+    if (basicInfo.title !== undefined && validateMapTitleInput(basicInfo.title) === 'slash') {
+      return Promise.reject({
+        msg: '导图名称不能包含斜杠（/ 或 \\）。',
+        fields: { title: '导图名称不能包含斜杠（/ 或 \\）。' },
+      });
+    }
     const maps = loadMockMaps();
     const target = maps.find((m) => m.id === id);
     if (!target) {
@@ -595,6 +627,12 @@ class MockClient implements Client {
   }
 
   duplicateMap(id: number, basicInfo: BasicMapInfo): Promise<number> {
+    if (validateMapTitleInput(basicInfo.title) === 'slash') {
+      return Promise.reject({
+        msg: '导图名称不能包含斜杠（/ 或 \\）。',
+        fields: { title: '导图名称不能包含斜杠（/ 或 \\）。' },
+      });
+    }
     const maps = loadMockMaps();
     const source = maps.find((m) => m.id === id);
     if (!source) {

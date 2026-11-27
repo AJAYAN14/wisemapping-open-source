@@ -24,13 +24,18 @@ import Typography from '@mui/material/Typography';
 import EditorLoadingSkeleton from '@wisemapping/editor/components/editor-loading-skeleton';
 import { MapsPageLoading } from '../maps-page/maps-list/MapsListSkeleton';
 import AuthProgress from '../layout/auth-progress';
+import { parseMapRouteSplat } from '../../utils/mapPath';
 
 const isEditorRoute = () => {
   if (typeof window === 'undefined') {
     return false;
   }
 
-  return /\/c\/maps\/(?:\d+)(?:\/|$)/.test(window.location.pathname);
+  const pathname = window.location.pathname;
+  return (
+    pathname.startsWith('/c/maps/') &&
+    parseMapRouteSplat(pathname.slice('/c/maps/'.length)) !== null
+  );
 };
 
 // The map list shows its own skeleton from the first paint, so that loading it is one skeleton

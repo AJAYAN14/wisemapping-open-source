@@ -27,7 +27,7 @@ import {
   VersionConflictError,
 } from './lib/repo.js';
 import { getDbPool } from './lib/db.js';
-import type { MindmapRepository, RepoUser } from './lib/repo.js';
+import type { MindmapRepository, MindmapWithLabels, RepoUser } from './lib/repo.js';
 import {
   MAP_ASSETS_BUCKET,
   StorageConfigurationError,
@@ -57,6 +57,41 @@ export interface ApiHandlerDeps {
 }
 
 const VALID_LOCALE_REGEX = /^[a-z]{2}(?:-[A-Z]{2})?$/;
+
+function buildMapMetadataResponse(
+  req: Request,
+  user: RepoUser,
+  map: MindmapWithLabels,
+  includeXml: boolean,
+): Response {
+  return jsonResponse(
+    req,
+    200,
+    {
+      id: map.id,
+      jsonProps: map.properties,
+      locked: false,
+      title: map.title,
+      isLockedBy: null,
+      creatorFullName: user.name,
+      role: 'owner',
+      description: map.description,
+      folderId: map.folderId,
+      folderPath: map.folderPath,
+      createdBy: user.email,
+      creationTime: map.creationTime,
+      lastModificationBy: map.lastModificationBy || user.name,
+      lastModificationTime: map.lastModificationTime,
+      starred: map.starred,
+      public: false,
+      version: map.version,
+      ...(includeXml ? { xml: map.xml } : {}),
+    },
+    {
+      'X-Mindmap-Version': String(map.version),
+    },
+  );
+}
 
 function toRepoUser(auth: SessionJwtUser): RepoUser {
   return {
@@ -619,6 +654,23 @@ export function createApiHandler(
       }
 
       // -----------------------------------------------------------------------
+      // Path-based map metadata lookup (must match before /maps/{id}...)
+      // -----------------------------------------------------------------------
+      if (path === '/maps/by-path/metadata' && method === 'GET') {
+        const title = url.searchParams.get('title')?.trim() ?? '';
+        if (!title) {
+          throw new BadRequestError(['Missing required query parameter: title.'], {
+            globalSeverity: 'WARNING',
+            errorCode: 'MISSING_MAP_TITLE',
+          });
+        }
+        const folderPath = url.searchParams.get('folderPath') ?? '';
+        const includeXml = url.searchParams.get('xml')?.toLowerCase() === 'true';
+        const map = await repo.getMapByPath(user, folderPath, title);
+        return buildMapMetadataResponse(req, user, map, includeXml);
+      }
+
+      // -----------------------------------------------------------------------
       // Map-scoped routes: /maps/{id}...
       // -----------------------------------------------------------------------
 
@@ -689,32 +741,7 @@ export function createApiHandler(
         const mapId = parsePositiveInt(metadataMatch[1], 'mapId');
         const includeXml = url.searchParams.get('xml')?.toLowerCase() === 'true';
         const map = await repo.getMap(user, mapId);
-        return jsonResponse(
-          req,
-          200,
-          {
-            jsonProps: map.properties,
-            locked: false,
-            title: map.title,
-            isLockedBy: null,
-            creatorFullName: user.name,
-            role: 'owner',
-            description: map.description,
-            folderId: map.folderId,
-            folderPath: map.folderPath,
-            createdBy: user.email,
-            creationTime: map.creationTime,
-            lastModificationBy: map.lastModificationBy || user.name,
-            lastModificationTime: map.lastModificationTime,
-            starred: map.starred,
-            public: false,
-            version: map.version,
-            ...(includeXml ? { xml: map.xml } : {}),
-          },
-          {
-            'X-Mindmap-Version': String(map.version),
-          },
-        );
+        return buildMapMetadataResponse(req, user, map, includeXml);
       }
 
       // PUT /maps/{id}/document

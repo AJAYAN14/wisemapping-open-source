@@ -92,7 +92,18 @@ export function validateTitle(title: unknown): { valid: true; value: string } | 
   if (trimmed.length > MAX_MAP_TITLE_LENGTH) {
     return { valid: false, message: `Title cannot exceed ${MAX_MAP_TITLE_LENGTH} characters.` };
   }
+  if (/[\\/]/.test(trimmed)) {
+    return { valid: false, message: '导图名称不能包含斜杠（/ 或 \\）。' };
+  }
   return { valid: true, value: trimmed };
+}
+
+export function normalizeFolderPath(rawPath: string): string {
+  const segments = rawPath
+    .split('/')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
+  return segments.length > 0 ? `${segments.join('/')}/` : '';
 }
 
 export function validateDescription(

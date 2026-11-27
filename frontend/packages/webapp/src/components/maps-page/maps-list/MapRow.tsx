@@ -29,6 +29,7 @@ import HubRoundedIcon from '@mui/icons-material/HubRounded';
 import MoreHorizRoundedIcon from '@mui/icons-material/MoreHorizRounded';
 import { Label, MapInfo } from '../../../classes/client';
 import { useDate } from '../../../classes/app-i18n/dates';
+import { buildMapEditPath } from '../../../utils/mapPath';
 import { LabelsCell } from './labels-cell';
 import {
   ActionIconButton,
@@ -156,7 +157,7 @@ const MapRowComponent = ({
             >
               <TitleLink
                 id={`map-title-${map.id}`}
-                href={`/c/maps/${map.id}/edit`}
+                href={buildMapEditPath(map.folderPath, map.title)}
                 underline="none"
                 onClick={(e) => e.stopPropagation()}
               >

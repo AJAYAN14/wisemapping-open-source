@@ -205,6 +205,11 @@ interface Client {
   renameMap(id: number, changes: Partial<BasicMapInfo>): Promise<void>;
   fetchAllMaps(): Promise<MapInfo[]>;
   fetchMapMetadata(id: number, includeXml?: boolean): Promise<MapMetadata>;
+  fetchMapMetadataByPath(
+    folderPath: string,
+    title: string,
+    includeXml?: boolean,
+  ): Promise<MapMetadata>;
 
   duplicateMap(id: number, basicInfo: BasicMapInfo): Promise<number>;
 

@@ -1090,6 +1090,22 @@ export function createFakeMindmapRepository(
       return toWithLabels(user.uid, m);
     },
 
+    async getMapByPath(user: RepoUserLike, folderPath: string, title: string) {
+      const normalizedTitle = title.trim();
+      const segments = folderPath
+        .split('/')
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0);
+      const normalizedPath = segments.length > 0 ? `${segments.join('/')}/` : '';
+      const m = store
+        .listMindmaps(user.uid)
+        .find((item) => (item.folderPath ?? '') === normalizedPath && item.title === normalizedTitle);
+      if (!m) {
+        throw new errors.NotFoundOrForbiddenError();
+      }
+      return toWithLabels(user.uid, m);
+    },
+
     async getMapXml(user: RepoUserLike, mapId: number) {
       const m = store.getMindmap(user.uid, mapId);
       if (!m) {

@@ -18,11 +18,13 @@
 
 import React, { use } from 'react';
 import { FormattedMessage, useIntl } from 'react-intl';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { ChangeHistory, ErrorInfo } from '../../../../classes/client';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { ChangeHistory, ErrorInfo, MapInfo } from '../../../../classes/client';
 import { SimpleDialogProps } from '..';
 import BaseDialog from '../base-dialog';
 import { useDate } from '../../../../classes/app-i18n/dates';
+import { useFetchMapById } from '../../../../classes/middleware';
+import { buildMapHistoryViewPath } from '../../../../utils/mapPath';
 
 import Tooltip from '@mui/material/Tooltip';
 import { ClientContext } from '../../../../classes/provider/client-context';
@@ -86,6 +88,12 @@ const HistoryDialog = ({
   const intl = useIntl();
   const date = useDate();
   const client = use(ClientContext);
+  const queryClient = useQueryClient();
+  const cachedMapFromList = queryClient
+    .getQueryData<MapInfo[]>(['maps'])
+    ?.find((item) => item.id === mapId);
+  const { data: fetchedMap } = useFetchMapById(cachedMapFromList ? Number.NaN : mapId);
+  const targetMap = cachedMapFromList ?? fetchedMap;
   const {
     data,
     isPending,
@@ -175,8 +183,16 @@ const HistoryDialog = ({
                 <HistoryActions>
                   <Button
                     size="small"
-                    href={`/c/maps/${mapId}/${row.id}/view`}
-                    target="history"
+                    {...(targetMap
+                      ? {
+                          href: buildMapHistoryViewPath(
+                            targetMap.folderPath,
+                            targetMap.title,
+                            row.id,
+                          ),
+                          target: 'history',
+                        }
+                      : { disabled: true })}
                     startIcon={<OpenInNewRoundedIcon fontSize="small" />}
                   >
                     <FormattedMessage id="maps.view" defaultMessage="View" />
