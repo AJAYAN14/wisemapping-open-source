@@ -170,4 +170,32 @@ describe('useMapsListState', () => {
     expect(result.current.selected).toEqual([]);
     expect(ids(result.current.filteredMaps)).toEqual([2]);
   });
+
+  test('persists viewMode, supports sizeBytes and lastOpenTime sorting via changeSort', () => {
+    localStorage.clear();
+    const sizedMaps = [
+      map(1, { sizeBytes: 500, lastOpenTime: '2026-01-05T00:00:00Z' }),
+      map(2, { sizeBytes: 4096, lastOpenTime: '2026-01-01T00:00:00Z' }),
+      map(3, { sizeBytes: 1200, lastOpenTime: '2026-01-10T00:00:00Z' }),
+    ];
+    const { result } = renderHook(() => useMapsListState(all, sizedMaps));
+
+    expect(result.current.viewMode).toBe('list');
+    act(() => result.current.changeViewMode('grid'));
+    expect(result.current.viewMode).toBe('grid');
+    expect(localStorage.getItem('mapsListViewMode')).toBe('grid');
+
+    act(() => result.current.changeSort('sizeBytes', 'desc'));
+    expect(result.current.orderBy).toBe('sizeBytes');
+    expect(result.current.order).toBe('desc');
+    expect(ids(result.current.pagedMaps)).toEqual([2, 3, 1]);
+
+    act(() => result.current.changeSort('sizeBytes', 'desc'));
+    expect(result.current.order).toBe('asc');
+    expect(ids(result.current.pagedMaps)).toEqual([1, 3, 2]);
+
+    act(() => result.current.changeSort('lastOpenTime', 'desc'));
+    expect(result.current.orderBy).toBe('lastOpenTime');
+    expect(ids(result.current.pagedMaps)).toEqual([3, 1, 2]);
+  });
 });

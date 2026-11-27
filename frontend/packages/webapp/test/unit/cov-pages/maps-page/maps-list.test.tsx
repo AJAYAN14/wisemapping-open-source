@@ -160,6 +160,7 @@ const setNarrowScreen = (narrow: boolean): void => {
   });
 };
 
+beforeEach(() => localStorage.clear());
 afterEach(() => setNarrowScreen(false));
 
 describe('MapsList', () => {

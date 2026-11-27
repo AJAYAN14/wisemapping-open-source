@@ -30,6 +30,7 @@ import MoreHorizRoundedIcon from '@mui/icons-material/MoreHorizRounded';
 import { Label, MapInfo } from '../../../classes/client';
 import { useDate } from '../../../classes/app-i18n/dates';
 import { buildMapEditPath } from '../../../utils/mapPath';
+import { formatMapSize } from '../../../utils/mapPreview';
 import { LabelsCell } from './labels-cell';
 import {
   ActionIconButton,
@@ -58,6 +59,7 @@ export interface MapItemHandlers {
 interface MapRowProps extends MapItemHandlers {
   map: MapInfo;
   selected: boolean;
+  timeField?: 'lastModificationTime' | 'lastOpenTime';
   onToggleSelected: (mapId: number) => void;
   onRemoveLabel: (mapId: number, labelId: number) => void;
   onContextMenu?: (mapId: number, event: React.MouseEvent<HTMLTableRowElement>) => void;
@@ -68,6 +70,7 @@ interface MapRowProps extends MapItemHandlers {
 const MapRowComponent = ({
   map,
   selected,
+  timeField = 'lastModificationTime',
   onToggleSelected,
   onStar,
   onOpenMenu,
@@ -77,6 +80,10 @@ const MapRowComponent = ({
 }: MapRowProps): React.ReactElement => {
   const intl = useIntl();
   const date = useDate();
+  const displayTime =
+    timeField === 'lastOpenTime'
+      ? (map.lastOpenTime ?? map.lastModificationTime)
+      : map.lastModificationTime;
 
   const handleStar = (event: React.MouseEvent<HTMLButtonElement>): void => {
     event.stopPropagation();
@@ -174,12 +181,17 @@ const MapRowComponent = ({
         />
       </LabelsBodyCell>
       <BodyCell>
+        <CellText variant="body2" sx={{ whiteSpace: 'nowrap' }}>
+          {formatMapSize(map.sizeBytes)}
+        </CellText>
+      </BodyCell>
+      <BodyCell>
         <Tooltip
           arrow={true}
-          title={date(map.lastModificationTime).format('lll')}
+          title={date(displayTime).format('lll')}
           placement="bottom-start"
         >
-          <CellText variant="body2">{date(map.lastModificationTime).fromNow()}</CellText>
+          <CellText variant="body2">{date(displayTime).fromNow()}</CellText>
         </Tooltip>
       </BodyCell>
       <BodyCell padding="checkbox">

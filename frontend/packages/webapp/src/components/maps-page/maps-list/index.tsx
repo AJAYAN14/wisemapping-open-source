@@ -32,8 +32,9 @@ import { Filter } from '..';
 import { MAP_IDS_DRAG_MIME } from '../folderTree';
 import ActionChooser, { ActionType } from '../action-chooser';
 import ActionDispatcher from '../action-dispatcher';
-import { CardSkeleton, MapsListSkeleton } from './MapsListSkeleton';
+import { CardSkeleton, GridCardSkeleton, MapsListSkeleton } from './MapsListSkeleton';
 import { MapCard } from './MapCard';
+import { MapGridCard } from './MapGridCard';
 import { MapRow } from './MapRow';
 import { MapsListToolbar } from './MapsListToolbar';
 import { MapsTableHead } from './MapsTableHead';
@@ -48,6 +49,7 @@ import {
   ListRoot,
   ListTable,
   ListTableContainer,
+  MapsGrid,
   PaginationDesktop,
   PaginationMobile,
 } from './styled';
@@ -75,12 +77,14 @@ interface MapsListProps {
   filter: Filter;
   folders?: Folder[];
   onFilterChange?: ((filter: Filter) => void) | undefined;
+  toolbarActions?: React.ReactNode;
 }
 
 export const MapsList = ({
   filter,
   folders = [],
   onFilterChange,
+  toolbarActions,
 }: MapsListProps): React.ReactElement => {
   const client = use(ClientContext);
   const intl = useIntl();
@@ -121,12 +125,15 @@ export const MapsList = ({
   const {
     order,
     orderBy,
+    viewMode,
     page,
     rowsPerPage,
     selected,
     filteredMaps,
     pagedMaps,
     requestSort,
+    changeSort,
+    changeViewMode,
     changePage,
     changeRowsPerPage,
     changeSearch,
@@ -154,7 +161,7 @@ export const MapsList = ({
     [],
   );
   const handleContextMenu = useCallback(
-    (mapId: number, event: React.MouseEvent<HTMLTableRowElement>) => {
+    (mapId: number, event: React.MouseEvent<HTMLElement>) => {
       event.preventDefault();
       event.stopPropagation();
       setRowMenu({ mapId, anchorPosition: { top: event.clientY, left: event.clientX } });
@@ -167,7 +174,7 @@ export const MapsList = ({
   }, [selected]);
 
   const handleDragStart = useCallback(
-    (mapId: number, event: React.DragEvent<HTMLTableRowElement>) => {
+    (mapId: number, event: React.DragEvent<HTMLElement>) => {
       const currentSelected = selectedRef.current;
       const dragIds =
         currentSelected.includes(mapId) && currentSelected.length > 0 ? currentSelected : [mapId];
@@ -249,6 +256,46 @@ export const MapsList = ({
     ))
   );
 
+  const timeField: 'lastModificationTime' | 'lastOpenTime' =
+    orderBy === 'lastOpenTime' ? 'lastOpenTime' : 'lastModificationTime';
+
+  const gridView = isLoadingMaps ? (
+    <MapsGrid data-testid="maps-loading" aria-busy="true">
+      {Array.from({ length: 8 }).map((_, index) => (
+        <GridCardSkeleton
+          // eslint-disable-next-line @eslint-react/no-array-index-key -- identical placeholders
+          key={index}
+        />
+      ))}
+    </MapsGrid>
+  ) : message ? (
+    <Card
+      elevation={0}
+      sx={{ borderRadius: '18px', border: '1px solid rgba(128,128,128,0.16)' }}
+    >
+      <CardContent sx={{ textAlign: 'center', py: 6, fontWeight: 600, color: 'text.secondary' }}>
+        {message}
+      </CardContent>
+    </Card>
+  ) : (
+    <MapsGrid data-testid="maps-grid">
+      {pagedMaps.map((map) => (
+        <MapGridCard
+          key={map.id}
+          map={map}
+          selected={selected.includes(map.id)}
+          hasAnySelected={selected.length > 0}
+          timeField={timeField}
+          onToggleSelected={toggleSelected}
+          onStar={handleStar}
+          onOpenMenu={handleOpenMenu}
+          onContextMenu={handleContextMenu}
+          onDragStart={handleDragStart}
+        />
+      ))}
+    </MapsGrid>
+  );
+
   const table = (
     <ListTable size="small" stickyHeader>
       <MapsTableHead
@@ -265,7 +312,7 @@ export const MapsList = ({
         ) : message ? (
           <TableRow>
             <TableCell
-              colSpan={6}
+              colSpan={7}
               sx={{ textAlign: 'center', py: 6, fontWeight: 600, color: 'text.secondary' }}
             >
               {message}
@@ -277,6 +324,7 @@ export const MapsList = ({
               key={map.id}
               map={map}
               selected={selected.includes(map.id)}
+              timeField={timeField}
               onToggleSelected={toggleSelected}
               onStar={handleStar}
               onOpenMenu={handleOpenMenu}
@@ -311,23 +359,45 @@ export const MapsList = ({
           onMoveSelected={() => openBulkDialog('move-folder')}
           onFilterChange={onFilterChange}
           onSearchChange={changeSearch}
-          end={!useCardView && pagination && <PaginationDesktop>{pagination}</PaginationDesktop>}
+          viewMode={viewMode}
+          onViewModeChange={changeViewMode}
+          showViewToggle={!useCardView}
+          order={order}
+          orderBy={orderBy}
+          onSortChange={changeSort}
+          toolbarActions={toolbarActions}
         />
 
-        <ListTableContainer
-          tabIndex={useCardView ? undefined : 0}
-          role={useCardView ? undefined : 'region'}
-          aria-label={
-            useCardView
-              ? undefined
-              : intl.formatMessage({ id: 'common.maps-list', defaultMessage: 'Maps list' })
-          }
-        >
-          {/* Only the view the screen shows: the other one would be rendered for nothing. */}
-          {useCardView ? <div data-testid="maps-cards">{cards}</div> : table}
-        </ListTableContainer>
+        {useCardView ? (
+          <ListTableContainer>
+            <div data-testid="maps-cards">{cards}</div>
+          </ListTableContainer>
+        ) : viewMode === 'grid' ? (
+          <div
+            tabIndex={0}
+            role="region"
+            aria-label={intl.formatMessage({ id: 'common.maps-list', defaultMessage: 'Maps list' })}
+          >
+            {gridView}
+          </div>
+        ) : (
+          <ListTableContainer
+            tabIndex={0}
+            role="region"
+            aria-label={intl.formatMessage({ id: 'common.maps-list', defaultMessage: 'Maps list' })}
+          >
+            {table}
+          </ListTableContainer>
+        )}
 
-        {useCardView && pagination && <PaginationMobile>{pagination}</PaginationMobile>}
+        {pagination &&
+          (useCardView ? (
+            <PaginationMobile>{pagination}</PaginationMobile>
+          ) : (
+            <PaginationDesktop sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+              {pagination}
+            </PaginationDesktop>
+          ))}
       </ListPaper>
       <ActionDispatcher
         action={activeDialog?.actionType}

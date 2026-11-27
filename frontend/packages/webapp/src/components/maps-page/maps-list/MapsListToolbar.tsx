@@ -21,16 +21,25 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import Tooltip from '@mui/material/Tooltip';
 import Box from '@mui/material/Box';
 import Link from '@mui/material/Link';
+import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import ListItemText from '@mui/material/ListItemText';
+import ArrowDownwardRoundedIcon from '@mui/icons-material/ArrowDownwardRounded';
+import ArrowUpwardRoundedIcon from '@mui/icons-material/ArrowUpwardRounded';
 import DeleteRoundedIcon from '@mui/icons-material/DeleteRounded';
 import DriveFileMoveRoundedIcon from '@mui/icons-material/DriveFileMoveRounded';
+import FormatListBulletedRoundedIcon from '@mui/icons-material/FormatListBulletedRounded';
+import GridViewRoundedIcon from '@mui/icons-material/GridViewRounded';
 import LabelRoundedIcon from '@mui/icons-material/LabelRounded';
 import NavigateNextRoundedIcon from '@mui/icons-material/NavigateNextRounded';
 import SearchRoundedIcon from '@mui/icons-material/SearchRounded';
-import type { Folder } from '../../../classes/client';
+import SwapVertRoundedIcon from '@mui/icons-material/SwapVertRounded';
+import type { Folder, MapInfo } from '../../../classes/client';
 import type { Filter } from '..';
 import { getFolderBreadcrumbs } from '../folderTree';
-import { isFolderFilter, isLabelFilter } from './model';
-import { APPLE_FONT_STACK } from '../appleDesign';
+import { isFolderFilter, isLabelFilter, type Order } from './model';
+import type { MapsViewMode } from './useMapsListState';
+import { APPLE_FONT_STACK, appleColors, glassMaterialMixin, isDarkTheme } from '../appleDesign';
 import {
   BulkActionButton,
   CountPill,
@@ -40,9 +49,12 @@ import {
   SearchIconWrapper,
   SearchInput,
   SearchShortcutHint,
+  SortTriggerButton,
   ToolbarActions,
   ToolbarEnd,
   ToolbarRightCluster,
+  ViewModeButton,
+  ViewModeGroup,
   WorkspaceHeading,
   WorkspaceTitle,
 } from './styled';
@@ -57,11 +69,29 @@ interface MapsListToolbarProps {
   onMoveSelected?: (() => void) | undefined;
   onFilterChange?: ((filter: Filter) => void) | undefined;
   onSearchChange: (value: string) => void;
-  /** Shown at the end of the toolbar: the pagination, on wide screens. */
+  viewMode?: MapsViewMode;
+  onViewModeChange?: ((mode: MapsViewMode) => void) | undefined;
+  showViewToggle?: boolean;
+  order?: Order;
+  orderBy?: keyof MapInfo;
+  onSortChange?: ((property: keyof MapInfo, defaultOrder?: Order) => void) | undefined;
+  toolbarActions?: React.ReactNode;
+  /** Shown at the end of the toolbar when needed. */
   end?: React.ReactNode;
 }
 
-/** Above the list: workspace heading / bulk actions, Spotlight search, and pagination. */
+const SORT_OPTIONS: Array<{
+  key: keyof MapInfo;
+  label: string;
+  defaultOrder: Order;
+}> = [
+  { key: 'title', label: '名称', defaultOrder: 'asc' },
+  { key: 'sizeBytes', label: '大小', defaultOrder: 'desc' },
+  { key: 'lastOpenTime', label: '最近打开', defaultOrder: 'desc' },
+  { key: 'lastModificationTime', label: '最近修改', defaultOrder: 'desc' },
+];
+
+/** Above the list: workspace heading / bulk actions, Spotlight search, view switcher and sort menu. */
 export const MapsListToolbar = ({
   filter,
   folders = [],
@@ -72,12 +102,20 @@ export const MapsListToolbar = ({
   onMoveSelected,
   onFilterChange,
   onSearchChange,
+  viewMode = 'list',
+  onViewModeChange,
+  showViewToggle = true,
+  order = 'desc',
+  orderBy = 'lastModificationTime',
+  onSortChange,
+  toolbarActions,
   end,
 }: MapsListToolbarProps): React.ReactElement => {
   const intl = useIntl();
   const searchInputRef = useRef<HTMLInputElement>(null);
   const [searchValue, setSearchValue] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
+  const [sortMenuAnchor, setSortMenuAnchor] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent): void => {
@@ -275,6 +313,139 @@ export const MapsListToolbar = ({
             )}
           </SearchBox>
         </SearchContainer>
+
+        {toolbarActions}
+
+        {onViewModeChange && showViewToggle && (
+          <ViewModeGroup role="group" aria-label="视图切换">
+            <Tooltip arrow={true} title="列表视图">
+              <ViewModeButton
+                type="button"
+                active={viewMode === 'list'}
+                aria-label="列表视图"
+                aria-pressed={viewMode === 'list'}
+                onClick={() => onViewModeChange('list')}
+              >
+                <FormatListBulletedRoundedIcon />
+              </ViewModeButton>
+            </Tooltip>
+            <Tooltip arrow={true} title="栅格视图">
+              <ViewModeButton
+                type="button"
+                active={viewMode === 'grid'}
+                aria-label="栅格视图"
+                aria-pressed={viewMode === 'grid'}
+                onClick={() => onViewModeChange('grid')}
+              >
+                <GridViewRoundedIcon />
+              </ViewModeButton>
+            </Tooltip>
+          </ViewModeGroup>
+        )}
+
+        {onSortChange && (
+          <>
+            <Tooltip arrow={true} title="排序方式">
+              <SortTriggerButton
+                type="button"
+                aria-label="排序方式"
+                aria-haspopup="menu"
+                aria-expanded={Boolean(sortMenuAnchor)}
+                startIcon={<SwapVertRoundedIcon sx={{ fontSize: 18 }} />}
+                onClick={(e) => setSortMenuAnchor(e.currentTarget)}
+              >
+                {SORT_OPTIONS.find((opt) => opt.key === orderBy)?.label ?? '排序'}
+              </SortTriggerButton>
+            </Tooltip>
+            <Menu
+              anchorEl={sortMenuAnchor}
+              open={Boolean(sortMenuAnchor)}
+              onClose={() => setSortMenuAnchor(null)}
+              anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+              transformOrigin={{ vertical: 'top', horizontal: 'right' }}
+              slotProps={{
+                paper: {
+                  elevation: 0,
+                  sx: (theme) => {
+                    const c = appleColors(isDarkTheme(theme));
+                    return {
+                      mt: 0.75,
+                      borderRadius: '14px',
+                      minWidth: 168,
+                      p: 0.6,
+                      color: c.textPrimary,
+                      boxShadow: c.shadowFloat,
+                      border: `1px solid ${c.hairline}`,
+                      fontFamily: APPLE_FONT_STACK,
+                      ...glassMaterialMixin(c.sidebarGlass, c.surfaceElevated, 24),
+                      '& .MuiMenuItem-root': {
+                        borderRadius: '8px',
+                        minHeight: '36px',
+                        fontSize: '0.86rem',
+                        fontWeight: 600,
+                        '&:hover': {
+                          backgroundColor: c.hoverFill,
+                        },
+                      },
+                    };
+                  },
+                },
+              }}
+            >
+              <MenuItem
+                disabled
+                sx={{
+                  opacity: '1 !important',
+                  fontSize: '0.75rem !important',
+                  fontWeight: '700 !important',
+                  color: 'text.secondary',
+                  minHeight: '28px !important',
+                  py: '4px',
+                }}
+              >
+                排序
+              </MenuItem>
+              {SORT_OPTIONS.map((option) => {
+                const isActive = orderBy === option.key;
+                return (
+                  <MenuItem
+                    key={option.key}
+                    selected={isActive}
+                    onClick={() => {
+                      onSortChange(option.key, option.defaultOrder);
+                      setSortMenuAnchor(null);
+                    }}
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: 2,
+                    }}
+                  >
+                    <ListItemText
+                      primary={option.label}
+                      slotProps={{
+                        primary: {
+                          sx: {
+                            fontSize: '0.86rem',
+                            fontWeight: isActive ? 700 : 500,
+                            fontFamily: APPLE_FONT_STACK,
+                          },
+                        },
+                      }}
+                    />
+                    {isActive &&
+                      (order === 'asc' ? (
+                        <ArrowUpwardRoundedIcon sx={{ fontSize: 16, opacity: 0.85 }} />
+                      ) : (
+                        <ArrowDownwardRoundedIcon sx={{ fontSize: 16, opacity: 0.85 }} />
+                      ))}
+                  </MenuItem>
+                );
+              })}
+            </Menu>
+          </>
+        )}
 
         {end && <ToolbarEnd>{end}</ToolbarEnd>}
       </ToolbarRightCluster>

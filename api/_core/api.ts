@@ -28,6 +28,7 @@ import {
 } from './lib/repo.js';
 import { getDbPool } from './lib/db.js';
 import type { MindmapRepository, MindmapWithLabels, RepoUser } from './lib/repo.js';
+import { extractMapPreview } from './lib/preview.js';
 import {
   MAP_ASSETS_BUCKET,
   StorageConfigurationError,
@@ -82,6 +83,8 @@ function buildMapMetadataResponse(
       creationTime: map.creationTime,
       lastModificationBy: map.lastModificationBy || user.name,
       lastModificationTime: map.lastModificationTime,
+      lastOpenTime: map.lastOpenTime,
+      sizeBytes: Buffer.byteLength(map.xml, 'utf8'),
       starred: map.starred,
       public: false,
       version: map.version,
@@ -470,6 +473,9 @@ export function createApiHandler(
               role: 'owner',
               creationTime: m.creationTime,
               lastModificationTime: m.lastModificationTime,
+              lastOpenTime: m.lastOpenTime,
+              sizeBytes: Buffer.byteLength(m.xml, 'utf8'),
+              preview: extractMapPreview(m.xml, m.title),
               public: false,
               spamDetected: false,
               starred: m.starred,
@@ -667,6 +673,9 @@ export function createApiHandler(
         const folderPath = url.searchParams.get('folderPath') ?? '';
         const includeXml = url.searchParams.get('xml')?.toLowerCase() === 'true';
         const map = await repo.getMapByPath(user, folderPath, title);
+        if (includeXml && repo.touchLastOpenTime) {
+          map.lastOpenTime = await repo.touchLastOpenTime(user, map.id);
+        }
         return buildMapMetadataResponse(req, user, map, includeXml);
       }
 
@@ -741,6 +750,9 @@ export function createApiHandler(
         const mapId = parsePositiveInt(metadataMatch[1], 'mapId');
         const includeXml = url.searchParams.get('xml')?.toLowerCase() === 'true';
         const map = await repo.getMap(user, mapId);
+        if (includeXml && repo.touchLastOpenTime) {
+          map.lastOpenTime = await repo.touchLastOpenTime(user, map.id);
+        }
         return buildMapMetadataResponse(req, user, map, includeXml);
       }
 
@@ -799,6 +811,7 @@ export function createApiHandler(
         const mapId = parsePositiveInt(docXmlMatch[1], 'mapId');
         if (method === 'GET') {
           const { xml, version } = await repo.getMapXml(user, mapId);
+          await repo.touchLastOpenTime?.(user, mapId);
           return xmlResponse(req, 200, xml, {
             'X-Mindmap-Version': String(version),
           });

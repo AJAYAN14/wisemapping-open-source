@@ -214,4 +214,44 @@ describe('MapsList rows are memoized', () => {
       globalThis.ResizeObserver = originalResizeObserver;
     }
   });
+
+  test('switches between list and grid views and sorts via the sort dropdown', async () => {
+    localStorage.clear();
+    const sizedMaps = [
+      {
+        ...map(1, 'Alpha plan'),
+        sizeBytes: 512,
+        lastOpenTime: '2026-02-01T00:00:00Z',
+        preview: { centralTopic: 'Alpha', branches: [{ text: 'Node A' }], topicCount: 2 },
+      },
+      {
+        ...map(2, 'Beta notes'),
+        sizeBytes: 2048,
+        lastOpenTime: '2026-04-01T00:00:00Z',
+        preview: { centralTopic: 'Beta', branches: [{ text: 'Node B' }], topicCount: 2 },
+      },
+    ];
+    const client = {
+      fetchAllMaps: jest.fn().mockResolvedValue(sizedMaps),
+      updateStarred: jest.fn().mockResolvedValue(undefined),
+    };
+    renderWithWrapper(<MapsList filter={{ type: 'all' }} />, { client });
+    await screen.findByText('Alpha plan');
+
+    expect(screen.getByText('512 B')).toBeTruthy();
+    expect(screen.getByText('2.0 KB')).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: '栅格视图' }));
+    expect(screen.getByTestId('maps-grid')).toBeTruthy();
+    expect(screen.queryByRole('table')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: '排序方式' }));
+    fireEvent.click(await screen.findByRole('menuitem', { name: '大小' }));
+    expect(localStorage.getItem('mapsListOrderBy')).toBe('sizeBytes');
+    expect(localStorage.getItem('mapsListOrder')).toBe('desc');
+
+    fireEvent.click(screen.getByRole('button', { name: '列表视图' }));
+    expect(screen.getByRole('table')).toBeTruthy();
+    localStorage.clear();
+  });
 });

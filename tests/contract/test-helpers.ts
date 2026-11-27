@@ -209,6 +209,7 @@ export class InMemoryMindmapRepo implements MindmapRepository {
           version: existing.version + 1,
           lastModificationBy: user.name,
           lastModificationTime: now,
+          lastOpenTime: now,
         };
         this.maps.set(existing.id, updated);
         for (let i = this.histories.length - 1; i >= 0; i -= 1) {
@@ -234,6 +235,7 @@ export class InMemoryMindmapRepo implements MindmapRepository {
       lastModificationBy: user.name,
       creationTime: now,
       lastModificationTime: now,
+      lastOpenTime: now,
     };
     this.maps.set(record.id, record);
     return { ...record };
@@ -273,6 +275,16 @@ export class InMemoryMindmapRepo implements MindmapRepository {
   async getMapXml(user: RepoUser, mapId: number): Promise<{ xml: string; version: number }> {
     const map = await this.getMap(user, mapId);
     return { xml: map.xml, version: map.version };
+  }
+
+  async touchLastOpenTime(user: RepoUser, mapId: number): Promise<string> {
+    const map = this.maps.get(mapId);
+    if (!map || map.ownerId !== user.uid) {
+      throw new NotFoundOrForbiddenError();
+    }
+    const now = new Date().toISOString();
+    map.lastOpenTime = now;
+    return now;
   }
 
   async updateDocument(

@@ -49,6 +49,19 @@ export type Folder = {
 // 'none': the map is public and the signed-in user (or the anonymous visitor) is no collaborator.
 export type Role = 'owner' | 'editor' | 'viewer' | 'none';
 
+export type MapPreviewBranch = {
+  text: string;
+  side?: 'left' | 'right';
+  color?: string;
+};
+
+export type MapPreview = {
+  centralTopic: string;
+  branches: MapPreviewBranch[];
+  theme?: string;
+  topicCount: number;
+};
+
 export type MapInfo = {
   id: number;
   starred: boolean;
@@ -60,6 +73,9 @@ export type MapInfo = {
   creationTime: string;
   lastModificationBy: string;
   lastModificationTime: string;
+  lastOpenTime?: string | undefined;
+  sizeBytes?: number | undefined;
+  preview?: MapPreview | undefined;
   description: string;
   public: boolean;
   role: Role;

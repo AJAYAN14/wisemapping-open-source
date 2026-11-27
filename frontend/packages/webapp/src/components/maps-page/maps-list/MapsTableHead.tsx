@@ -69,12 +69,23 @@ const MapsTableHeadComponent = ({
         ariaLabel: intl.formatMessage({ id: 'map.labels', defaultMessage: 'Labels' }),
       },
       {
-        id: 'lastModificationTime',
-        label: intl.formatMessage({ id: 'map.last-update', defaultMessage: 'Last Update' }),
-        sx: { width: '120px', whiteSpace: 'nowrap' },
+        id: 'sizeBytes',
+        label: '大小',
+        sx: { width: '96px', whiteSpace: 'nowrap' },
       },
+      orderBy === 'lastOpenTime'
+        ? {
+            id: 'lastOpenTime',
+            label: '最近打开',
+            sx: { width: '120px', whiteSpace: 'nowrap' },
+          }
+        : {
+            id: 'lastModificationTime',
+            label: intl.formatMessage({ id: 'map.last-update', defaultMessage: 'Last Update' }),
+            sx: { width: '120px', whiteSpace: 'nowrap' },
+          },
     ],
-    [intl],
+    [intl, orderBy],
   );
 
   return (

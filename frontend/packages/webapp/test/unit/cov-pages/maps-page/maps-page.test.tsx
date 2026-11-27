@@ -21,10 +21,19 @@ import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 // The list, the dialogs and the header menus have their own suites: stand-ins
 // expose what the page hands them.
 jest.mock('../../../../src/components/maps-page/maps-list', () => ({
-  MapsList: ({ filter }: { filter: { type: string; label?: { title: string } } }) => (
-    <div data-testid="maps-list">
-      {filter.type}
-      {filter.label ? `:${filter.label.title}` : ''}
+  MapsList: ({
+    filter,
+    toolbarActions,
+  }: {
+    filter: { type: string; label?: { title: string } };
+    toolbarActions?: React.ReactNode;
+  }) => (
+    <div>
+      {toolbarActions}
+      <div data-testid="maps-list">
+        {filter.type}
+        {filter.label ? `:${filter.label.title}` : ''}
+      </div>
     </div>
   ),
 }));

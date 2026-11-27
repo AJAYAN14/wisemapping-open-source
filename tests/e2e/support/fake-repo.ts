@@ -53,6 +53,7 @@ export interface FakeMindmapRecord {
   lastModificationBy: string;
   creationTime: string;
   lastModificationTime: string;
+  lastOpenTime: string;
 }
 
 export interface FakeHistoryRecord {
@@ -290,6 +291,7 @@ export class FakeStore {
       lastModificationBy: editor,
       creationTime: now,
       lastModificationTime: now,
+      lastOpenTime: now,
     };
     this.mindmaps.set(id, record);
     return { ...record };
@@ -1032,6 +1034,7 @@ export function createFakeMindmapRepository(
     lastModificationBy: m.lastModificationBy,
     creationTime: m.creationTime,
     lastModificationTime: m.lastModificationTime,
+    lastOpenTime: m.lastOpenTime,
     labels: store.getLabelsForMap(ownerId, m.id).map((l) => ({
       id: l.id,
       title: l.title,
@@ -1112,6 +1115,19 @@ export function createFakeMindmapRepository(
         throw new errors.NotFoundOrForbiddenError();
       }
       return { xml: m.xml, version: m.version };
+    },
+
+    async touchLastOpenTime(user: RepoUserLike, mapId: number) {
+      const m = store.getMindmap(user.uid, mapId);
+      if (!m) {
+        throw new errors.NotFoundOrForbiddenError();
+      }
+      const now = new Date().toISOString();
+      const raw = (store as unknown as { mindmaps: Map<number, FakeMindmapRecord> }).mindmaps?.get(mapId);
+      if (raw) {
+        raw.lastOpenTime = now;
+      }
+      return now;
     },
 
     async updateDocument(

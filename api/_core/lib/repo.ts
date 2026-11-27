@@ -40,6 +40,7 @@ export interface MindmapRecord {
   lastModificationBy: string;
   creationTime: string;
   lastModificationTime: string;
+  lastOpenTime: string;
 }
 
 export interface MindmapWithLabels extends MindmapRecord {
@@ -141,6 +142,7 @@ export interface MindmapRepository {
   getMap(user: RepoUser, mapId: number): Promise<MindmapWithLabels>;
   getMapByPath(user: RepoUser, folderPath: string, title: string): Promise<MindmapWithLabels>;
   getMapXml(user: RepoUser, mapId: number): Promise<{ xml: string; version: number }>;
+  touchLastOpenTime?(user: RepoUser, mapId: number): Promise<string>;
   updateDocument(
     user: RepoUser,
     mapId: number,
@@ -199,6 +201,7 @@ interface RawMindmapRow {
   last_modification_by: string;
   creation_time: Date | string;
   last_modification_time: Date | string;
+  last_open_time?: Date | string | null;
 }
 
 interface RawFolderRow {
@@ -253,6 +256,7 @@ function mapMindmapRow(row: RawMindmapRow): MindmapRecord {
     lastModificationBy: row.last_modification_by,
     creationTime: toIso(row.creation_time),
     lastModificationTime: toIso(row.last_modification_time),
+    lastOpenTime: row.last_open_time ? toIso(row.last_open_time) : toIso(row.last_modification_time),
   };
 }
 
@@ -447,7 +451,7 @@ export class PgMindmapRepository implements MindmapRepository {
       if (normalizedFilter === '' || normalizedFilter === 'all' || normalizedFilter === 'my_maps') {
         const res = await client.query<RawMindmapRow>(
           `SELECT id, owner_id, title, description, folder_id, folder_path, xml, properties, starred, version,
-                  last_modification_by, creation_time, last_modification_time
+                  last_modification_by, creation_time, last_modification_time, last_open_time
            FROM public.mindmaps
            WHERE owner_id = $1
            ORDER BY last_modification_time DESC, id DESC
@@ -458,7 +462,7 @@ export class PgMindmapRepository implements MindmapRepository {
       } else if (normalizedFilter === 'starred') {
         const res = await client.query<RawMindmapRow>(
           `SELECT id, owner_id, title, description, folder_id, folder_path, xml, properties, starred, version,
-                  last_modification_by, creation_time, last_modification_time
+                  last_modification_by, creation_time, last_modification_time, last_open_time
            FROM public.mindmaps
            WHERE owner_id = $1 AND starred = TRUE
            ORDER BY last_modification_time DESC, id DESC
@@ -469,7 +473,7 @@ export class PgMindmapRepository implements MindmapRepository {
       } else {
         const res = await client.query<RawMindmapRow>(
           `SELECT m.id, m.owner_id, m.title, m.description, m.folder_id, m.folder_path, m.xml, m.properties, m.starred, m.version,
-                  m.last_modification_by, m.creation_time, m.last_modification_time
+                  m.last_modification_by, m.creation_time, m.last_modification_time, m.last_open_time
            FROM public.mindmaps m
            INNER JOIN public.mindmap_labels ml ON ml.mindmap_id = m.id
            INNER JOIN public.labels l ON l.id = ml.label_id
@@ -543,10 +547,11 @@ export class PgMindmapRepository implements MindmapRepository {
                folder_path = $5,
                last_modification_by = $6,
                last_modification_time = NOW(),
+               last_open_time = NOW(),
                version = version + 1
            WHERE id = $7 AND owner_id = $8
            RETURNING id, owner_id, title, description, folder_id, folder_path, xml, properties, starred, version,
-                     last_modification_by, creation_time, last_modification_time`,
+                     last_modification_by, creation_time, last_modification_time, last_open_time`,
           [
             input.xml,
             input.description,
@@ -567,11 +572,11 @@ export class PgMindmapRepository implements MindmapRepository {
 
       const res = await client.query<RawMindmapRow>(
         `INSERT INTO public.mindmaps (
-           owner_id, title, description, folder_id, folder_path, xml, properties, starred, version, last_modification_by
+           owner_id, title, description, folder_id, folder_path, xml, properties, starred, version, last_modification_by, last_open_time
          )
-         VALUES ($1, $2, $3, $4, $5, $6, $7, FALSE, 1, $8)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, FALSE, 1, $8, NOW())
          RETURNING id, owner_id, title, description, folder_id, folder_path, xml, properties, starred, version,
-                   last_modification_by, creation_time, last_modification_time`,
+                   last_modification_by, creation_time, last_modification_time, last_open_time`,
         [
           user.uid,
           input.title,
@@ -609,7 +614,7 @@ export class PgMindmapRepository implements MindmapRepository {
     return this.runInTx(user, async (client) => {
       const res = await client.query<RawMindmapRow>(
         `SELECT id, owner_id, title, description, folder_id, folder_path, xml, properties, starred, version,
-                last_modification_by, creation_time, last_modification_time
+                last_modification_by, creation_time, last_modification_time, last_open_time
          FROM public.mindmaps
          WHERE id = $1 AND owner_id = $2
          LIMIT 1`,
@@ -632,7 +637,7 @@ export class PgMindmapRepository implements MindmapRepository {
     return this.runInTx(user, async (client) => {
       const res = await client.query<RawMindmapRow>(
         `SELECT id, owner_id, title, description, folder_id, folder_path, xml, properties, starred, version,
-                last_modification_by, creation_time, last_modification_time
+                last_modification_by, creation_time, last_modification_time, last_open_time
          FROM public.mindmaps
          WHERE owner_id = $1 AND folder_path = $2 AND title = $3
          LIMIT 1`,
@@ -643,6 +648,23 @@ export class PgMindmapRepository implements MindmapRepository {
         throw new NotFoundOrForbiddenError();
       }
       return this.attachLabelsToMap(client, user, row);
+    });
+  }
+
+  async touchLastOpenTime(user: RepoUser, mapId: number): Promise<string> {
+    return this.runInTx(user, async (client) => {
+      const res = await client.query<{ last_open_time: Date | string }>(
+        `UPDATE public.mindmaps
+         SET last_open_time = NOW()
+         WHERE id = $1 AND owner_id = $2
+         RETURNING last_open_time`,
+        [mapId, user.uid],
+      );
+      const row = res.rows[0];
+      if (!row) {
+        throw new NotFoundOrForbiddenError();
+      }
+      return toIso(row.last_open_time);
     });
   }
 
@@ -928,7 +950,7 @@ export class PgMindmapRepository implements MindmapRepository {
     return this.runInTx(user, async (client) => {
       const sourceRes = await client.query<RawMindmapRow>(
         `SELECT id, owner_id, title, description, folder_id, folder_path, xml, properties, starred, version,
-                last_modification_by, creation_time, last_modification_time
+                last_modification_by, creation_time, last_modification_time, last_open_time
          FROM public.mindmaps
          WHERE id = $1 AND owner_id = $2
          LIMIT 1`,
@@ -957,11 +979,11 @@ export class PgMindmapRepository implements MindmapRepository {
 
       const insertRes = await client.query<RawMindmapRow>(
         `INSERT INTO public.mindmaps (
-           owner_id, title, description, folder_id, folder_path, xml, properties, starred, version, last_modification_by
+           owner_id, title, description, folder_id, folder_path, xml, properties, starred, version, last_modification_by, last_open_time
          )
-         VALUES ($1, $2, $3, $4, $5, $6, $7, FALSE, 1, $8)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, FALSE, 1, $8, NOW())
          RETURNING id, owner_id, title, description, folder_id, folder_path, xml, properties, starred, version,
-                   last_modification_by, creation_time, last_modification_time`,
+                   last_modification_by, creation_time, last_modification_time, last_open_time`,
         [
           user.uid,
           input.title,

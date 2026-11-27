@@ -41,7 +41,7 @@ export const ListRoot = styled('div')({
 });
 
 export const ListPaper = styled(Paper)(({ theme }) => ({
-  maxWidth: '1080px',
+  maxWidth: '1240px',
   margin: '8px auto 24px auto',
   paddingLeft: '28px',
   paddingRight: '28px',
@@ -573,5 +573,230 @@ export const CardTitle = styled(Typography)(({ theme }) => {
     fontFamily: APPLE_FONT_STACK,
     color: c.textPrimary,
     overflowWrap: 'break-word',
+  };
+});
+
+// ---------------------------------------------------------------- View Switcher, Sort & Grid View
+
+export const ViewModeGroup = styled('div')(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    display: 'inline-flex',
+    alignItems: 'center',
+    padding: '3px',
+    borderRadius: '11px',
+    backgroundColor: c.hoverFill,
+    border: `1px solid ${c.hairline}`,
+    gap: '2px',
+    flexShrink: 0,
+  };
+});
+
+export const ViewModeButton = styled('button', {
+  shouldForwardProp: (prop) => prop !== 'active',
+})<{ active: boolean }>(({ theme, active }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    appearance: 'none',
+    border: 'none',
+    outline: 'none',
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    width: '30px',
+    height: '28px',
+    borderRadius: '8px',
+    backgroundColor: active ? c.surface : 'transparent',
+    color: active ? c.textPrimary : c.textSecondary,
+    boxShadow: active ? c.shadowSubtle : 'none',
+    transition: 'background-color 140ms ease, color 140ms ease, box-shadow 140ms ease',
+    ...applePressMixin,
+    '& svg': {
+      fontSize: '18px',
+    },
+    '&:hover': {
+      color: c.textPrimary,
+    },
+    '&:focus-visible': {
+      boxShadow: `0 0 0 2px ${c.amberRing}`,
+    },
+  };
+});
+
+export const SortTriggerButton = styled(Button)(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    minWidth: '36px',
+    height: '36px',
+    borderRadius: '11px',
+    padding: '0 10px',
+    fontSize: '0.82rem',
+    fontWeight: 700,
+    fontFamily: APPLE_FONT_STACK,
+    backgroundColor: c.surface,
+    color: c.textPrimary,
+    border: `1px solid ${c.hairline}`,
+    boxShadow: c.shadowSubtle,
+    textTransform: 'none',
+    flexShrink: 0,
+    ...applePressMixin,
+    '&:hover': {
+      backgroundColor: c.hoverFill,
+      borderColor: c.hairlineStrong,
+    },
+    '& .MuiButton-startIcon': {
+      marginRight: '4px',
+      color: c.textSecondary,
+    },
+  };
+});
+
+export const MapsGrid = styled('div')({
+  display: 'grid',
+  gridTemplateColumns: 'repeat(auto-fill, minmax(224px, 1fr))',
+  gap: '18px',
+  width: '100%',
+});
+
+export const GridCardRoot = styled('div', {
+  shouldForwardProp: (prop) => prop !== 'selected',
+})<{ selected?: boolean }>(({ theme, selected }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    position: 'relative',
+    borderRadius: '16px',
+    backgroundColor: c.surface,
+    border: `1px solid ${selected ? c.amber : c.hairline}`,
+    boxShadow: selected ? `0 0 0 2px ${c.amberRing}` : c.shadowSubtle,
+    overflow: 'hidden',
+    transition:
+      'transform 160ms cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 160ms ease, border-color 160ms ease',
+    cursor: 'pointer',
+    '&:hover': {
+      transform: 'translateY(-2px)',
+      boxShadow: c.shadowFloat,
+      borderColor: selected ? c.amber : c.hairlineStrong,
+      '& .grid-card-overlay': {
+        opacity: 1,
+      },
+    },
+    '&:focus-within .grid-card-overlay': {
+      opacity: 1,
+    },
+    '@media (hover: none), (pointer: coarse)': {
+      '& .grid-card-overlay': {
+        opacity: 1,
+      },
+    },
+    '@media (prefers-reduced-motion: reduce)': {
+      transition: 'none',
+      '&:hover': {
+        transform: 'none',
+      },
+    },
+  };
+});
+
+export const GridCardPreview = styled('div')(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    position: 'relative',
+    width: '100%',
+    aspectRatio: '16 / 10',
+    overflow: 'hidden',
+    borderBottom: `1px solid ${c.hairline}`,
+    backgroundColor: isDarkTheme(theme) ? '#18181B' : '#F8FAFC',
+  };
+});
+
+export const GridCardCheckboxOverlay = styled('div', {
+  shouldForwardProp: (prop) => prop !== 'visible',
+})<{ visible?: boolean }>(({ theme, visible }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    position: 'absolute',
+    top: '8px',
+    left: '8px',
+    zIndex: 2,
+    borderRadius: '9px',
+    backgroundColor: isDarkTheme(theme) ? 'rgba(28, 28, 32, 0.82)' : 'rgba(255, 255, 255, 0.88)',
+    backdropFilter: 'blur(8px)',
+    border: `1px solid ${c.hairline}`,
+    opacity: visible ? 1 : 0,
+    transition: 'opacity 140ms ease',
+    display: 'inline-flex',
+    '& .MuiCheckbox-root': {
+      padding: '3px',
+    },
+    '@media (hover: none), (pointer: coarse)': {
+      opacity: 1,
+    },
+  };
+});
+
+export const GridCardActionsOverlay = styled('div', {
+  shouldForwardProp: (prop) => prop !== 'alwaysVisibleStar',
+})<{ alwaysVisibleStar?: boolean }>(({ theme, alwaysVisibleStar }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    position: 'absolute',
+    top: '8px',
+    right: '8px',
+    zIndex: 2,
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '2px',
+    padding: '2px',
+    borderRadius: '10px',
+    backgroundColor: isDarkTheme(theme) ? 'rgba(28, 28, 32, 0.82)' : 'rgba(255, 255, 255, 0.88)',
+    backdropFilter: 'blur(8px)',
+    border: `1px solid ${c.hairline}`,
+    opacity: alwaysVisibleStar ? 1 : 0,
+    transition: 'opacity 140ms ease',
+    '.MuiBox-root:hover &, .grid-card-overlay': {},
+    '@media (hover: none), (pointer: coarse)': {
+      opacity: 1,
+    },
+  };
+});
+
+export const GridCardBody = styled('div')({
+  padding: '12px 14px 13px 14px',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '4px',
+  minWidth: 0,
+  flex: 1,
+});
+
+export const GridCardTitle = styled('div')(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    fontFamily: APPLE_FONT_STACK,
+    fontSize: '0.92rem',
+    fontWeight: 700,
+    lineHeight: 1.35,
+    letterSpacing: '-0.01em',
+    color: c.textPrimary,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+  };
+});
+
+export const GridCardMeta = styled('div')(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '8px',
+    marginTop: '2px',
+    fontFamily: APPLE_FONT_STACK,
+    fontSize: '0.75rem',
+    fontWeight: 600,
+    color: c.textSecondary,
+    minWidth: 0,
   };
 });

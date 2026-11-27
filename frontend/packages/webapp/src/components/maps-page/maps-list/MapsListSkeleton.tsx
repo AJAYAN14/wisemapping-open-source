@@ -22,14 +22,12 @@ import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
-import Toolbar from '@mui/material/Toolbar';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import type { Theme } from '@mui/material/styles';
 import { readStorage } from '../../../utils/storage';
 import { BodyCell, CompactCardHeader, MapCardRoot } from './shared.styled';
 import {
   DrawerSkeleton,
-  LoadingAppBar,
   LoadingContainer,
   LoadingDrawer,
   LoadingDrawerItem,
@@ -45,10 +43,8 @@ import {
   LoadingSearchCluster,
   LoadingSearchToolbar,
   LoadingTableContainer,
-  LoadingToolbarSpacer,
   SkeletonAmberBlock,
   SkeletonBlock,
-  SkeletonButton,
   SkeletonText,
 } from './skeleton.styled';
 
@@ -90,6 +86,9 @@ export const TableRowSkeleton: React.FC<{ index?: number }> = ({ index = 0 }) =>
         ) : null}
       </BodyCell>
       <BodyCell>
+        <SkeletonText animation="wave" variant="text" width={54} />
+      </BodyCell>
+      <BodyCell>
         <SkeletonText animation="wave" variant="text" width={72} />
       </BodyCell>
       <BodyCell padding="checkbox">
@@ -119,6 +118,32 @@ export const CardSkeleton: React.FC = () => {
         </Box>
       </Box>
     </MapCardRoot>
+  );
+};
+
+export const GridCardSkeleton: React.FC = () => {
+  return (
+    <Box
+      sx={{
+        borderRadius: '16px',
+        overflow: 'hidden',
+        border: '1px solid rgba(128, 128, 128, 0.14)',
+      }}
+    >
+      <SkeletonBlock
+        animation="wave"
+        variant="rectangular"
+        width="100%"
+        sx={{ aspectRatio: '16 / 10', height: 'auto' }}
+      />
+      <Box sx={{ p: '12px 14px 13px 14px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        <SkeletonText animation="wave" variant="text" width="76%" height={20} />
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: '8px' }}>
+          <SkeletonText animation="wave" variant="text" width="48%" height={16} />
+          <SkeletonText animation="wave" variant="text" width="22%" height={16} />
+        </Box>
+      </Box>
+    </Box>
   );
 };
 
@@ -252,49 +277,47 @@ export const MapsPageLoading = (): React.ReactElement => {
 
       {/* Main Content Area */}
       <LoadingMainContent>
-        {/* Frosted AppBar Skeleton */}
-        <LoadingAppBar position="fixed" elevation={0} expanded={drawerExpanded}>
-          <Toolbar>
+        <Box
+          component="header"
+          sx={{
+            maxWidth: '1240px',
+            width: '100%',
+            margin: '0 auto',
+            padding: { xs: '10px 12px 0 12px', sm: '12px 20px 0 20px', md: '14px 28px 0 28px' },
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: isMobile ? 'space-between' : 'flex-end',
+            gap: '8px',
+            minHeight: '46px',
+            boxSizing: 'border-box',
+          }}
+        >
+          {isMobile && (
             <SkeletonBlock
               animation="wave"
               variant="rounded"
-              width={isMobile ? 38 : 34}
-              height={isMobile ? 38 : 34}
-              sx={{ borderRadius: '10px', mr: '6px', flexShrink: 0 }}
+              width={38}
+              height={38}
+              sx={{ borderRadius: '10px', flexShrink: 0 }}
             />
-            <SkeletonAmberBlock
-              animation="wave"
-              variant="rounded"
-              width={isMobile ? 38 : 104}
-              height={isMobile ? 38 : 36}
-              sx={{ borderRadius: isMobile ? '10px' : '12px', flexShrink: 0 }}
-            />
-            <SkeletonButton
-              animation="wave"
-              variant="rounded"
-              width={isMobile ? 38 : 102}
-              height={isMobile ? 38 : 36}
-              sx={{ borderRadius: isMobile ? '10px' : '12px', flexShrink: 0 }}
-            />
-            <Box sx={{ flexGrow: 1 }} />
+          )}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <SkeletonBlock
               animation="wave"
               variant="rounded"
-              width={34}
-              height={34}
+              width={64}
+              height={32}
               sx={{ borderRadius: '10px', flexShrink: 0 }}
             />
             <SkeletonBlock
               animation="wave"
               variant="circular"
-              width={34}
-              height={34}
+              width={32}
+              height={32}
               sx={{ flexShrink: 0 }}
             />
-          </Toolbar>
-        </LoadingAppBar>
-
-        <LoadingToolbarSpacer />
+          </Box>
+        </Box>
 
         {/* Maps List Area */}
         <LoadingListPaper elevation={0}>
@@ -357,6 +380,9 @@ export const MapsPageLoading = (): React.ReactElement => {
                       <SkeletonText animation="wave" variant="text" width={52} />
                     </LoadingHeaderCell>
                     <LoadingHeaderCell />
+                    <LoadingHeaderCell sx={{ width: '96px' }}>
+                      <SkeletonText animation="wave" variant="text" width={36} />
+                    </LoadingHeaderCell>
                     <LoadingHeaderCell sx={{ width: '120px' }}>
                       <SkeletonText animation="wave" variant="text" width={68} />
                     </LoadingHeaderCell>

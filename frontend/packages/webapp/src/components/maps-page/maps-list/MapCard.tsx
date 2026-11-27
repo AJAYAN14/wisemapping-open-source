@@ -30,6 +30,7 @@ import MoreVertRoundedIcon from '@mui/icons-material/MoreVertRounded';
 import { MapInfo } from '../../../classes/client';
 import { useDate } from '../../../classes/app-i18n/dates';
 import { buildMapEditPath } from '../../../utils/mapPath';
+import { formatMapSize } from '../../../utils/mapPreview';
 import type { MapItemHandlers } from './MapRow';
 import {
   ActionIconButton,
@@ -192,6 +193,9 @@ const MapCardComponent = ({
                 >
                   <span>{date(map.lastModificationTime).fromNow()}</span>
                 </Tooltip>
+                {typeof map.sizeBytes === 'number' && (
+                  <span> · {formatMapSize(map.sizeBytes)}</span>
+                )}
               </Typography>
             }
           />

@@ -32,6 +32,7 @@ import { LocaleCode, localeFromStr } from '../../app-i18n';
 import JwtTokenConfig from '../../jwt-token-config';
 import { appLogger as log } from '../../../utils/logger';
 import { normalizeFolderPath, validateMapTitleInput } from '../../../utils/mapPath';
+import { extractMapPreview, getUtf8ByteLength } from '../../../utils/mapPreview';
 
 const MOCK_MAPS_KEY = 'wisemapping.mock.maps';
 const MOCK_LABELS_KEY = 'wisemapping.mock.labels';
@@ -266,9 +267,17 @@ const getCurrentUserIdentity = (): {
 
 class MockClient implements Client {
   fetchMapMetadata(id: number, includeXml = false): Promise<MapMetadata> {
-    const map = loadMockMaps().find((m) => m.id === id);
+    const maps = loadMockMaps();
+    const mapIndex = maps.findIndex((m) => m.id === id);
+    const map = mapIndex !== -1 ? maps[mapIndex] : undefined;
     if (!map) {
       return Promise.reject({ msg: `Map could not be found ${id}`, status: 404 });
+    }
+
+    const now = new Date().toISOString();
+    if (includeXml) {
+      maps[mapIndex] = { ...map, lastOpenTime: now };
+      saveMockMaps(maps);
     }
 
     const savedProps = loadMockProps(id);
@@ -932,7 +941,16 @@ class MockClient implements Client {
 
   fetchAllMaps(): Promise<MapInfo[]> {
     log.debug('Fetching  maps from server');
-    return Promise.resolve(loadMockMaps());
+    const maps = loadMockMaps().map((m) => {
+      const xml = loadMockXml(m.id) ?? buildDefaultMapXml(m.id, m.title);
+      return {
+        ...m,
+        lastOpenTime: m.lastOpenTime ?? m.lastModificationTime,
+        sizeBytes: getUtf8ByteLength(xml),
+        preview: extractMapPreview(xml, m.title),
+      };
+    });
+    return Promise.resolve(maps);
   }
 
   processGoogleCallback(): Promise<Oauth2CallbackResult> {

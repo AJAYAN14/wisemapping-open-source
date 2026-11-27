@@ -285,11 +285,14 @@ export const DesktopDrawerToggle = styled(IconButton)(({ theme }) => {
 export const PrimaryToolbarButton = styled(Button)(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
-    borderRadius: '12px',
-    fontSize: '0.875rem',
+    borderRadius: '11px',
+    height: '36px',
+    fontSize: '0.84rem',
     fontWeight: 700,
     letterSpacing: '-0.01em',
-    padding: '7px 15px',
+    padding: '6px 14px',
+    whiteSpace: 'nowrap',
+    flexShrink: 0,
     fontFamily: APPLE_FONT_STACK,
     backgroundColor: c.amber,
     color: '#FFFFFF',
@@ -301,7 +304,7 @@ export const PrimaryToolbarButton = styled(Button)(({ theme }) => {
       boxShadow: '0 4px 12px rgba(245, 158, 11, 0.32)',
     },
     '& .MuiButton-startIcon svg': {
-      fontSize: '19px',
+      fontSize: '18px',
     },
     [theme.breakpoints.down('sm')]: mobileAppbarButton,
   };
@@ -311,25 +314,29 @@ export const PrimaryToolbarButton = styled(Button)(({ theme }) => {
 export const SecondaryToolbarButton = styled(Button)(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
-    borderRadius: '12px',
-    fontSize: '0.875rem',
+    borderRadius: '11px',
+    height: '36px',
+    fontSize: '0.84rem',
     fontWeight: 700,
     letterSpacing: '-0.01em',
-    padding: '7px 14px',
+    padding: '6px 12px',
+    whiteSpace: 'nowrap',
+    flexShrink: 0,
     fontFamily: APPLE_FONT_STACK,
-    backgroundColor: c.hoverFill,
+    backgroundColor: c.surface,
     color: c.textPrimary,
     border: `1px solid ${c.hairline}`,
+    boxShadow: c.shadowSubtle,
     ...applePressMixin,
     '&:hover': {
-      backgroundColor: c.activeFill,
+      backgroundColor: c.hoverFill,
       borderColor: c.hairlineStrong,
     },
     '& .MuiButton-startIcon': {
       color: c.textSecondary,
     },
     '& .MuiButton-startIcon svg': {
-      fontSize: '19px',
+      fontSize: '18px',
     },
     [theme.breakpoints.down('sm')]: mobileAppbarButton,
   };
@@ -381,11 +388,29 @@ export const PageContent = styled('main')({
   minWidth: 0,
   containerType: 'inline-size',
   containerName: 'maps-main',
-  paddingTop: '1.25rem',
+  paddingTop: 'env(safe-area-inset-top, 0px)',
   paddingBottom: 'max(2.5rem, env(safe-area-inset-bottom, 0px))',
   paddingInlineStart: 'env(safe-area-inset-left, 0px)',
   paddingInlineEnd: 'env(safe-area-inset-right, 0px)',
 });
+
+/** Compact, borderless top utility strip inside the workspace (mobile drawer trigger + theme/account). */
+export const WorkspaceTopBar = styled('header')(({ theme }) => ({
+  maxWidth: '1240px',
+  margin: '0 auto',
+  padding: '14px 28px 0 28px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: '8px',
+  minHeight: '46px',
+  [theme.breakpoints.down('md')]: {
+    padding: '12px 20px 0 20px',
+  },
+  [theme.breakpoints.down('sm')]: {
+    padding: '10px 12px 0 12px',
+  },
+}));
 
 /** Keeps the content below the fixed translucent app bar. */
 export const ToolbarSpacer = styled('div')({

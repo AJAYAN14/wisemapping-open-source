@@ -23,22 +23,19 @@ import MenuItem from '@mui/material/MenuItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
 import Snackbar from '@mui/material/Snackbar';
-import Toolbar from '@mui/material/Toolbar';
 import Typography from '@mui/material/Typography';
 import {
-  DesktopDrawer,
-  DesktopDrawerToggle,
   DRAWER_WIDTH_COLLAPSED,
   DRAWER_WIDTH_EXPANDED,
+  DesktopDrawer,
   MobileDrawer,
   MobileDrawerToggle,
-  PageAppBar,
   PageContent,
   PageRoot,
   PrimaryToolbarButton,
   RightButtonGroup,
   SecondaryToolbarButton,
-  ToolbarSpacer,
+  WorkspaceTopBar,
 } from './styled';
 import { MapsList } from './maps-list';
 import { ImportProgressDialog, ImportStage } from './import-progress';
@@ -55,8 +52,6 @@ import { useLocaleMessages } from '../../classes/app-i18n/messages';
 import { useFetchAccount } from '../../classes/middleware';
 
 import MenuRoundedIcon from '@mui/icons-material/MenuRounded';
-import NavigateNextRoundedIcon from '@mui/icons-material/NavigateNextRounded';
-import NavigateBeforeRoundedIcon from '@mui/icons-material/NavigateBeforeRounded';
 
 import AddCircleRoundedIcon from '@mui/icons-material/AddCircleRounded';
 import CloudUploadRoundedIcon from '@mui/icons-material/CloudUploadRounded';
@@ -764,10 +759,10 @@ const MapsPage = (): ReactElement => {
     }),
   );
 
-  const drawerItemsList = (
+  const renderDrawerItems = (includeDesktopToggle: boolean) => (
     <DrawerNav
       account={account}
-      drawerOpen={desktopDrawerOpen || mobileDrawerOpen}
+      drawerOpen={includeDesktopToggle ? desktopDrawerOpen : true}
       filterButtons={filterButtons}
       folders={folders}
       folderCounts={folderCounts}
@@ -779,7 +774,59 @@ const MapsPage = (): ReactElement => {
       onMoveFolder={(folder) => setFolderDialog({ mode: 'move', folder })}
       onDeleteFolder={(folder) => setFolderDialog({ mode: 'delete', folder })}
       onDropMapsToFolder={(mapIds, folderId) => moveMapsDropMutation.mutate({ mapIds, folderId })}
+      onToggleDesktopDrawer={includeDesktopToggle ? handleDesktopDrawerToggle : undefined}
     />
+  );
+
+  const toolbarActions = (
+    <>
+      <Tooltip
+        arrow={true}
+        title={intl.formatMessage({
+          id: 'maps.create-tooltip',
+          defaultMessage: 'Create a new mindmap',
+        })}
+      >
+        <PrimaryToolbarButton
+          color="primary"
+          data-testid="create"
+          size="medium"
+          variant="contained"
+          type="button"
+          disableElevation={true}
+          startIcon={<AddCircleRoundedIcon />}
+          onClick={() => setActiveDialog('create')}
+        >
+          <span className="message">
+            <FormattedMessage id="action.new" defaultMessage="New map" />
+          </span>
+        </PrimaryToolbarButton>
+      </Tooltip>
+
+      <Tooltip
+        arrow={true}
+        title={intl.formatMessage({
+          id: 'maps.import-desc',
+          defaultMessage: 'Import from other tools',
+        })}
+      >
+        <SecondaryToolbarButton
+          size="medium"
+          variant="text"
+          type="button"
+          disableElevation={true}
+          startIcon={<CloudUploadRoundedIcon />}
+          endIcon={
+            <KeyboardArrowDownRoundedIcon sx={{ fontSize: 18, ml: -0.5, opacity: 0.7 }} />
+          }
+          onClick={(e) => setImportMenuAnchor(e.currentTarget)}
+        >
+          <span className="message">
+            <FormattedMessage id="action.import" defaultMessage="Import" />
+          </span>
+        </SecondaryToolbarButton>
+      </Tooltip>
+    </>
   );
 
   const container = document !== undefined ? () => document.body : undefined;
@@ -863,8 +910,117 @@ const MapsPage = (): ReactElement => {
             </Box>
           </Box>
         )}
-        <PageAppBar position="fixed" expanded={desktopDrawerOpen} variant="outlined" elevation={0}>
-          <Toolbar role="banner">
+        <Menu
+          anchorEl={importMenuAnchor}
+          open={Boolean(importMenuAnchor)}
+          onClose={() => setImportMenuAnchor(null)}
+          slotProps={{
+            paper: {
+              elevation: 0,
+              sx: (theme) => {
+                const c = appleColors(isDarkTheme(theme));
+                return {
+                  mt: 0.75,
+                  borderRadius: '14px',
+                  minWidth: 190,
+                  p: 0.6,
+                  color: c.textPrimary,
+                  boxShadow: c.shadowFloat,
+                  border: `1px solid ${c.hairline}`,
+                  fontFamily: APPLE_FONT_STACK,
+                  ...glassMaterialMixin(c.sidebarGlass, c.surfaceElevated, 24),
+                  '@media (forced-colors: active)': {
+                    backgroundColor: 'Canvas',
+                    color: 'CanvasText',
+                    borderColor: 'ButtonBorder',
+                  },
+                  '& .MuiMenuItem-root': {
+                    borderRadius: '8px',
+                    '&:hover': {
+                      backgroundColor: c.hoverFill,
+                    },
+                  },
+                };
+              },
+            },
+          }}
+        >
+          <MenuItem
+            onClick={() => {
+              setImportMenuAnchor(null);
+              fileInputRef.current?.click();
+            }}
+            sx={{ borderRadius: '8px', py: 1, gap: 1.2 }}
+          >
+            <ListItemIcon sx={{ minWidth: 26, color: 'text.primary' }}>
+              <InsertDriveFileRoundedIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText
+              primary="导入文件"
+              slotProps={{ primary: { sx: { fontSize: '13.5px', fontWeight: 500 } } }}
+            />
+          </MenuItem>
+          <MenuItem
+            onClick={() => {
+              setImportMenuAnchor(null);
+              folderInputRef.current?.click();
+            }}
+            sx={{ borderRadius: '8px', py: 1, gap: 1.2 }}
+          >
+            <ListItemIcon sx={{ minWidth: 26, color: 'text.primary' }}>
+              <FolderRoundedIcon fontSize="small" />
+            </ListItemIcon>
+            <ListItemText
+              primary="导入文件夹 (含子目录)"
+              slotProps={{ primary: { sx: { fontSize: '13.5px', fontWeight: 500 } } }}
+            />
+          </MenuItem>
+        </Menu>
+        <input
+          type="file"
+          ref={fileInputRef}
+          accept=".wxml,.mm,.mmx,.xmind,.mmap,.opml"
+          multiple
+          style={{ display: 'none' }}
+          onChange={handleFilesSelected}
+        />
+        <input
+          type="file"
+          ref={folderInputRef}
+          {...({
+            webkitdirectory: '',
+            directory: '',
+          } as React.InputHTMLAttributes<HTMLInputElement> & {
+            webkitdirectory?: string;
+            directory?: string;
+          })}
+          multiple
+          style={{ display: 'none' }}
+          onChange={handleFilesSelected}
+        />
+        <ActionDispatcher
+          action={activeDialog}
+          folderId={activeFolderId}
+          onClose={() => setActiveDialog(undefined)}
+          mapsId={[]}
+        />
+        <MobileDrawer
+          expanded={desktopDrawerOpen}
+          container={container}
+          variant={'temporary'}
+          open={mobileDrawerOpen}
+          onClose={handleMobileDrawerToggle}
+          ModalProps={{
+            keepMounted: true,
+          }}
+        >
+          {renderDrawerItems(false)}
+        </MobileDrawer>
+        <DesktopDrawer variant="permanent" expanded={desktopDrawerOpen}>
+          {renderDrawerItems(true)}
+        </DesktopDrawer>
+        <PageContent role="main">
+          <WorkspaceTopBar>
             <MobileDrawerToggle
               aria-label={intl.formatMessage({
                 id: 'common.open-drawer',
@@ -876,186 +1032,20 @@ const MapsPage = (): ReactElement => {
             >
               <MenuRoundedIcon />
             </MobileDrawerToggle>
-            <DesktopDrawerToggle
-              aria-label={intl.formatMessage({
-                id: 'common.open-drawer',
-                defaultMessage: 'Open drawer',
-              })}
-              edge="start"
-              onClick={handleDesktopDrawerToggle}
-              id="open-desktop-drawer"
-            >
-              {!desktopDrawerOpen && <NavigateNextRoundedIcon />}
-              {desktopDrawerOpen && <NavigateBeforeRoundedIcon />}
-            </DesktopDrawerToggle>
-            <Tooltip
-              arrow={true}
-              title={intl.formatMessage({
-                id: 'maps.create-tooltip',
-                defaultMessage: 'Create a new mindmap',
-              })}
-            >
-              <PrimaryToolbarButton
-                color="primary"
-                data-testid="create"
-                size="medium"
-                variant="contained"
-                type="button"
-                disableElevation={true}
-                startIcon={<AddCircleRoundedIcon />}
-                onClick={() => setActiveDialog('create')}
-              >
-                <span className="message">
-                  <FormattedMessage id="action.new" defaultMessage="New map" />
-                </span>
-              </PrimaryToolbarButton>
-            </Tooltip>
-
-            <Tooltip
-              arrow={true}
-              title={intl.formatMessage({
-                id: 'maps.import-desc',
-                defaultMessage: 'Import from other tools',
-              })}
-            >
-              <SecondaryToolbarButton
-                size="medium"
-                variant="text"
-                type="button"
-                disableElevation={true}
-                startIcon={<CloudUploadRoundedIcon />}
-                endIcon={
-                  <KeyboardArrowDownRoundedIcon sx={{ fontSize: 18, ml: -0.5, opacity: 0.7 }} />
-                }
-                onClick={(e) => setImportMenuAnchor(e.currentTarget)}
-              >
-                <span className="message">
-                  <FormattedMessage id="action.import" defaultMessage="Import" />
-                </span>
-              </SecondaryToolbarButton>
-            </Tooltip>
-            <Menu
-              anchorEl={importMenuAnchor}
-              open={Boolean(importMenuAnchor)}
-              onClose={() => setImportMenuAnchor(null)}
-              slotProps={{
-                paper: {
-                  elevation: 0,
-                  sx: (theme) => {
-                    const c = appleColors(isDarkTheme(theme));
-                    return {
-                      mt: 0.75,
-                      borderRadius: '14px',
-                      minWidth: 190,
-                      p: 0.6,
-                      color: c.textPrimary,
-                      boxShadow: c.shadowFloat,
-                      border: `1px solid ${c.hairline}`,
-                      fontFamily: APPLE_FONT_STACK,
-                      ...glassMaterialMixin(c.sidebarGlass, c.surfaceElevated, 24),
-                      '@media (forced-colors: active)': {
-                        backgroundColor: 'Canvas',
-                        color: 'CanvasText',
-                        borderColor: 'ButtonBorder',
-                      },
-                      '& .MuiMenuItem-root': {
-                        borderRadius: '8px',
-                        '&:hover': {
-                          backgroundColor: c.hoverFill,
-                        },
-                      },
-                    };
-                  },
-                },
-              }}
-            >
-              <MenuItem
-                onClick={() => {
-                  setImportMenuAnchor(null);
-                  fileInputRef.current?.click();
-                }}
-                sx={{ borderRadius: '8px', py: 1, gap: 1.2 }}
-              >
-                <ListItemIcon sx={{ minWidth: 26, color: 'text.primary' }}>
-                  <InsertDriveFileRoundedIcon fontSize="small" />
-                </ListItemIcon>
-                <ListItemText
-                  primary="导入文件"
-                  slotProps={{ primary: { sx: { fontSize: '13.5px', fontWeight: 500 } } }}
-                />
-              </MenuItem>
-              <MenuItem
-                onClick={() => {
-                  setImportMenuAnchor(null);
-                  folderInputRef.current?.click();
-                }}
-                sx={{ borderRadius: '8px', py: 1, gap: 1.2 }}
-              >
-                <ListItemIcon sx={{ minWidth: 26, color: 'text.primary' }}>
-                  <FolderRoundedIcon fontSize="small" />
-                </ListItemIcon>
-                <ListItemText
-                  primary="导入文件夹 (含子目录)"
-                  slotProps={{ primary: { sx: { fontSize: '13.5px', fontWeight: 500 } } }}
-                />
-              </MenuItem>
-            </Menu>
-            <input
-              type="file"
-              ref={fileInputRef}
-              accept=".wxml,.mm,.mmx,.xmind,.mmap,.opml"
-              multiple
-              style={{ display: 'none' }}
-              onChange={handleFilesSelected}
-            />
-            <input
-              type="file"
-              ref={folderInputRef}
-              {...({
-                webkitdirectory: '',
-                directory: '',
-              } as React.InputHTMLAttributes<HTMLInputElement> & {
-                webkitdirectory?: string;
-                directory?: string;
-              })}
-              multiple
-              style={{ display: 'none' }}
-              onChange={handleFilesSelected}
-            />
-            <ActionDispatcher
-              action={activeDialog}
-              folderId={activeFolderId}
-              onClose={() => setActiveDialog(undefined)}
-              mapsId={[]}
-            />
-
             <RightButtonGroup>
               <ThemeToggleButton />
               <AccountMenu />
             </RightButtonGroup>
-          </Toolbar>
-        </PageAppBar>
-        <MobileDrawer
-          expanded={desktopDrawerOpen}
-          container={container}
-          variant={'temporary'}
-          open={mobileDrawerOpen}
-          onClose={handleMobileDrawerToggle}
-          ModalProps={{
-            keepMounted: true,
-          }}
-        >
-          {drawerItemsList}
-        </MobileDrawer>
-        <DesktopDrawer variant="permanent" expanded={desktopDrawerOpen}>
-          {drawerItemsList}
-        </DesktopDrawer>
-        <PageContent role="main">
-          <ToolbarSpacer />
+          </WorkspaceTopBar>
           <section
             aria-label={intl.formatMessage({ id: 'common.maps-list', defaultMessage: 'Maps list' })}
           >
-            <MapsList filter={filter} folders={folders} onFilterChange={handleMenuClick} />
+            <MapsList
+              filter={filter}
+              folders={folders}
+              onFilterChange={handleMenuClick}
+              toolbarActions={toolbarActions}
+            />
           </section>
         </PageContent>
       </PageRoot>

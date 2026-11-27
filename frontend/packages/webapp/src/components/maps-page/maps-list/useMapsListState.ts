@@ -18,8 +18,37 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import { MapInfo } from '../../../classes/client';
+import { readStorage, writeStorage } from '../../../utils/storage';
 import type { Filter } from '..';
 import { Order, getComparator, isFolderFilter, isLabelFilter, mapsFilter, stableSort } from './model';
+
+export type MapsViewMode = 'list' | 'grid';
+
+const VIEW_MODE_STORAGE_KEY = 'mapsListViewMode';
+const ORDER_BY_STORAGE_KEY = 'mapsListOrderBy';
+const ORDER_STORAGE_KEY = 'mapsListOrder';
+const ALLOWED_SORT_KEYS: ReadonlySet<keyof MapInfo> = new Set([
+  'title',
+  'sizeBytes',
+  'lastOpenTime',
+  'lastModificationTime',
+  'labels',
+]);
+
+const readStoredViewMode = (): MapsViewMode => {
+  const stored = readStorage(VIEW_MODE_STORAGE_KEY);
+  return stored === 'grid' ? 'grid' : 'list';
+};
+
+const readStoredOrderBy = (): keyof MapInfo => {
+  const stored = readStorage(ORDER_BY_STORAGE_KEY) as keyof MapInfo | null;
+  return stored && ALLOWED_SORT_KEYS.has(stored) ? stored : 'lastModificationTime';
+};
+
+const readStoredOrder = (): Order => {
+  const stored = readStorage(ORDER_STORAGE_KEY);
+  return stored === 'asc' ? 'asc' : 'desc';
+};
 
 /** What identifies the sidebar entry: choosing the same entry again hands over a new object. */
 const entryKey = (filter: Filter): string =>
@@ -44,6 +73,7 @@ const entryKey = (filter: Filter): string =>
 export interface MapsListState {
   order: Order;
   orderBy: keyof MapInfo;
+  viewMode: MapsViewMode;
   search: string;
   /** The page shown, 0-based: always one that exists. */
   page: number;
@@ -54,6 +84,8 @@ export interface MapsListState {
   /** The maps of the page shown, sorted. */
   pagedMaps: MapInfo[];
   requestSort: (property: keyof MapInfo) => void;
+  changeSort: (property: keyof MapInfo, defaultOrder?: Order) => void;
+  changeViewMode: (mode: MapsViewMode) => void;
   changePage: (newPage: number) => void;
   changeRowsPerPage: (count: number) => void;
   changeSearch: (value: string) => void;
@@ -63,9 +95,31 @@ export interface MapsListState {
   isSelected: (id: number) => boolean;
 }
 
+const getMapComparator = (
+  order: Order,
+  orderBy: keyof MapInfo,
+): ((a: MapInfo, b: MapInfo) => number) => {
+  if (orderBy === 'sizeBytes') {
+    return (a, b) => {
+      const diff = (b.sizeBytes ?? 0) - (a.sizeBytes ?? 0);
+      return order === 'desc' ? diff : -diff;
+    };
+  }
+  if (orderBy === 'lastOpenTime') {
+    return (a, b) => {
+      const aTime = a.lastOpenTime ?? a.lastModificationTime;
+      const bTime = b.lastOpenTime ?? b.lastModificationTime;
+      const cmp = bTime.localeCompare(aTime);
+      return order === 'desc' ? cmp : -cmp;
+    };
+  }
+  return getComparator<MapInfo>(order, orderBy);
+};
+
 export const useMapsListState = (filter: Filter, maps: MapInfo[]): MapsListState => {
-  const [order, setOrder] = useState<Order>('desc');
-  const [orderBy, setOrderBy] = useState<keyof MapInfo>('lastModificationTime');
+  const [order, setOrder] = useState<Order>(readStoredOrder);
+  const [orderBy, setOrderBy] = useState<keyof MapInfo>(readStoredOrderBy);
+  const [viewMode, setViewMode] = useState<MapsViewMode>(readStoredViewMode);
   const [search, setSearch] = useState('');
   const [requestedPage, setRequestedPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
@@ -86,7 +140,7 @@ export const useMapsListState = (filter: Filter, maps: MapInfo[]): MapsListState
     [maps, filter, search],
   );
   const sortedMaps = useMemo(
-    () => stableSort(filteredMaps, getComparator<MapInfo>(order, orderBy)),
+    () => stableSort(filteredMaps, getMapComparator(order, orderBy)),
     [filteredMaps, order, orderBy],
   );
 
@@ -108,6 +162,10 @@ export const useMapsListState = (filter: Filter, maps: MapInfo[]): MapsListState
     setRowsPerPage(count);
     setRequestedPage(0);
   }, []);
+  const changeViewMode = useCallback((mode: MapsViewMode): void => {
+    setViewMode(mode);
+    writeStorage(VIEW_MODE_STORAGE_KEY, mode);
+  }, []);
   const toggleSelected = useCallback(
     (id: number): void =>
       setSelected((current) =>
@@ -117,9 +175,17 @@ export const useMapsListState = (filter: Filter, maps: MapInfo[]): MapsListState
   );
   const clearSelection = useCallback((): void => setSelected([]), []);
 
+  const persistSort = (nextOrderBy: keyof MapInfo, nextOrder: Order): void => {
+    setOrderBy(nextOrderBy);
+    setOrder(nextOrder);
+    writeStorage(ORDER_BY_STORAGE_KEY, String(nextOrderBy));
+    writeStorage(ORDER_STORAGE_KEY, nextOrder);
+  };
+
   return {
     order,
     orderBy,
+    viewMode,
     search,
     page,
     rowsPerPage,
@@ -129,9 +195,15 @@ export const useMapsListState = (filter: Filter, maps: MapInfo[]): MapsListState
 
     /** Sorts by the column, or reverses the order if it already is the sort column. */
     requestSort: (property: keyof MapInfo): void => {
-      setOrder(orderBy === property && order === 'asc' ? 'desc' : 'asc');
-      setOrderBy(property);
+      const nextOrder: Order = orderBy === property && order === 'asc' ? 'desc' : 'asc';
+      persistSort(property, nextOrder);
     },
+    changeSort: (property: keyof MapInfo, defaultOrder: Order = 'desc'): void => {
+      const nextOrder: Order =
+        orderBy === property ? (order === 'asc' ? 'desc' : 'asc') : defaultOrder;
+      persistSort(property, nextOrder);
+    },
+    changeViewMode,
     changePage,
     changeRowsPerPage,
     changeSearch,

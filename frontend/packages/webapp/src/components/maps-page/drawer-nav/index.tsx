@@ -34,8 +34,11 @@ import FolderRoundedIcon from '@mui/icons-material/FolderRounded';
 import KeyboardArrowDownRoundedIcon from '@mui/icons-material/KeyboardArrowDownRounded';
 import KeyboardArrowRightRoundedIcon from '@mui/icons-material/KeyboardArrowRightRounded';
 import MoreHorizRoundedIcon from '@mui/icons-material/MoreHorizRounded';
+import NavigateBeforeRoundedIcon from '@mui/icons-material/NavigateBeforeRounded';
+import NavigateNextRoundedIcon from '@mui/icons-material/NavigateNextRounded';
 
 import logoIcon from '../../../../images/logo-icon.svg';
+import { DesktopDrawerToggle } from '../styled';
 import StyleListItem from './filter-list-item';
 import {
   DrawerContent,
@@ -92,6 +95,7 @@ export interface DrawerNavProps {
   onMoveFolder?: (folder: Folder) => void;
   onDeleteFolder?: (folder: Folder) => void;
   onDropMapsToFolder?: (mapIds: number[], folderId: number | null) => void;
+  onToggleDesktopDrawer?: (() => void) | undefined;
 }
 
 /**
@@ -112,6 +116,7 @@ const DrawerNav = ({
   onMoveFolder,
   onDeleteFolder,
   onDropMapsToFolder,
+  onToggleDesktopDrawer,
 }: DrawerNavProps): ReactElement => {
   const intl = useIntl();
 
@@ -341,16 +346,38 @@ const DrawerNav = ({
 
   return (
     <DrawerContent>
-      <LogoBox key="logo">
+      <LogoBox
+        key="logo"
+        sx={!drawerOpen ? { padding: '14px 6px', justifyContent: 'center', gap: '2px' } : undefined}
+      >
         <LogoIcon
           src={logoIcon}
           alt={intl.formatMessage({ id: 'common.logo', defaultMessage: 'WiseMapping logo' })}
+          sx={!drawerOpen ? { height: '22px' } : undefined}
         />
         {drawerOpen && (
           <LogoText>
             <span className="logo-wise">wise</span>
             <span className="logo-mapping">mapping</span>
           </LogoText>
+        )}
+        {onToggleDesktopDrawer && (
+          <DesktopDrawerToggle
+            aria-label={intl.formatMessage({
+              id: 'common.open-drawer',
+              defaultMessage: 'Open drawer',
+            })}
+            onClick={onToggleDesktopDrawer}
+            id="open-desktop-drawer"
+            sx={
+              drawerOpen
+                ? { ml: 'auto', mr: 0 }
+                : { width: '26px', height: '26px', mr: 0, ml: '2px' }
+            }
+          >
+            {!drawerOpen && <NavigateNextRoundedIcon />}
+            {drawerOpen && <NavigateBeforeRoundedIcon />}
+          </DesktopDrawerToggle>
         )}
       </LogoBox>
 
