@@ -6,7 +6,11 @@
 
 ---
 
-## Latest Fixes (v6.0.34)
+## Latest Fixes (v6.0.35)
+
+- **Un-jammed Rich Text Note Toolbar Buttons (`rich-text-note-editor/styled.ts`, `index.tsx`)**: Replaced fused `ButtonGroup` blocks (where buttons had 0px gap and shared borders like a dense brick) with independent rounded icon buttons (`width: 32px`, `height: 32px`, `borderRadius: 8px`, `gap: 6px`) and inserted clean vertical rules (`ToolDivider`) between logical groups (Heading selector, Link, Typography, Lists & Indent), giving each tool tactile clarity and generous breathing room.
+
+## Previous Fixes (v6.0.34)
 
 - **Solid Mindmap Row Badge (`MapGlyphBadge`)**: Updated the non-folder mindmap row badge (`hub` icon) from translucent light blue to the identical solid iOS blue (`#007AFF` / `#0A84FF`) with a pure white Google icon (`#FFFFFF`), unifying all list item row icons.
 - **Removed Stroke/Border on Segmented Controls (`WorkspaceSegmentedGroup`, `ViewModeGroup`)**: Removed the outer `1px solid hairline` border on both the workspace segmented switch ("全部导图 5 / 文件夹 1") and the view mode group ("列表 / 栅格"), restoring native Apple segmented control style (clean track recessed background without outline).

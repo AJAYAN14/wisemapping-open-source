@@ -18,7 +18,7 @@
 
 import Box from '@mui/material/Box';
 import Button from '@mui/material/Button';
-import ButtonGroup from '@mui/material/ButtonGroup';
+import Divider from '@mui/material/Divider';
 import FormControl from '@mui/material/FormControl';
 import IconButton from '@mui/material/IconButton';
 import Select from '@mui/material/Select';
@@ -120,27 +120,40 @@ export const HeaderSelect = styled(Select)(({ theme }) => ({
   },
 }));
 
-export const ToolGroup = styled(ButtonGroup)({
+export const ToolGroup = styled(Box)({
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: '6px',
   flexShrink: 0,
-  '& .MuiButtonGroup-grouped:not(:last-of-type)': {
-    borderRightColor: 'transparent',
-  },
 });
 
 export const ToolButton = styled(Button)(({ theme }) => ({
+  width: '32px',
   minWidth: '32px',
   height: '32px',
-  padding: '4px 6px',
+  padding: 0,
+  borderRadius: '8px',
   color: theme.palette.text.primary,
-  borderColor: theme.palette.divider,
+  border: `1px solid ${theme.palette.divider}`,
   backgroundColor: theme.palette.background.paper,
+  transition: 'background-color 120ms ease, border-color 120ms ease, transform 120ms ease',
   '&:hover': {
     borderColor: theme.palette.text.secondary,
     backgroundColor: theme.palette.action.hover,
   },
+  '&:active': {
+    transform: 'scale(0.92)',
+  },
   '& .MuiSvgIcon-root': {
     fontSize: '18px',
   },
+}));
+
+export const ToolDivider = styled(Divider)(({ theme }) => ({
+  height: '20px',
+  alignSelf: 'center',
+  margin: `0 ${theme.spacing(0.75)}`,
+  borderColor: theme.palette.divider,
 }));
 
 export const NoteFrame = styled(Box)(({ theme }) => ({

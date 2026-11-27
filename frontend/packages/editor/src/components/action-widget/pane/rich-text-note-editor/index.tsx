@@ -52,6 +52,7 @@ import {
   ToolbarFrame,
   ToolbarRow,
   ToolButton,
+  ToolDivider,
   ToolGroup,
 } from './styled';
 
@@ -316,7 +317,9 @@ const RichTextNoteEditor = ({ closeModal, noteModel }: RichTextNoteEditorProps):
             </HeaderSelect>
           </HeaderControl>
 
-          <ToolGroup size="small" variant="outlined">
+          <ToolDivider orientation="vertical" flexItem />
+
+          <ToolGroup>
             <ToolButton
               onClick={insertLink}
               title={intl.formatMessage({
@@ -328,7 +331,9 @@ const RichTextNoteEditor = ({ closeModal, noteModel }: RichTextNoteEditorProps):
             </ToolButton>
           </ToolGroup>
 
-          <ToolGroup size="small" variant="outlined">
+          <ToolDivider orientation="vertical" flexItem />
+
+          <ToolGroup>
             <ToolButton
               onClick={() => execCommand('bold')}
               title={intl.formatMessage({ id: 'rich-text-editor.bold', defaultMessage: 'Bold' })}
@@ -364,7 +369,9 @@ const RichTextNoteEditor = ({ closeModal, noteModel }: RichTextNoteEditorProps):
             </ToolButton>
           </ToolGroup>
 
-          <ToolGroup size="small" variant="outlined">
+          <ToolDivider orientation="vertical" flexItem />
+
+          <ToolGroup>
             <ToolButton
               onClick={() => execCommand('insertUnorderedList')}
               title={intl.formatMessage({
