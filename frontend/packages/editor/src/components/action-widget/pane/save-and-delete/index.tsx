@@ -53,18 +53,24 @@ const SaveAndDelete = ({
       component="span"
       sx={{
         justifyContent: 'flex-end',
+        alignItems: 'center',
         display: 'flex',
-        pt: 1,
+        gap: 1,
       }}
     >
       {value && value.trim() !== '' && (
         <>
           <Button
-            color="secondary"
-            variant="outlined"
+            color="error"
+            variant="text"
             onClick={() => setConfirmOpen(true)}
-            sx={{ mr: 1 }}
             size="small"
+            sx={{
+              borderRadius: '8px',
+              fontWeight: 500,
+              fontSize: '0.8rem',
+              px: 1.5,
+            }}
           >
             <FormattedMessage id="action.delete" defaultMessage="Delete" />
           </Button>
@@ -88,7 +94,20 @@ const SaveAndDelete = ({
           />
         </>
       )}
-      <Button color="primary" variant="outlined" onClick={submitHandler} size="small">
+      <Button
+        color="primary"
+        variant="contained"
+        disableElevation
+        onClick={submitHandler}
+        size="small"
+        sx={{
+          borderRadius: '8px',
+          fontWeight: 600,
+          fontSize: '0.8rem',
+          px: 2,
+          minHeight: '30px',
+        }}
+      >
         <FormattedMessage id="action.accept" defaultMessage="Accept" />
       </Button>
     </Box>

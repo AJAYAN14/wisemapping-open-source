@@ -20,42 +20,71 @@ import Button from '@mui/material/Button';
 import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import { styled } from '@mui/material/styles';
-import { StyledEditorContainer } from '../shared/StyledEditorContainer';
+import { PaneCard } from '../shared/StyledPane';
 
-export const FontPaneContainer = styled(StyledEditorContainer)(({ theme }) => ({
-  paddingTop: theme.spacing(2),
+export const FontPaneContainer = styled(PaneCard)(({ theme }) => ({
+  paddingTop: theme.spacing(1.75),
   paddingLeft: theme.spacing(2),
   paddingRight: theme.spacing(2),
-  paddingBottom: theme.spacing(1),
+  paddingBottom: theme.spacing(1.75),
+  minWidth: 'min(290px, calc(100dvw - 32px))',
 }));
 
-/** A bold, italic... toggle: outlined in the primary colour while it is on. */
-export const ActionButton = styled(IconButton)<{ selected?: boolean }>(({ selected, theme }) => ({
-  padding: '8px',
-  width: '32px',
-  height: '32px',
-  border: selected
-    ? `2px solid ${theme.palette.primary.main}`
-    : `2px solid ${theme.palette.divider}`,
-  borderRadius: '4px',
-  backgroundColor: selected ? 'rgba(25, 118, 210, 0.08)' : 'transparent',
-  ...(selected && theme.applyStyles('dark', { backgroundColor: 'rgba(144, 202, 249, 0.08)' })),
-  '&:hover': {
-    borderColor: theme.palette.primary.main,
-    backgroundColor: theme.palette.action.hover,
-  },
-}));
+/** A bold, italic... toggle: highlighted with HIG systemBlue when active. */
+export const ActionButton = styled(IconButton)<{ selected?: boolean }>(({ selected, theme }) => {
+  const isDark = theme.palette.mode === 'dark';
+  return {
+    padding: '4px',
+    width: '36px',
+    height: '32px',
+    borderRadius: '8px',
+    border: `1px solid ${selected ? theme.palette.primary.main : theme.palette.divider}`,
+    color: selected ? theme.palette.primary.main : theme.palette.text.primary,
+    backgroundColor: selected
+      ? isDark
+        ? 'rgba(10, 132, 255, 0.18)'
+        : 'rgba(0, 122, 255, 0.12)'
+      : isDark
+        ? 'rgba(255, 255, 255, 0.05)'
+        : 'rgba(120, 120, 128, 0.08)',
+    transition:
+      'background-color 140ms ease, border-color 140ms ease, color 140ms ease, transform 120ms ease',
+    '&:hover': {
+      borderColor: selected ? theme.palette.primary.main : theme.palette.text.secondary,
+      backgroundColor: selected
+        ? isDark
+          ? 'rgba(10, 132, 255, 0.24)'
+          : 'rgba(0, 122, 255, 0.18)'
+        : theme.palette.action.hover,
+    },
+    '&:active': {
+      transform: 'scale(0.95)',
+    },
+  };
+});
 
 export const ResetSection = styled(Box)(({ theme }) => ({
-  marginTop: theme.spacing(2),
-  paddingTop: theme.spacing(2),
-  borderTop: '1px solid',
-  borderColor: theme.palette.divider,
+  marginTop: theme.spacing(1.75),
+  paddingTop: theme.spacing(1.5),
+  borderTop: `1px solid ${theme.palette.divider}`,
 }));
 
-export const ResetButton = styled(Button)(({ theme }) => ({
-  textTransform: 'none',
-  fontSize: '0.75rem',
-  paddingTop: theme.spacing(0.75),
-  paddingBottom: theme.spacing(0.75),
-}));
+export const ResetButton = styled(Button)(({ theme }) => {
+  const isDark = theme.palette.mode === 'dark';
+  return {
+    textTransform: 'none',
+    fontSize: '0.78rem',
+    fontWeight: 500,
+    borderRadius: '8px',
+    paddingTop: theme.spacing(0.75),
+    paddingBottom: theme.spacing(0.75),
+    color: theme.palette.text.secondary,
+    borderColor: theme.palette.divider,
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(120, 120, 128, 0.08)',
+    '&:hover': {
+      color: theme.palette.error.main,
+      borderColor: theme.palette.error.main,
+      backgroundColor: isDark ? 'rgba(255, 69, 58, 0.14)' : 'rgba(255, 59, 48, 0.08)',
+    },
+  };
+});

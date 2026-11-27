@@ -26,23 +26,23 @@ interface MindmapMiniPreviewProps {
   title: string;
 }
 
-// Restrained ink-on-paper branch palette (avoids saturated candy colors & AI violet).
+// Clean system-aligned branch colors matching prism-default / prism-dark on pure white/charcoal ground.
 const BRANCH_PALETTE_LIGHT = [
-  { fill: '#F1F5F9', stroke: '#CBD5E1', text: '#334155', line: '#94A3B8' },
-  { fill: '#FEF3C7', stroke: '#FCD34D', text: '#92400E', line: '#D97706' },
-  { fill: '#ECFDF5', stroke: '#A7F3D0', text: '#065F46', line: '#10B981' },
-  { fill: '#FFF7ED', stroke: '#FED7AA', text: '#9A3412', line: '#EA580C' },
-  { fill: '#F0FDFA', stroke: '#99F6E4', text: '#115E59', line: '#14B8A6' },
-  { fill: '#F4F4F5', stroke: '#D4D4D8', text: '#3F3F46', line: '#71717A' },
+  { fill: '#D1E7FF', stroke: '#007AFF', text: '#0040DD', line: '#007AFF' },
+  { fill: '#DAF5E1', stroke: '#34C759', text: '#248A3D', line: '#34C759' },
+  { fill: '#FFECCF', stroke: '#FF9500', text: '#C93400', line: '#FF9500' },
+  { fill: '#DAF1F5', stroke: '#30B0C7', text: '#008299', line: '#30B0C7' },
+  { fill: '#FFD9E0', stroke: '#FF2D55', text: '#D30F45', line: '#FF2D55' },
+  { fill: '#E1E1F8', stroke: '#5856D6', text: '#3634A3', line: '#5856D6' },
 ] as const;
 
 const BRANCH_PALETTE_DARK = [
-  { fill: 'rgba(148, 163, 184, 0.14)', stroke: 'rgba(148, 163, 184, 0.35)', text: '#E2E8F0', line: '#64748B' },
-  { fill: 'rgba(245, 158, 11, 0.15)', stroke: 'rgba(251, 191, 36, 0.38)', text: '#FDE68A', line: '#F59E0B' },
-  { fill: 'rgba(16, 185, 129, 0.14)', stroke: 'rgba(52, 211, 153, 0.35)', text: '#A7F3D0', line: '#34D399' },
-  { fill: 'rgba(234, 88, 12, 0.15)', stroke: 'rgba(251, 146, 60, 0.35)', text: '#FED7AA', line: '#FB923C' },
-  { fill: 'rgba(20, 184, 166, 0.14)', stroke: 'rgba(45, 212, 191, 0.35)', text: '#99F6E4', line: '#2DD4BF' },
-  { fill: 'rgba(161, 161, 170, 0.15)', stroke: 'rgba(161, 161, 170, 0.35)', text: '#E4E4E7', line: '#A1A1AA' },
+  { fill: '#162840', stroke: '#409CFF', text: '#E5F0FF', line: '#0A84FF' },
+  { fill: '#1A3524', stroke: '#30DB5B', text: '#DAF5E1', line: '#30D158' },
+  { fill: '#3D2714', stroke: '#FFB340', text: '#FFECCF', line: '#FF9F0A' },
+  { fill: '#1A333B', stroke: '#5DE6FF', text: '#DAF1F5', line: '#40C8E0' },
+  { fill: '#3D1924', stroke: '#FF6482', text: '#FFD9E0', line: '#FF375F' },
+  { fill: '#232244', stroke: '#7D7AFF', text: '#E1E1F8', line: '#5E5CE6' },
 ] as const;
 
 const clipText = (text: string, maxChars: number): string =>
@@ -105,7 +105,7 @@ const MindmapMiniPreviewComponent = ({ preview, title }: MindmapMiniPreviewProps
         y="0"
         width="280"
         height="176"
-        fill={dark ? '#18181C' : '#FAFAFB'}
+        fill={dark ? '#1C1C1E' : '#FFFFFF'}
       />
 
       {isEmpty ? (
@@ -113,19 +113,19 @@ const MindmapMiniPreviewComponent = ({ preview, title }: MindmapMiniPreviewProps
           <path
             d={`M ${cx + centerW / 2} ${cy} C ${cx + 52} ${cy}, ${cx + 56} 54, 210 54`}
             fill="none"
-            stroke={dark ? 'rgba(255,255,255,0.14)' : '#CBD5E1'}
+            stroke={dark ? '#38383A' : '#D1D1D6'}
             strokeWidth="1.5"
           />
           <path
             d={`M ${cx + centerW / 2} ${cy} C ${cx + 52} ${cy}, ${cx + 56} 122, 210 122`}
             fill="none"
-            stroke={dark ? 'rgba(255,255,255,0.14)' : '#CBD5E1'}
+            stroke={dark ? '#38383A' : '#D1D1D6'}
             strokeWidth="1.5"
           />
           <path
             d={`M ${cx - centerW / 2} ${cy} C ${cx - 52} ${cy}, ${cx - 56} 88, 70 88`}
             fill="none"
-            stroke={dark ? 'rgba(255,255,255,0.14)' : '#CBD5E1'}
+            stroke={dark ? '#38383A' : '#D1D1D6'}
             strokeWidth="1.5"
           />
           <rect
@@ -134,8 +134,8 @@ const MindmapMiniPreviewComponent = ({ preview, title }: MindmapMiniPreviewProps
             width="44"
             height="18"
             rx="5"
-            fill={dark ? 'rgba(255,255,255,0.06)' : '#FFFFFF'}
-            stroke={dark ? 'rgba(255,255,255,0.14)' : '#E4E4E7'}
+            fill={dark ? '#2C2C2E' : '#F2F2F7'}
+            stroke={dark ? '#38383A' : '#E5E5EA'}
           />
           <rect
             x="210"
@@ -143,8 +143,8 @@ const MindmapMiniPreviewComponent = ({ preview, title }: MindmapMiniPreviewProps
             width="44"
             height="18"
             rx="5"
-            fill={dark ? 'rgba(255,255,255,0.06)' : '#FFFFFF'}
-            stroke={dark ? 'rgba(255,255,255,0.14)' : '#E4E4E7'}
+            fill={dark ? '#2C2C2E' : '#F2F2F7'}
+            stroke={dark ? '#38383A' : '#E5E5EA'}
           />
           <rect
             x="26"
@@ -152,8 +152,8 @@ const MindmapMiniPreviewComponent = ({ preview, title }: MindmapMiniPreviewProps
             width="44"
             height="18"
             rx="5"
-            fill={dark ? 'rgba(255,255,255,0.06)' : '#FFFFFF'}
-            stroke={dark ? 'rgba(255,255,255,0.14)' : '#E4E4E7'}
+            fill={dark ? '#2C2C2E' : '#F2F2F7'}
+            stroke={dark ? '#38383A' : '#E5E5EA'}
           />
         </>
       ) : (
@@ -181,14 +181,14 @@ const MindmapMiniPreviewComponent = ({ preview, title }: MindmapMiniPreviewProps
                   rx="5"
                   fill={style.fill}
                   stroke={style.stroke}
-                  strokeWidth="1"
+                  strokeWidth="0.9"
                 />
                 <text
                   x={targetX + nodeW / 2}
                   y={y + 3}
                   textAnchor="middle"
                   fontSize="7.5"
-                  fontWeight="500"
+                  fontWeight="600"
                   fill={style.text}
                 >
                   {branch.text}
@@ -220,14 +220,14 @@ const MindmapMiniPreviewComponent = ({ preview, title }: MindmapMiniPreviewProps
                   rx="5"
                   fill={style.fill}
                   stroke={style.stroke}
-                  strokeWidth="1"
+                  strokeWidth="0.9"
                 />
                 <text
                   x={targetX - nodeW / 2}
                   y={y + 3}
                   textAnchor="middle"
                   fontSize="7.5"
-                  fontWeight="500"
+                  fontWeight="600"
                   fill={style.text}
                 >
                   {branch.text}
@@ -245,8 +245,7 @@ const MindmapMiniPreviewComponent = ({ preview, title }: MindmapMiniPreviewProps
         width={centerW}
         height={centerH}
         rx="6"
-        fill={dark ? '#27272A' : '#18181B'}
-        stroke={dark ? 'rgba(255,255,255,0.16)' : 'none'}
+        fill={dark ? '#0A84FF' : '#007AFF'}
       />
       <text
         x={cx}

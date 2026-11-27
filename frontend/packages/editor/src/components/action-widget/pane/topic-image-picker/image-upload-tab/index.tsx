@@ -171,22 +171,32 @@ const ImageUploadTab = ({
         }}
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
-        sx={(theme) => ({
-          flex: 1,
-          minHeight: 140,
-          borderRadius: '12px',
-          border: `1.5px dashed ${isDragging ? theme.palette.primary.main : theme.palette.divider}`,
-          backgroundColor: isDragging ? theme.palette.action.selected : theme.palette.action.hover,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 1,
-          p: 2,
-          textAlign: 'center',
-          cursor: canEdit && !uploading ? 'pointer' : 'default',
-          transition: 'border-color 160ms ease, background-color 160ms ease',
-        })}
+        sx={(theme) => {
+          const isDark = theme.palette.mode === 'dark';
+          return {
+            flex: 1,
+            minHeight: 148,
+            borderRadius: '12px',
+            border: `1.5px dashed ${isDragging ? theme.palette.primary.main : theme.palette.divider}`,
+            backgroundColor: isDragging
+              ? isDark
+                ? 'rgba(10, 132, 255, 0.14)'
+                : 'rgba(0, 122, 255, 0.06)'
+              : isDark
+                ? 'rgba(255, 255, 255, 0.03)'
+                : 'rgba(242, 242, 247, 0.72)',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: 1.25,
+            p: 2.5,
+            textAlign: 'center',
+            cursor: canEdit && !uploading ? 'pointer' : 'default',
+            transition: 'border-color 160ms ease, background-color 160ms ease',
+            '&:hover': canEdit && !uploading ? { borderColor: theme.palette.primary.main } : undefined,
+          };
+        }}
       >
         {uploading ? (
           <>
@@ -200,14 +210,33 @@ const ImageUploadTab = ({
           </>
         ) : (
           <>
-            <CloudUploadRoundedIcon color="primary" sx={{ fontSize: 32 }} />
+            <Box
+              sx={(theme) => ({
+                width: 42,
+                height: 42,
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor:
+                  theme.palette.mode === 'dark'
+                    ? 'rgba(10, 132, 255, 0.16)'
+                    : 'rgba(0, 122, 255, 0.10)',
+              })}
+            >
+              <CloudUploadRoundedIcon color="primary" sx={{ fontSize: 22 }} />
+            </Box>
             <Typography variant="body2" sx={{ fontWeight: 600 }}>
               <FormattedMessage
                 id="topic-image.choose-file"
                 defaultMessage="点击选择图片，或拖拽图片到此处"
               />
             </Typography>
-            <Typography variant="caption" color="text.secondary">
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ maxWidth: 248, lineHeight: 1.45 }}
+            >
               <FormattedMessage
                 id="topic-image.paste-hint"
                 defaultMessage="支持选中节点后 Ctrl+V 粘贴截图 · ≥50 KB 或 GIF 自动转静态高画质 AVIF"

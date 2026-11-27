@@ -24,78 +24,88 @@ import IconButton from '@mui/material/IconButton';
 import Select from '@mui/material/Select';
 import { styled } from '@mui/material/styles';
 
-/** The note editor's frame: toolbar on top, the note below, the counter and buttons at the foot. */
-export const NoteEditorFrame = styled(Box)(({ theme }) => ({
-  paddingLeft: 0,
-  paddingRight: 0,
-  paddingBottom: theme.spacing(0.375),
-  width: '650px',
-  height: '470px',
-  backgroundColor: theme.palette.background.paper,
-  borderRadius: Number(theme.shape.borderRadius) * 2,
-  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-  position: 'relative',
-  ...theme.applyStyles('dark', {
-    boxShadow: '0 4px 12px rgba(255, 255, 255, 0.1)',
-  }),
-}));
+/** The note editor's frame: toolbar on top, scrollable note body in the middle, footer pinned cleanly at the bottom. */
+export const NoteEditorFrame = styled(Box)(({ theme }) => {
+  const isDark = theme.palette.mode === 'dark';
+  return {
+    display: 'flex',
+    flexDirection: 'column',
+    width: 'min(560px, calc(100dvw - 32px))',
+    height: 'min(430px, calc(100dvh - 110px))',
+    backgroundColor: isDark ? 'rgba(28, 28, 30, 0.94)' : 'rgba(255, 255, 255, 0.96)',
+    backdropFilter: 'blur(20px) saturate(180%)',
+    WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+    borderRadius: '14px',
+    border: `1px solid ${isDark ? 'rgba(84, 84, 86, 0.45)' : 'rgba(60, 60, 67, 0.12)'}`,
+    boxShadow: isDark
+      ? '0 14px 36px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.30)'
+      : '0 12px 32px rgba(0, 0, 0, 0.09), 0 2px 6px rgba(0, 0, 0, 0.04)',
+    overflow: 'hidden',
+    position: 'relative',
+  };
+});
 
 export const CloseNoteButton = styled(IconButton)(({ theme }) => ({
-  position: 'absolute',
-  top: theme.spacing(1),
-  right: theme.spacing(1),
-  zIndex: 10,
-  width: 32,
-  height: 32,
-  backgroundColor: theme.palette.background.paper,
+  width: 28,
+  height: 28,
+  flexShrink: 0,
+  borderRadius: '7px',
+  color: theme.palette.text.secondary,
+  transition: 'transform 120ms cubic-bezier(0.23, 1, 0.32, 1), background-color 140ms ease',
   '&:hover': {
     backgroundColor: theme.palette.action.hover,
+    color: theme.palette.text.primary,
+  },
+  '&:active': {
+    transform: 'scale(0.92)',
   },
   '& .MuiSvgIcon-root': {
-    fontSize: '20px',
+    fontSize: '18px',
   },
 }));
 
-export const ToolbarFrame = styled(Box)(({ theme }) => ({
-  margin: 0,
-  padding: 0,
-  minHeight: '60px',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  border: `1px solid ${theme.palette.divider}`,
-  borderBottom: 'none',
-  borderRadius: '8px 8px 0 0',
-  backgroundColor: theme.palette.background.default,
-  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
-  ...theme.applyStyles('dark', {
-    boxShadow: '0 2px 4px rgba(255, 255, 255, 0.05)',
-  }),
-}));
+export const ToolbarFrame = styled(Box)(({ theme }) => {
+  const isDark = theme.palette.mode === 'dark';
+  return {
+    flexShrink: 0,
+    minHeight: '50px',
+    padding: `${theme.spacing(1)} ${theme.spacing(1.5)}`,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: theme.spacing(1),
+    borderBottom: `1px solid ${theme.palette.divider}`,
+    backgroundColor: isDark ? 'rgba(44, 44, 46, 0.72)' : '#F2F2F7',
+  };
+});
 
 /** All the tools on one row, scrolling sideways when the window is narrow. */
 export const ToolbarRow = styled(Box)(({ theme }) => ({
+  flex: 1,
+  minWidth: 0,
   display: 'flex',
-  gap: theme.spacing(1),
+  gap: theme.spacing(0.75),
   alignItems: 'center',
   flexWrap: 'nowrap',
   overflowX: 'auto',
 }));
 
 export const HeaderControl = styled(FormControl)({
-  minWidth: 150,
+  minWidth: 120,
   flexShrink: 0,
 });
 
 export const HeaderSelect = styled(Select)(({ theme }) => ({
-  fontSize: '14px',
+  height: '30px',
+  fontSize: '13px',
+  borderRadius: '7px',
   backgroundColor: theme.palette.background.paper,
   borderColor: theme.palette.divider,
   '&:hover': {
     borderColor: theme.palette.text.secondary,
   },
   '&.Mui-focused': {
-    borderColor: theme.palette.divider,
+    borderColor: theme.palette.primary.main,
   },
   '& .MuiOutlinedInput-notchedOutline': {
     borderColor: theme.palette.divider,
@@ -104,7 +114,7 @@ export const HeaderSelect = styled(Select)(({ theme }) => ({
     borderColor: theme.palette.text.secondary,
   },
   '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
-    borderColor: theme.palette.divider,
+    borderColor: theme.palette.primary.main,
   },
 }));
 
@@ -113,25 +123,28 @@ export const ToolGroup = styled(ButtonGroup)({
 });
 
 export const ToolButton = styled(Button)(({ theme }) => ({
-  minWidth: '36px',
+  minWidth: '30px',
+  height: '30px',
+  padding: '4px',
+  color: theme.palette.text.primary,
   borderColor: theme.palette.divider,
+  backgroundColor: theme.palette.background.paper,
   '&:hover': {
     borderColor: theme.palette.text.secondary,
     backgroundColor: theme.palette.action.hover,
   },
+  '& .MuiSvgIcon-root': {
+    fontSize: '17px',
+  },
 }));
 
 export const NoteFrame = styled(Box)(({ theme }) => ({
+  flex: 1,
+  minHeight: 0,
   position: 'relative',
-  height: '350px',
-  border: `1px solid ${theme.palette.divider}`,
-  borderTop: 'none',
-  borderRadius: '0 0 8px 8px',
   backgroundColor: theme.palette.background.paper,
-  boxShadow: 'inset 0 1px 3px rgba(0, 0, 0, 0.1)',
-  ...theme.applyStyles('dark', {
-    boxShadow: 'inset 0 1px 3px rgba(255, 255, 255, 0.1)',
-  }),
+  display: 'flex',
+  flexDirection: 'column',
 }));
 
 /** The editable note: lists, links and a slim scrollbar, in both colour modes. */
@@ -171,15 +184,18 @@ export const NoteEditable = styled(Box)(({ theme }) => ({
   },
 }));
 
-export const FooterBar = styled(Box)(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  paddingLeft: theme.spacing(2),
-  paddingRight: theme.spacing(2),
-  paddingTop: theme.spacing(1.5),
-  paddingBottom: theme.spacing(1.5),
-  borderTop: '1px solid',
-  borderColor: theme.palette.divider,
-  backgroundColor: theme.palette.background.default,
-}));
+export const FooterBar = styled(Box)(({ theme }) => {
+  const isDark = theme.palette.mode === 'dark';
+  return {
+    flexShrink: 0,
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingLeft: theme.spacing(2),
+    paddingRight: theme.spacing(2),
+    paddingTop: theme.spacing(1.25),
+    paddingBottom: theme.spacing(1.25),
+    borderTop: `1px solid ${theme.palette.divider}`,
+    backgroundColor: isDark ? 'rgba(44, 44, 46, 0.72)' : '#F9F9FB',
+  };
+});

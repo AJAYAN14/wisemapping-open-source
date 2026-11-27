@@ -110,16 +110,18 @@ describe('Apple Design homepage refinements', () => {
     expect(screen.getByTestId('spring-value').textContent).toBe('240');
   });
 
-  test('appleColors differentiates light and dark surfaces and preserves amber accent', () => {
+  test('appleColors differentiates light and dark surfaces and adheres to color-palette tokens', () => {
     const light = appleColors(false);
     const dark = appleColors(true);
 
-    expect(light.canvas).not.toBe(dark.canvas);
-    expect(light.sidebarGlass).not.toBe(dark.sidebarGlass);
-    expect(light.amber).toBe('#F59E0B');
+    expect(light.canvas).toBe('#F2F2F7');
+    expect(dark.canvas).toBe('#000000');
+    expect(light.surface).toBe('#FFFFFF');
+    expect(dark.surface).toBe('#1C1C1E');
+    expect(light.amber).toBe('#FF9500');
     expect(dark.amber).toBe('#FF9F0A');
-    expect(light.ctaPrimary).toBe('#18181B');
-    expect(dark.ctaPrimary).toBe('#F4F4F5');
+    expect(light.ctaPrimary).toBe('#007AFF');
+    expect(dark.ctaPrimary).toBe('#0A84FF');
   });
 
   test('MapsPageLoading renders grid card skeletons when mapsListViewMode is grid', () => {

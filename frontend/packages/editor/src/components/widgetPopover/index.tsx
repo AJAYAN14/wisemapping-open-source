@@ -154,22 +154,22 @@ export const WidgetPopover = ({
                 width: isCompactViewport ? 'min(360px, calc(100dvw - 24px))' : undefined,
                 maxWidth: 'calc(100dvw - 24px)',
                 maxHeight: 'calc(100dvh - 32px)',
-                borderRadius: '16px',
+                borderRadius: '14px',
                 overflowX: 'hidden',
                 overflowY: 'auto',
                 boxShadow: (theme) =>
                   theme.palette.mode === 'dark'
                     ? '0 16px 40px rgba(0, 0, 0, 0.55), 0 2px 8px rgba(0, 0, 0, 0.3)'
-                    : '0 16px 36px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.04)',
+                    : '0 14px 34px rgba(0, 0, 0, 0.10), 0 2px 8px rgba(0, 0, 0, 0.04)',
                 border: (theme) =>
                   `1px solid ${
                     theme.palette.mode === 'dark'
-                      ? 'rgba(255, 255, 255, 0.12)'
-                      : 'rgba(0, 0, 0, 0.08)'
+                      ? 'rgba(84, 84, 86, 0.45)'
+                      : 'rgba(60, 60, 67, 0.12)'
                   }`,
                 backgroundColor: (theme) =>
                   theme.palette.mode === 'dark'
-                    ? 'rgba(32, 32, 36, 0.95)'
+                    ? 'rgba(28, 28, 30, 0.94)'
                     : 'rgba(255, 255, 255, 0.95)',
                 backdropFilter: 'blur(20px) saturate(180%)',
                 WebkitBackdropFilter: 'blur(20px) saturate(180%)',
@@ -182,22 +182,18 @@ export const WidgetPopover = ({
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center',
-              px: 2,
+              px: 1.75,
               py: 1,
               borderBottom: '1px solid',
               borderColor: 'divider',
-              backgroundColor: 'background.default',
             }}
           >
             <Typography
               variant="caption"
               sx={{
-                color: 'text.secondary',
-                fontSize: '11px',
-                fontWeight: 500,
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-                opacity: 0.7,
+                color: 'text.primary',
+                fontSize: '0.8rem',
+                fontWeight: 600,
               }}
             >
               {panelTitle && <FormattedMessage {...panelTitle} />}
@@ -208,9 +204,13 @@ export const WidgetPopover = ({
               aria-label={'Close'}
               size="small"
               sx={{
+                width: 26,
+                height: 26,
+                borderRadius: '7px',
                 color: 'text.secondary',
                 '&:hover': {
                   backgroundColor: 'action.hover',
+                  color: 'text.primary',
                 },
               }}
             >

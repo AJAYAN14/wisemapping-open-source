@@ -25,31 +25,34 @@ const createEditorTheme = (mode: PaletteMode): Theme => {
     palette: {
       mode,
       primary: {
-        light: '#ffb74d',
-        main: '#ffa800',
-        dark: '#e57500',
-        contrastText: isLight ? '#FFFFFF' : '#000000',
-      },
-      secondary: {
-        light: '#a19f9f',
-        main: '#5a5a5a',
-        dark: '#424242',
+        light: isLight ? '#5AC8F5' : '#409CFF',
+        main: isLight ? '#007AFF' : '#0A84FF',
+        dark: isLight ? '#0040DD' : '#007AFF',
         contrastText: '#FFFFFF',
       },
+      secondary: {
+        light: '#AEAEB2',
+        main: '#8E8E93',
+        dark: '#636366',
+        contrastText: '#FFFFFF',
+      },
+      error: {
+        main: isLight ? '#FF3B30' : '#FF453A',
+      },
       background: {
-        paper: isLight ? '#ffffff' : '#1e1e1e',
-        default: isLight ? '#f5f5f5' : '#121212',
+        paper: isLight ? '#FFFFFF' : '#1C1C1E',
+        default: isLight ? '#FFFFFF' : '#000000',
       },
       text: {
-        primary: isLight ? '#313131' : '#ffffff',
-        secondary: isLight ? '#666666' : '#b3b3b3',
+        primary: isLight ? '#000000' : '#FFFFFF',
+        secondary: isLight ? 'rgba(60, 60, 67, 0.60)' : 'rgba(235, 235, 245, 0.60)',
       },
-      divider: isLight ? '#e0e0e0' : '#424242',
+      divider: isLight ? 'rgba(84, 84, 86, 0.20)' : '#38383A',
       action: {
-        hover: isLight ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.08)',
-        selected: isLight ? 'rgba(0, 0, 0, 0.08)' : 'rgba(255, 255, 255, 0.12)',
-        disabled: isLight ? 'rgba(0, 0, 0, 0.26)' : 'rgba(255, 255, 255, 0.3)',
-        disabledBackground: isLight ? 'rgba(0, 0, 0, 0.12)' : 'rgba(255, 255, 255, 0.12)',
+        hover: isLight ? 'rgba(120, 120, 128, 0.12)' : 'rgba(120, 120, 128, 0.24)',
+        selected: isLight ? 'rgba(0, 122, 255, 0.12)' : 'rgba(10, 132, 255, 0.22)',
+        disabled: isLight ? 'rgba(60, 60, 67, 0.30)' : 'rgba(235, 235, 245, 0.30)',
+        disabledBackground: isLight ? 'rgba(120, 120, 128, 0.12)' : 'rgba(120, 120, 128, 0.20)',
       },
     },
     components: {
@@ -58,7 +61,7 @@ const createEditorTheme = (mode: PaletteMode): Theme => {
           root: ({ theme }) => ({
             backgroundColor: theme.palette.background.paper,
             color: theme.palette.text.primary,
-            boxShadow: `0 1px 3px ${isLight ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.12)'}`,
+            boxShadow: `0 1px 3px ${isLight ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.4)'}`,
           }),
         },
       },
@@ -73,6 +76,7 @@ const createEditorTheme = (mode: PaletteMode): Theme => {
         styleOverrides: {
           root: {
             textTransform: 'none',
+            borderRadius: '8px',
           },
         },
         variants: [
@@ -81,8 +85,10 @@ const createEditorTheme = (mode: PaletteMode): Theme => {
             style: ({ theme }) => ({
               backgroundColor: theme.palette.primary.main,
               color: theme.palette.primary.contrastText,
+              boxShadow: 'none',
               '&:hover': {
                 backgroundColor: theme.palette.primary.dark,
+                boxShadow: 'none',
               },
             }),
           },
@@ -93,13 +99,13 @@ const createEditorTheme = (mode: PaletteMode): Theme => {
           root: ({ theme }) => ({
             color: theme.palette.text.primary,
             '&:hover': {
-              backgroundColor: isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.08)',
+              backgroundColor: isLight ? 'rgba(120, 120, 128, 0.12)' : 'rgba(120, 120, 128, 0.24)',
             },
             '&.Mui-disabled': {
               color: theme.palette.text.disabled,
             },
             '&[aria-pressed="true"]': {
-              backgroundColor: isLight ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.12)',
+              backgroundColor: isLight ? 'rgba(0, 122, 255, 0.12)' : 'rgba(10, 132, 255, 0.22)',
             },
             '& svg': {
               color: 'inherit',
@@ -110,8 +116,8 @@ const createEditorTheme = (mode: PaletteMode): Theme => {
       MuiTooltip: {
         styleOverrides: {
           tooltip: () => ({
-            backgroundColor: isLight ? '#616161' : '#424242',
-            color: '#ffffff',
+            backgroundColor: isLight ? '#1C1C1E' : '#2C2C2E',
+            color: '#FFFFFF',
           }),
         },
       },
@@ -119,7 +125,7 @@ const createEditorTheme = (mode: PaletteMode): Theme => {
       MuiCssBaseline: {
         styleOverrides: {
           body: {
-            transition: 'background-color 0.3s ease-in-out, color 0.3s ease-in-out',
+            transition: 'background-color 0.25s ease-in-out, color 0.25s ease-in-out',
           },
         },
       },

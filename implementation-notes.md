@@ -6,7 +6,13 @@
 
 ---
 
-## Latest Fixes (v6.0.30)
+## Latest Fixes (v6.0.31)
+
+- **Clean HIG Color Palette Alignment (`appleDesign.ts`, `MindmapMiniPreview.tsx`, `FolderItems.tsx`, `editor/src/theme/index.ts`)**: Aligned homepage canvas (`#F2F2F7` / `#000000`), elevated cards (`#FFFFFF` / `#1C1C1E`), primary tint (`#007AFF` / `#0A84FF`), and star highlight (`#FF9500` / `#FF9F0A`) strictly to `color-palette` tokens, removing muddy grays/browns.
+- **Pure White Mindmap Canvas (`prism-default.json`, `prism-light.json`, `editor-loading-skeleton/styled.ts`)**: Switched light-mode mindmap editor canvas and loading skeleton background from ceramic white (`#F2F2F7` / `#f5f5f5`) to pure white (`#FFFFFF`), keeping dark mode `#000000`.
+- **Editor Popup Redesign (`StyledPane.ts`, `widgetPopover`, `save-and-delete`, `color-picker`, `topic-font-editor`, `topic-image-picker`, `rich-text-note-editor`, `topic-link-editor`)**: Replaced absolute close buttons overridden by `StyledEngineProvider injectFirst` with flex `PaneHeader` rows (`PaneHeaderCloseButton`) and `&&` specificity; unified `14px` translucent glass surfaces; upgraded `ColorPicker` to a 9-column crisp grid with `#007AFF` selection rings; gave `TopicImagePicker` a soft blue badge and balanced dropzone spacing; switched `RichTextNoteEditor` to a responsive flex-column layout so `FooterBar` never clips and replaced emoji/HTML glyphs with Material Rounded icons; and harmonized `SaveAndDelete` primary/destructive actions.
+
+## Previous Fixes (v6.0.30)
 
 - **Narrow-Desktop Table Clipping Fix (`styled.ts`, `MapsListSkeleton.tsx`)**: Lowered `ListTable` and `MapsPageLoading` table `minWidth` from `680px` to `600px` so list view fits cleanly inside `~978px` viewports with expanded sidebar without horizontal scrollbar clipping on the rightmost action icon.
 

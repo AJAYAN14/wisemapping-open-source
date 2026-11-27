@@ -24,23 +24,26 @@ import BlockRoundedIcon from '@mui/icons-material/BlockRounded';
 import { useIntl } from 'react-intl';
 
 const NoneColorCircle = styled(Box)<{ selected?: boolean }>(({ selected, theme }) => ({
-  width: '18px',
-  height: '18px',
+  width: '22px',
+  height: '22px',
   borderRadius: '50%',
-  backgroundColor: '#ffffff',
-  border: selected ? `2px solid ${theme.palette.primary.main}` : '2px solid #e0e0e0',
+  backgroundColor: theme.palette.background.paper,
+  border: `1px solid ${theme.palette.divider}`,
+  boxShadow: selected
+    ? `0 0 0 2px ${theme.palette.background.paper}, 0 0 0 4px ${theme.palette.primary.main}`
+    : 'none',
   cursor: 'pointer',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   position: 'relative',
+  transition: 'transform 120ms ease, box-shadow 120ms ease',
   '&:hover': {
     transform: 'scale(1.1)',
-    transition: 'transform 0.2s ease',
   },
   '& svg': {
-    fontSize: '12px',
-    color: '#ff4444',
+    fontSize: '14px',
+    color: theme.palette.error.main,
   },
 }));
 
@@ -84,7 +87,14 @@ const ColorPicker = (props: {
 
   return (
     <Box component="div" aria-label={colorLabel}>
-      <Box sx={{ display: 'flex', flexWrap: 'wrap', width: '216px', gap: '6px' }}>
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(9, 22px)',
+          gap: '7px',
+          justifyContent: 'center',
+        }}
+      >
         {!props.hideNoneOption && (
           <NoneColorCircle
             selected={isNoneSelected}
@@ -102,19 +112,23 @@ const ColorPicker = (props: {
             component="button"
             aria-label={color}
             title={color}
-            sx={{
-              width: '18px',
-              height: '18px',
+            sx={(theme) => ({
+              width: '22px',
+              height: '22px',
               borderRadius: '50%',
               backgroundColor: color,
-              border: currentValue === color ? '2px solid #ffa800' : '2px solid transparent',
+              border: 'none',
+              boxShadow:
+                currentValue === color
+                  ? `0 0 0 2px ${theme.palette.background.paper}, 0 0 0 4px ${theme.palette.primary.main}`
+                  : 'inset 0 0 0 1px rgba(128, 128, 128, 0.22)',
               cursor: 'pointer',
               padding: 0,
+              transition: 'transform 120ms ease, box-shadow 120ms ease',
               '&:hover': {
                 transform: 'scale(1.1)',
-                transition: 'transform 0.2s ease',
               },
-            }}
+            })}
             onClick={() => handleColorChange({ hex: color })}
           />
         ))}

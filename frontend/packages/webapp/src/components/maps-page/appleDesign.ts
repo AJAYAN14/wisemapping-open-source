@@ -19,9 +19,9 @@
 import type { CSSObject, Theme } from '@mui/material/styles';
 
 /**
- * Unified workspace design tokens & motion mixins for the maps homepage.
- * Enforces a calm neutral canvas (#F5F5F7 / #0D0D10), three strict corner radii,
- * high-contrast charcoal primary CTA, and restrained WiseMapping amber accents.
+ * Clean semantic color tokens & motion mixins aligned with the official HIG color palette:
+ * - Light: pure #FFFFFF surfaces on crisp cool-neutral #F2F2F7 grouped canvas, #007AFF primary, rgba(60,60,67,0.6) secondary
+ * - Dark: pure #000000 canvas, #1C1C1E / #2C2C2E layered surfaces, #0A84FF primary, rgba(235,235,245,0.6) secondary
  */
 
 export const APPLE_FONT_STACK =
@@ -66,36 +66,36 @@ export interface AppleColorTokens {
 }
 
 export const appleColors = (isDark: boolean): AppleColorTokens => ({
-  canvas: isDark ? '#0D0D10' : '#F5F5F7',
-  surface: isDark ? '#1A1A1E' : '#FFFFFF',
-  surfaceElevated: isDark ? '#242429' : '#F3F4F6',
-  sidebarGlass: isDark ? 'rgba(26, 26, 30, 0.90)' : 'rgba(255, 255, 255, 0.92)',
-  sidebarSolid: isDark ? '#1A1A1E' : '#FFFFFF',
-  headerGlass: isDark ? 'rgba(26, 26, 30, 0.84)' : 'rgba(245, 245, 247, 0.86)',
-  headerSolid: isDark ? '#1A1A1E' : '#F5F5F7',
-  textPrimary: isDark ? '#F4F4F5' : '#18181B',
-  textSecondary: isDark ? '#A1A1AA' : '#71717A',
-  textTertiary: isDark ? '#71717A' : '#8E8E95',
-  hairline: isDark ? 'rgba(255, 255, 255, 0.09)' : 'rgba(24, 24, 27, 0.08)',
-  hairlineStrong: isDark ? 'rgba(255, 255, 255, 0.18)' : 'rgba(24, 24, 27, 0.16)',
-  hoverFill: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(24, 24, 27, 0.045)',
-  activeFill: isDark ? 'rgba(255, 255, 255, 0.10)' : 'rgba(24, 24, 27, 0.08)',
-  ctaPrimary: isDark ? '#F4F4F5' : '#18181B',
-  ctaPrimaryHover: isDark ? '#E4E4E7' : '#27272A',
-  ctaPrimaryText: isDark ? '#18181B' : '#FFFFFF',
-  amber: isDark ? '#FF9F0A' : '#F59E0B',
-  amberHover: isDark ? '#FFB340' : '#D97706',
-  amberSoft: isDark ? 'rgba(255, 159, 10, 0.16)' : 'rgba(245, 158, 11, 0.11)',
-  amberSoftHover: isDark ? 'rgba(255, 159, 10, 0.24)' : 'rgba(245, 158, 11, 0.17)',
-  amberText: isDark ? '#FFB340' : '#B45309',
-  amberRing: isDark ? 'rgba(255, 159, 10, 0.28)' : 'rgba(217, 119, 6, 0.22)',
-  specularEdge: isDark ? 'rgba(255, 255, 255, 0.06)' : 'rgba(255, 255, 255, 0.75)',
+  canvas: isDark ? '#000000' : '#F2F2F7',
+  surface: isDark ? '#1C1C1E' : '#FFFFFF',
+  surfaceElevated: isDark ? '#2C2C2E' : '#FFFFFF',
+  sidebarGlass: isDark ? 'rgba(28, 28, 30, 0.92)' : 'rgba(255, 255, 255, 0.94)',
+  sidebarSolid: isDark ? '#1C1C1E' : '#FFFFFF',
+  headerGlass: isDark ? 'rgba(0, 0, 0, 0.86)' : 'rgba(242, 242, 247, 0.88)',
+  headerSolid: isDark ? '#000000' : '#F2F2F7',
+  textPrimary: isDark ? '#FFFFFF' : '#000000',
+  textSecondary: isDark ? 'rgba(235, 235, 245, 0.60)' : 'rgba(60, 60, 67, 0.60)',
+  textTertiary: isDark ? 'rgba(235, 235, 245, 0.36)' : 'rgba(60, 60, 67, 0.36)',
+  hairline: isDark ? 'rgba(84, 84, 86, 0.42)' : 'rgba(60, 60, 67, 0.12)',
+  hairlineStrong: isDark ? '#38383A' : '#C6C6C8',
+  hoverFill: isDark ? 'rgba(120, 120, 128, 0.24)' : 'rgba(120, 120, 128, 0.12)',
+  activeFill: isDark ? 'rgba(120, 120, 128, 0.32)' : 'rgba(120, 120, 128, 0.18)',
+  ctaPrimary: isDark ? '#0A84FF' : '#007AFF',
+  ctaPrimaryHover: isDark ? '#409CFF' : '#0066D6',
+  ctaPrimaryText: '#FFFFFF',
+  amber: isDark ? '#FF9F0A' : '#FF9500',
+  amberHover: isDark ? '#409CFF' : '#007AFF',
+  amberSoft: isDark ? 'rgba(10, 132, 255, 0.18)' : 'rgba(0, 122, 255, 0.10)',
+  amberSoftHover: isDark ? 'rgba(10, 132, 255, 0.26)' : 'rgba(0, 122, 255, 0.16)',
+  amberText: isDark ? '#409CFF' : '#007AFF',
+  amberRing: isDark ? 'rgba(10, 132, 255, 0.32)' : 'rgba(0, 122, 255, 0.24)',
+  specularEdge: isDark ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.85)',
   shadowSubtle: isDark
-    ? '0 1px 3px rgba(0, 0, 0, 0.28)'
-    : '0 1px 2px rgba(24, 24, 27, 0.04)',
+    ? '0 1px 2px rgba(0, 0, 0, 0.4)'
+    : '0 1px 2px rgba(0, 0, 0, 0.04)',
   shadowFloat: isDark
-    ? '0 12px 32px rgba(0, 0, 0, 0.48)'
-    : '0 10px 28px rgba(24, 24, 27, 0.10), 0 1px 3px rgba(24, 24, 27, 0.05)',
+    ? '0 12px 32px rgba(0, 0, 0, 0.55)'
+    : '0 8px 24px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.04)',
 });
 
 export const isDarkTheme = (theme: Theme): boolean => theme.palette.mode === 'dark';
@@ -117,8 +117,8 @@ export const applePressMixin: CSSObject = {
 /** Translucent glass material with reduced-transparency and high-contrast fallbacks. */
 export const glassMaterialMixin = (glassBg: string, solidBg: string, blurPx = 18): CSSObject => ({
   backgroundColor: glassBg,
-  backdropFilter: `blur(${blurPx}px) saturate(160%)`,
-  WebkitBackdropFilter: `blur(${blurPx}px) saturate(160%)`,
+  backdropFilter: `blur(${blurPx}px) saturate(180%)`,
+  WebkitBackdropFilter: `blur(${blurPx}px) saturate(180%)`,
   '@media (prefers-reduced-transparency: reduce)': {
     backgroundColor: solidBg,
     backdropFilter: 'none',

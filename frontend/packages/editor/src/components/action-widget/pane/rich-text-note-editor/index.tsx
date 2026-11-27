@@ -18,8 +18,15 @@
 import Box from '@mui/material/Box';
 import MenuItem from '@mui/material/MenuItem';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
-import FormatIndentIncreaseRoundedIcon from '@mui/icons-material/FormatIndentIncreaseRounded';
+import FormatBoldRoundedIcon from '@mui/icons-material/FormatBoldRounded';
 import FormatIndentDecreaseRoundedIcon from '@mui/icons-material/FormatIndentDecreaseRounded';
+import FormatIndentIncreaseRoundedIcon from '@mui/icons-material/FormatIndentIncreaseRounded';
+import FormatItalicRoundedIcon from '@mui/icons-material/FormatItalicRounded';
+import FormatListBulletedRoundedIcon from '@mui/icons-material/FormatListBulletedRounded';
+import FormatListNumberedRoundedIcon from '@mui/icons-material/FormatListNumberedRounded';
+import FormatStrikethroughRoundedIcon from '@mui/icons-material/FormatStrikethroughRounded';
+import FormatUnderlinedRoundedIcon from '@mui/icons-material/FormatUnderlinedRounded';
+import LinkRoundedIcon from '@mui/icons-material/LinkRounded';
 import React, {
   ReactElement,
   useState,
@@ -269,9 +276,6 @@ const RichTextNoteEditor = ({ closeModal, noteModel }: RichTextNoteEditorProps):
 
   return (
     <NoteEditorFrame>
-      <CloseNoteButton onClick={closeModal}>
-        <CloseRoundedIcon />
-      </CloseNoteButton>
       {/* Toolbar */}
       <ToolbarFrame>
         {/* Single Row - All Options */}
@@ -320,7 +324,7 @@ const RichTextNoteEditor = ({ closeModal, noteModel }: RichTextNoteEditorProps):
                 defaultMessage: 'Insert Link',
               })}
             >
-              🔗
+              <LinkRoundedIcon fontSize="small" />
             </ToolButton>
           </ToolGroup>
 
@@ -329,7 +333,7 @@ const RichTextNoteEditor = ({ closeModal, noteModel }: RichTextNoteEditorProps):
               onClick={() => execCommand('bold')}
               title={intl.formatMessage({ id: 'rich-text-editor.bold', defaultMessage: 'Bold' })}
             >
-              <strong>B</strong>
+              <FormatBoldRoundedIcon fontSize="small" />
             </ToolButton>
             <ToolButton
               onClick={() => execCommand('italic')}
@@ -338,7 +342,7 @@ const RichTextNoteEditor = ({ closeModal, noteModel }: RichTextNoteEditorProps):
                 defaultMessage: 'Italic',
               })}
             >
-              <em>I</em>
+              <FormatItalicRoundedIcon fontSize="small" />
             </ToolButton>
             <ToolButton
               onClick={() => execCommand('underline')}
@@ -347,7 +351,7 @@ const RichTextNoteEditor = ({ closeModal, noteModel }: RichTextNoteEditorProps):
                 defaultMessage: 'Underline',
               })}
             >
-              <u>U</u>
+              <FormatUnderlinedRoundedIcon fontSize="small" />
             </ToolButton>
             <ToolButton
               onClick={() => execCommand('strikeThrough')}
@@ -356,7 +360,7 @@ const RichTextNoteEditor = ({ closeModal, noteModel }: RichTextNoteEditorProps):
                 defaultMessage: 'Strikethrough',
               })}
             >
-              <s>S</s>
+              <FormatStrikethroughRoundedIcon fontSize="small" />
             </ToolButton>
           </ToolGroup>
 
@@ -368,7 +372,7 @@ const RichTextNoteEditor = ({ closeModal, noteModel }: RichTextNoteEditorProps):
                 defaultMessage: 'Bullet List',
               })}
             >
-              •
+              <FormatListBulletedRoundedIcon fontSize="small" />
             </ToolButton>
             <ToolButton
               onClick={() => execCommand('insertOrderedList')}
@@ -377,7 +381,7 @@ const RichTextNoteEditor = ({ closeModal, noteModel }: RichTextNoteEditorProps):
                 defaultMessage: 'Numbered List',
               })}
             >
-              1.
+              <FormatListNumberedRoundedIcon fontSize="small" />
             </ToolButton>
             <ToolButton
               // Keeps the selection in the note.
@@ -402,6 +406,10 @@ const RichTextNoteEditor = ({ closeModal, noteModel }: RichTextNoteEditorProps):
             </ToolButton>
           </ToolGroup>
         </ToolbarRow>
+
+        <CloseNoteButton onClick={closeModal} aria-label="Close">
+          <CloseRoundedIcon />
+        </CloseNoteButton>
       </ToolbarFrame>
 
       {/* Editor */}

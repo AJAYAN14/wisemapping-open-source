@@ -23,27 +23,27 @@ import Typography from '@mui/material/Typography';
 import { styled } from '@mui/material/styles';
 
 /**
- * The parts the style panes (canvas, topic, font, relationship) are made of: a card with a close
- * button, sections with a small title, and centred rows of controls.
+ * Shared floating pane surface and section primitives aligned with the color-palette spec.
  */
 export const PaneCard = styled(Box)(({ theme }) => {
   const isDark = theme.palette.mode === 'dark';
   return {
-    paddingTop: theme.spacing(1.75),
-    paddingLeft: theme.spacing(2),
-    paddingRight: theme.spacing(2),
-    paddingBottom: theme.spacing(1.5),
+    paddingTop: '14px',
+    paddingLeft: '16px',
+    paddingRight: '16px',
+    paddingBottom: '14px',
     minWidth: 'min(290px, calc(100dvw - 32px))',
-    maxWidth: 'min(330px, calc(100dvw - 24px))',
-    backgroundColor: isDark ? 'rgba(32, 32, 36, 0.88)' : 'rgba(255, 255, 255, 0.88)',
+    maxWidth: 'min(340px, calc(100dvw - 24px))',
+    backgroundColor: isDark ? 'rgba(28, 28, 30, 0.92)' : 'rgba(255, 255, 255, 0.95)',
     backdropFilter: 'blur(20px) saturate(180%)',
     WebkitBackdropFilter: 'blur(20px) saturate(180%)',
-    borderRadius: '16px',
-    border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)'}`,
+    borderRadius: '14px',
+    border: `1px solid ${isDark ? 'rgba(84, 84, 86, 0.45)' : 'rgba(60, 60, 67, 0.12)'}`,
     boxShadow: isDark
-      ? '0 12px 36px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.25)'
-      : '0 12px 32px rgba(0, 0, 0, 0.08), 0 2px 6px rgba(0, 0, 0, 0.04)',
+      ? '0 14px 36px rgba(0, 0, 0, 0.55), 0 2px 6px rgba(0, 0, 0, 0.30)'
+      : '0 12px 32px rgba(0, 0, 0, 0.09), 0 2px 6px rgba(0, 0, 0, 0.04)',
     position: 'relative',
+    color: theme.palette.text.primary,
     '@media (prefers-reduced-transparency: reduce)': {
       backgroundColor: theme.palette.background.paper,
       backdropFilter: 'none',
@@ -52,36 +52,88 @@ export const PaneCard = styled(Box)(({ theme }) => {
   };
 });
 
-export const PaneCloseButton = styled(IconButton)({
-  position: 'absolute',
-  top: 8,
-  right: 8,
-  zIndex: 1,
+/** Flex header row inside popups so title & close button always align cleanly on opposite sides. */
+export const PaneHeader = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: '8px',
+  marginBottom: theme.spacing(1.5),
+}));
+
+export const PaneHeaderTitle = styled(Typography)(({ theme }) => ({
+  fontSize: '0.82rem',
+  fontWeight: 600,
+  color: theme.palette.text.primary,
+  lineHeight: 1.3,
+  fontFamily:
+    '-apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif',
+}));
+
+/** Inline close button placed inside PaneHeader. */
+export const PaneHeaderCloseButton = styled(IconButton)(({ theme }) => ({
   width: 26,
   height: 26,
-  borderRadius: '8px',
-  transition: 'transform 120ms ease, background-color 150ms ease',
+  padding: 0,
+  borderRadius: '7px',
+  color: theme.palette.text.secondary,
+  flexShrink: 0,
+  transition: 'transform 120ms cubic-bezier(0.23, 1, 0.32, 1), background-color 140ms ease',
+  '&:hover': {
+    backgroundColor: theme.palette.action.hover,
+    color: theme.palette.text.primary,
+  },
+  '&:active': {
+    transform: 'scale(0.92)',
+  },
+  '& svg': {
+    fontSize: '17px',
+  },
+}));
+
+/**
+ * Legacy absolute close button kept for panes without PaneHeader; uses `&&` specificity so
+ * StyledEngineProvider injectFirst cannot override `position: absolute` with MuiIconButton's `relative`.
+ */
+export const PaneCloseButton = styled(IconButton)(({ theme }) => ({
+  '&&': {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    zIndex: 1,
+    width: 26,
+    height: 26,
+    borderRadius: '7px',
+    color: theme.palette.text.secondary,
+  },
+  transition: 'transform 120ms cubic-bezier(0.23, 1, 0.32, 1), background-color 140ms ease',
+  '&:hover': {
+    backgroundColor: theme.palette.action.hover,
+    color: theme.palette.text.primary,
+  },
   '&:active': {
     transform: 'scale(0.92)',
   },
   '& .MuiSvgIcon-root': {
-    fontSize: '16px',
+    fontSize: '17px',
   },
-});
+}));
 
 export const PaneSection = styled(Box)(({ theme }) => ({
-  marginBottom: theme.spacing(2),
+  marginBottom: theme.spacing(1.75),
+  '&:last-child': {
+    marginBottom: 0,
+  },
 }));
 
 export const PaneSectionTitle = styled(Typography)(({ theme }) => ({
-  fontSize: '0.72rem',
-  fontWeight: 700,
-  letterSpacing: '0.04em',
-  textTransform: 'uppercase',
+  fontSize: '0.75rem',
+  fontWeight: 600,
+  letterSpacing: '0',
   color: theme.palette.text.secondary,
   marginBottom: theme.spacing(1),
   fontFamily:
-    '-apple-system, BlinkMacSystemFont, "SF Pro Rounded", "SF Pro Text", system-ui, sans-serif',
+    '-apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif',
 }));
 
 /** Controls centred across the whole width of the pane. */
@@ -101,8 +153,8 @@ export const PaneControlRow = styled(Box)(({ theme }) => ({
 
 /** A vertical rule between two groups of controls in a row. */
 export const PaneDivider = styled(Divider)(({ theme }) => ({
-  marginLeft: theme.spacing(1),
-  marginRight: theme.spacing(1),
-  height: '32px',
+  marginLeft: theme.spacing(0.75),
+  marginRight: theme.spacing(0.75),
+  height: '28px',
   alignSelf: 'center',
 }));

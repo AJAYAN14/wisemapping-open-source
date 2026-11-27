@@ -26,7 +26,7 @@ export const LoadingContainer = styled('div')(({ theme }) => {
   return {
     position: 'absolute',
     inset: 0,
-    backgroundColor: isDark ? '#000000' : '#F2F2F7',
+    backgroundColor: isDark ? '#000000' : '#FFFFFF',
     display: 'flex',
     flexDirection: 'column',
     zIndex: EDITOR_Z_INDEX.canvasChrome,

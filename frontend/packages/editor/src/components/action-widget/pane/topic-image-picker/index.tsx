@@ -23,7 +23,7 @@ import NodeProperty from '../../../../classes/model/node-property';
 import { DesignerKeyboard, TopicImageValue } from '@wisemapping/mindplot';
 import ImageUploadTab from './image-upload-tab';
 import type { UploadTopicImageFn } from '../../../../hooks/useEditor';
-import { PaneCard, PaneCloseButton, PaneSectionTitle } from '../shared/StyledPane';
+import { PaneCard, PaneHeader, PaneHeaderCloseButton, PaneHeaderTitle } from '../shared/StyledPane';
 
 type TopicImagePickerProp = {
   triggerClose: () => void;
@@ -44,16 +44,18 @@ const TopicImagePicker = ({
   }, []);
 
   return (
-    <PaneCard sx={{ p: 0, pt: 1.75 }}>
-      <PaneCloseButton onClick={triggerClose} aria-label="Close">
-        <CloseRoundedIcon />
-      </PaneCloseButton>
-      <PaneSectionTitle variant="subtitle2" sx={{ px: 2, mb: 0 }}>
-        <FormattedMessage
-          id="editor-panel.tooltip-add-topic-image"
-          defaultMessage="Add Topic Image"
-        />
-      </PaneSectionTitle>
+    <PaneCard sx={{ p: 0 }}>
+      <PaneHeader sx={{ px: 2, pt: 1.75, mb: 0 }}>
+        <PaneHeaderTitle>
+          <FormattedMessage
+            id="editor-panel.tooltip-add-topic-image"
+            defaultMessage="Add Topic Image"
+          />
+        </PaneHeaderTitle>
+        <PaneHeaderCloseButton onClick={triggerClose} aria-label="Close">
+          <CloseRoundedIcon />
+        </PaneHeaderCloseButton>
+      </PaneHeader>
       <ImageUploadTab
         topicImageModel={topicImageModel}
         onUploadTopicImage={onUploadTopicImage}

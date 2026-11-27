@@ -87,21 +87,23 @@ describe('createEditorTheme', () => {
   it('builds a light palette', () => {
     const theme = createEditorTheme('light');
     expect(theme.palette.mode).toBe('light');
-    expect(theme.palette.primary.main).toBe('#ffa800');
+    expect(theme.palette.primary.main).toBe('#007AFF');
     expect(theme.palette.primary.contrastText).toBe('#FFFFFF');
-    expect(theme.palette.background.paper).toBe('#ffffff');
-    expect(theme.palette.text.primary).toBe('#313131');
-    expect(theme.palette.divider).toBe('#e0e0e0');
+    expect(theme.palette.background.paper).toBe('#FFFFFF');
+    expect(theme.palette.background.default).toBe('#FFFFFF');
+    expect(theme.palette.text.primary).toBe('#000000');
+    expect(theme.palette.divider).toBe('rgba(84, 84, 86, 0.20)');
   });
 
   it('builds a dark palette', () => {
     const theme = createEditorTheme('dark');
     expect(theme.palette.mode).toBe('dark');
-    expect(theme.palette.primary.contrastText).toBe('#000000');
-    expect(theme.palette.background.paper).toBe('#1e1e1e');
-    expect(theme.palette.background.default).toBe('#121212');
-    expect(theme.palette.text.primary).toBe('#ffffff');
-    expect(theme.palette.action.hover).toBe('rgba(255, 255, 255, 0.08)');
+    expect(theme.palette.primary.main).toBe('#0A84FF');
+    expect(theme.palette.primary.contrastText).toBe('#FFFFFF');
+    expect(theme.palette.background.paper).toBe('#1C1C1E');
+    expect(theme.palette.background.default).toBe('#000000');
+    expect(theme.palette.text.primary).toBe('#FFFFFF');
+    expect(theme.palette.action.hover).toBe('rgba(120, 120, 128, 0.24)');
   });
 
   it.each(['light', 'dark'] as const)(
@@ -116,7 +118,7 @@ describe('createEditorTheme', () => {
       expect(call(overrides.MuiAppBar!.styleOverrides!.root)).toEqual({
         backgroundColor: theme.palette.background.paper,
         color: theme.palette.text.primary,
-        boxShadow: `0 1px 3px ${isLight ? 'rgba(0,0,0,0.12)' : 'rgba(255,255,255,0.12)'}`,
+        boxShadow: `0 1px 3px ${isLight ? 'rgba(0,0,0,0.08)' : 'rgba(0,0,0,0.4)'}`,
       });
       expect(call(overrides.MuiToolbar!.styleOverrides!.root)).toEqual({
         backgroundColor: theme.palette.background.paper,
@@ -124,11 +126,11 @@ describe('createEditorTheme', () => {
       const iconButton = call(overrides.MuiIconButton!.styleOverrides!.root);
       expect(iconButton['color']).toBe(theme.palette.text.primary);
       expect(iconButton['&:hover']).toEqual({
-        backgroundColor: isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.08)',
+        backgroundColor: isLight ? 'rgba(120, 120, 128, 0.12)' : 'rgba(120, 120, 128, 0.24)',
       });
       expect(call(overrides.MuiTooltip!.styleOverrides!.tooltip)).toEqual({
-        backgroundColor: isLight ? '#616161' : '#424242',
-        color: '#ffffff',
+        backgroundColor: isLight ? '#1C1C1E' : '#2C2C2E',
+        color: '#FFFFFF',
       });
       const contained = defined(overrides.MuiButton!.variants![0]);
       expect(call(contained.style)).toEqual(

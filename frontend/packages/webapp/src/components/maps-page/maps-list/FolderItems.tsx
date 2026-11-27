@@ -321,7 +321,8 @@ const FolderGridCardComponent = ({
             alignItems: 'center',
             justifyContent: 'center',
             gap: '6px',
-            backgroundColor: c.surfaceElevated,
+            backgroundColor: isDarkTheme(theme) ? '#2C2C2E' : '#F2F2F7',
+            borderBottom: `1px solid ${c.hairline}`,
           };
         }}
       >
@@ -329,7 +330,7 @@ const FolderGridCardComponent = ({
           name="folder"
           size={40}
           filled
-          style={{ color: '#D97706' }}
+          style={{ color: '#007AFF' }}
         />
         <GridCardActionsOverlay className="grid-card-overlay">
           <Tooltip arrow={true} title="文件夹操作">

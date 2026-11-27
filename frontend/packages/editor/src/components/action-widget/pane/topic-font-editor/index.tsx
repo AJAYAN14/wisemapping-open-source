@@ -31,9 +31,10 @@ import ColorPicker from '../color-picker';
 import Editor from '../../../../classes/model/editor';
 import {
   PaneCenteredRow,
-  PaneCloseButton,
   PaneControlRow,
   PaneDivider,
+  PaneHeader,
+  PaneHeaderCloseButton,
   PaneSection,
   PaneSectionTitle,
 } from '../shared/StyledPane';
@@ -117,14 +118,16 @@ const TopicFontEditor = (props: TopicFontEditorProps): ReactElement => {
 
   return (
     <FontPaneContainer>
-      <PaneCloseButton onClick={props.closeModal}>
-        <CloseRoundedIcon />
-      </PaneCloseButton>
       {/* Font Color */}
       <PaneSection>
-        <PaneSectionTitle variant="subtitle2" gutterBottom>
-          <FormattedMessage id="topic-font-editor.font-color" defaultMessage="Font Color" />
-        </PaneSectionTitle>
+        <PaneHeader sx={{ mb: 1.25 }}>
+          <PaneSectionTitle variant="subtitle2" sx={{ mb: 0 }}>
+            <FormattedMessage id="topic-font-editor.font-color" defaultMessage="Font Color" />
+          </PaneSectionTitle>
+          <PaneHeaderCloseButton onClick={props.closeModal} aria-label="Close">
+            <CloseRoundedIcon />
+          </PaneHeaderCloseButton>
+        </PaneHeader>
         <PaneCenteredRow>
           <ColorPicker
             closeModal={() => {}}

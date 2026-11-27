@@ -26,6 +26,7 @@ import SaveAndDelete from '../save-and-delete';
 import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import { FormattedMessage, useIntl } from 'react-intl';
+import { PaneCard, PaneHeader, PaneHeaderCloseButton, PaneHeaderTitle } from '../shared/StyledPane';
 
 /**
  * Url form for toolbar and node contextual editor
@@ -66,36 +67,20 @@ const TopicLinkEditor = (props: {
   const isValidUrl = !url || checkURL(url);
 
   return (
-    <Box
+    <PaneCard
       sx={{
-        pt: 1.5,
-        px: 1.5,
-        pb: 1,
         minWidth: 'min(320px, calc(100dvw - 32px))',
         maxWidth: 'min(380px, calc(100dvw - 24px))',
-        backgroundColor: 'background.paper',
-        borderRadius: '16px',
-        border: '1px solid',
-        borderColor: 'divider',
-        position: 'relative',
       }}
     >
-      <IconButton
-        onClick={props.closeModal}
-        sx={{
-          position: 'absolute',
-          top: 4,
-          right: 4,
-          zIndex: 1,
-          width: 24,
-          height: 24,
-          '& .MuiSvgIcon-root': {
-            fontSize: '16px',
-          },
-        }}
-      >
-        <CloseRoundedIcon />
-      </IconButton>
+      <PaneHeader sx={{ mb: 1.25 }}>
+        <PaneHeaderTitle>
+          <FormattedMessage id="editor-panel.tooltip-add-link" defaultMessage="Add Link" />
+        </PaneHeaderTitle>
+        <PaneHeaderCloseButton onClick={props.closeModal} aria-label="Close">
+          <CloseRoundedIcon />
+        </PaneHeaderCloseButton>
+      </PaneHeader>
       <Input
         autoFocus
         error={!isValidUrl}
@@ -121,29 +106,31 @@ const TopicLinkEditor = (props: {
           input: {
             endAdornment: (
               <Link href={isValidUrl ? url : ''} target="_blank">
-                <IconButton disabled={!isValidUrl}>
-                  <OpenInNewRoundedIcon />
+                <IconButton size="small" disabled={!isValidUrl}>
+                  <OpenInNewRoundedIcon fontSize="small" />
                 </IconButton>
               </Link>
             ),
           },
         }}
       />
-      <SaveAndDelete
-        model={props.urlModel as NodeProperty<string | undefined>}
-        closeModal={props.closeModal}
-        submitHandler={submitHandler}
-        deleteConfirmTitle={
-          <FormattedMessage id="confirm-delete.link-title" defaultMessage="Delete link?" />
-        }
-        deleteConfirmMessage={
-          <FormattedMessage
-            id="confirm-delete.link-message"
-            defaultMessage="Are you sure you want to remove the link from this topic?"
-          />
-        }
-      />
-    </Box>
+      <Box sx={{ mt: 1.5 }}>
+        <SaveAndDelete
+          model={props.urlModel as NodeProperty<string | undefined>}
+          closeModal={props.closeModal}
+          submitHandler={submitHandler}
+          deleteConfirmTitle={
+            <FormattedMessage id="confirm-delete.link-title" defaultMessage="Delete link?" />
+          }
+          deleteConfirmMessage={
+            <FormattedMessage
+              id="confirm-delete.link-message"
+              defaultMessage="Are you sure you want to remove the link from this topic?"
+            />
+          }
+        />
+      </Box>
+    </PaneCard>
   );
 };
 
