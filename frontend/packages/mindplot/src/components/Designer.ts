@@ -190,7 +190,7 @@ class Designer extends EventDispispatcher<DesignerEvents> {
     const divElem = options.divContainer;
 
     this._options = options;
-    this._themeVariant = 'light'; // Default theme variant, will be updated by initializeThemeVariant
+    this._themeVariant = options.themeVariant ?? 'light';
 
     // Set full div elem render area.The component must fill container size
     // container is responsible for location and size
@@ -1298,6 +1298,9 @@ class Designer extends EventDispispatcher<DesignerEvents> {
       return;
     }
     const variant = editorThemeMode === 'dark' ? 'dark' : 'light';
+    if (this._themeVariant === variant) {
+      return;
+    }
     this._themeVariant = variant;
 
     // If mindmap is already loaded, apply the theme variant immediately

@@ -144,6 +144,8 @@ class MindplotWebComponent extends HTMLElementBase {
     const editorRenderMode = this.getAttribute('mode') as EditorRenderMode;
     const locale = this.getAttribute('locale');
     const zoom = this.getAttribute('zoom');
+    const themeVariantAttr = this.getAttribute('theme-variant');
+    const themeVariant = themeVariantAttr === 'dark' ? 'dark' : 'light';
     // Selection assistance is enabled by default
 
     // Clear theme cache to ensure updated configurations are loaded
@@ -163,6 +165,7 @@ class MindplotWebComponent extends HTMLElementBase {
       divContainer: mindplodElem,
       zoom: zoom ? Number.parseFloat(zoom) : 1,
       locale: locale || 'en',
+      themeVariant,
     });
 
     this._persistence = persistenceManager;

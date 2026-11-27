@@ -310,6 +310,7 @@ const EditorContent = ({
             mode: options.mode,
             locale: locale,
             zoom: options.zoom,
+            'theme-variant': mode,
           })}
 
           <Notifier id="headerNotifier" />

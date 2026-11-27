@@ -19,6 +19,7 @@ import { $assert } from './util/assert';
 import type EditorRenderMode from './EditorRenderMode';
 import type WidgetBuilder from './WidgetBuilder';
 import type PersistenceManager from './PersistenceManager';
+import type { ThemeVariant } from './theme/Theme';
 
 export type DesignerOptions = {
   zoom: number;
@@ -29,6 +30,7 @@ export type DesignerOptions = {
   widgetManager: WidgetBuilder;
   saveOnLoad?: boolean;
   locale?: string;
+  themeVariant?: ThemeVariant;
 };
 
 class OptionsBuilder {

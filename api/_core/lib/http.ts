@@ -118,7 +118,7 @@ export function buildCorsHeaders(req: Request): Headers {
     'Access-Control-Allow-Headers',
     'Content-Type, Authorization, Accept, Accept-Language, X-Mindmap-Version, If-Match',
   );
-  headers.set('Access-Control-Expose-Headers', 'Location, ResourceId, X-Mindmap-Version');
+  headers.set('Access-Control-Expose-Headers', 'Location, ResourceId, X-Mindmap-Version, Server-Timing');
   return headers;
 }
 

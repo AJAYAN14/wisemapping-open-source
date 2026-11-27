@@ -24,7 +24,6 @@ import {
   createRoutesFromElements,
   createBrowserRouter,
   useSearchParams,
-  useLocation,
   Outlet,
 } from 'react-router';
 import LoginPage from './components/login-page';
@@ -94,7 +93,6 @@ const PageEditorWrapper = () => {
 
 // Wrapper component that provides Chinese locale to IntlProvider
 const IntlProviderWrapper = ({ children }: { children: React.ReactNode }): ReactElement => {
-  const location = useLocation();
   const account = useFetchAccount();
   const locale = AppI18n.getUserLocale(account?.locale);
   const intlLocale = useLocaleMessages(locale.code);
@@ -104,7 +102,6 @@ const IntlProviderWrapper = ({ children }: { children: React.ReactNode }): React
       locale={intlLocale.locale}
       defaultLocale={Locales.ZH.code}
       messages={intlLocale.messages}
-      key={location.pathname} // Force re-render when pathname changes
     >
       {children}
     </IntlProvider>
@@ -158,7 +155,7 @@ const buildRouter = () =>
             <Route
               path="/*"
               element={<PageEditorWrapper />}
-              loader={mapLoader(true)}
+              loader={mapLoader(true, { defer: true })}
               errorElement={
                 <IntlProviderWrapper>
                   <ErrorPage />

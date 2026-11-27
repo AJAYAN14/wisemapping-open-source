@@ -55,6 +55,18 @@ const ensureViewportCullStyles = (container: HTMLElement): void => {
 /** Elements a map load adds to the canvas before it lets the browser paint (its spinner). */
 const RENDER_QUEUE_BATCH = 300;
 
+type BatchRenderable = CanvasElement & {
+  prepareWorkspaceBatch: (workspace: Canvas) => void;
+  measureTextForBatch: () => void;
+  finishWorkspaceBatch: () => void;
+};
+
+const isBatchRenderable = (elem: unknown): elem is BatchRenderable =>
+  Boolean(elem) &&
+  typeof (elem as Partial<BatchRenderable>).prepareWorkspaceBatch === 'function' &&
+  typeof (elem as Partial<BatchRenderable>).measureTextForBatch === 'function' &&
+  typeof (elem as Partial<BatchRenderable>).finishWorkspaceBatch === 'function';
+
 /** How long to wait for a paint where animation frames don't run (a hidden tab). */
 const NO_FRAME_TIMEOUT = 100;
 const VISIBILITY_PADDING_RATIO = 0.08;
@@ -102,6 +114,9 @@ class Canvas {
 
   // Receives canvasPanned and canvasZoomed: the bus of the designer the canvas belongs to.
   private _layoutEventBus: LayoutEventBus;
+
+  // Non-null while processRenderQueue is appending a batch so topics defer getBBox() layout reads.
+  private _batchDeferredTopics: BatchRenderable[] | undefined;
 
   constructor(
     screenManager: ScreenManager,
@@ -307,19 +322,52 @@ class Canvas {
     });
   }
 
-  /** Adds the queued elements, a batch per paint, in the order they were queued (popped). */
+  /** True while processRenderQueue is collecting topics for deferred batch text measurement. */
+  isDeferringBatchMeasure(): boolean {
+    return this._batchDeferredTopics !== undefined;
+  }
+
+  /** Registers a topic prepared in Phase 1 so Phase 2/3 run after all batch DOM writes. */
+  enqueueBatchMeasure(topic: CanvasElement): void {
+    if (this._batchDeferredTopics && isBatchRenderable(topic)) {
+      this._batchDeferredTopics.push(topic);
+    }
+  }
+
+  /**
+   * Adds the queued elements, a batch per paint, in the order they were queued (popped).
+   * Topics added during the batch defer SVG text measurement until all elements in the batch
+   * have written their text DOM nodes, reducing forced synchronous layouts to one per batch.
+   */
   private processRenderQueue(
     renderQueue: (ElementClass<ElementPeer> | CanvasElement)[],
     batch: number,
   ): Promise<void> {
+    const batchTopics: BatchRenderable[] = [];
+    this._batchDeferredTopics = batchTopics;
     try {
       for (let i = 0; i < batch && renderQueue.length > 0; i++) {
         const elem = renderQueue.pop()!;
         this.appendInternal(elem);
       }
     } catch (e) {
+      this._batchDeferredTopics = undefined;
+      return Promise.reject(e);
+    } finally {
+      this._batchDeferredTopics = undefined;
+    }
+
+    try {
+      for (const topic of batchTopics) {
+        topic.measureTextForBatch();
+      }
+      for (const topic of batchTopics) {
+        topic.finishWorkspaceBatch();
+      }
+    } catch (e) {
       return Promise.reject(e);
     }
+
     if (renderQueue.length === 0) {
       return Promise.resolve();
     }

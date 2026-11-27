@@ -28,6 +28,7 @@ import {
 import type { PersistenceError, MapInfo } from '@wisemapping/editor';
 import type { EditorRenderMode } from '@wisemapping/mindplot';
 import { IntlProvider } from 'react-intl';
+import { useTheme as useMuiTheme } from '@mui/material/styles';
 import AppI18n, { Locales } from '../../classes/app-i18n';
 import { useLocaleMessages } from '../../classes/app-i18n/messages';
 import { useFetchAccount } from '../../classes/middleware';
@@ -35,7 +36,13 @@ import MapInfoImpl from '../../classes/editor-map-info';
 import AppConfig from '../../classes/app-config';
 import JwtTokenConfig from '../../classes/jwt-token-config';
 import { useLoaderData, useNavigation, useSearchParams } from 'react-router';
-import { EditorMetadata, PageModeType } from './loader';
+import {
+  DeferredEditorLoaderData,
+  DeferredEditorLoadResult,
+  EditorMetadata,
+  PageModeType,
+} from './loader';
+import { leaveTo } from '../../utils/redirect';
 import { ClientContext } from '../../classes/provider/client-context';
 import { KeyboardContext } from '../../classes/provider/keyboard-context';
 import SessionExpiredDialog from '../common-page/session-expired-dialog';
@@ -45,8 +52,9 @@ import type { EditorConfiguration, UploadTopicImageFn } from '@wisemapping/edito
 import { createThemeVariantStorage } from '../../services/createThemeVariantStorage';
 import type { ActionType } from '../maps-page/action-chooser';
 import { uploadBlobToMapAssets } from '../../utils/mapAssets';
-import { buildMapEditPath } from '../../utils/mapPath';
+import { buildMapEditPath, buildMapHistoryViewPath } from '../../utils/mapPath';
 import { scheduleIdleMapsPreload } from '../../utils/editorPreload';
+import { finishMapOpenTrace, type MapOpenTimingRecord } from '../../utils/mapOpenTiming';
 
 const escapeXmlAttr = (value: string): string =>
   value
@@ -120,19 +128,74 @@ export type EditorPropsType = {
 
 const ActionDispatcher = React.lazy(() => import('../maps-page/action-dispatcher'));
 
+const isDeferredLoaderData = (
+  data: EditorMetadata | DeferredEditorLoaderData | undefined,
+): data is DeferredEditorLoaderData =>
+  Boolean(
+    data && typeof data === 'object' && ('metadataPromise' in data || 'editorMetadata' in data),
+  );
+
+const DeferredEditorGate = ({
+  metadataPromise,
+  ...props
+}: EditorPropsType & {
+  metadataPromise: Promise<DeferredEditorLoadResult>;
+}): React.ReactElement => {
+  const result = use(metadataPromise);
+
+  useEffect(() => {
+    if (result.redirectTo) {
+      leaveTo(result.redirectTo);
+    }
+  }, [result.redirectTo]);
+
+  if (!result.editorMetadata) {
+    return <EditorLoadingSkeleton />;
+  }
+
+  return (
+    <LoadedEditorPage
+      {...props}
+      mapId={result.editorMetadata.mapMetadata.id}
+      editorMetadata={result.editorMetadata}
+    />
+  );
+};
+
 // While the router loads another page (leaving the editor, or another map), only the skeleton is
 // shown. Deciding it here, before the editor's own hooks, keeps their order the same on every render.
 const EditorPage = (props: EditorPropsType): React.ReactElement => {
   const navigation = useNavigation();
-  const editorMetadata = useLoaderData() as EditorMetadata | undefined;
-  if (navigation.state === 'loading' || !editorMetadata) {
+  const loaderData = useLoaderData() as EditorMetadata | DeferredEditorLoaderData | undefined;
+  if (navigation.state === 'loading' || !loaderData) {
     return <EditorLoadingSkeleton />;
   }
+
+  if (isDeferredLoaderData(loaderData)) {
+    if (loaderData.editorMetadata) {
+      return (
+        <LoadedEditorPage
+          {...props}
+          mapId={loaderData.editorMetadata.mapMetadata.id}
+          editorMetadata={loaderData.editorMetadata}
+        />
+      );
+    }
+    if (loaderData.metadataPromise) {
+      return (
+        <Suspense fallback={<EditorLoadingSkeleton />}>
+          <DeferredEditorGate metadataPromise={loaderData.metadataPromise} {...props} />
+        </Suspense>
+      );
+    }
+    return <EditorLoadingSkeleton />;
+  }
+
   return (
     <LoadedEditorPage
       {...props}
-      mapId={editorMetadata.mapMetadata.id}
-      editorMetadata={editorMetadata}
+      mapId={loaderData.mapMetadata.id}
+      editorMetadata={loaderData}
     />
   );
 };
@@ -154,6 +217,8 @@ const LoadedEditorPage = ({
   const intlLocale = useLocaleMessages(userLocale.code);
   const client = use(ClientContext);
   const { hotkeyEnabled } = use(KeyboardContext);
+  const muiTheme = useMuiTheme();
+  const isDark = muiTheme.palette.mode === 'dark';
 
   // Parse query parameter for theme
   const [searchParams] = useSearchParams();
@@ -233,12 +298,16 @@ const LoadedEditorPage = ({
   }, [mapId]);
 
   useEffect(() => {
+    const folderPath = editorMetadata.mapMetadata.folderPath ?? '';
+    const title = editorMetadata.mapMetadata.title;
     return () => {
       queryClient.invalidateQueries({ queryKey: ['maps', 'metadata', mapId] });
-      queryClient.invalidateQueries({ queryKey: ['maps', 'metadata-by-path'] });
+      queryClient.invalidateQueries({
+        queryKey: ['maps', 'metadata-by-path', folderPath, title],
+      });
       queryClient.invalidateQueries({ queryKey: ['maps'] });
     };
-  }, [mapId]);
+  }, [mapId, editorMetadata.mapMetadata.folderPath, editorMetadata.mapMetadata.title]);
 
   useEffect(() => scheduleIdleMapsPreload(), []);
 
@@ -322,6 +391,55 @@ const LoadedEditorPage = ({
     }
   }, [mapTitle]);
 
+  const isMapLoaded = Boolean(editorConfig.model?.isMapLoadded());
+  const recordedPerfMapIdRef = useRef<number | undefined>(undefined);
+  const [openPerfRecord, setOpenPerfRecord] = useState<MapOpenTimingRecord | undefined>(undefined);
+
+  useEffect(() => {
+    if (!isMapLoaded || recordedPerfMapIdRef.current === mapId) {
+      return;
+    }
+    recordedPerfMapIdRef.current = mapId;
+    let topicCount: number;
+    try {
+      topicCount = editorConfig.model?.getDesigner().getModel().getTopics().length ?? 0;
+    } catch {
+      topicCount = 0;
+    }
+    const targetPath =
+      pageMode === 'edit'
+        ? buildMapEditPath(
+            editorMetadata.mapMetadata.folderPath,
+            editorMetadata.mapMetadata.title,
+          )
+        : buildMapHistoryViewPath(
+            editorMetadata.mapMetadata.folderPath,
+            editorMetadata.mapMetadata.title,
+            hid ?? 0,
+          );
+    const record = finishMapOpenTrace(targetPath, mapTitle || editorMetadata.mapMetadata.title, topicCount);
+    if (record) {
+      setOpenPerfRecord(record);
+    }
+  }, [
+    isMapLoaded,
+    mapId,
+    pageMode,
+    hid,
+    mapTitle,
+    editorConfig.model,
+    editorMetadata.mapMetadata.folderPath,
+    editorMetadata.mapMetadata.title,
+  ]);
+
+  useEffect(() => {
+    if (!openPerfRecord) {
+      return undefined;
+    }
+    const timer = window.setTimeout(() => setOpenPerfRecord(undefined), 5500);
+    return () => window.clearTimeout(timer);
+  }, [openPerfRecord]);
+
   const themeVariantStorage = useMemo(() => createThemeVariantStorage(), []);
   useEffect(() => () => themeVariantStorage.destroy?.(), [themeVariantStorage]);
 
@@ -338,6 +456,42 @@ const LoadedEditorPage = ({
         onAction={setActiveDialog}
         themeVariantStorage={themeVariantStorage}
       />
+      {openPerfRecord && (
+        <button
+          type="button"
+          data-testid="map-open-perf-badge"
+          role="status"
+          aria-live="polite"
+          title={`总耗时 ${openPerfRecord.totalMs}ms | 路由 ${openPerfRecord.routeCommitMs}ms | 数据 ${openPerfRecord.metadataMs}ms (${openPerfRecord.cacheHit ? '命中预取' : '网络拉取'}${openPerfRecord.serverDbMs !== undefined ? `, DB ${openPerfRecord.serverDbMs}ms` : ''}) | 渲染 ${openPerfRecord.renderMs}ms | 节点 ${openPerfRecord.topicCount}`}
+          onClick={() => setOpenPerfRecord(undefined)}
+          style={{
+            appearance: 'none',
+            position: 'fixed',
+            left: 'max(14px, env(safe-area-inset-left, 0px))',
+            bottom: 'max(14px, env(safe-area-inset-bottom, 0px))',
+            zIndex: 1200,
+            padding: '5px 10px',
+            borderRadius: '999px',
+            fontSize: '11.5px',
+            fontWeight: 500,
+            fontVariantNumeric: 'tabular-nums',
+            letterSpacing: '-0.01em',
+            color: isDark ? 'rgba(245, 245, 247, 0.9)' : 'rgba(60, 60, 67, 0.88)',
+            background: isDark ? 'rgba(38, 38, 42, 0.82)' : 'rgba(255, 255, 255, 0.78)',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            border: isDark ? '1px solid rgba(255, 255, 255, 0.14)' : '1px solid rgba(0, 0, 0, 0.08)',
+            boxShadow: isDark ? '0 2px 12px rgba(0, 0, 0, 0.35)' : '0 2px 10px rgba(0, 0, 0, 0.08)',
+            cursor: 'pointer',
+            userSelect: 'none',
+          }}
+        >
+          打开耗时 {openPerfRecord.totalMs} ms ·{' '}
+          {openPerfRecord.cacheHit
+            ? `命中预取 · 渲染 ${openPerfRecord.renderMs} ms`
+            : `数据 ${openPerfRecord.metadataMs} ms · 渲染 ${openPerfRecord.renderMs} ms`}
+        </button>
+      )}
       {activeDialog && (
         <Suspense fallback={<></>}>
           <ActionDispatcher

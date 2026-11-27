@@ -29,7 +29,13 @@ import { ClientContext } from '../../../classes/provider/client-context';
 import { useDate } from '../../../classes/app-i18n/dates';
 import { buildMapEditPath } from '../../../utils/mapPath';
 import { handleSpaLinkClick } from '../../../utils/appNavigation';
-import { prefetchMapForOpen, preloadEditorResources } from '../../../utils/editorPreload';
+import { beginMapOpenTrace } from '../../../utils/mapOpenTiming';
+import {
+  cancelHoverPrefetchMapForOpen,
+  prefetchMapForOpen,
+  preloadEditorResources,
+  scheduleHoverPrefetchMapForOpen,
+} from '../../../utils/editorPreload';
 import { formatMapSize } from '../../../utils/mapPreview';
 import { GoogleIcon } from '../../common/google-symbol';
 import { LabelsCell } from './labels-cell';
@@ -155,6 +161,10 @@ const MapRowComponent = ({
                 underline="none"
                 onMouseEnter={() => {
                   void preloadEditorResources();
+                  scheduleHoverPrefetchMapForOpen(client, map.folderPath ?? '', map.title);
+                }}
+                onMouseLeave={() => {
+                  cancelHoverPrefetchMapForOpen(map.folderPath ?? '', map.title);
                 }}
                 onFocus={() => {
                   void preloadEditorResources();
@@ -162,7 +172,10 @@ const MapRowComponent = ({
                 onPointerDown={() => {
                   prefetchMapForOpen(client, map.folderPath ?? '', map.title);
                 }}
-                onClick={(e) => handleSpaLinkClick(e, editPath)}
+                onClick={(e) => {
+                  beginMapOpenTrace(editPath, map.title, 'list-click');
+                  handleSpaLinkClick(e, editPath);
+                }}
               >
                 {map.title}
               </TitleLink>

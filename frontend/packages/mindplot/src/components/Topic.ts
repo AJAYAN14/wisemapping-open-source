@@ -132,6 +132,8 @@ abstract class Topic extends NodeGraph {
 
   private _outerHaloSuppressed = false;
 
+  private _pendingBatchRedraw: { shapeChanged: boolean; theme: Theme } | undefined;
+
   constructor(
     model: NodeModel,
     options: NodeOption,
@@ -1499,6 +1501,20 @@ abstract class Topic extends NodeGraph {
   }
 
   addToWorkspace(workspace: Canvas): void {
+    this.prepareWorkspaceBatch(workspace);
+    if (workspace.isDeferringBatchMeasure()) {
+      workspace.enqueueBatchMeasure(this);
+      return;
+    }
+    this.measureTextForBatch();
+    this.finishWorkspaceBatch();
+  }
+
+  /**
+   * Batch Phase 1: appends the topic group to the workspace, notifies the layout model,
+   * and writes shape/text DOM attributes without reading layout (`getBBox`).
+   */
+  prepareWorkspaceBatch(workspace: Canvas): void {
     const elem = this.get2DElement();
     workspace.append(elem);
     if (!this._isInWorkspace) {
@@ -1516,7 +1532,33 @@ abstract class Topic extends NodeGraph {
     }
     this._isInWorkspace = true;
     this._workspace = workspace;
-    this.redraw(this.getThemeVariant(), false);
+    this._pendingBatchRedraw = ThemeResolutionCache.run(() =>
+      this.prepareRedrawInPass(this.getThemeVariant()),
+    );
+  }
+
+  /** Batch Phase 2: measures SVG text bounding boxes together after all batch DOM writes. */
+  measureTextForBatch(): void {
+    if (this._isInWorkspace) {
+      this.getOrBuildTextShape().measure();
+    }
+  }
+
+  /** Batch Phase 3: completes sizing, positioning, and styling using cached text measurements. */
+  finishWorkspaceBatch(): void {
+    const pending = this._pendingBatchRedraw;
+    this._pendingBatchRedraw = undefined;
+    if (this._isInWorkspace && pending) {
+      ThemeResolutionCache.run(() =>
+        this.completeRedrawInPass(
+          this.getThemeVariant(),
+          false,
+          pending.shapeChanged,
+          pending.theme,
+          true,
+        ),
+      );
+    }
   }
 
   override createDragNode(layoutManager: LayoutManager): DragTopic {
@@ -1576,36 +1618,59 @@ abstract class Topic extends NodeGraph {
   }
 
   private redrawInPass(variant: ThemeVariant, redrawChildren: boolean): void {
+    const prepared = this.prepareRedrawInPass(variant);
+    if (prepared) {
+      this.completeRedrawInPass(variant, redrawChildren, prepared.shapeChanged, prepared.theme);
+    }
+  }
+
+  private prepareRedrawInPass(
+    variant: ThemeVariant,
+  ): { shapeChanged: boolean; theme: Theme } | undefined {
+    if (!this._isInWorkspace) {
+      return undefined;
+    }
+    this._measuredFontHeight = undefined;
+    const theme = ThemeFactory.create(this.getModel(), variant);
+    const textShape = this.getOrBuildTextShape();
+
+    // Update shape ...
+    const shapeChanged = this.updateTopicShape();
+
+    // Update font ...
+    const fontColor = this.getFontColor(variant);
+    const fontSize = this.getFontSize();
+    const fontWeight = this.getFontWeight();
+    const web2dWeight = toTextWeight(fontWeight);
+    const fontStyle = this.getFontStyle();
+    const fontFamily = this.getFontFamily();
+    const text = this.getText();
+    textShape.setMaxWidth(this.getMaxTextWidth());
+    this.applyTextValues(textShape, {
+      color: fontColor,
+      size: fontSize,
+      weight: web2dWeight,
+      style: fontStyle,
+      family: fontFamily,
+      text,
+    });
+
+    // Update outer shape style ...
+    const outerShape = this.getOuterShape();
+    this.applyOuterHaloStyle(theme, outerShape, this.isOnFocus());
+
+    return { shapeChanged, theme };
+  }
+
+  private completeRedrawInPass(
+    variant: ThemeVariant,
+    redrawChildren: boolean,
+    shapeChanged: boolean,
+    theme: Theme,
+    skipChildrenRedraw = false,
+  ): void {
     if (this._isInWorkspace) {
-      this._measuredFontHeight = undefined;
-      const theme = ThemeFactory.create(this.getModel(), variant);
       const textShape = this.getOrBuildTextShape();
-
-      // Update shape ...
-      const shapeChanged = this.updateTopicShape();
-
-      // Update font ...
-      const fontColor = this.getFontColor(variant);
-      const fontSize = this.getFontSize();
-      const fontWeight = this.getFontWeight();
-      const web2dWeight = toTextWeight(fontWeight);
-      const fontStyle = this.getFontStyle();
-      const fontFamily = this.getFontFamily();
-      const text = this.getText();
-      textShape.setMaxWidth(this.getMaxTextWidth());
-      this.applyTextValues(textShape, {
-        color: fontColor,
-        size: fontSize,
-        weight: web2dWeight,
-        style: fontStyle,
-        family: fontFamily,
-        text,
-      });
-
-      // Update outer shape style ...
-      const outerShape = this.getOuterShape();
-      this.applyOuterHaloStyle(theme, outerShape, this.isOnFocus());
-
       // Calculate topic size and adjust elements. The text is measured once: the font
       // height is the height of one of its lines (Text.getFontHeight) ...
       const { width: textWidth, height: textHeight } = textShape.measure();
@@ -1804,7 +1869,11 @@ abstract class Topic extends NodeGraph {
       // The measurement is only valid until the text changes ...
       this._measuredFontHeight = undefined;
 
-      if ((redrawChildren || shapeChanged || connectionChanged) && !this.areChildrenShrunken()) {
+      if (
+        !skipChildrenRedraw &&
+        (redrawChildren || shapeChanged || connectionChanged) &&
+        !this.areChildrenShrunken()
+      ) {
         this.getChildren().forEach((t) => t.redraw(variant, true));
       }
     }
@@ -1819,17 +1888,24 @@ abstract class Topic extends NodeGraph {
     if (applied.color !== values.color) {
       textShape.setColor(values.color);
     }
-    if (applied.size !== values.size) {
-      textShape.setFontSize(values.size);
-    }
-    if (applied.weight !== values.weight) {
-      textShape.setWeight(values.weight);
-    }
-    if (applied.style !== values.style) {
-      textShape.setStyle(values.style);
-    }
-    if (applied.family !== values.family) {
-      textShape.setFontName(values.family);
+    const sizeChanged = applied.size !== values.size;
+    const weightChanged = applied.weight !== values.weight;
+    const styleChanged = applied.style !== values.style;
+    const familyChanged = applied.family !== values.family;
+    const fontChangeCount =
+      Number(sizeChanged) + Number(weightChanged) + Number(styleChanged) + Number(familyChanged);
+    if (fontChangeCount > 1) {
+      textShape.setFont(values.family, values.size, values.style, values.weight);
+    } else if (fontChangeCount === 1) {
+      if (sizeChanged) {
+        textShape.setFontSize(values.size);
+      } else if (weightChanged) {
+        textShape.setWeight(values.weight);
+      } else if (styleChanged) {
+        textShape.setStyle(values.style);
+      } else if (familyChanged) {
+        textShape.setFontName(values.family);
+      }
     }
     if (applied.text !== values.text) {
       textShape.setText(values.text);

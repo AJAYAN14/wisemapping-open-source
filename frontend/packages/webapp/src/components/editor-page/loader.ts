@@ -27,8 +27,13 @@ import { mapMetadataByPathQueryKey, mapMetadataQueryKey } from '../../classes/mi
 import AppI18n from '../../classes/app-i18n';
 import I18nMsg from '@wisemapping/editor/classes/i18n-msg';
 import { appLogger as log } from '../../utils/logger';
-import { parseMapRouteSplat } from '../../utils/mapPath';
+import {
+  buildMapEditPath,
+  buildMapHistoryViewPath,
+  parseMapRouteSplat,
+} from '../../utils/mapPath';
 import { loadEditorPage } from '../../utils/editorPreload';
+import { markMapOpenMetadataReady, markMapOpenRouteCommitted } from '../../utils/mapOpenTiming';
 
 export type EditorMetadata = {
   editorMode: EditorRenderMode;
@@ -38,6 +43,21 @@ export type EditorMetadata = {
 };
 
 export type PageModeType = 'edit' | 'view-private';
+
+export type DeferredEditorLoadResult =
+  | { editorMetadata: EditorMetadata; redirectTo?: undefined }
+  | { redirectTo: string; editorMetadata?: undefined };
+
+export type DeferredEditorLoaderData = {
+  editorMetadata?: EditorMetadata;
+  metadataPromise?: Promise<DeferredEditorLoadResult>;
+};
+
+export type EditorLoaderOptions = {
+  defer?: boolean;
+};
+
+const MAP_OPEN_STALE_TIME_MS = 30_000;
 
 /**
  * Fetches map metadata by folderPath + title using React Query cache, and seeds the
@@ -52,6 +72,7 @@ async function fetchMapMetadataByPathWithCache(
   const metadata = await queryClient.fetchQuery<MapMetadata, ErrorInfo>({
     queryKey: mapMetadataByPathQueryKey(folderPath, title, includeXml),
     queryFn: () => client.fetchMapMetadataByPath(folderPath, title, includeXml),
+    staleTime: MAP_OPEN_STALE_TIME_MS,
   });
   queryClient.setQueryData(mapMetadataQueryKey(metadata.id, includeXml), metadata);
   if (!includeXml) {
@@ -60,6 +81,43 @@ async function fetchMapMetadataByPathWithCache(
   return metadata;
 }
 
+const buildEditorMetadata = (
+  mapMetadata: MapMetadata,
+  pageMode: PageModeType,
+  bootstrapXml: boolean,
+): EditorMetadata => {
+  const editorMode: EditorRenderMode =
+    mapMetadata.isLocked || pageMode === 'view-private'
+      ? 'viewonly-private'
+      : `edition-${mapMetadata.role === 'none' ? 'owner' : mapMetadata.role}`;
+
+  let zoom = 0.8;
+  if (mapMetadata.jsonProps && mapMetadata.jsonProps.trim()) {
+    try {
+      const parsedProps = JSON.parse(mapMetadata.jsonProps.trim());
+      if (parsedProps && typeof parsedProps === 'object' && 'zoom' in parsedProps) {
+        zoom = typeof parsedProps.zoom === 'number' ? parsedProps.zoom : zoom;
+      }
+    } catch (error) {
+      console.warn(
+        `Failed to parse jsonProps for map ${mapMetadata.id}:`,
+        mapMetadata.jsonProps,
+        error,
+      );
+    }
+  }
+
+  const data: EditorMetadata = {
+    editorMode,
+    mapMetadata,
+    zoom,
+  };
+  if (bootstrapXml && mapMetadata.xml) {
+    data.bootstrapXML = mapMetadata.xml;
+  }
+  return data;
+};
+
 // The editor's own messages, loaded with the map so that its chrome paints in Chinese.
 // language. Imported by path: the editor barrel would put the whole editor in the entry.
 const preloadEditorMessages = (): Promise<unknown> =>
@@ -67,7 +125,102 @@ const preloadEditorMessages = (): Promise<unknown> =>
     log.error('The editor messages could not be loaded', error),
   );
 
-export const loader = (bootstrap = false) => {
+const resolveLoginRedirectUrl = (args?: LoaderFunctionArgs): string => {
+  let url = window.location.pathname + window.location.search;
+  if (args?.request?.url) {
+    try {
+      const reqUrl = new URL(args.request.url);
+      url = reqUrl.pathname + reqUrl.search;
+    } catch {
+      // Fallback to window.location
+    }
+  }
+  return `/login?redirect=${encodeURIComponent(url)}`;
+};
+
+const loadDeferredMap = (
+  bootstrap: boolean,
+  args: LoaderFunctionArgs,
+): Response | DeferredEditorLoaderData => {
+  const parsed = parseMapRouteSplat(args.params['*']);
+  if (!parsed) {
+    return new Response('Map could not be found', {
+      status: 404,
+      statusText: 'Not Found',
+    });
+  }
+
+  const { pageMode, folderPath, title } = parsed;
+  const targetPath =
+    pageMode === 'edit'
+      ? buildMapEditPath(folderPath, title)
+      : buildMapHistoryViewPath(folderPath, title, parsed.hid);
+  markMapOpenRouteCommitted(targetPath);
+
+  const bootstrapXml = bootstrap && pageMode === 'edit';
+  const messagesPromise = preloadEditorMessages();
+  const chunkPromise = loadEditorPage().catch(() => undefined);
+
+  const cacheKey = mapMetadataByPathQueryKey(folderPath, title, bootstrapXml);
+  const cached = queryClient.getQueryData<MapMetadata>(cacheKey);
+  const cacheState = queryClient.getQueryState(cacheKey);
+  const isFreshCache = Boolean(
+    cached &&
+      !cacheState?.isInvalidated &&
+      cacheState?.status === 'success' &&
+      Date.now() - cacheState.dataUpdatedAt < MAP_OPEN_STALE_TIME_MS,
+  );
+  if (isFreshCache && cached) {
+    queryClient.setQueryData(mapMetadataQueryKey(cached.id, bootstrapXml), cached);
+    if (!bootstrapXml) {
+      queryClient.setQueryData(mapMetadataQueryKey(cached.id, false), cached);
+    }
+    markMapOpenMetadataReady(targetPath, true);
+    return {
+      editorMetadata: buildEditorMetadata(cached, pageMode, bootstrapXml),
+    };
+  }
+
+  const client = AppConfig.getClient();
+  const metadataPromise: Promise<DeferredEditorLoadResult> = (async () => {
+    try {
+      const [mapMetadata] = await Promise.all([
+        fetchMapMetadataByPathWithCache(folderPath, title, client, bootstrapXml),
+        messagesPromise,
+        chunkPromise,
+      ]);
+      markMapOpenMetadataReady(targetPath, false);
+      return {
+        editorMetadata: buildEditorMetadata(mapMetadata, pageMode, bootstrapXml),
+      };
+    } catch (e) {
+      const error = e as ErrorInfo;
+      if (!error.isAuth) {
+        console.warn('Map could not be loaded');
+        console.warn(e);
+        throw e;
+      }
+      return {
+        redirectTo: resolveLoginRedirectUrl(args),
+      };
+    }
+  })();
+
+  return { metadataPromise };
+};
+
+export function loader(bootstrap?: boolean): (args: LoaderFunctionArgs) => Promise<Response>;
+export function loader(
+  bootstrap: boolean,
+  options: { defer: true },
+): (args: LoaderFunctionArgs) => Response | DeferredEditorLoaderData;
+export function loader(
+  bootstrap = false,
+  options?: EditorLoaderOptions,
+): (args: LoaderFunctionArgs) => Promise<Response> | Response | DeferredEditorLoaderData {
+  if (options?.defer) {
+    return (args: LoaderFunctionArgs) => loadDeferredMap(bootstrap, args);
+  }
   const loadMap = loadMapFor(bootstrap);
   return async (args: LoaderFunctionArgs): Promise<Response> => {
     const [result] = await Promise.all([
@@ -77,11 +230,11 @@ export const loader = (bootstrap = false) => {
     ]);
     return result;
   };
-};
+}
 
 const loadMapFor = (bootstrap: boolean) => {
-  return async ({ params }: LoaderFunctionArgs): Promise<Response> => {
-    const parsed = parseMapRouteSplat(params['*']);
+  return async (args: LoaderFunctionArgs): Promise<Response> => {
+    const parsed = parseMapRouteSplat(args.params['*']);
     if (!parsed) {
       return new Response('Map could not be found', {
         status: 404,
@@ -106,42 +259,7 @@ const loadMapFor = (bootstrap: boolean) => {
             client,
             bootstrapXml,
           );
-
-          const editorMode: EditorRenderMode =
-            mapMetadata.isLocked || pageMode === 'view-private'
-              ? 'viewonly-private'
-              : `edition-${mapMetadata.role === 'none' ? 'owner' : mapMetadata.role}`;
-
-          // Build result ...
-          // Safely parse jsonProps with fallback to default zoom
-          let zoom = 0.8; // Default zoom value
-          if (mapMetadata.jsonProps && mapMetadata.jsonProps.trim()) {
-            try {
-              const parsedProps = JSON.parse(mapMetadata.jsonProps.trim());
-              if (parsedProps && typeof parsedProps === 'object' && 'zoom' in parsedProps) {
-                zoom = typeof parsedProps.zoom === 'number' ? parsedProps.zoom : zoom;
-              }
-            } catch (error) {
-              console.warn(
-                `Failed to parse jsonProps for map ${mapMetadata.id}:`,
-                mapMetadata.jsonProps,
-                error,
-              );
-              // Use default zoom value on parse error
-            }
-          }
-          const data: EditorMetadata = {
-            editorMode: editorMode,
-            mapMetadata: mapMetadata,
-            zoom: zoom,
-          };
-
-          // Include XML if requested and available
-          if (bootstrapXml && mapMetadata.xml) {
-            data.bootstrapXML = mapMetadata.xml;
-          }
-
-          result = createJsonResponse(data);
+          result = createJsonResponse(buildEditorMetadata(mapMetadata, pageMode, bootstrapXml));
         } catch (e) {
           // If the issue is an auth error, it needs to be redirect to login.
           const error = e as ErrorInfo;
@@ -161,11 +279,10 @@ const loadMapFor = (bootstrap: boolean) => {
 
     // If result has not been set, redict to the login with the original url
     if (!result) {
-      const url = window.location.pathname + window.location.search;
       result = new Response('Map could not be loaded, redirect to login.', {
         status: 302,
         headers: {
-          Location: `/login?redirect=${encodeURIComponent(url)}`,
+          Location: resolveLoginRedirectUrl(args),
         },
       });
     }

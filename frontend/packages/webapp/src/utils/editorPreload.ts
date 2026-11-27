@@ -20,6 +20,7 @@ import AppI18n from '../classes/app-i18n';
 import type Client from '../classes/client';
 import { mapMetadataByPathQueryKey } from '../classes/middleware';
 import queryClient from '../queryClient';
+import { normalizeFolderPath } from './mapPath';
 
 type EditorModule = typeof import('../components/editor-page');
 type MapsPageModule = typeof import('../components/maps-page');
@@ -27,6 +28,37 @@ type MapsPageModule = typeof import('../components/maps-page');
 let editorModulePromise: Promise<EditorModule> | undefined;
 let mapsPageModulePromise: Promise<MapsPageModule> | undefined;
 let editorMessagesPromise: Promise<unknown> | undefined;
+
+const EDITOR_FONT_STYLESHEETS = [
+  {
+    match: 'Material+Icons',
+    href: 'https://fonts.googleapis.com/icon?family=Material+Icons&display=swap',
+  },
+  {
+    match: 'Inter',
+    href: 'https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap',
+  },
+] as const;
+
+const PREFETCH_STALE_TIME_MS = 30_000;
+const HOVER_PREFETCH_DELAY_MS = 100;
+const hoverPrefetchTimers = new Map<string, ReturnType<typeof setTimeout>>();
+
+/** Preloads editor font stylesheets after list paint so mounting the canvas never triggers late relayout. */
+export const preloadEditorFonts = (): void => {
+  if (typeof document === 'undefined' || !document.head) {
+    return;
+  }
+  for (const font of EDITOR_FONT_STYLESHEETS) {
+    if (document.querySelector(`link[href*="${font.match}"]`)) {
+      continue;
+    }
+    const link = document.createElement('link');
+    link.href = font.href;
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+  }
+};
 
 /** Loads the lazy EditorPage chunk once and reuses the in-flight promise. */
 export const loadEditorPage = (): Promise<EditorModule> => {
@@ -50,8 +82,9 @@ export const loadMapsPage = (): Promise<MapsPageModule> => {
   return mapsPageModulePromise;
 };
 
-/** Preloads both the EditorPage JS chunk and editor locale messages. */
+/** Preloads the EditorPage JS chunk, editor locale messages, and editor font stylesheets. */
 export const preloadEditorResources = (): Promise<void> => {
+  preloadEditorFonts();
   if (!editorMessagesPromise) {
     editorMessagesPromise = I18nMsg.load(AppI18n.getUserLocale().code).catch(() => {
       editorMessagesPromise = undefined;
@@ -119,6 +152,19 @@ export const scheduleIdleMapsPreload = (): (() => void) => {
   return () => window.clearTimeout(timerId);
 };
 
+const buildHoverKey = (folderPath: string, title: string): string =>
+  `${normalizeFolderPath(folderPath)}::${title.trim()}`;
+
+/** Cancels a pending hover-intent prefetch when the pointer leaves before the delay fires. */
+export const cancelHoverPrefetchMapForOpen = (folderPath: string, title: string): void => {
+  const key = buildHoverKey(folderPath, title);
+  const timer = hoverPrefetchTimers.get(key);
+  if (timer !== undefined) {
+    clearTimeout(timer);
+    hoverPrefetchTimers.delete(key);
+  }
+};
+
 /**
  * Warms both the editor code chunk and the target map's XML/metadata query cache
  * right before navigation completes (e.g. on pointerDown / Enter).
@@ -129,15 +175,57 @@ export const prefetchMapForOpen = (
   title: string,
 ): void => {
   void preloadEditorResources();
-  if (!client || typeof client.fetchMapMetadataByPath !== 'function' || !title) {
+  const normalizedTitle = title.trim();
+  if (!client || typeof client.fetchMapMetadataByPath !== 'function' || !normalizedTitle) {
     return;
   }
-  const normalizedFolderPath = folderPath ?? '';
+  const normalizedFolderPath = normalizeFolderPath(folderPath);
+  cancelHoverPrefetchMapForOpen(normalizedFolderPath, normalizedTitle);
+
+  const queryKey = mapMetadataByPathQueryKey(normalizedFolderPath, normalizedTitle, true);
+  const existingState = queryClient.getQueryState(queryKey);
+  if (
+    existingState?.fetchStatus === 'fetching' ||
+    (existingState?.status === 'success' &&
+      !existingState.isInvalidated &&
+      Date.now() - existingState.dataUpdatedAt < PREFETCH_STALE_TIME_MS)
+  ) {
+    return;
+  }
+
   void queryClient
     .prefetchQuery({
-      queryKey: mapMetadataByPathQueryKey(normalizedFolderPath, title, true),
-      queryFn: () => client.fetchMapMetadataByPath(normalizedFolderPath, title, true),
-      staleTime: 30_000,
+      queryKey,
+      queryFn: () => client.fetchMapMetadataByPath(normalizedFolderPath, normalizedTitle, true),
+      staleTime: PREFETCH_STALE_TIME_MS,
     })
     .catch(() => undefined);
+};
+
+/**
+ * Schedules a map metadata+XML prefetch after a brief hover-intent delay so casual
+ * pointer sweeps do not spam the API while real clicks get a multi-hundred-ms head start.
+ */
+export const scheduleHoverPrefetchMapForOpen = (
+  client: Client | undefined,
+  folderPath: string,
+  title: string,
+): void => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  const normalizedTitle = title.trim();
+  if (!client || typeof client.fetchMapMetadataByPath !== 'function' || !normalizedTitle) {
+    return;
+  }
+  const normalizedFolderPath = normalizeFolderPath(folderPath);
+  const hoverKey = buildHoverKey(normalizedFolderPath, normalizedTitle);
+  if (hoverPrefetchTimers.has(hoverKey)) {
+    return;
+  }
+  const timer = setTimeout(() => {
+    hoverPrefetchTimers.delete(hoverKey);
+    prefetchMapForOpen(client, normalizedFolderPath, normalizedTitle);
+  }, HOVER_PREFETCH_DELAY_MS);
+  hoverPrefetchTimers.set(hoverKey, timer);
 };

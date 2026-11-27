@@ -26,9 +26,12 @@ import {
   registerRouterNavigate,
 } from '../../../src/utils/appNavigation';
 import {
+  cancelHoverPrefetchMapForOpen,
   loadEditorPage,
   prefetchMapForOpen,
+  preloadEditorFonts,
   preloadEditorResources,
+  scheduleHoverPrefetchMapForOpen,
   scheduleIdleEditorPreload,
 } from '../../../src/utils/editorPreload';
 
@@ -160,8 +163,47 @@ describe('editorPreload', () => {
     prefetchMapForOpen(fakeClient, 'work/', '');
     expect(fetchMapMetadataByPath).not.toHaveBeenCalled();
 
-    prefetchMapForOpen(fakeClient, 'work/', 'Plan');
+    prefetchMapForOpen(fakeClient, 'work', 'Plan');
     await Promise.resolve();
     expect(fetchMapMetadataByPath).toHaveBeenCalledWith('work/', 'Plan', true);
+    expect(fetchMapMetadataByPath).toHaveBeenCalledTimes(1);
+  });
+
+  it('preloads editor font stylesheets idempotently', () => {
+    document.head.querySelectorAll('link[href*="Material+Icons"], link[href*="Inter"]').forEach((n) =>
+      n.remove(),
+    );
+
+    preloadEditorFonts();
+    preloadEditorFonts();
+
+    expect(document.head.querySelectorAll('link[href*="Material+Icons"]')).toHaveLength(1);
+    expect(document.head.querySelectorAll('link[href*="Inter"]')).toHaveLength(1);
+  });
+
+  it('schedules hover prefetch after intent delay and cancels on pointer leave', async () => {
+    jest.useFakeTimers();
+    const fetchMapMetadataByPath = jest.fn().mockResolvedValue({
+      id: 10,
+      title: 'HoverMap',
+      folderPath: 'docs/',
+      creatorFullName: 'Ada',
+      isLocked: false,
+      jsonProps: '{"zoom":0.8}',
+      role: 'owner',
+      xml: '<map/>',
+    });
+    const fakeClient = { fetchMapMetadataByPath } as unknown as Client;
+
+    scheduleHoverPrefetchMapForOpen(fakeClient, 'docs/', 'HoverMap');
+    cancelHoverPrefetchMapForOpen('docs/', 'HoverMap');
+    jest.advanceTimersByTime(150);
+    expect(fetchMapMetadataByPath).not.toHaveBeenCalled();
+
+    scheduleHoverPrefetchMapForOpen(fakeClient, 'docs/', 'HoverMap');
+    jest.advanceTimersByTime(150);
+    await Promise.resolve();
+    expect(fetchMapMetadataByPath).toHaveBeenCalledWith('docs/', 'HoverMap', true);
+    jest.useRealTimers();
   });
 });

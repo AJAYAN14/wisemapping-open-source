@@ -125,6 +125,13 @@ describe('Designer theme variant toggle', () => {
     expect(seen.length).toBeGreaterThan(0);
     expect(seen.every((variant) => variant === 'dark')).toBe(true);
   });
+
+  it('skips full-tree redraw when initializeThemeVariant matches the active variant', () => {
+    const redraws = countCalls(Topic.prototype, 'redraw', () => {
+      harness.designer.initializeThemeVariant('light');
+    });
+    expect(redraws).toBe(0);
+  });
 });
 
 describe('text editor', () => {

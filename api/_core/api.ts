@@ -64,7 +64,14 @@ function buildMapMetadataResponse(
   user: RepoUser,
   map: MindmapRecord,
   includeXml: boolean,
+  dbDurationMs?: number,
 ): Response {
+  const headers: Record<string, string> = {
+    'X-Mindmap-Version': String(map.version),
+  };
+  if (typeof dbDurationMs === 'number' && Number.isFinite(dbDurationMs)) {
+    headers['Server-Timing'] = `db;dur=${dbDurationMs.toFixed(1)};desc="Postgres metadata"`;
+  }
   return jsonResponse(
     req,
     200,
@@ -90,9 +97,7 @@ function buildMapMetadataResponse(
       version: map.version,
       ...(includeXml ? { xml: map.xml } : {}),
     },
-    {
-      'X-Mindmap-Version': String(map.version),
-    },
+    headers,
   );
 }
 
@@ -672,6 +677,7 @@ export function createApiHandler(
         }
         const folderPath = url.searchParams.get('folderPath') ?? '';
         const includeXml = url.searchParams.get('xml')?.toLowerCase() === 'true';
+        const dbStart = performance.now();
         const map = repo.getMapMetadataByPath
           ? await repo.getMapMetadataByPath(user, folderPath, title, includeXml)
           : await (async () => {
@@ -681,7 +687,8 @@ export function createApiHandler(
               }
               return found;
             })();
-        return buildMapMetadataResponse(req, user, map, includeXml);
+        const dbDurationMs = performance.now() - dbStart;
+        return buildMapMetadataResponse(req, user, map, includeXml, dbDurationMs);
       }
 
       // -----------------------------------------------------------------------
@@ -754,6 +761,7 @@ export function createApiHandler(
       if (metadataMatch && method === 'GET') {
         const mapId = parsePositiveInt(metadataMatch[1], 'mapId');
         const includeXml = url.searchParams.get('xml')?.toLowerCase() === 'true';
+        const dbStart = performance.now();
         const map = repo.getMapMetadataById
           ? await repo.getMapMetadataById(user, mapId, includeXml)
           : await (async () => {
@@ -763,7 +771,8 @@ export function createApiHandler(
               }
               return found;
             })();
-        return buildMapMetadataResponse(req, user, map, includeXml);
+        const dbDurationMs = performance.now() - dbStart;
+        return buildMapMetadataResponse(req, user, map, includeXml, dbDurationMs);
       }
 
       // PUT /maps/{id}/document

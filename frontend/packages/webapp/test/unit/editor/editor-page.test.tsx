@@ -49,21 +49,23 @@ jest.mock('@wisemapping/editor', () => {
 });
 
 const mockNavigation = { state: 'idle' };
+const defaultLoaderData = {
+  editorMode: 'edition-owner',
+  zoom: 1,
+  mapMetadata: {
+    id: 42,
+    title: 'My map',
+    folderPath: '',
+    creatorFullName: 'Jane Doe',
+    isLocked: false,
+    isLockedBy: undefined,
+    starred: false,
+  },
+};
+let mockLoaderData: unknown = defaultLoaderData;
 jest.mock('react-router', () => ({
   useNavigation: () => mockNavigation,
-  useLoaderData: () => ({
-    editorMode: 'edition-owner',
-    zoom: 1,
-    mapMetadata: {
-      id: 42,
-      title: 'My map',
-      folderPath: '',
-      creatorFullName: 'Jane Doe',
-      isLocked: false,
-      isLockedBy: undefined,
-      starred: false,
-    },
-  }),
+  useLoaderData: () => mockLoaderData,
   useSearchParams: () => [new URLSearchParams()],
 }));
 jest.mock('../../../src/components/common-page/session-expired-dialog', () => () => null);
@@ -100,6 +102,7 @@ describe('EditorPage', () => {
 
   afterEach(() => {
     mockNavigation.state = 'idle';
+    mockLoaderData = defaultLoaderData;
   });
 
   test('passes hid and clean fallback XML to MockPersistenceManager', () => {
@@ -133,5 +136,26 @@ describe('EditorPage', () => {
     rerender();
 
     expect(screen.getByTestId('editor')).toBeTruthy();
+  });
+
+  test('renders loading skeleton immediately for deferred metadataPromise until resolved', async () => {
+    let resolveDeferred!: (value: { editorMetadata: typeof defaultLoaderData }) => void;
+    mockLoaderData = {
+      metadataPromise: new Promise<{ editorMetadata: typeof defaultLoaderData }>((resolve) => {
+        resolveDeferred = resolve;
+      }),
+    };
+
+    await act(async () => {
+      renderWithProviders(<EditorPage pageMode="edit" />, { client });
+    });
+    expect(screen.getByTestId('editor-skeleton')).toBeTruthy();
+    expect(screen.queryByTestId('editor')).toBeNull();
+
+    await act(async () => {
+      resolveDeferred({ editorMetadata: defaultLoaderData });
+    });
+
+    expect(await screen.findByTestId('editor')).toBeTruthy();
   });
 });

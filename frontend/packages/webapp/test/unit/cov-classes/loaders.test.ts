@@ -26,7 +26,10 @@ import Client, { MapMetadata } from '../../../src/classes/client';
 import JwtTokenConfig from '../../../src/classes/jwt-token-config';
 import queryClient from '../../../src/queryClient';
 import { loader as rootLoader } from '../../../src/loader';
-import { loader as editorLoader } from '../../../src/components/editor-page/loader';
+import {
+  loader as editorLoader,
+  type DeferredEditorLoaderData,
+} from '../../../src/components/editor-page/loader';
 import { appLogger } from '../../../src/utils/logger';
 import { getLoadedMessages } from '../../../src/classes/app-i18n/messages';
 import I18nMsg from '@wisemapping/editor/classes/i18n-msg';
@@ -241,5 +244,64 @@ describe('editor page loader', () => {
     stubClient(jest.fn().mockRejectedValue(error));
 
     await expect(runLoader('My%20map/history/55/view')).rejects.toEqual(error);
+  });
+
+  describe('deferred mode', () => {
+    const runDeferredLoader = (splat: string | undefined, bootstrap = true) =>
+      editorLoader(bootstrap, { defer: true })({
+        params: splat === undefined ? {} : { '*': splat },
+      } as unknown as LoaderFunctionArgs);
+
+    it('returns a 404 Response synchronously on invalid route splats', () => {
+      stubClient(jest.fn());
+
+      const result = runDeferredLoader('invalid-route') as Response;
+
+      expect(result).toBeInstanceOf(Response);
+      expect(result.status).toBe(404);
+    });
+
+    it('returns a non-blocking metadataPromise and resolves editor metadata', async () => {
+      const fetchMapMetadataByPath = jest.fn().mockResolvedValue(metadata({ xml: '<map/>' }));
+      stubClient(fetchMapMetadataByPath);
+
+      const data = runDeferredLoader('My%20map/edit', true) as DeferredEditorLoaderData;
+
+      expect(data.metadataPromise).toBeDefined();
+      expect(data.editorMetadata).toBeUndefined();
+      await expect(data.metadataPromise).resolves.toMatchObject({
+        editorMetadata: {
+          editorMode: 'edition-editor',
+          bootstrapXML: '<map/>',
+        },
+      });
+    });
+
+    it('returns editorMetadata synchronously when fresh cache is already populated', async () => {
+      const fetchMapMetadataByPath = jest.fn().mockResolvedValue(metadata({ xml: '<map/>' }));
+      stubClient(fetchMapMetadataByPath);
+
+      const first = runDeferredLoader('My%20map/edit', true) as DeferredEditorLoaderData;
+      await first.metadataPromise;
+
+      const second = runDeferredLoader('My%20map/edit', true) as DeferredEditorLoaderData;
+      expect(second.metadataPromise).toBeUndefined();
+      expect(second.editorMetadata).toMatchObject({
+        editorMode: 'edition-editor',
+        bootstrapXML: '<map/>',
+      });
+      expect(fetchMapMetadataByPath).toHaveBeenCalledTimes(1);
+    });
+
+    it('resolves a redirect target on auth errors instead of blocking navigation', async () => {
+      window.history.pushState({}, '', '/My%20map/edit');
+      stubClient(jest.fn().mockRejectedValue({ isAuth: true, status: 401 }));
+
+      const data = runDeferredLoader('My%20map/edit', true) as DeferredEditorLoaderData;
+      await expect(data.metadataPromise).resolves.toEqual({
+        redirectTo: `/login?redirect=${encodeURIComponent('/My%20map/edit')}`,
+      });
+      window.history.pushState({}, '', '/');
+    });
   });
 });
