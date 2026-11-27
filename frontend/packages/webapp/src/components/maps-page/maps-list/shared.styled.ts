@@ -40,11 +40,35 @@ export const BodyCell = styled(TableCell)(() => {
   };
 });
 
-export const CompactCardHeader = styled(CardHeader)(({ theme }) => ({
-  padding: theme.spacing(1, 1.5),
+export const CompactCardHeader = styled(CardHeader, {
+  shouldForwardProp: (prop) => prop !== 'hasLeadingControl',
+})<{ hasLeadingControl?: boolean }>(({ theme, hasLeadingControl }) => ({
+  padding: hasLeadingControl
+    ? theme.spacing(1.25, 1.25, 1.25, 0.75)
+    : theme.spacing(1.25, 1.25, 1.25, 1.5),
+  gap: theme.spacing(1.25),
+  '& .MuiCardHeader-avatar': {
+    marginRight: 0,
+    flexShrink: 0,
+  },
+  '& .MuiCardHeader-content': {
+    minWidth: 0,
+  },
+  '& .MuiCardHeader-title, & .MuiCardHeader-subheader': {
+    minWidth: 0,
+  },
+  '& .MuiCardHeader-action': {
+    alignSelf: 'center',
+    margin: 0,
+    flexShrink: 0,
+    display: 'inline-flex',
+    alignItems: 'center',
+  },
 }));
 
-export const MapCardRoot = styled(Card)(({ theme }) => {
+export const MapCardRoot = styled(Card, {
+  shouldForwardProp: (prop) => prop !== 'selected',
+})<{ selected?: boolean }>(({ theme, selected }) => {
   const c = appleColors(isDarkTheme(theme));
   return {
     maxWidth: '100%',
@@ -52,10 +76,13 @@ export const MapCardRoot = styled(Card)(({ theme }) => {
     borderRadius: RADIUS_LG,
     backgroundColor: c.surface,
     border: 'none',
-    boxShadow: c.shadowSubtle,
+    boxShadow: selected ? `0 0 0 2px ${c.amberRing}` : c.shadowSubtle,
     ...applePressMixin,
     '&:active': {
       transform: 'scale(0.985)',
+    },
+    [theme.breakpoints.up('sm')]: {
+      margin: '8px 0',
     },
   };
 });

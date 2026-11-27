@@ -914,16 +914,29 @@ export const CardTitle = styled(Typography)(({ theme }) => {
     maxWidth: '100%',
     fontSize: '0.9rem',
     fontWeight: 600,
+    lineHeight: 1.35,
     letterSpacing: '-0.01em',
     fontFamily: APPLE_FONT_STACK,
     color: c.textPrimary,
-    overflowWrap: 'break-word',
+    display: '-webkit-box',
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: 'vertical',
+    overflow: 'hidden',
+    overflowWrap: 'anywhere',
   };
 });
 
 export const CardSelectBox = styled('div')({
-  paddingLeft: '4px',
+  paddingLeft: '8px',
+  display: 'inline-flex',
+  alignItems: 'center',
   flexShrink: 0,
+  '& .MuiCheckbox-root': {
+    padding: '6px',
+    '@media (pointer: coarse)': {
+      padding: '8px',
+    },
+  },
 });
 
 export const CardLink = styled(Link)({
@@ -935,7 +948,22 @@ export const CardLink = styled(Link)({
 export const CardTitleStack = styled('div')({
   display: 'flex',
   flexDirection: 'column',
+  gap: '3px',
   minWidth: 0,
+  width: '100%',
+});
+
+export const CardActionsGroup = styled('div')({
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: '2px',
+  '& .MuiIconButton-root': {
+    padding: '6px',
+    '@media (pointer: coarse)': {
+      minWidth: '36px',
+      minHeight: '40px',
+    },
+  },
 });
 
 export const CardMetaText = styled(Typography)(({ theme }) => {
@@ -943,8 +971,14 @@ export const CardMetaText = styled(Typography)(({ theme }) => {
   return {
     fontSize: '0.75rem',
     fontWeight: 400,
+    lineHeight: 1.35,
+    fontFamily: APPLE_FONT_STACK,
     fontVariantNumeric: 'tabular-nums',
     color: c.textSecondary,
+    marginTop: '2px',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
   };
 });
 

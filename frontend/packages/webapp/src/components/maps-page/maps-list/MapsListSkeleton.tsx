@@ -119,8 +119,13 @@ export const CardSkeleton: React.FC = () => {
         </Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <CompactCardHeader
-            avatar={<SkeletonBlock animation="pulse" variant="circular" width={22} height={22} />}
-            action={<SkeletonBlock animation="pulse" variant="circular" width={22} height={22} />}
+            hasLeadingControl
+            action={
+              <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                <SkeletonBlock animation="pulse" variant="circular" width={20} height={20} />
+                <SkeletonBlock animation="pulse" variant="circular" width={20} height={20} />
+              </Box>
+            }
             title={<SkeletonText animation="pulse" variant="text" width="70%" />}
             subheader={<SkeletonText animation="pulse" variant="text" width="46%" />}
           />

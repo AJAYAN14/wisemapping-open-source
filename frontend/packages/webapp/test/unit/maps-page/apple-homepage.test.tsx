@@ -25,6 +25,7 @@ import { ThemeProvider } from '@mui/material/styles';
 import { createAppTheme } from '../../../src/theme';
 import { MapsListToolbar } from '../../../src/components/maps-page/maps-list/MapsListToolbar';
 import { MapsPageLoading } from '../../../src/components/maps-page/maps-list/MapsListSkeleton';
+import { MapCard } from '../../../src/components/maps-page/maps-list/MapCard';
 import { MapRow } from '../../../src/components/maps-page/maps-list/MapRow';
 import {
   FolderBreadcrumbsBar,
@@ -358,5 +359,53 @@ describe('Apple Design homepage refinements', () => {
     const rowEl = screen.getByRole('row');
     expect(within(gridCard).getByTestId('folder-grid-svg-icon')).toBeTruthy();
     expect(within(rowEl).queryByTestId('folder-grid-svg-icon')).toBeNull();
+  });
+
+  test('MapCard groups star and settings actions on the right and keeps card content shrinkable on narrow screens', () => {
+    const sampleMap: MapInfo = {
+      id: 11,
+      title: '2.4、机械零件设计公差与配合（超长标题测试）',
+      description: '',
+      createdBy: 'owner@example.com',
+      creationTime: '2026-01-01T00:00:00Z',
+      lastModificationBy: 'owner@example.com',
+      lastModificationTime: '2026-01-02T00:00:00Z',
+      starred: false,
+      public: false,
+      labels: [],
+      role: 'owner',
+      sizeBytes: 50278,
+    };
+
+    const { container } = render(
+      <ThemeProvider theme={createAppTheme('light')}>
+        <IntlProvider locale="en" defaultLocale="en" messages={{}}>
+          <MapCard
+            map={sampleMap}
+            selected={false}
+            onToggleSelected={jest.fn()}
+            onStar={jest.fn()}
+            onOpenMenu={jest.fn()}
+          />
+        </IntlProvider>
+      </ThemeProvider>,
+    );
+
+    expect(container.querySelector('.MuiCardHeader-avatar')).toBeNull();
+    const actionSlot = container.querySelector('.MuiCardHeader-action') as HTMLElement;
+    expect(actionSlot).toBeTruthy();
+    expect(within(actionSlot).getByRole('button', { name: 'Starred' })).toBeTruthy();
+    expect(within(actionSlot).getByRole('button', { name: 'Settings' })).toBeTruthy();
+
+    const contentSlot = container.querySelector('.MuiCardHeader-content') as HTMLElement;
+    expect(['0', '0px']).toContain(getComputedStyle(contentSlot).minWidth);
+
+    // Verify CompactCardHeader injects an override rule centering .MuiCardHeader-action
+    const injectedCss = Array.from(document.querySelectorAll('style'))
+      .flatMap((style) =>
+        style.sheet ? Array.from(style.sheet.cssRules).map((rule) => rule.cssText) : [],
+      )
+      .join('\n');
+    expect(injectedCss).toMatch(/\.MuiCardHeader-action\s*\{[^}]*align-self:\s*center/);
   });
 });

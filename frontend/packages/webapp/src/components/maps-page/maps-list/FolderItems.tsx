@@ -26,7 +26,6 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import TableRow from '@mui/material/TableRow';
 import Tooltip from '@mui/material/Tooltip';
-import Typography from '@mui/material/Typography';
 import type { Folder } from '../../../classes/client';
 import { useDate } from '../../../classes/app-i18n/dates';
 import { GoogleIcon } from '../../common/google-symbol';
@@ -43,6 +42,8 @@ import {
   BreadcrumbMeasureStrip,
   BreadcrumbOverflowButton,
   BreadcrumbTrail,
+  CardActionsGroup,
+  CardMetaText,
   CardTitle,
   CellText,
   CompactCardHeader,
@@ -445,19 +446,21 @@ const FolderCardComponent = ({
           </FolderGlyphBadge>
         }
         action={
-          <Tooltip arrow={true} title="文件夹操作">
-            <ActionIconButton>
-              <IconButton aria-label={`操作文件夹 ${folder.name}`} onClick={handleOpenMenu}>
-                <GoogleIcon name="more_vert" size={20} />
-              </IconButton>
-            </ActionIconButton>
-          </Tooltip>
+          <CardActionsGroup>
+            <Tooltip arrow={true} title="文件夹操作">
+              <ActionIconButton>
+                <IconButton size="small" aria-label={`操作文件夹 ${folder.name}`} onClick={handleOpenMenu}>
+                  <GoogleIcon name="more_vert" size={20} />
+                </IconButton>
+              </ActionIconButton>
+            </Tooltip>
+          </CardActionsGroup>
         }
-        title={<CardTitle noWrap>{folder.name}</CardTitle>}
+        title={<CardTitle>{folder.name}</CardTitle>}
         subheader={
-          <Typography variant="subtitle2" sx={{ fontSize: '0.75rem', fontWeight: 400 }}>
+          <CardMetaText variant="subtitle2">
             {formatFolderSummary(count)}
-          </Typography>
+          </CardMetaText>
         }
       />
     </MapCardRoot>

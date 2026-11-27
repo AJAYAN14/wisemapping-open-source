@@ -190,14 +190,20 @@ describe('MapsPage', () => {
       document.querySelector('.MuiDrawer-modal') as HTMLElement;
     expect(mobileDrawer().classList.contains('MuiModal-hidden')).toBe(true);
 
-    fireEvent.click(document.getElementById('open-main-drawer') as HTMLElement);
+    const drawerTrigger = document.getElementById('open-main-drawer') as HTMLElement;
+    const topBar = drawerTrigger.closest('header') as HTMLElement;
+    fireEvent.click(drawerTrigger);
     expect(mobileDrawer().classList.contains('MuiModal-hidden')).toBe(false);
+    // Keeping the header in layout flow (visibility: hidden instead of display: none) prevents the list below from jumping up.
+    expect(getComputedStyle(topBar).display).not.toBe('none');
+    expect(getComputedStyle(topBar).visibility).toBe('hidden');
     // The open temporary drawer also expands its entries (the account card is shown).
     expect(await within(mobileDrawer()).findByText('account-menu:open')).toBeTruthy();
 
     fireEvent.click(within(mobileDrawer()).getByText('Starred'));
     expect(listFilter()).toBe('starred');
     await waitFor(() => expect(mobileDrawer().classList.contains('MuiModal-hidden')).toBe(true));
+    expect(getComputedStyle(topBar).visibility).not.toBe('hidden');
   });
 
   test('deleting a label asks first, then deletes it and reloads labels and maps', async () => {

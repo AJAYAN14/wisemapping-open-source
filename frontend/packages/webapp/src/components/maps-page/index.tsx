@@ -1062,13 +1062,17 @@ const MapsPage = (): ReactElement => {
           {renderDrawerItems(true)}
         </DesktopDrawer>
         <PageContent role="main">
-          <WorkspaceTopBar sx={{ display: mobileDrawerOpen ? 'none' : undefined }}>
+          <WorkspaceTopBar
+            sx={{
+              visibility: mobileDrawerOpen ? 'hidden' : undefined,
+              pointerEvents: mobileDrawerOpen ? 'none' : undefined,
+            }}
+          >
             <MobileDrawerToggle
               aria-label={intl.formatMessage({
                 id: 'common.open-drawer',
                 defaultMessage: 'Open drawer',
               })}
-              edge="start"
               onClick={handleMobileDrawerToggle}
               id="open-main-drawer"
             >

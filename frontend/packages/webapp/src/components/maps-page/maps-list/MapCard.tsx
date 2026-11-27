@@ -35,6 +35,7 @@ import type { MapItemHandlers } from './MapRow';
 import { MapFolderPathBadge } from './MapFolderPathBadge';
 import {
   ActionIconButton,
+  CardActionsGroup,
   CardLink,
   CardMetaText,
   CardSelectBox,
@@ -83,17 +84,8 @@ const MapCardComponent = ({
   };
 
   return (
-    <MapCardRoot
-      elevation={0}
-      sx={
-        selected
-          ? {
-              boxShadow: (theme) => `0 0 0 2px ${theme.palette.primary.main}33`,
-            }
-          : undefined
-      }
-    >
-      <Box sx={{ display: 'flex', alignItems: 'center' }}>
+    <MapCardRoot elevation={0} selected={selected}>
+      <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
         {onToggleSelected && (
           <CardSelectBox>
             <SelectCheckbox
@@ -128,53 +120,55 @@ const MapCardComponent = ({
           onClick={(e) => handleSpaLinkClick(e, editPath)}
         >
           <CompactCardHeader
-            avatar={
-              <Tooltip
-                arrow={true}
-                title={intl.formatMessage({
-                  id: 'maps.tooltip-starred',
-                  defaultMessage: 'Starred',
-                })}
-              >
-                <ActionIconButton>
-                  <IconButton
-                    size="small"
-                    aria-label={intl.formatMessage({
-                      id: 'maps.tooltip-starred',
-                      defaultMessage: 'Starred',
-                    })}
-                    onClick={handleStar}
-                  >
-                    <StarIcon color="action" starred={map.starred} />
-                  </IconButton>
-                </ActionIconButton>
-              </Tooltip>
-            }
+            hasLeadingControl={Boolean(onToggleSelected)}
             action={
-              <Tooltip
-                arrow={true}
-                title={intl.formatMessage({
-                  id: 'map.more-actions',
-                  defaultMessage: 'More Actions',
-                })}
-              >
-                <ActionIconButton>
-                  <IconButton
-                    aria-label={intl.formatMessage({
-                      id: 'common.settings',
-                      defaultMessage: 'Settings',
-                    })}
-                    onClick={handleOpenMenu}
-                  >
-                    <GoogleIcon name="more_vert" size={20} />
-                  </IconButton>
-                </ActionIconButton>
-              </Tooltip>
+              <CardActionsGroup>
+                <Tooltip
+                  arrow={true}
+                  title={intl.formatMessage({
+                    id: 'maps.tooltip-starred',
+                    defaultMessage: 'Starred',
+                  })}
+                >
+                  <ActionIconButton>
+                    <IconButton
+                      size="small"
+                      aria-label={intl.formatMessage({
+                        id: 'maps.tooltip-starred',
+                        defaultMessage: 'Starred',
+                      })}
+                      onClick={handleStar}
+                    >
+                      <StarIcon color="action" starred={map.starred} />
+                    </IconButton>
+                  </ActionIconButton>
+                </Tooltip>
+                <Tooltip
+                  arrow={true}
+                  title={intl.formatMessage({
+                    id: 'map.more-actions',
+                    defaultMessage: 'More Actions',
+                  })}
+                >
+                  <ActionIconButton>
+                    <IconButton
+                      size="small"
+                      aria-label={intl.formatMessage({
+                        id: 'common.settings',
+                        defaultMessage: 'Settings',
+                      })}
+                      onClick={handleOpenMenu}
+                    >
+                      <GoogleIcon name="more_vert" size={20} />
+                    </IconButton>
+                  </ActionIconButton>
+                </Tooltip>
+              </CardActionsGroup>
             }
             // Not a Typography itself, so the header wraps it in its title Typography.
             title={
               <CardTitleStack>
-                <CardTitle noWrap>{map.title}</CardTitle>
+                <CardTitle>{map.title}</CardTitle>
                 {showFolderPath && (
                   <MapFolderPathBadge
                     folderPath={map.folderPath}

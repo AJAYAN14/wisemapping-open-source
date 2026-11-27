@@ -263,19 +263,30 @@ export const PageAppBar = styled(AppBar, { shouldForwardProp: notExpanded })<Exp
 
 /** Opens the drawer on phones. */
 export const MobileDrawerToggle = styled(IconButton)(({ theme }) => {
-  const c = appleColors(isDarkTheme(theme));
+  const isDark = isDarkTheme(theme);
+  const c = appleColors(isDark);
   return {
-    marginRight: theme.spacing(0.5),
+    width: '36px',
+    height: '36px',
+    padding: 0,
     borderRadius: RADIUS_MD,
-    color: c.textSecondary,
+    backgroundColor: c.surface,
+    color: c.textPrimary,
+    boxShadow: c.shadowSubtle,
     ...applePressMixin,
     '@media (pointer: coarse)': {
-      minWidth: '44px',
-      minHeight: '44px',
+      minWidth: '40px',
+      minHeight: '40px',
+      width: '40px',
+      height: '40px',
     },
     '&:hover': {
-      backgroundColor: c.hoverFill,
+      backgroundColor: isDark ? c.surfaceElevated : c.hoverFill,
       color: c.textPrimary,
+    },
+    '&:focus-visible': {
+      outline: 'none',
+      boxShadow: `0 0 0 2px ${c.amberRing}`,
     },
     [theme.breakpoints.up('sm')]: {
       display: 'none',
@@ -476,12 +487,12 @@ export const PageContent = styled('main')(({ theme }) => ({
 export const WorkspaceTopBar = styled('header')(({ theme }) => ({
   width: '100%',
   boxSizing: 'border-box',
-  padding: '10px 12px 0 12px',
+  padding: '12px 18px 0 18px',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
   gap: '8px',
-  minHeight: '40px',
+  minHeight: '44px',
   [theme.breakpoints.up('sm')]: {
     display: 'none',
   },
