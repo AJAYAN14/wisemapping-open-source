@@ -462,7 +462,15 @@ class Canvas {
   }
 
   private _registerDragEvents() {
-    const workspace = this._workspace;
+    const workspace = this._workspace as Workspace2D & {
+      clientToWorld?: (x: number, y: number) => PositionType;
+      beginPanPreview?: (marginPx?: number) => boolean;
+      updatePanPreview?: (
+        totalDx: number,
+        totalDy: number,
+      ) => { localDx: number; localDy: number; reanchored: boolean };
+      commitPanPreview?: () => boolean;
+    };
     const screenManager = this._screenManager;
     const mWorkspace = this;
     let panUpdateScheduled = false;
@@ -497,12 +505,9 @@ class Canvas {
         typeof container.getBoundingClientRect === 'function'
           ? container.getBoundingClientRect()
           : { left: 0, top: 0 };
-      const workspaceWithClient = workspace as Workspace2D & {
-        clientToWorld?: (x: number, y: number) => PositionType;
-      };
       const anchorWorld =
-        typeof workspaceWithClient.clientToWorld === 'function'
-          ? workspaceWithClient.clientToWorld(startMidX, startMidY)
+        typeof workspace.clientToWorld === 'function'
+          ? workspace.clientToWorld(startMidX, startMidY)
           : undefined;
 
       mWorkspace.enableWorkspaceEvents(false);
@@ -604,6 +609,50 @@ class Canvas {
           const isObjectTap = event.type === 'touchstart' && isObjectTouch(event);
 
           let wasDragged = false;
+          let panInitialized = false;
+          let usingPanPreview = false;
+          let latestDeltaX = 0;
+          let latestDeltaY = 0;
+          let panRafId: number | undefined;
+
+          const applyPendingPan = () => {
+            panRafId = undefined;
+            if (!panInitialized) {
+              panInitialized = true;
+              // Close any active inline text editor once when drag starts instead of on every mousemove.
+              screenManager.fireEvent('update');
+              window.document.body.style.cursor = 'move';
+              usingPanPreview =
+                typeof workspace.beginPanPreview === 'function' && workspace.beginPanPreview();
+            }
+
+            if (usingPanPreview && typeof workspace.updatePanPreview === 'function') {
+              const { localDx, localDy, reanchored } = workspace.updatePanPreview(
+                latestDeltaX,
+                latestDeltaY,
+              );
+              this._layoutEventBus.fireEvent('canvasPanPreview', {
+                active: true,
+                dx: localDx,
+                dy: localDy,
+              });
+              if (reanchored) {
+                this._layoutEventBus.fireEvent('canvasPanned');
+              }
+              return;
+            }
+
+            const offsetX = latestDeltaX * this._zoom;
+            const coordOriginX = -offsetX + originalCoordOrigin.x;
+
+            const offsetY = latestDeltaY * this._zoom;
+            const coordOriginY = -offsetY + originalCoordOrigin.y;
+
+            workspace.setCoordOrigin(coordOriginX, coordOriginY);
+            screenManager.fireEvent('update');
+            schedulePanUpdate();
+          };
+
           this._mouseMoveListener = (mouseMoveEvent: Event) => {
             if (mouseMoveEvent.type === 'touchmove') {
               const touchEvent = mouseMoveEvent as TouchEvent;
@@ -629,19 +678,8 @@ class Canvas {
               return;
             }
 
-            const offsetX = deltaX * this._zoom;
-            const coordOriginX = -offsetX + originalCoordOrigin.x;
-
-            const offsetY = deltaY * this._zoom;
-            const coordOriginY = -offsetY + originalCoordOrigin.y;
-
-            workspace.setCoordOrigin(coordOriginX, coordOriginY);
-
-            // Change cursor.
-            window.document.body.style.cursor = 'move';
-
-            // Prevent default behavior for mouse and single-touch events
-            // This prevents pull-to-refresh and text selection during drag
+            // Prevent default behavior for mouse and single-touch events synchronously
+            // (pull-to-refresh and text selection during drag).
             if (mouseMoveEvent.type !== 'touchmove') {
               mouseMoveEvent.preventDefault();
             } else {
@@ -651,11 +689,17 @@ class Canvas {
               }
             }
 
-            // Fire drag event ...
-            screenManager.fireEvent('update');
-            // Also fire LayoutEventBus event for canvas panning (throttled via requestAnimationFrame)
-            schedulePanUpdate();
+            latestDeltaX = deltaX;
+            latestDeltaY = deltaY;
             wasDragged = true;
+
+            if (typeof requestAnimationFrame === 'function') {
+              if (panRafId === undefined) {
+                panRafId = requestAnimationFrame(applyPendingPan);
+              }
+            } else {
+              applyPendingPan();
+            }
           };
           // Mouse events are listened on the document, so that a release outside the container
           // still ends the pan. Touch events always go to the element the touch started on.
@@ -663,6 +707,11 @@ class Canvas {
           screenManager.addEvent('touchmove', this._mouseMoveListener);
 
           const endPan = (isRelease: boolean) => {
+            const hadPendingRaf = panRafId !== undefined;
+            if (panRafId !== undefined && typeof cancelAnimationFrame === 'function') {
+              cancelAnimationFrame(panRafId);
+              panRafId = undefined;
+            }
             // The listeners are all set together when the pan starts, before it can end.
             const mouseMoveListener = this._mouseMoveListener!;
             const mouseUpListener = this._mouseUpListener!;
@@ -677,6 +726,33 @@ class Canvas {
             this._mouseMoveListener = undefined;
             this._cancelPan = undefined;
             window.document.body.style.cursor = 'default';
+
+            if (wasDragged) {
+              if (
+                usingPanPreview &&
+                typeof workspace.updatePanPreview === 'function' &&
+                typeof workspace.commitPanPreview === 'function'
+              ) {
+                workspace.updatePanPreview(latestDeltaX, latestDeltaY);
+                workspace.commitPanPreview();
+                this._layoutEventBus.fireEvent('canvasPanPreview', {
+                  active: false,
+                  dx: 0,
+                  dy: 0,
+                });
+                screenManager.fireEvent('update');
+                this._layoutEventBus.fireEvent('canvasPanned');
+              } else if (hadPendingRaf || !panInitialized) {
+                const offsetX = latestDeltaX * this._zoom;
+                const offsetY = latestDeltaY * this._zoom;
+                workspace.setCoordOrigin(
+                  -offsetX + originalCoordOrigin.x,
+                  -offsetY + originalCoordOrigin.y,
+                );
+                screenManager.fireEvent('update');
+                this._layoutEventBus.fireEvent('canvasPanned');
+              }
+            }
 
             mWorkspace.enableWorkspaceEvents(true);
 

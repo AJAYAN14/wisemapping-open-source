@@ -146,6 +146,9 @@ class Workspace extends WorkspaceElement<WorkspacePeer> {
    * pc (picas; 1pc=12pt)
    */
   override setSize(width?: string | number, height?: string | number): void {
+    if (this.peer.isPanPreviewActive()) {
+      this.commitPanPreview();
+    }
     // HTML container must have the size of the group element.
     if (width !== undefined) {
       this._htmlContainer.style.width = String(width);
@@ -168,11 +171,58 @@ class Workspace extends WorkspaceElement<WorkspacePeer> {
    * stretched to the workspace size.
    */
   setCoordSize(width: number | string, height: number | string): void {
+    if (this.peer.isPanPreviewActive()) {
+      this.commitPanPreview();
+    }
     this.peer.setCoordSize(Number.parseFloat(String(width)), Number.parseFloat(String(height)));
   }
 
   setCoordOrigin(x: number, y: number): void {
+    if (this.peer.isPanPreviewActive()) {
+      this.commitPanPreview();
+    }
     this.peer.setCoordOrigin(x, y);
+  }
+
+  /**
+   * Enters GPU-composited pan preview with an overscanned SVG buffer so panning translates the
+   * pre-rendered layer via `translate3d` without re-rasterizing the SVG on every frame.
+   */
+  beginPanPreview(marginPx?: number): boolean {
+    const size = this.peer.getSize();
+    const resolvedMargin =
+      marginPx ??
+      Math.min(360, Math.max(220, Math.round(Math.min(size.width, size.height) * 0.35)));
+    if (!this.peer.beginPanPreview(resolvedMargin)) {
+      return false;
+    }
+    this._htmlContainer.style.willChange = 'transform';
+    this._htmlContainer.style.transform = 'translate3d(0px, 0px, 0)';
+    return true;
+  }
+
+  /**
+   * Updates the GPU `translate3d` pan preview offset, re-anchoring the overscanned SVG viewBox
+   * only when the drag reaches the overscan margin.
+   */
+  updatePanPreview(
+    totalDx: number,
+    totalDy: number,
+  ): { localDx: number; localDy: number; reanchored: boolean } {
+    const result = this.peer.updatePanPreview(totalDx, totalDy);
+    this._htmlContainer.style.transform = `translate3d(${result.localDx}px, ${result.localDy}px, 0)`;
+    return result;
+  }
+
+  /**
+   * Commits the active pan preview offset into the SVG viewBox and clears the temporary
+   * GPU `transform` and `will-change` hint.
+   */
+  commitPanPreview(): boolean {
+    const committed = this.peer.commitPanPreview();
+    this._htmlContainer.style.transform = '';
+    this._htmlContainer.style.willChange = '';
+    return committed;
   }
 
   /**

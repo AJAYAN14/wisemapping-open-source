@@ -23,7 +23,28 @@ import { viewBoxMatrix, type Matrix } from '../../geometry/matrix';
 /** The viewBox numbers: <min-x> <min-y> <width> <height>. */
 type ViewBox = readonly [x: number, y: number, width: number, height: number];
 
+type PanPreviewState = {
+  logicalWidth: number;
+  logicalHeight: number;
+  logicalOriginX: number;
+  logicalOriginY: number;
+  logicalCoordWidth: number;
+  logicalCoordHeight: number;
+  scaleX: number;
+  scaleY: number;
+  marginPx: number;
+  anchorDx: number;
+  anchorDy: number;
+  localDx: number;
+  localDy: number;
+  prevPosition: string;
+  prevLeft: string;
+  prevTop: string;
+};
+
 class WorkspacePeer extends ElementPeer<SVGSVGElement> {
+  private _panPreview: PanPreviewState | undefined;
+
   constructor() {
     super(ElementPeer.createNode('svg'));
     // The viewBox (the coordinate size and origin) stretches to the SVG size on both axes.
@@ -41,11 +62,24 @@ class WorkspacePeer extends ElementPeer<SVGSVGElement> {
    * value is returned, so its precision is not lost to the attribute format.
    */
   override getSize(): SizeType {
+    if (this._panPreview) {
+      return {
+        width: this._panPreview.logicalWidth,
+        height: this._panPreview.logicalHeight,
+      };
+    }
     const { width, height } = super.getSize();
     return {
       width: this.sizeAttribute('width', width),
       height: this.sizeAttribute('height', height),
     };
+  }
+
+  override setSize(width?: number, height?: number): void {
+    if (this._panPreview) {
+      this.commitPanPreview();
+    }
+    super.setSize(width, height);
   }
 
   private sizeAttribute(name: 'width' | 'height', kept: number): number {
@@ -71,24 +105,168 @@ class WorkspacePeer extends ElementPeer<SVGSVGElement> {
    * scale, so rounding them here makes slow pans stall and the mouse mapping drift.
    */
   setCoordSize(width: number, height: number): void {
+    if (this._panPreview) {
+      this.commitPanPreview();
+    }
     const [x, y] = this.viewBox() ?? [0, 0, 0, 0];
     this.writeViewBox([x, y, width, height]);
   }
 
   getCoordSize(): SizeType {
+    if (this._panPreview) {
+      return {
+        width: this._panPreview.logicalCoordWidth,
+        height: this._panPreview.logicalCoordHeight,
+      };
+    }
     const [, , width, height] = this.viewBox() ?? [1, 1, 1, 1];
     return { width, height };
   }
 
   setCoordOrigin(x: number, y: number): void {
+    if (this._panPreview) {
+      this.commitPanPreview();
+    }
     // ViewBox min-x ,min-y by default initializated with 0 and 0.
     const [currentX, currentY, width, height] = this.viewBox() ?? [0, 0, 0, 0];
     this.writeViewBox([x ?? currentX, y ?? currentY, width, height]);
   }
 
   getCoordOrigin(): PositionType {
+    if (this._panPreview) {
+      const p = this._panPreview;
+      return {
+        x: p.logicalOriginX - p.localDx * p.scaleX,
+        y: p.logicalOriginY - p.localDy * p.scaleY,
+      };
+    }
     const [x, y] = this.viewBox() ?? [0, 0, 0, 0];
     return { x, y };
+  }
+
+  isPanPreviewActive(): boolean {
+    return this._panPreview !== undefined;
+  }
+
+  beginPanPreview(marginPx: number): boolean {
+    if (this._panPreview) {
+      return true;
+    }
+    const { width: logicalWidth, height: logicalHeight } = this.getSize();
+    const [logicalOriginX, logicalOriginY, logicalCoordWidth, logicalCoordHeight] = this.viewBox() ?? [
+      0,
+      0,
+      logicalWidth,
+      logicalHeight,
+    ];
+    if (
+      !Number.isFinite(logicalWidth) ||
+      !Number.isFinite(logicalHeight) ||
+      logicalWidth <= 0 ||
+      logicalHeight <= 0 ||
+      !Number.isFinite(marginPx) ||
+      marginPx <= 0 ||
+      !Number.isFinite(logicalCoordWidth) ||
+      !Number.isFinite(logicalCoordHeight) ||
+      logicalCoordWidth <= 0 ||
+      logicalCoordHeight <= 0
+    ) {
+      return false;
+    }
+
+    const scaleX = logicalCoordWidth / logicalWidth;
+    const scaleY = logicalCoordHeight / logicalHeight;
+    const prevPosition = this._native.style.position;
+    const prevLeft = this._native.style.left;
+    const prevTop = this._native.style.top;
+
+    this._panPreview = {
+      logicalWidth,
+      logicalHeight,
+      logicalOriginX,
+      logicalOriginY,
+      logicalCoordWidth,
+      logicalCoordHeight,
+      scaleX,
+      scaleY,
+      marginPx,
+      anchorDx: 0,
+      anchorDy: 0,
+      localDx: 0,
+      localDy: 0,
+      prevPosition,
+      prevLeft,
+      prevTop,
+    };
+
+    super.setSize(logicalWidth + marginPx * 2, logicalHeight + marginPx * 2);
+    this._native.style.position = 'relative';
+    this._native.style.left = `${-marginPx}px`;
+    this._native.style.top = `${-marginPx}px`;
+    this.writeOverscanViewBox(this._panPreview);
+    return true;
+  }
+
+  updatePanPreview(
+    totalDx: number,
+    totalDy: number,
+  ): { localDx: number; localDy: number; reanchored: boolean } {
+    const p = this._panPreview;
+    if (!p) {
+      return { localDx: 0, localDy: 0, reanchored: false };
+    }
+    const localDx = totalDx - p.anchorDx;
+    const localDy = totalDy - p.anchorDy;
+    if (Math.abs(localDx) >= p.marginPx || Math.abs(localDy) >= p.marginPx) {
+      p.logicalOriginX -= localDx * p.scaleX;
+      p.logicalOriginY -= localDy * p.scaleY;
+      p.anchorDx = totalDx;
+      p.anchorDy = totalDy;
+      p.localDx = 0;
+      p.localDy = 0;
+      this.writeOverscanViewBox(p);
+      return { localDx: 0, localDy: 0, reanchored: true };
+    }
+    p.localDx = localDx;
+    p.localDy = localDy;
+    return { localDx, localDy, reanchored: false };
+  }
+
+  commitPanPreview(): boolean {
+    const p = this._panPreview;
+    if (!p) {
+      return false;
+    }
+    const finalOriginX = p.logicalOriginX - p.localDx * p.scaleX;
+    const finalOriginY = p.logicalOriginY - p.localDy * p.scaleY;
+    const {
+      logicalWidth,
+      logicalHeight,
+      logicalCoordWidth,
+      logicalCoordHeight,
+      prevPosition,
+      prevLeft,
+      prevTop,
+    } = p;
+
+    this._panPreview = undefined;
+    this._native.style.position = prevPosition;
+    this._native.style.left = prevLeft;
+    this._native.style.top = prevTop;
+    super.setSize(logicalWidth, logicalHeight);
+    this.writeViewBox([finalOriginX, finalOriginY, logicalCoordWidth, logicalCoordHeight]);
+    return true;
+  }
+
+  private writeOverscanViewBox(p: PanPreviewState): void {
+    const marginCoordX = p.marginPx * p.scaleX;
+    const marginCoordY = p.marginPx * p.scaleY;
+    this.writeViewBox([
+      p.logicalOriginX - marginCoordX,
+      p.logicalOriginY - marginCoordY,
+      p.logicalCoordWidth + marginCoordX * 2,
+      p.logicalCoordHeight + marginCoordY * 2,
+    ]);
   }
 
   /**

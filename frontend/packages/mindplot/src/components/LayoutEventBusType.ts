@@ -33,6 +33,7 @@ export type LayoutEvents = {
   topicSelected: NodeModel;
   topicUnselected: NodeModel;
   canvasPanned: void;
+  canvasPanPreview: { active: boolean; dx: number; dy: number };
   canvasZoomed: { zoom: number };
 };
 
