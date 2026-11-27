@@ -33,7 +33,6 @@ import {
   PageContent,
   PageRoot,
   PrimaryToolbarButton,
-  RightButtonGroup,
   SecondaryToolbarButton,
   WorkspaceTopBar,
 } from './styled';
@@ -45,7 +44,6 @@ import { Folder, Label, MapInfo } from '../../classes/client';
 import ActionDispatcher from './action-dispatcher';
 import { ActionType } from './action-chooser';
 import AccountMenu from './account-menu';
-import ThemeToggleButton from '../common/theme-toggle-button';
 import AppI18n, { Locales } from '../../classes/app-i18n';
 import { externalizeXmlInlineImages } from '../../utils/mapAssets';
 import { useLocaleMessages } from '../../classes/app-i18n/messages';
@@ -775,6 +773,12 @@ const MapsPage = (): ReactElement => {
       onDeleteFolder={(folder) => setFolderDialog({ mode: 'delete', folder })}
       onDropMapsToFolder={(mapIds, folderId) => moveMapsDropMutation.mutate({ mapIds, folderId })}
       onToggleDesktopDrawer={includeDesktopToggle ? handleDesktopDrawerToggle : undefined}
+      userMenu={
+        <AccountMenu
+          variant="sidebar"
+          drawerOpen={includeDesktopToggle ? desktopDrawerOpen : true}
+        />
+      }
     />
   );
 
@@ -1032,10 +1036,6 @@ const MapsPage = (): ReactElement => {
             >
               <MenuRoundedIcon />
             </MobileDrawerToggle>
-            <RightButtonGroup>
-              <ThemeToggleButton />
-              <AccountMenu />
-            </RightButtonGroup>
           </WorkspaceTopBar>
           <section
             aria-label={intl.formatMessage({ id: 'common.maps-list', defaultMessage: 'Maps list' })}

@@ -96,6 +96,7 @@ export interface DrawerNavProps {
   onDeleteFolder?: (folder: Folder) => void;
   onDropMapsToFolder?: (mapIds: number[], folderId: number | null) => void;
   onToggleDesktopDrawer?: (() => void) | undefined;
+  userMenu?: React.ReactNode;
 }
 
 /**
@@ -117,6 +118,7 @@ const DrawerNav = ({
   onDeleteFolder,
   onDropMapsToFolder,
   onToggleDesktopDrawer,
+  userMenu,
 }: DrawerNavProps): ReactElement => {
   const intl = useIntl();
 
@@ -381,7 +383,22 @@ const DrawerNav = ({
         )}
       </LogoBox>
 
-      <List component="nav" sx={{ paddingTop: 0, overflowY: 'auto', flex: 1 }}>
+      <List
+        component="nav"
+        sx={{
+          paddingTop: 0,
+          overflowY: 'auto',
+          overflowX: 'hidden',
+          flex: 1,
+          minHeight: 0,
+          scrollbarWidth: 'thin',
+          '&::-webkit-scrollbar': { width: '4px' },
+          '&::-webkit-scrollbar-thumb': {
+            borderRadius: '999px',
+            backgroundColor: 'rgba(128, 128, 128, 0.28)',
+          },
+        }}
+      >
         {drawerOpen && <SectionHeader>分类</SectionHeader>}
         {primaryButtons.map((buttonInfo) => (
           <StyleListItem
@@ -577,23 +594,28 @@ const DrawerNav = ({
         )}
       </Menu>
 
-      {account && drawerOpen && (
-        <UserInfoBox>
-          {avatarUrl && !imgError ? (
-            <UserAvatarImage
-              src={avatarUrl}
-              alt={displayName || account.email}
-              referrerPolicy="no-referrer"
-              onError={() => setImgError(true)}
-            />
-          ) : (
-            <UserAvatarBadge aria-hidden="true">{initial}</UserAvatarBadge>
-          )}
-          <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
-            <UserName variant="body2">{displayName}</UserName>
-            <UserEmail variant="caption">{account.email}</UserEmail>
-          </Box>
-        </UserInfoBox>
+      {userMenu !== undefined ? (
+        userMenu
+      ) : (
+        account &&
+        drawerOpen && (
+          <UserInfoBox>
+            {avatarUrl && !imgError ? (
+              <UserAvatarImage
+                src={avatarUrl}
+                alt={displayName || account.email}
+                referrerPolicy="no-referrer"
+                onError={() => setImgError(true)}
+              />
+            ) : (
+              <UserAvatarBadge aria-hidden="true">{initial}</UserAvatarBadge>
+            )}
+            <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
+              <UserName variant="body2">{displayName}</UserName>
+              <UserEmail variant="caption">{account.email}</UserEmail>
+            </Box>
+          </UserInfoBox>
+        )
       )}
     </DrawerContent>
   );

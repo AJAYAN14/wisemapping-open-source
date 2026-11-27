@@ -281,40 +281,22 @@ export const MapsPageLoading = (): React.ReactElement => {
           component="header"
           sx={{
             width: '100%',
-            padding: { xs: '10px 12px 0 12px', sm: '14px 20px 0 20px', md: '14px 28px 0 28px' },
-            display: 'flex',
+            padding: '10px 12px 0 12px',
+            display: { xs: 'flex', sm: 'none' },
             alignItems: 'center',
-            justifyContent: isMobile ? 'space-between' : 'flex-end',
+            justifyContent: 'space-between',
             gap: '8px',
-            minHeight: '38px',
+            minHeight: '40px',
             boxSizing: 'border-box',
           }}
         >
-          {isMobile && (
-            <SkeletonBlock
-              animation="wave"
-              variant="rounded"
-              width={38}
-              height={38}
-              sx={{ borderRadius: '10px', flexShrink: 0 }}
-            />
-          )}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <SkeletonBlock
-              animation="wave"
-              variant="rounded"
-              width={64}
-              height={32}
-              sx={{ borderRadius: '10px', flexShrink: 0 }}
-            />
-            <SkeletonBlock
-              animation="wave"
-              variant="circular"
-              width={32}
-              height={32}
-              sx={{ flexShrink: 0 }}
-            />
-          </Box>
+          <SkeletonBlock
+            animation="wave"
+            variant="rounded"
+            width={38}
+            height={38}
+            sx={{ borderRadius: '10px', flexShrink: 0 }}
+          />
         </Box>
 
         {/* Maps List Area */}

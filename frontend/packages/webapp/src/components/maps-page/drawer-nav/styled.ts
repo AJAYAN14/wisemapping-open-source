@@ -27,7 +27,7 @@ export const DrawerContent = styled('div')({
   display: 'flex',
   flexDirection: 'column',
   height: '100%',
-  overflowX: 'hidden',
+  overflow: 'hidden',
 });
 
 export const LogoBox = styled('div')({

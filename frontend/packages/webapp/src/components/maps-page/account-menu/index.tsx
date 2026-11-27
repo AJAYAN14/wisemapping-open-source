@@ -25,40 +25,26 @@ import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
 import Tooltip from '@mui/material/Tooltip';
 import Box from '@mui/material/Box';
-import { styled } from '@mui/material/styles';
+import { styled, useTheme as useMuiTheme } from '@mui/material/styles';
 import React, { use } from 'react';
 import { FormattedMessage } from 'react-intl';
+import DarkModeRoundedIcon from '@mui/icons-material/DarkModeRounded';
+import LightModeRoundedIcon from '@mui/icons-material/LightModeRounded';
 import LogoutRoundedIcon from '@mui/icons-material/LogoutRounded';
 import StorageRoundedIcon from '@mui/icons-material/StorageRounded';
+import UnfoldMoreRoundedIcon from '@mui/icons-material/UnfoldMoreRounded';
 import { useFetchAccount } from '../../../classes/middleware';
 import { ClientContext } from '../../../classes/provider/client-context';
 import JwtTokenConfig from '../../../classes/jwt-token-config';
-import { appleColors, applePressMixin, isDarkTheme } from '../appleDesign';
+import { useOptionalTheme } from '../../../contexts/ThemeContext';
+import { APPLE_FONT_STACK, appleColors, applePressMixin, isDarkTheme } from '../appleDesign';
 import StorageQuotaDialog from './StorageQuotaDialog';
 
 declare const VITE_APP_VERSION: string | undefined;
 declare const VITE_BUILD_TIME: string | undefined;
 
-const APP_VERSION = typeof VITE_APP_VERSION !== 'undefined' ? VITE_APP_VERSION : '6.0.19';
+const APP_VERSION = typeof VITE_APP_VERSION !== 'undefined' ? VITE_APP_VERSION : '6.0.20';
 const BUILD_TIME = typeof VITE_BUILD_TIME !== 'undefined' ? VITE_BUILD_TIME : '';
-
-const VersionBadge = styled('span')(({ theme }) => {
-  const c = appleColors(isDarkTheme(theme));
-  return {
-    fontSize: '11px',
-    fontWeight: 600,
-    fontVariantNumeric: 'tabular-nums',
-    letterSpacing: '0.01em',
-    color: c.textSecondary,
-    backgroundColor: c.hoverFill,
-    border: `1px solid ${c.hairline}`,
-    borderRadius: '999px',
-    padding: '2px 7px',
-    lineHeight: 1.4,
-    userSelect: 'none',
-    cursor: 'pointer',
-  };
-});
 
 const AvatarTrigger = styled(IconButton)(({ theme }) => {
   const c = appleColors(isDarkTheme(theme));
@@ -70,6 +56,37 @@ const AvatarTrigger = styled(IconButton)(({ theme }) => {
     '&:hover': {
       backgroundColor: c.hoverFill,
       borderColor: c.hairlineStrong,
+    },
+  };
+});
+
+const SidebarAccountButton = styled('button')(({ theme }) => {
+  const isDark = isDarkTheme(theme);
+  const c = appleColors(isDark);
+  return {
+    appearance: 'none',
+    width: 'calc(100% - 20px)',
+    margin: 'auto 10px 10px 10px',
+    padding: '9px 10px',
+    backgroundColor: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+    borderRadius: '12px',
+    border: `1px solid ${c.hairline}`,
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    cursor: 'pointer',
+    textAlign: 'left',
+    fontFamily: APPLE_FONT_STACK,
+    color: c.textPrimary,
+    boxSizing: 'border-box',
+    ...applePressMixin,
+    '&:hover': {
+      backgroundColor: c.hoverFill,
+      borderColor: c.hairlineStrong,
+    },
+    '&:focus-visible': {
+      outline: 'none',
+      boxShadow: `0 0 0 2px ${c.amberRing}`,
     },
   };
 });
@@ -99,12 +116,24 @@ const AvatarCircle = styled('span')(({ theme }) => {
   };
 });
 
-const AccountMenu = (): React.ReactElement => {
+interface AccountMenuProps {
+  variant?: 'avatar' | 'sidebar';
+  drawerOpen?: boolean;
+}
+
+const AccountMenu = ({
+  variant = 'avatar',
+  drawerOpen = true,
+}: AccountMenuProps = {}): React.ReactElement | null => {
   const [anchorEl, setAnchorEl] = React.useState<HTMLElement>();
   const [storageOpen, setStorageOpen] = React.useState(false);
+  const [imgError, setImgError] = React.useState(false);
   const open = Boolean(anchorEl);
   const client = use(ClientContext);
   const queryClient = useQueryClient();
+  const themeCtx = useOptionalTheme();
+  const muiTheme = useMuiTheme();
+  const isDark = (themeCtx?.mode ?? muiTheme.palette.mode) === 'dark';
 
   const handleMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -125,62 +154,135 @@ const AccountMenu = (): React.ReactElement => {
   };
 
   const account = useFetchAccount();
+  if (variant === 'sidebar' && !account) {
+    return null;
+  }
+
   const email = account?.email || 'a.jian0629@gmail.com';
   const fullName =
     account?.fullName ||
     [account?.firstname, account?.lastname].filter(Boolean).join(' ') ||
     account?.firstname;
-  const initial = (fullName || email).trim().charAt(0).toUpperCase();
+  const displayName = fullName || email;
+  const initial = displayName.trim().charAt(0).toUpperCase();
   const avatarUrl = account?.avatarUrl;
-  const [imgError, setImgError] = React.useState(false);
 
   const avatarTooltip = [
     fullName ? `${fullName} (${email})` : email,
     `版本 v${APP_VERSION}${BUILD_TIME ? ` (${BUILD_TIME})` : ''}`,
   ].join(' · ');
 
+  const avatarNode =
+    avatarUrl && !imgError ? (
+      <AvatarImage
+        src={avatarUrl}
+        alt={displayName}
+        referrerPolicy="no-referrer"
+        onError={() => setImgError(true)}
+      />
+    ) : (
+      <AvatarCircle>{initial}</AvatarCircle>
+    );
+
   return (
-    <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75 }}>
-      <Tooltip arrow={true} title={avatarTooltip}>
-        <VersionBadge onClick={handleMenu} aria-label={`当前版本 v${APP_VERSION}`}>
-          v{APP_VERSION}
-        </VersionBadge>
-      </Tooltip>
-      <Tooltip arrow={true} title={avatarTooltip}>
-        <AvatarTrigger onClick={handleMenu} size="small" aria-label={fullName || email}>
-          {avatarUrl && !imgError ? (
-            <AvatarImage
-              src={avatarUrl}
-              alt={fullName || email}
-              referrerPolicy="no-referrer"
-              onError={() => setImgError(true)}
-            />
-          ) : (
-            <AvatarCircle>{initial}</AvatarCircle>
-          )}
-        </AvatarTrigger>
-      </Tooltip>
+    <Box
+      sx={
+        variant === 'sidebar'
+          ? {
+              mt: 'auto',
+              display: 'flex',
+              justifyContent: 'center',
+              width: '100%',
+              flexShrink: 0,
+            }
+          : { display: 'inline-flex', alignItems: 'center', gap: 0.75 }
+      }
+    >
+      {variant === 'sidebar' ? (
+        drawerOpen ? (
+          <SidebarAccountButton
+            type="button"
+            onClick={handleMenu}
+            aria-label={displayName}
+            aria-haspopup="menu"
+            aria-expanded={open}
+          >
+            {avatarNode}
+            <Box sx={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
+              <Typography
+                variant="body2"
+                sx={{
+                  fontWeight: 700,
+                  fontSize: '13.5px',
+                  lineHeight: 1.25,
+                  color: 'text.primary',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {displayName}
+              </Typography>
+              <Typography
+                variant="caption"
+                sx={{
+                  fontSize: '11px',
+                  fontWeight: 500,
+                  lineHeight: 1.25,
+                  color: 'text.secondary',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {email}
+              </Typography>
+            </Box>
+            <UnfoldMoreRoundedIcon sx={{ fontSize: 16, color: 'text.secondary', flexShrink: 0 }} />
+          </SidebarAccountButton>
+        ) : (
+          <Tooltip arrow={true} placement="right" title={avatarTooltip}>
+            <AvatarTrigger
+              onClick={handleMenu}
+              size="small"
+              aria-label={displayName}
+              sx={{ mb: 1.25 }}
+            >
+              {avatarNode}
+            </AvatarTrigger>
+          </Tooltip>
+        )
+      ) : (
+        <Tooltip arrow={true} title={avatarTooltip}>
+          <AvatarTrigger onClick={handleMenu} size="small" aria-label={displayName}>
+            {avatarNode}
+          </AvatarTrigger>
+        </Tooltip>
+      )}
       <Menu
         id="appbar-profile"
         anchorEl={anchorEl}
         keepMounted
         open={open}
         onClose={handleClose}
-        anchorOrigin={{
-          vertical: 'bottom',
-          horizontal: 'right',
-        }}
-        transformOrigin={{
-          vertical: 'top',
-          horizontal: 'right',
-        }}
+        anchorOrigin={
+          variant === 'sidebar'
+            ? { vertical: 'top', horizontal: 'left' }
+            : { vertical: 'bottom', horizontal: 'right' }
+        }
+        transformOrigin={
+          variant === 'sidebar'
+            ? { vertical: 'bottom', horizontal: 'left' }
+            : { vertical: 'top', horizontal: 'right' }
+        }
         slotProps={{
           paper: {
             sx: (theme) => {
               const c = appleColors(isDarkTheme(theme));
               return {
-                mt: 1,
-                minWidth: '180px',
+                mt: variant === 'sidebar' ? 0 : 1,
+                mb: variant === 'sidebar' ? 1 : 0,
+                minWidth: '210px',
                 borderRadius: '14px',
                 border: `1px solid ${c.hairline}`,
                 boxShadow: c.shadowFloat,
@@ -209,6 +311,17 @@ const AccountMenu = (): React.ReactElement => {
           </Box>
         </MenuItem>
         <Divider />
+        <MenuItem
+          onClick={() => {
+            themeCtx?.toggleMode();
+          }}
+          sx={{ fontWeight: 600 }}
+        >
+          <ListItemIcon>
+            {isDark ? <LightModeRoundedIcon fontSize="small" /> : <DarkModeRoundedIcon fontSize="small" />}
+          </ListItemIcon>
+          {isDark ? '切换到浅色模式' : '切换到深色模式'}
+        </MenuItem>
         {client.fetchAssetStorageStats && (
           <MenuItem
             onClick={() => {

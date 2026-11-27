@@ -51,11 +51,9 @@ jest.mock('../../../../src/components/maps-page/action-dispatcher', () => ({
 
 jest.mock('../../../../src/components/maps-page/account-menu', () => ({
   __esModule: true,
-  default: () => <span>account-menu</span>,
-}));
-jest.mock('../../../../src/components/common/theme-toggle-button', () => ({
-  __esModule: true,
-  default: () => <span>theme-toggle</span>,
+  default: ({ drawerOpen }: { drawerOpen?: boolean }) => (
+    <span>{drawerOpen ? 'account-menu:open' : 'account-menu:closed'}</span>
+  ),
 }));
 // DrawerNav reads the colour mode for its logo; the real hook needs AppThemeProvider.
 jest.mock('../../../../src/contexts/ThemeContext', () => ({
@@ -111,7 +109,7 @@ describe('MapsPage', () => {
     expect(scrollSpy).toHaveBeenCalledWith(0, 0);
     expect(listFilter()).toBe('all');
     expect(screen.getByRole('region', { name: 'Maps list' })).toBeTruthy();
-    expect(screen.getByText('account-menu')).toBeTruthy();
+    expect(screen.getAllByText(/account-menu/).length).toBeGreaterThan(0);
   });
 
   test('the drawer lists the fixed filters followed by the account labels', async () => {
@@ -173,7 +171,7 @@ describe('MapsPage', () => {
 
     const toggle = document.getElementById('open-desktop-drawer') as HTMLElement;
     expect(within(toggle).getByTestId('NavigateBeforeRoundedIcon')).toBeTruthy();
-    expect((await screen.findAllByText('ada@example.com')).length).toBeGreaterThan(0);
+    expect((await screen.findAllByText('account-menu:open')).length).toBeGreaterThan(0);
   });
 
   test('the mobile drawer opens and closes once a filter is picked', async () => {
@@ -185,8 +183,8 @@ describe('MapsPage', () => {
 
     fireEvent.click(document.getElementById('open-main-drawer') as HTMLElement);
     expect(mobileDrawer().classList.contains('MuiModal-hidden')).toBe(false);
-    // The open temporary drawer also expands its entries (the account box is shown).
-    expect(await within(mobileDrawer()).findByText('ada@example.com')).toBeTruthy();
+    // The open temporary drawer also expands its entries (the account card is shown).
+    expect(await within(mobileDrawer()).findByText('account-menu:open')).toBeTruthy();
 
     fireEvent.click(within(mobileDrawer()).getByText('Starred'));
     expect(listFilter()).toBe('starred');

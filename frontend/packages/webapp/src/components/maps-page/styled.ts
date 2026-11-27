@@ -85,6 +85,8 @@ const drawerPaper = (theme: Theme, expanded: boolean): CSSObject => {
     border: `1px solid ${c.hairline}`,
     borderRadius: '16px',
     boxShadow: c.shadowSubtle,
+    boxSizing: 'border-box',
+    overflow: 'hidden',
     top: '12px',
     left: '12px',
     bottom: '12px',
@@ -394,7 +396,6 @@ export const MobileDrawer = styled(Drawer, { shouldForwardProp: notExpanded })<E
 export const DesktopDrawer = styled(Drawer, { shouldForwardProp: notExpanded })<ExpandedProps>(
   ({ theme, expanded }) => [
     desktopDrawer(theme, expanded),
-    drawerPaper(theme, expanded),
     { '& .MuiPaper-root': drawerPaper(theme, expanded) },
   ],
 );
@@ -413,6 +414,7 @@ export const PageContent = styled('main')(({ theme }) => {
       border: `1px solid ${c.hairline}`,
       boxShadow: c.shadowSubtle,
       minHeight: 'calc(100dvh - 24px)',
+      paddingTop: '14px',
       paddingBottom: '24px',
     },
     [theme.breakpoints.down('sm')]: {
@@ -424,21 +426,18 @@ export const PageContent = styled('main')(({ theme }) => {
   };
 });
 
-/** Compact, borderless top utility strip inside the floating main card (mobile drawer trigger + theme/account). */
+/** Mobile-only top strip inside the workspace for opening the drawer. */
 export const WorkspaceTopBar = styled('header')(({ theme }) => ({
   width: '100%',
   boxSizing: 'border-box',
-  padding: '14px 28px 0 28px',
+  padding: '10px 12px 0 12px',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
   gap: '8px',
-  minHeight: '38px',
-  [theme.breakpoints.down('md')]: {
-    padding: '14px 20px 0 20px',
-  },
-  [theme.breakpoints.down('sm')]: {
-    padding: '10px 12px 0 12px',
+  minHeight: '40px',
+  [theme.breakpoints.up('sm')]: {
+    display: 'none',
   },
 }));
 

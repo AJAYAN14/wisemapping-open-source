@@ -87,6 +87,8 @@ export const AppThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => 
   return <ThemeContext value={value}>{children}</ThemeContext>;
 };
 
+export const useOptionalTheme = (): ThemeContextType | undefined => use(ThemeContext);
+
 export const useTheme = (): ThemeContextType => {
   const context = use(ThemeContext);
   if (!context) {
