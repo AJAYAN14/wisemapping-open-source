@@ -15,7 +15,7 @@
  *   See the License for the specific language governing permissions and
  *   limitations under the License.
  */
-import { Workspace as Workspace2D } from '@wisemapping/web2d';
+import { Workspace as Workspace2D, setImagePredecodePaused } from '@wisemapping/web2d';
 import type {
   CustomEventMap,
   ElementEventListener,
@@ -59,6 +59,7 @@ const RENDER_QUEUE_BATCH = 300;
 const NO_FRAME_TIMEOUT = 100;
 const VISIBILITY_PADDING_RATIO = 0.08;
 const TOUCH_PAN_THRESHOLD_PX = 5;
+const DEFERRED_PAN_COMMIT_IDLE_MS = 350;
 export const CANVAS_ZOOM_RANGE = { min: 0.3, max: 7 } as const;
 type BoundsType = { left: number; right: number; top: number; bottom: number };
 
@@ -89,6 +90,10 @@ class Canvas {
   private _cancelPinch: (() => void) | undefined;
 
   private _mouseDownListener: ((event: Event) => void) | undefined;
+
+  private _flushDeferredPanCommit: ((emitEvents?: boolean) => void) | undefined;
+
+  private _captureFlushListener: ((event: Event) => void) | undefined;
 
   // Stops observing the container size (registerEvents); undefined before or after.
   private _stopResizeObserver: (() => void) | undefined;
@@ -196,6 +201,15 @@ class Canvas {
 
   dispose(): void {
     this.cancelPan();
+    this._flushDeferredPanCommit?.(false);
+
+    if (this._captureFlushListener) {
+      const container = this._screenManager.getContainer();
+      container.removeEventListener('mousedown', this._captureFlushListener, true);
+      container.removeEventListener('wheel', this._captureFlushListener, true);
+      window.document.removeEventListener('keydown', this._captureFlushListener, true);
+      this._captureFlushListener = undefined;
+    }
 
     if (this._stopResizeObserver) {
       this._stopResizeObserver();
@@ -410,6 +424,7 @@ class Canvas {
    * screen manager's scale and the viewBox all agree.
    */
   private _applyViewport(zoom: number, coordOriginX: number, coordOriginY: number): void {
+    this._flushDeferredPanCommit?.(false);
     const workspace = this._workspace;
     const containerWidth = this._screenManager.getContainerWidth();
     const containerHeight = this._screenManager.getContainerHeight();
@@ -433,6 +448,7 @@ class Canvas {
   }
 
   setCoordOrigin(x: number, y: number): void {
+    this._flushDeferredPanCommit?.(false);
     this._workspace.setCoordOrigin(x, y);
   }
 
@@ -442,6 +458,7 @@ class Canvas {
 
   panBy(deltaX: number, deltaY: number): void {
     if (deltaX === 0 && deltaY === 0) return;
+    this._flushDeferredPanCommit?.(false);
     const origin = this._workspace.getCoordOrigin();
     const newOriginX = origin.x + deltaX * this._zoom;
     const newOriginY = origin.y + deltaY * this._zoom;
@@ -457,12 +474,14 @@ class Canvas {
    */
   panForEditor(deltaX: number, deltaY: number): void {
     if (deltaX === 0 && deltaY === 0) return;
+    this._flushDeferredPanCommit?.(false);
     const origin = this._workspace.getCoordOrigin();
     this._workspace.setCoordOrigin(origin.x + deltaX * this._zoom, origin.y + deltaY * this._zoom);
     this._layoutEventBus.fireEvent('canvasPanned');
   }
 
   setCoordSize(width: number, height: number): void {
+    this._flushDeferredPanCommit?.(false);
     this._workspace.setCoordSize(width, height);
   }
 
@@ -502,6 +521,8 @@ class Canvas {
     const mWorkspace = this;
     const panContainer = screenManager.getContainer();
     let panShield: HTMLDivElement | undefined;
+    let deferredCommitTimer: ReturnType<typeof setTimeout> | undefined;
+    let hasDeferredPan = false;
     // Use a single O(1) childless overlay shield instead of mutating body cursor or SVG
     // pointer-events, which would otherwise trigger inherited style recalc on every SVG child.
     const setPanShieldVisible = (visible: boolean) => {
@@ -524,6 +545,65 @@ class Canvas {
         panShield.style.display = 'none';
       }
     };
+
+    const clearDeferredCommitTimer = () => {
+      if (deferredCommitTimer !== undefined) {
+        clearTimeout(deferredCommitTimer);
+        deferredCommitTimer = undefined;
+      }
+    };
+
+    const flushDeferredPanCommit = (emitEvents = true) => {
+      clearDeferredCommitTimer();
+      if (!hasDeferredPan) {
+        return;
+      }
+      hasDeferredPan = false;
+      if (typeof workspace.commitPanPreview === 'function') {
+        workspace.commitPanPreview();
+      }
+      if (emitEvents) {
+        this._layoutEventBus.fireEvent('canvasPanPreview', {
+          active: false,
+          dx: 0,
+          dy: 0,
+        });
+        screenManager.fireEvent('update');
+        this._layoutEventBus.fireEvent('canvasPanned');
+      }
+    };
+    this._flushDeferredPanCommit = flushDeferredPanCommit;
+
+    const captureFlushListener = (captureEvent: Event) => {
+      if (!hasDeferredPan) {
+        return;
+      }
+      if (captureEvent.type === 'mousedown') {
+        const mouseEvt = captureEvent as MouseEvent;
+        const button = mouseEvt.button ?? 0;
+        // Middle-button pan or left-button pan on empty canvas keeps the deferred GPU preview.
+        if (button === 1) {
+          return;
+        }
+        const target = mouseEvt.target as Element | null;
+        const svgEl = workspace.getSVGElement();
+        const htmlContainer = workspace._getHtmlContainer();
+        if (
+          button === 0 &&
+          (target === panContainer ||
+            target === htmlContainer ||
+            target === svgEl ||
+            target === panShield)
+        ) {
+          return;
+        }
+      }
+      flushDeferredPanCommit(true);
+    };
+    this._captureFlushListener = captureFlushListener;
+    panContainer.addEventListener('mousedown', captureFlushListener, true);
+    panContainer.addEventListener('wheel', captureFlushListener, true);
+    window.document.addEventListener('keydown', captureFlushListener, true);
     let panUpdateScheduled = false;
     const schedulePanUpdate = () => {
       if (!panUpdateScheduled) {
@@ -670,8 +750,12 @@ class Canvas {
             panRafId = undefined;
             if (!panInitialized) {
               panInitialized = true;
+              clearDeferredCommitTimer();
+              setImagePredecodePaused(true);
               // Close any active inline text editor once when drag starts instead of on every mousemove.
-              screenManager.fireEvent('update');
+              if (!hasDeferredPan) {
+                screenManager.fireEvent('update');
+              }
               setPanShieldVisible(true);
               usingPanPreview =
                 typeof workspace.beginPanPreview === 'function' && workspace.beginPanPreview();
@@ -777,6 +861,7 @@ class Canvas {
             this._mouseMoveListener = undefined;
             this._cancelPan = undefined;
             setPanShieldVisible(false);
+            setImagePredecodePaused(false);
 
             if (wasDragged) {
               if (
@@ -784,15 +869,27 @@ class Canvas {
                 typeof workspace.updatePanPreview === 'function' &&
                 typeof workspace.commitPanPreview === 'function'
               ) {
-                workspace.updatePanPreview(latestDeltaX, latestDeltaY);
-                workspace.commitPanPreview();
+                const { localDx, localDy, reanchored } = workspace.updatePanPreview(
+                  latestDeltaX,
+                  latestDeltaY,
+                );
                 this._layoutEventBus.fireEvent('canvasPanPreview', {
-                  active: false,
-                  dx: 0,
-                  dy: 0,
+                  active: true,
+                  dx: localDx,
+                  dy: localDy,
                 });
-                screenManager.fireEvent('update');
-                this._layoutEventBus.fireEvent('canvasPanned');
+                if (reanchored) {
+                  this._layoutEventBus.fireEvent('canvasPanned');
+                }
+                hasDeferredPan = true;
+                if (!isRelease) {
+                  flushDeferredPanCommit(true);
+                } else {
+                  clearDeferredCommitTimer();
+                  deferredCommitTimer = setTimeout(() => {
+                    flushDeferredPanCommit(true);
+                  }, DEFERRED_PAN_COMMIT_IDLE_MS);
+                }
               } else if (hadPendingRaf || !panInitialized) {
                 const offsetX = latestDeltaX * this._zoom;
                 const offsetY = latestDeltaY * this._zoom;
@@ -834,6 +931,7 @@ class Canvas {
   }
 
   ensureVisible(bounds: BoundsType, minPadding = DEFAULT_VISIBILITY_PADDING): boolean {
+    this._flushDeferredPanCommit?.(false);
     const workspace = this._workspace;
     const origin = workspace.getCoordOrigin();
     const coordSize = workspace.getCoordSize();
@@ -903,6 +1001,7 @@ class Canvas {
    * Returns true when the viewport actually moved.
    */
   centerOnPosition(position: PositionType): boolean {
+    this._flushDeferredPanCommit?.(false);
     const workspace = this._workspace;
     const coordSize = workspace.getCoordSize();
     const origin = workspace.getCoordOrigin();

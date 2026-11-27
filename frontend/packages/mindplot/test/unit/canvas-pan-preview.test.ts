@@ -30,6 +30,7 @@ describe('Canvas GPU pan preview', () => {
   let originalCancelRaf: typeof globalThis.cancelAnimationFrame;
 
   beforeEach(() => {
+    jest.useFakeTimers();
     rafQueue = [];
     originalRaf = globalThis.requestAnimationFrame;
     originalCancelRaf = globalThis.cancelAnimationFrame;
@@ -59,6 +60,7 @@ describe('Canvas GPU pan preview', () => {
   afterEach(() => {
     canvas.dispose();
     divContainer.remove();
+    jest.useRealTimers();
     globalThis.requestAnimationFrame = originalRaf;
     globalThis.cancelAnimationFrame = originalCancelRaf;
   });
@@ -111,18 +113,39 @@ describe('Canvas GPU pan preview', () => {
     expect(updateSpy).toHaveBeenCalledTimes(1);
     expect(pannedSpy).not.toHaveBeenCalled();
 
-    // Subsequent mousemove past last rAF, then mouseup commits final delta
+    // Subsequent mousemove past last rAF, then mouseup defers commit across consecutive swipes
     window.document.dispatchEvent(
       new MouseEvent('mousemove', { clientX: 290, clientY: 250, bubbles: true }),
     );
     window.document.dispatchEvent(new MouseEvent('mouseup', { button: 1, bubbles: true }));
 
     expect(shield?.style.display).toBe('none');
-    expect(workspace.getSVGElement().style.transform).toBe('');
-    expect(workspace.getSVGElement().getAttribute('width')).toBe('1640');
+    expect(workspace.getSVGElement().style.transform).toBe('translate3d(90px, 50px, 0)');
     expect(canvas.getCoordOrigin()).toEqual({
       x: startOrigin.x - 90,
       y: startOrigin.y - 50,
+    });
+    // Consecutive swipe accumulates GPU translate3d without rewriting viewBox in between
+    divContainer.dispatchEvent(
+      new MouseEvent('mousedown', { button: 1, clientX: 300, clientY: 300, bubbles: true }),
+    );
+    window.document.dispatchEvent(
+      new MouseEvent('mousemove', { clientX: 330, clientY: 320, bubbles: true }),
+    );
+    flushRaf();
+    expect(workspace.getSVGElement().style.transform).toBe('translate3d(120px, 70px, 0)');
+    window.document.dispatchEvent(new MouseEvent('mouseup', { button: 1, bubbles: true }));
+
+    expect(pannedSpy).not.toHaveBeenCalled();
+
+    // After 350ms idle, deferred commit settles viewBox once
+    jest.advanceTimersByTime(360);
+
+    expect(workspace.getSVGElement().style.transform).toBe('');
+    expect(workspace.getSVGElement().getAttribute('width')).toBe('1640');
+    expect(canvas.getCoordOrigin()).toEqual({
+      x: startOrigin.x - 120,
+      y: startOrigin.y - 70,
     });
     expect(previewEvents[previewEvents.length - 1]).toEqual({ active: false, dx: 0, dy: 0 });
     expect(pannedSpy).toHaveBeenCalledTimes(1);

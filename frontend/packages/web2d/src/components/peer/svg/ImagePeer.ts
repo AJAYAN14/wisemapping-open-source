@@ -19,50 +19,71 @@ import type PositionType from '../../PositionType';
 import ElementPeer from './ElementPeer';
 
 const MAX_PREDECODED_IMAGES = 160;
-const PREDECODE_BATCH_SIZE = 4;
 const predecodedCache = new Map<string, HTMLImageElement>();
 const predecodeQueue: string[] = [];
 const queuedUrls = new Set<string>();
 let predecodeScheduled = false;
+let predecodeInFlight = false;
+let predecodePaused = false;
+
+export const setImagePredecodePaused = (paused: boolean): void => {
+  predecodePaused = paused;
+  if (!paused && predecodeQueue.length > 0 && !predecodeInFlight) {
+    schedulePredecodeFlush();
+  }
+};
 
 const flushPredecodeQueue = (): void => {
   predecodeScheduled = false;
+  if (predecodePaused || predecodeInFlight) {
+    return;
+  }
   if (typeof window === 'undefined' || typeof window.Image !== 'function') {
     predecodeQueue.length = 0;
     queuedUrls.clear();
     return;
   }
 
-  let processed = 0;
-  while (predecodeQueue.length > 0 && processed < PREDECODE_BATCH_SIZE) {
-    const url = predecodeQueue.shift()!;
-    queuedUrls.delete(url);
-    if (predecodedCache.has(url)) {
-      continue;
+  let nextUrl: string | undefined;
+  while (predecodeQueue.length > 0) {
+    const candidate = predecodeQueue.shift()!;
+    queuedUrls.delete(candidate);
+    if (!predecodedCache.has(candidate)) {
+      nextUrl = candidate;
+      break;
     }
-    processed += 1;
-    const img = new window.Image();
-    img.decoding = 'async';
-    img.src = url;
-    if (typeof img.decode === 'function') {
-      img.decode().catch(() => undefined);
-    }
-    if (predecodedCache.size >= MAX_PREDECODED_IMAGES) {
-      const oldestKey = predecodedCache.keys().next().value;
-      if (oldestKey !== undefined) {
-        predecodedCache.delete(oldestKey);
-      }
-    }
-    predecodedCache.set(url, img);
+  }
+  if (!nextUrl) {
+    return;
   }
 
-  if (predecodeQueue.length > 0) {
-    schedulePredecodeFlush();
+  predecodeInFlight = true;
+  const img = new window.Image();
+  img.decoding = 'async';
+  img.src = nextUrl;
+  if (predecodedCache.size >= MAX_PREDECODED_IMAGES) {
+    const oldestKey = predecodedCache.keys().next().value;
+    if (oldestKey !== undefined) {
+      predecodedCache.delete(oldestKey);
+    }
+  }
+  predecodedCache.set(nextUrl, img);
+
+  const finish = () => {
+    predecodeInFlight = false;
+    if (predecodeQueue.length > 0 && !predecodePaused) {
+      schedulePredecodeFlush();
+    }
+  };
+  if (typeof img.decode === 'function') {
+    img.decode().catch(() => undefined).finally(finish);
+  } else {
+    finish();
   }
 };
 
 const schedulePredecodeFlush = (): void => {
-  if (predecodeScheduled || typeof window === 'undefined') {
+  if (predecodeScheduled || predecodePaused || predecodeInFlight || typeof window === 'undefined') {
     return;
   }
   predecodeScheduled = true;
@@ -70,9 +91,9 @@ const schedulePredecodeFlush = (): void => {
     requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
   };
   if (typeof win.requestIdleCallback === 'function') {
-    win.requestIdleCallback(flushPredecodeQueue, { timeout: 200 });
+    win.requestIdleCallback(flushPredecodeQueue, { timeout: 2000 });
   } else {
-    window.setTimeout(flushPredecodeQueue, 16);
+    window.setTimeout(flushPredecodeQueue, 32);
   }
 };
 

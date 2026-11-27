@@ -35,6 +35,7 @@ import WorkspaceElement from './components/WorkspaceElement';
 import type Line from './components/Line';
 import type { ControlPointLine } from './components/Line';
 import ElementPeer from './components/peer/svg/ElementPeer';
+import { setImagePredecodePaused } from './components/peer/svg/ImagePeer';
 import type { FontStyle } from './components/peer/svg/FontPeer';
 import type {
   CustomEventMap,
@@ -95,6 +96,7 @@ export {
   ELEMENT_TYPES,
   isWithinStraightTolerance,
   defaultControlPoints,
+  setImagePredecodePaused,
 };
 
 export type {

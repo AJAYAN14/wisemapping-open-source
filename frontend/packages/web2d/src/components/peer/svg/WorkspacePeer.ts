@@ -277,6 +277,9 @@ class WorkspacePeer extends ElementPeer<SVGSVGElement> {
 
   beginPanPreview(marginPx: number): boolean {
     if (this._panPreview) {
+      // Resume seamlessly from an uncommitted deferred pan preview without rewriting viewBox.
+      this._panPreview.anchorDx = -this._panPreview.localDx;
+      this._panPreview.anchorDy = -this._panPreview.localDy;
       return true;
     }
     const persistent = this._overscanMargin > 0;
