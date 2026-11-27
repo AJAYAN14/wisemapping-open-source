@@ -6,6 +6,13 @@
 
 ---
 
+## Latest Fixes (v6.0.28)
+
+- **Font Consistency Fix (`appleDesign.ts`, `theme/index.ts`)**: Removed Japanese rounded font (`"Hiragino Maru Gothic ProN"`) and non-standard fallbacks; standardized on Apple and Chinese system fonts (`-apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑"`), resolving font mismatch between `导入文件` and `导入文件夹`.
+- **Logo & Toggle Button Overlap Fix (`styled.ts`, `maps-page/index.tsx`, `drawer-nav/index.tsx`)**: Removed `zIndex: 1300` from `MobileDrawerToggle` and `DesktopDrawerToggle` which caused the mobile hamburger menu icon to sit on top of the open drawer's `LogoBox` (MUI Drawer zIndex: 1200). Added `display: none` to `WorkspaceTopBar` when `mobileDrawerOpen === true`, and added a mobile close button inside `LogoBox`.
+
+---
+
 ## Deviations
 
 1. **Git Backup Tag Naming (`backup-java-original` + `backup-java-original-tag`)**

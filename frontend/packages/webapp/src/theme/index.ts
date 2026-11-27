@@ -177,9 +177,18 @@ const createAppTheme = (mode: PaletteMode): Theme => {
       ...createDialogComponents(isLight),
     },
     typography: {
-      fontFamily: ['Figtree', 'Noto Sans JP', 'Helvetica', 'system-ui', 'Arial', 'sans-serif'].join(
-        ',',
-      ),
+      fontFamily: [
+        '-apple-system',
+        'BlinkMacSystemFont',
+        '"SF Pro Text"',
+        '"PingFang SC"',
+        '"Hiragino Sans GB"',
+        '"Microsoft YaHei"',
+        '"微软雅黑"',
+        'Figtree',
+        'system-ui',
+        'sans-serif',
+      ].join(','),
       h4: {
         color: isLight ? '#ffa800' : '#cc8500',
         fontWeight: 600,

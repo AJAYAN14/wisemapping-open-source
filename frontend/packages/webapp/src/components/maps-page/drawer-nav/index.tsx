@@ -17,6 +17,7 @@
  */
 import React, { ReactElement } from 'react';
 import Box from '@mui/material/Box';
+import IconButton from '@mui/material/IconButton';
 import List from '@mui/material/List';
 import Tooltip from '@mui/material/Tooltip';
 import NavigateBeforeRoundedIcon from '@mui/icons-material/NavigateBeforeRounded';
@@ -61,6 +62,7 @@ export interface DrawerNavProps {
   onFilterClick: (filter: Filter) => void;
   onLabelDelete: (id: number) => void;
   onToggleDesktopDrawer?: (() => void) | undefined;
+  onCloseMobileDrawer?: (() => void) | undefined;
   userMenu?: React.ReactNode;
 }
 
@@ -76,6 +78,7 @@ const DrawerNav = ({
   onFilterClick,
   onLabelDelete,
   onToggleDesktopDrawer,
+  onCloseMobileDrawer,
   userMenu,
 }: DrawerNavProps): ReactElement => {
   const intl = useIntl();
@@ -171,6 +174,24 @@ const DrawerNav = ({
               )}
             </DesktopDrawerToggle>
           </Tooltip>
+        )}
+        {onCloseMobileDrawer && (
+          <IconButton
+            aria-label={intl.formatMessage({
+              id: 'common.close-drawer',
+              defaultMessage: '收起侧边栏',
+            })}
+            onClick={onCloseMobileDrawer}
+            sx={{
+              ml: 'auto',
+              display: { xs: 'inline-flex', sm: 'none' },
+              color: 'text.secondary',
+              padding: '6px',
+              borderRadius: '10px',
+            }}
+          >
+            <NavigateBeforeRoundedIcon />
+          </IconButton>
         )}
       </LogoBox>
 

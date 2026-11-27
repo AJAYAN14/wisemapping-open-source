@@ -744,7 +744,10 @@ const MapsPage = (): ReactElement => {
     }),
   );
 
-  const renderDrawerItems = (includeDesktopToggle: boolean) => (
+  const renderDrawerItems = (
+    includeDesktopToggle: boolean,
+    onCloseMobile?: () => void,
+  ) => (
     <DrawerNav
       account={account}
       drawerOpen={includeDesktopToggle ? desktopDrawerOpen : true}
@@ -753,6 +756,7 @@ const MapsPage = (): ReactElement => {
       onFilterClick={handleMenuClick}
       onLabelDelete={setLabelToDelete}
       onToggleDesktopDrawer={includeDesktopToggle ? handleDesktopDrawerToggle : undefined}
+      onCloseMobileDrawer={onCloseMobile}
       userMenu={
         <AccountMenu
           variant="sidebar"
@@ -1048,13 +1052,13 @@ const MapsPage = (): ReactElement => {
             keepMounted: true,
           }}
         >
-          {renderDrawerItems(false)}
+          {renderDrawerItems(false, handleMobileDrawerToggle)}
         </MobileDrawer>
         <DesktopDrawer variant="permanent" expanded={desktopDrawerOpen}>
           {renderDrawerItems(true)}
         </DesktopDrawer>
         <PageContent role="main">
-          <WorkspaceTopBar>
+          <WorkspaceTopBar sx={{ display: mobileDrawerOpen ? 'none' : undefined }}>
             <MobileDrawerToggle
               aria-label={intl.formatMessage({
                 id: 'common.open-drawer',

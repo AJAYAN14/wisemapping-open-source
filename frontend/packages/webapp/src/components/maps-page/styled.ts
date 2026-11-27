@@ -283,8 +283,6 @@ export const MobileDrawerToggle = styled(IconButton)(({ theme }) => {
     [theme.breakpoints.up('sm')]: {
       display: 'none',
     },
-    zIndex: 1300,
-    position: 'relative',
   };
 });
 
@@ -347,8 +345,6 @@ export const DesktopDrawerToggle = styled(IconButton)(({ theme }) => {
     [theme.breakpoints.up('sm')]: {
       display: 'inline-flex',
     },
-    zIndex: 1300,
-    position: 'relative',
   };
 });
 

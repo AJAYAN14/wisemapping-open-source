@@ -25,7 +25,7 @@ import type { CSSObject, Theme } from '@mui/material/styles';
  */
 
 export const APPLE_FONT_STACK =
-  '"SF Pro Rounded", -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "PingFang SC", "Hiragino Maru Gothic ProN", "Hiragino Sans GB", Figtree, system-ui, sans-serif';
+  '-apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "微软雅黑", Figtree, system-ui, sans-serif';
 
 export interface AppleColorTokens {
   canvas: string;
