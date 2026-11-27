@@ -204,4 +204,55 @@ describe('functions db pool config & RLS transaction wrapper', () => {
     expect(appQueries2).toHaveLength(1);
     expect(appQueries2[0]).toContain('SELECT id, owner_id');
   });
+
+  it('lists maps with aggregated labels in a single SQL query', async () => {
+    const queries: string[] = [];
+    const fakePool: PoolLike = {
+      async connect() {
+        return {
+          async query(text: string) {
+            queries.push(text);
+            if (text.includes('FROM public.mindmaps')) {
+              return {
+                rows: [
+                  {
+                    id: 7,
+                    owner_id: TEST_UID,
+                    title: '首页导图',
+                    description: '',
+                    folder_id: null,
+                    folder_path: '',
+                    xml: '<map/>',
+                    properties: '{"zoom":0.8}',
+                    starred: true,
+                    version: 1,
+                    last_modification_by: 'Owner',
+                    creation_time: new Date('2026-01-01T00:00:00Z'),
+                    last_modification_time: new Date('2026-01-02T00:00:00Z'),
+                    last_open_time: new Date('2026-01-03T00:00:00Z'),
+                    labels_json: [{ id: 1, title: '工作', color: '#007AFF' }],
+                  },
+                ],
+                rowCount: 1,
+              } as never;
+            }
+            return { rows: [], rowCount: 0 } as never;
+          },
+          release() {},
+        } as never;
+      },
+    };
+
+    const repo = new PgMindmapRepository(fakePool);
+    const user = { uid: TEST_UID, email: 'a.jian0629@gmail.com', name: 'Owner' };
+    const maps = await repo.listMaps(user);
+
+    expect(maps).toHaveLength(1);
+    expect(maps[0]?.labels).toEqual([{ id: 1, title: '工作', color: '#007AFF' }]);
+    const appQueries = queries.filter(
+      (q) => !q.startsWith('BEGIN') && !q.startsWith('COMMIT') && !q.includes('set_config') && !q.startsWith('SET LOCAL'),
+    );
+    expect(appQueries).toHaveLength(1);
+    expect(appQueries[0]).toContain('labels_json');
+  });
 });

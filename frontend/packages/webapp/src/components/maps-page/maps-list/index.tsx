@@ -33,6 +33,7 @@ import { RADIUS_LG } from '../appleDesign';
 import { ErrorInfo, Folder, MapInfo } from '../../../classes/client';
 import { ClientContext } from '../../../classes/provider/client-context';
 import { buildLoginRedirectUrl, isAuthErrorInfo, leaveTo } from '../../../utils/redirect';
+import { clearHomeCache } from '../../../utils/homeCache';
 import { Filter } from '..';
 import { MAP_IDS_DRAG_MIME } from '../folderTree';
 import ActionChooser, { ActionType } from '../action-chooser';
@@ -156,6 +157,7 @@ export const MapsList = ({
   const isAuthFailed = mapsLoadFailed && isAuthErrorInfo(mapsError);
   useEffect(() => {
     if (isAuthFailed) {
+      clearHomeCache();
       leaveTo(buildLoginRedirectUrl());
     }
   }, [isAuthFailed]);

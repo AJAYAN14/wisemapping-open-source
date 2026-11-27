@@ -22,8 +22,10 @@ import { mapMetadataByPathQueryKey } from '../classes/middleware';
 import queryClient from '../queryClient';
 
 type EditorModule = typeof import('../components/editor-page');
+type MapsPageModule = typeof import('../components/maps-page');
 
 let editorModulePromise: Promise<EditorModule> | undefined;
+let mapsPageModulePromise: Promise<MapsPageModule> | undefined;
 let editorMessagesPromise: Promise<unknown> | undefined;
 
 /** Loads the lazy EditorPage chunk once and reuses the in-flight promise. */
@@ -35,6 +37,17 @@ export const loadEditorPage = (): Promise<EditorModule> => {
     });
   }
   return editorModulePromise;
+};
+
+/** Loads the lazy MapsPage chunk once and reuses the in-flight promise. */
+export const loadMapsPage = (): Promise<MapsPageModule> => {
+  if (!mapsPageModulePromise) {
+    mapsPageModulePromise = import('../components/maps-page').catch((error) => {
+      mapsPageModulePromise = undefined;
+      throw error;
+    });
+  }
+  return mapsPageModulePromise;
 };
 
 /** Preloads both the EditorPage JS chunk and editor locale messages. */
@@ -73,6 +86,36 @@ export const scheduleIdleEditorPreload = (): (() => void) => {
   const timerId = window.setTimeout(() => {
     void preloadEditorResources();
   }, 400);
+  return () => window.clearTimeout(timerId);
+};
+
+/**
+ * Schedules low-priority idle preloading of the MapsPage chunk while inside the
+ * editor (important when the user entered directly via a map URL and clicks Back).
+ */
+export const scheduleIdleMapsPreload = (): (() => void) => {
+  if (typeof window === 'undefined') {
+    return () => undefined;
+  }
+
+  const win = window as Window & {
+    requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+    cancelIdleCallback?: (handle: number) => void;
+  };
+
+  if (typeof win.requestIdleCallback === 'function') {
+    const idleId = win.requestIdleCallback(
+      () => {
+        void loadMapsPage().catch(() => undefined);
+      },
+      { timeout: 1500 },
+    );
+    return () => win.cancelIdleCallback?.(idleId);
+  }
+
+  const timerId = window.setTimeout(() => {
+    void loadMapsPage().catch(() => undefined);
+  }, 600);
   return () => window.clearTimeout(timerId);
 };
 

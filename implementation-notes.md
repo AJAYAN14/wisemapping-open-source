@@ -6,7 +6,18 @@
 
 ---
 
-## Latest Fixes (v6.0.36)
+## Latest Fixes (v6.0.37)
+
+- **Instant Fresh-Tab & Back-to-Home Rendering (`homeCache.ts`, `maps-page/loader.ts`, `app.tsx`, `rest-client/index.ts`, `maps-list/index.tsx`)**:
+  - Added user-scoped localStorage SWR snapshot hydration (`hydrateHomeCacheIntoQueryClient`, keyed by non-expired JWT subject `sub`, cleared on `logout` and auth errors) with `updatedAt: 0` so fresh browser tabs render the cached maps list, labels, folders, and account immediately while silently revalidating in the background.
+  - Updated `mapsPageLoader` to prefetch `['folders']` and `['account']` in parallel alongside `['maps']` and `['labels']`, and skip blocking navigation whenever cached `['maps']` data is already present (both fresh-tab SWR hydration and back-to-home transitions).
+  - Preloaded the `MapsPage` chunk at boot in `app.tsx` when landing on `/` and during editor idle time via `scheduleIdleMapsPreload` in `editor-page/index.tsx`.
+- **Lazy-Split Homepage Action Dialogs (`action-dispatcher/index.tsx`)**:
+  - Converted all 8 remaining action dialogs (`CreateDialog`, `RenameDialog`, `DeleteDialog`, `DuplicateDialog`, `HistoryDialog`, `DeleteMultiselectDialog`, `LabelDialog`, `MoveFolderDialog`) to `React.lazy`, cutting unused dialog code out of the initial `MapsPage` bundle.
+- **Single-Query Backend `listMaps` (`api/_core/lib/repo.ts`)**:
+  - Merged the separate `fetchLabelsForMaps` SQL roundtrip into `PgMindmapRepository.listMaps` via correlated `json_agg` (`labels_json`), reducing homepage list fetching from 2 DB queries to 1.
+
+## Previous Fixes (v6.0.36)
 
 - **SPA Map Opening & Idle/Intent Preloading (`appNavigation.ts`, `editorPreload.ts`, `app.tsx`, `MapRow.tsx`, `MapGridCard.tsx`, `MapCard.tsx`, `action-dispatcher/`, `maps-page/index.tsx`, `editor-page/loader.ts`, `editor-page/index.tsx`)**:
   - Replaced full-document `<a href>` / `window.location.href` transitions on map rows, grid cards, mobile cards, and create/duplicate/open/import/back actions with an in-app SPA router bridge (`navigateTo` / `handleSpaLinkClick`) that uses `router.navigate(...)` while preserving middle-click / modifier-key / context-menu new-tab behavior and falling back safely when no router is mounted.

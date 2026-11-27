@@ -55,10 +55,14 @@ import AppConfig from './classes/app-config';
 import { useFetchAccount } from './classes/middleware';
 import { parseMapRouteSplat } from './utils/mapPath';
 import { registerRouterNavigate } from './utils/appNavigation';
-import { loadEditorPage } from './utils/editorPreload';
+import { loadEditorPage, loadMapsPage } from './utils/editorPreload';
+import {
+  hydrateHomeCacheIntoQueryClient,
+  subscribeHomeCachePersistence,
+} from './utils/homeCache';
 
 const EditorPage = React.lazy(loadEditorPage);
-const MapsPage = React.lazy(() => import('./components/maps-page'));
+const MapsPage = React.lazy(loadMapsPage);
 
 const LegacyMapWildcardRedirect = (): ReactElement => {
   const splat = useParams()['*'];
@@ -191,7 +195,18 @@ const AppWithTheme = (): ReactElement => {
   const [router, setRouter] = useState<ReturnType<typeof createBrowserRouter> | undefined>(() => {
     const syncConfig =
       typeof AppConfig.tryInitializeSync === 'function' ? AppConfig.tryInitializeSync() : undefined;
-    return syncConfig ? buildRouter() : undefined;
+    if (!syncConfig) {
+      return undefined;
+    }
+    hydrateHomeCacheIntoQueryClient(queryClient);
+    subscribeHomeCachePersistence(queryClient);
+    if (
+      typeof window !== 'undefined' &&
+      (window.location.pathname === '/' || window.location.pathname.startsWith('/c/maps'))
+    ) {
+      void loadMapsPage().catch(() => undefined);
+    }
+    return buildRouter();
   });
   const [initializationError, setInitializationError] = useState<string>();
 

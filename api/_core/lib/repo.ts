@@ -213,6 +213,7 @@ interface RawMindmapRow {
   creation_time: Date | string;
   last_modification_time: Date | string;
   last_open_time?: Date | string | null;
+  labels_json?: unknown;
 }
 
 interface RawFolderRow {
@@ -250,6 +251,22 @@ function toInt(val: string | number): number {
 
 function toIso(val: Date | string): string {
   return val instanceof Date ? val.toISOString() : new Date(val).toISOString();
+}
+
+function parseLabelsJson(raw: unknown): LabelDto[] {
+  const arr = typeof raw === 'string' ? (JSON.parse(raw) as unknown) : raw;
+  if (!Array.isArray(arr)) {
+    return [];
+  }
+  return arr
+    .filter((item): item is { id: string | number; title: string; color: string } =>
+      Boolean(item && typeof item === 'object' && 'id' in item && 'title' in item),
+    )
+    .map((item) => ({
+      id: toInt(item.id),
+      title: String(item.title),
+      color: typeof item.color === 'string' ? item.color : '',
+    }));
 }
 
 function mapMindmapRow(row: RawMindmapRow): MindmapRecord {
@@ -457,26 +474,41 @@ export class PgMindmapRepository implements MindmapRepository {
     }
 
     return this.runInTx(user, async (client) => {
+      const labelsSelect = `COALESCE(
+        (
+          SELECT json_agg(
+            json_build_object('id', l.id, 'title', l.title, 'color', l.color)
+            ORDER BY l.id ASC
+          )
+          FROM public.mindmap_labels ml
+          INNER JOIN public.labels l ON l.id = ml.label_id
+          WHERE ml.owner_id = m.owner_id AND ml.mindmap_id = m.id
+        ),
+        '[]'::json
+      ) AS labels_json`;
+
       let rows: RawMindmapRow[];
 
       if (normalizedFilter === '' || normalizedFilter === 'all' || normalizedFilter === 'my_maps') {
         const res = await client.query<RawMindmapRow>(
-          `SELECT id, owner_id, title, description, folder_id, folder_path, xml, properties, starred, version,
-                  last_modification_by, creation_time, last_modification_time, last_open_time
-           FROM public.mindmaps
-           WHERE owner_id = $1
-           ORDER BY last_modification_time DESC, id DESC
+          `SELECT m.id, m.owner_id, m.title, m.description, m.folder_id, m.folder_path, m.xml, m.properties, m.starred, m.version,
+                  m.last_modification_by, m.creation_time, m.last_modification_time, m.last_open_time,
+                  ${labelsSelect}
+           FROM public.mindmaps m
+           WHERE m.owner_id = $1
+           ORDER BY m.last_modification_time DESC, m.id DESC
            LIMIT 500`,
           [user.uid],
         );
         rows = res.rows;
       } else if (normalizedFilter === 'starred') {
         const res = await client.query<RawMindmapRow>(
-          `SELECT id, owner_id, title, description, folder_id, folder_path, xml, properties, starred, version,
-                  last_modification_by, creation_time, last_modification_time, last_open_time
-           FROM public.mindmaps
-           WHERE owner_id = $1 AND starred = TRUE
-           ORDER BY last_modification_time DESC, id DESC
+          `SELECT m.id, m.owner_id, m.title, m.description, m.folder_id, m.folder_path, m.xml, m.properties, m.starred, m.version,
+                  m.last_modification_by, m.creation_time, m.last_modification_time, m.last_open_time,
+                  ${labelsSelect}
+           FROM public.mindmaps m
+           WHERE m.owner_id = $1 AND m.starred = TRUE
+           ORDER BY m.last_modification_time DESC, m.id DESC
            LIMIT 500`,
           [user.uid],
         );
@@ -484,11 +516,12 @@ export class PgMindmapRepository implements MindmapRepository {
       } else {
         const res = await client.query<RawMindmapRow>(
           `SELECT m.id, m.owner_id, m.title, m.description, m.folder_id, m.folder_path, m.xml, m.properties, m.starred, m.version,
-                  m.last_modification_by, m.creation_time, m.last_modification_time, m.last_open_time
+                  m.last_modification_by, m.creation_time, m.last_modification_time, m.last_open_time,
+                  ${labelsSelect}
            FROM public.mindmaps m
-           INNER JOIN public.mindmap_labels ml ON ml.mindmap_id = m.id
-           INNER JOIN public.labels l ON l.id = ml.label_id
-           WHERE m.owner_id = $1 AND l.owner_id = $1 AND l.title = $2
+           INNER JOIN public.mindmap_labels ml_filter ON ml_filter.mindmap_id = m.id
+           INNER JOIN public.labels l_filter ON l_filter.id = ml_filter.label_id
+           WHERE m.owner_id = $1 AND l_filter.owner_id = $1 AND l_filter.title = $2
            ORDER BY m.last_modification_time DESC, m.id DESC
            LIMIT 500`,
           [user.uid, normalizedFilter],
@@ -496,16 +529,9 @@ export class PgMindmapRepository implements MindmapRepository {
         rows = res.rows;
       }
 
-      const records = rows.map(mapMindmapRow);
-      const labelMap = await this.fetchLabelsForMaps(
-        client,
-        user.uid,
-        records.map((r) => r.id),
-      );
-
-      return records.map((record) => ({
-        ...record,
-        labels: labelMap.get(record.id) ?? [],
+      return rows.map((row) => ({
+        ...mapMindmapRow(row),
+        labels: parseLabelsJson(row.labels_json),
       }));
     });
   }

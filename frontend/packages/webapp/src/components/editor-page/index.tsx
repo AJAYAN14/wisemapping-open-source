@@ -46,6 +46,7 @@ import { createThemeVariantStorage } from '../../services/createThemeVariantStor
 import type { ActionType } from '../maps-page/action-chooser';
 import { uploadBlobToMapAssets } from '../../utils/mapAssets';
 import { buildMapEditPath } from '../../utils/mapPath';
+import { scheduleIdleMapsPreload } from '../../utils/editorPreload';
 
 const escapeXmlAttr = (value: string): string =>
   value
@@ -238,6 +239,8 @@ const LoadedEditorPage = ({
       queryClient.invalidateQueries({ queryKey: ['maps'] });
     };
   }, [mapId]);
+
+  useEffect(() => scheduleIdleMapsPreload(), []);
 
   const editorName =
     account?.fullName?.trim() ||

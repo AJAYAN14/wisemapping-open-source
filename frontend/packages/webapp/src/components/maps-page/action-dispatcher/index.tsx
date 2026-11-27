@@ -17,17 +17,9 @@
  */
 
 import React, { Suspense, use, useEffect } from 'react';
-import RenameDialog from './rename-dialog';
-import DeleteDialog from './delete-dialog';
 import { ActionType } from '../action-chooser';
 import { PageModeType } from '../../editor-page/loader';
 import { QueryClient, useQueryClient } from '@tanstack/react-query';
-import DuplicateDialog from './duplicate-dialog';
-import CreateDialog from './create-dialog';
-import HistoryDialog from './history-dialog';
-import DeleteMultiselectDialog from './delete-multiselect-dialog';
-import LabelDialog from './label-dialog';
-import MoveFolderDialog from './move-folder-dialog';
 import type { Designer } from '@wisemapping/editor';
 import { ClientContext } from '../../../classes/provider/client-context';
 import { MapInfo, MapMetadata } from '../../../classes/client';
@@ -35,7 +27,15 @@ import { mapMetadataQueryKey } from '../../../classes/middleware';
 import { buildMapEditPath } from '../../../utils/mapPath';
 import { navigateTo } from '../../../utils/appNavigation';
 
-// Uses the editor's exporters: loaded lazily on demand.
+// Dialogs are loaded lazily on demand so the maps list page stays lean on first load.
+const RenameDialog = React.lazy(() => import('./rename-dialog'));
+const DeleteDialog = React.lazy(() => import('./delete-dialog'));
+const DuplicateDialog = React.lazy(() => import('./duplicate-dialog'));
+const CreateDialog = React.lazy(() => import('./create-dialog'));
+const HistoryDialog = React.lazy(() => import('./history-dialog'));
+const DeleteMultiselectDialog = React.lazy(() => import('./delete-multiselect-dialog'));
+const LabelDialog = React.lazy(() => import('./label-dialog'));
+const MoveFolderDialog = React.lazy(() => import('./move-folder-dialog'));
 const ExportDialog = React.lazy(() => import('./export-dialog'));
 
 export type BasicMapInfo = {

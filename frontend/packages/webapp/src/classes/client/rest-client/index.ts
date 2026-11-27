@@ -37,6 +37,7 @@ import Client, {
 import AppI18n, { Locale, LocaleCode, Locales, localeFromStr } from '../../app-i18n';
 import JwtTokenConfig from '../../jwt-token-config';
 import { appLogger as log } from '../../../utils/logger';
+import { clearHomeCache } from '../../../utils/homeCache';
 import { describeHttpError } from '../http-error';
 
 export default class RestClient implements Client {
@@ -164,6 +165,7 @@ export default class RestClient implements Client {
   }
 
   async logout(): Promise<void> {
+    clearHomeCache();
     JwtTokenConfig.removeToken();
 
     // Kill backend session ...
@@ -215,6 +217,7 @@ export default class RestClient implements Client {
   }
 
   private sessionExpired() {
+    clearHomeCache();
     if (this._onSessionExpired) {
       this._onSessionExpired();
     }

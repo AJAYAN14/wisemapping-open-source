@@ -104,9 +104,9 @@ describe('ActionDispatcher', () => {
     expect(screen.getAllByRole('button')).toHaveLength(1);
   });
 
-  test("a dialog's result is passed on to onClose", () => {
+  test("a dialog's result is passed on to onClose", async () => {
     const { onClose } = dispatch('rename', [5]);
-    fireEvent.click(screen.getByRole('button'));
+    fireEvent.click(await screen.findByRole('button'));
     expect(onClose).toHaveBeenCalledWith(true);
   });
 

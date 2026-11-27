@@ -79,4 +79,31 @@ describe('mapsPageLoader', () => {
       expect(leaveSpy).toHaveBeenCalledWith('/login?redirect=%2F');
     }
   });
+
+  test('returns immediately without awaiting network when cached maps already exist', async () => {
+    const staleMaps = [{ id: 1, title: 'Cached Plan' }];
+    queryClient.setQueryData(['maps'], staleMaps, { updatedAt: 0 });
+
+    let resolveMaps!: (v: unknown) => void;
+    const fetchAllMaps = jest.fn(
+      () =>
+        new Promise((resolve) => {
+          resolveMaps = resolve;
+        }),
+    );
+    const fetchFolders = jest.fn().mockResolvedValue([]);
+    const fetchAccountInfo = jest.fn().mockResolvedValue({ email: 'a@b.com' });
+    jest.spyOn(AppConfig, 'getClient').mockReturnValue({
+      fetchAllMaps,
+      fetchLabels: jest.fn().mockResolvedValue([]),
+      fetchFolders,
+      fetchAccountInfo,
+    } as unknown as Client);
+
+    await expect(mapsPageLoader()).resolves.toBeNull();
+    expect(fetchAllMaps).toHaveBeenCalledTimes(1);
+    expect(fetchFolders).toHaveBeenCalledTimes(1);
+    expect(fetchAccountInfo).toHaveBeenCalledTimes(1);
+    resolveMaps([{ id: 1, title: 'Fresh Plan' }]);
+  });
 });
