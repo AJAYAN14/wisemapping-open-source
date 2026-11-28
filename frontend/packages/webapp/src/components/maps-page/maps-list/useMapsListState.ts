@@ -76,6 +76,7 @@ export interface MapsListState {
   page: number;
   rowsPerPage: number;
   selected: number[];
+  selectedFolders: number[];
   /** Direct subfolders of the active folder matching search, in display sort order. */
   childFolders: Folder[];
   /** The subfolders shown on the current page. */
@@ -93,9 +94,11 @@ export interface MapsListState {
   changeRowsPerPage: (count: number) => void;
   changeSearch: (value: string) => void;
   toggleSelected: (id: number) => void;
+  toggleFolderSelected: (id: number) => void;
   selectAll: (checked: boolean) => void;
   clearSelection: () => void;
   isSelected: (id: number) => boolean;
+  isFolderSelected: (id: number) => boolean;
 }
 
 const getMapComparator = (
@@ -131,6 +134,7 @@ export const useMapsListState = (
   const [requestedPage, setRequestedPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
   const [selected, setSelected] = useState<number[]>([]);
+  const [selectedFolders, setSelectedFolders] = useState<number[]>([]);
 
   // Adjusted while rendering, not in an effect: the list never shows a frame of the old entry's
   // selection or page.
@@ -139,6 +143,7 @@ export const useMapsListState = (
   if (seenKey !== key) {
     setSeenKey(key);
     setSelected([]);
+    setSelectedFolders([]);
     setRequestedPage(0);
   }
 
@@ -148,6 +153,15 @@ export const useMapsListState = (
         ? getChildFolders(folders, filter.folderId ?? null, search, order, orderBy)
         : NO_FOLDERS,
     [filter, folders, search, order, orderBy],
+  );
+
+  const visibleFolderIds = useMemo(
+    () => new Set(childFolders.map((folder) => folder.id)),
+    [childFolders],
+  );
+  const activeSelectedFolders = useMemo(
+    () => selectedFolders.filter((id) => visibleFolderIds.has(id)),
+    [selectedFolders, visibleFolderIds],
   );
 
   const filteredMaps = useMemo(
@@ -180,6 +194,7 @@ export const useMapsListState = (
   const changeSearch = useCallback((value: string): void => {
     setSearch(value);
     setSelected([]);
+    setSelectedFolders([]);
     setRequestedPage(0);
   }, []);
   const changePage = useCallback((newPage: number): void => setRequestedPage(newPage), []);
@@ -198,7 +213,17 @@ export const useMapsListState = (
       ),
     [],
   );
-  const clearSelection = useCallback((): void => setSelected([]), []);
+  const toggleFolderSelected = useCallback(
+    (id: number): void =>
+      setSelectedFolders((current) =>
+        current.includes(id) ? current.filter((other) => other !== id) : [...current, id],
+      ),
+    [],
+  );
+  const clearSelection = useCallback((): void => {
+    setSelected([]);
+    setSelectedFolders([]);
+  }, []);
 
   const persistSort = (nextOrderBy: keyof MapInfo, nextOrder: Order): void => {
     setOrderBy(nextOrderBy);
@@ -215,6 +240,7 @@ export const useMapsListState = (
     page,
     rowsPerPage,
     selected,
+    selectedFolders: activeSelectedFolders,
     childFolders,
     pagedFolders,
     filteredMaps,
@@ -236,10 +262,14 @@ export const useMapsListState = (
     changeRowsPerPage,
     changeSearch,
     toggleSelected,
-    /** Every map the entry and the search list, on every page. */
-    selectAll: (checked: boolean): void =>
-      setSelected(checked ? filteredMaps.map((map) => map.id) : []),
+    toggleFolderSelected,
+    /** Every map and folder the entry and the search list include, on every page. */
+    selectAll: (checked: boolean): void => {
+      setSelected(checked ? filteredMaps.map((map) => map.id) : []);
+      setSelectedFolders(checked ? childFolders.map((folder) => folder.id) : []);
+    },
     clearSelection,
     isSelected: (id: number): boolean => selected.includes(id),
+    isFolderSelected: (id: number): boolean => activeSelectedFolders.includes(id),
   };
 };

@@ -187,6 +187,7 @@ export interface MindmapRepository {
   listFolders(user: RepoUser): Promise<FolderDto[]>;
   createFolder(user: RepoUser, input: CreateFolderInput): Promise<FolderDto>;
   updateFolder(user: RepoUser, folderId: number, input: UpdateFolderInput): Promise<FolderDto>;
+  moveFoldersToFolder(user: RepoUser, folderIds: number[], parentId: number | null): Promise<void>;
   deleteFolder(user: RepoUser, folderId: number): Promise<void>;
   moveMapsToFolder(user: RepoUser, mapIds: number[], folderId: number | null): Promise<void>;
   listAllXmlForOwner(user: RepoUser): Promise<string[]>;
@@ -1501,6 +1502,76 @@ export class PgMindmapRepository implements MindmapRepository {
 
       await this.syncFolderPathsTx(client, user.uid);
       return mapFolderRow(updated);
+    });
+  }
+
+  async moveFoldersToFolder(
+    user: RepoUser,
+    folderIds: number[],
+    parentId: number | null,
+  ): Promise<void> {
+    const uniqueIds = Array.from(new Set(folderIds));
+    if (uniqueIds.length === 0) {
+      return;
+    }
+
+    await this.runInTx(user, async (client) => {
+      const folders = await this.fetchAllFoldersTx(client, user.uid);
+      const byId = new Map(folders.map((f) => [f.id, f]));
+
+      const movingFolders: FolderDto[] = [];
+      for (const folderId of uniqueIds) {
+        const existing = byId.get(folderId);
+        if (!existing) {
+          throw new NotFoundOrForbiddenError('Folder could not be found.', 'FOLDER_NOT_FOUND');
+        }
+        movingFolders.push(existing);
+      }
+
+      const movingSet = new Set(uniqueIds);
+      if (parentId !== null) {
+        if (!byId.has(parentId)) {
+          throw new NotFoundOrForbiddenError('Parent folder could not be found.', 'FOLDER_NOT_FOUND');
+        }
+        const visited = new Set<number>();
+        let cur: number | null = parentId;
+        while (cur !== null && !visited.has(cur)) {
+          if (movingSet.has(cur)) {
+            throw new RepoValidationError(
+              ['不能将文件夹移动到自身或其子文件夹下。'],
+              { parentId: '不能将文件夹移动到自身或其子文件夹下。' },
+              'FOLDER_CYCLE',
+            );
+          }
+          visited.add(cur);
+          cur = byId.get(cur)?.parentId ?? null;
+        }
+      }
+
+      const occupiedNames = new Set(
+        folders
+          .filter((f) => f.parentId === parentId && !movingSet.has(f.id))
+          .map((f) => f.name),
+      );
+      for (const folder of movingFolders) {
+        if (occupiedNames.has(folder.name)) {
+          throw new RepoValidationError(
+            [`目标目录下已存在同名文件夹“${folder.name}”。`],
+            { name: `目标目录下已存在同名文件夹“${folder.name}”。` },
+            'DUPLICATE_FOLDER_NAME',
+          );
+        }
+        occupiedNames.add(folder.name);
+      }
+
+      await client.query(
+        `UPDATE public.folders
+         SET parent_id = $1, updated_time = NOW()
+         WHERE owner_id = $2 AND id = ANY($3::bigint[])`,
+        [parentId, user.uid, uniqueIds],
+      );
+
+      await this.syncFolderPathsTx(client, user.uid);
     });
   }
 

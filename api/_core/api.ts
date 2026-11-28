@@ -630,6 +630,24 @@ export function createApiHandler(
         }
       }
 
+      // Batch move folders to parent endpoint (must match before /folders/{id})
+      if (path === '/folders/batch/parent' && method === 'PUT') {
+        const body = await readJsonBody<{ folderIds?: unknown; parentId?: unknown }>(req);
+        if (!Array.isArray(body.folderIds) || body.folderIds.length === 0) {
+          throw new BadRequestError(['Missing required field: folderIds.'], {
+            globalSeverity: 'WARNING',
+            errorCode: 'INVALID_BATCH_IDS',
+          });
+        }
+        const folderIds = body.folderIds.map((id) => parsePositiveInt(String(id), 'folderIds'));
+        const parentId =
+          body.parentId === null || body.parentId === undefined
+            ? null
+            : parsePositiveInt(String(body.parentId), 'parentId');
+        await repo.moveFoldersToFolder(user, folderIds, parentId);
+        return emptyResponse(req, 204);
+      }
+
       // PUT/DELETE /folders/{id}
       const folderMatch = /^\/folders\/([^/]+)$/.exec(path);
       if (folderMatch) {

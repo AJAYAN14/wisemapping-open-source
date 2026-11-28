@@ -691,6 +691,23 @@ export default class RestClient implements Client {
       .catch((error) => Promise.reject(this.parseResponseOnError(error.response)));
   }
 
+  moveFoldersToFolder(folderIds: number[], parentId: number | null): Promise<void> {
+    if (folderIds.length === 0) {
+      return Promise.resolve();
+    }
+    if (folderIds.length === 1) {
+      return this.updateFolder(folderIds[0]!, { parentId }).then(() => undefined);
+    }
+    return this.axios
+      .put(
+        `${this.baseUrl}/api/restful/folders/batch/parent`,
+        { folderIds, parentId },
+        { headers: { 'Content-Type': 'application/json' } },
+      )
+      .then(() => undefined)
+      .catch((error) => Promise.reject(this.parseResponseOnError(error.response)));
+  }
+
   deleteFolder(id: number): Promise<void> {
     return this.axios
       .delete(`${this.baseUrl}/api/restful/folders/${id}`)

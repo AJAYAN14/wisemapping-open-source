@@ -26,6 +26,8 @@ import Menu from '@mui/material/Menu';
 import MenuItem from '@mui/material/MenuItem';
 import TableRow from '@mui/material/TableRow';
 import Tooltip from '@mui/material/Tooltip';
+import CheckBoxOutlineBlankRoundedIcon from '@mui/icons-material/CheckBoxOutlineBlankRounded';
+import CheckBoxRoundedIcon from '@mui/icons-material/CheckBoxRounded';
 import type { Folder } from '../../../classes/client';
 import { useDate } from '../../../classes/app-i18n/dates';
 import { GoogleIcon } from '../../common/google-symbol';
@@ -44,6 +46,7 @@ import {
   BreadcrumbTrail,
   CardActionsGroup,
   CardMetaText,
+  CardSelectBox,
   CardTitle,
   CellText,
   CompactCardHeader,
@@ -51,12 +54,14 @@ import {
   FolderGridCardPreview,
   GridCardActionsOverlay,
   GridCardBody,
+  GridCardCheckboxOverlay,
   GridCardMeta,
   GridCardRoot,
   GridCardTitle,
   LabelsBodyCell,
   MapCardRoot,
   MapRowTitleWrap,
+  SelectCheckbox,
 } from './styled';
 
 export type FolderMenuState = {
@@ -150,11 +155,16 @@ export function useFolderDropTarget(
 interface FolderItemProps extends FolderItemHandlers {
   folder: Folder;
   count?: FolderDirectCount | undefined;
+  selected?: boolean;
+  hasAnySelected?: boolean;
+  onToggleSelected?: ((folderId: number) => void) | undefined;
 }
 
 const FolderRowComponent = ({
   folder,
   count,
+  selected = false,
+  onToggleSelected,
   onOpenFolder,
   onOpenMenu,
   onContextMenu,
@@ -176,6 +186,7 @@ const FolderRowComponent = ({
   return (
     <TableRow
       hover
+      selected={selected}
       onClick={() => onOpenFolder(folder.id)}
       onContextMenu={(e) => onContextMenu(folder, e)}
       onDragOver={onDragOver}
@@ -196,7 +207,35 @@ const FolderRowComponent = ({
         };
       }}
     >
-      <BodyCell padding="checkbox" />
+      <BodyCell
+        padding="checkbox"
+        onClick={
+          onToggleSelected
+            ? (e) => {
+                e.stopPropagation();
+                if (e.target === e.currentTarget) {
+                  onToggleSelected(folder.id);
+                }
+              }
+            : undefined
+        }
+      >
+        {onToggleSelected && (
+          <SelectCheckbox
+            checked={selected}
+            onClick={(e) => e.stopPropagation()}
+            onChange={() => onToggleSelected(folder.id)}
+            size="small"
+            icon={<CheckBoxOutlineBlankRoundedIcon fontSize="small" />}
+            checkedIcon={<CheckBoxRoundedIcon fontSize="small" />}
+            slotProps={{
+              input: {
+                'aria-label': `选择文件夹 ${folder.name}`,
+              },
+            }}
+          />
+        )}
+      </BodyCell>
       <BodyCell>
         <MapRowTitleWrap>
           <FolderGlyphBadge aria-hidden="true">
@@ -337,6 +376,9 @@ const GridFolderSvgIcon = (): React.ReactElement => {
 const FolderGridCardComponent = ({
   folder,
   count,
+  selected = false,
+  hasAnySelected = false,
+  onToggleSelected,
   onOpenFolder,
   onOpenMenu,
   onContextMenu,
@@ -357,7 +399,7 @@ const FolderGridCardComponent = ({
 
   return (
     <GridCardRoot
-      selected={isDragTarget}
+      selected={selected || isDragTarget}
       dragTarget={isDragTarget}
       onClick={() => onOpenFolder(folder.id)}
       onContextMenu={(e) => onContextMenu(folder, e)}
@@ -368,6 +410,26 @@ const FolderGridCardComponent = ({
     >
       <FolderGridCardPreview>
         <GridFolderSvgIcon />
+        {onToggleSelected && (
+          <GridCardCheckboxOverlay
+            className="grid-card-overlay"
+            visible={selected || hasAnySelected}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <SelectCheckbox
+              checked={selected}
+              onChange={() => onToggleSelected(folder.id)}
+              size="small"
+              icon={<CheckBoxOutlineBlankRoundedIcon fontSize="small" />}
+              checkedIcon={<CheckBoxRoundedIcon fontSize="small" />}
+              slotProps={{
+                input: {
+                  'aria-label': `选择文件夹 ${folder.name}`,
+                },
+              }}
+            />
+          </GridCardCheckboxOverlay>
+        )}
         <GridCardActionsOverlay className="grid-card-overlay">
           <Tooltip arrow={true} title="文件夹操作">
             <ActionIconButton>
@@ -401,6 +463,8 @@ export const FolderGridCard = memo(FolderGridCardComponent);
 const FolderCardComponent = ({
   folder,
   count,
+  selected = false,
+  onToggleSelected,
   onOpenFolder,
   onOpenMenu,
   onContextMenu,
@@ -420,6 +484,7 @@ const FolderCardComponent = ({
   return (
     <MapCardRoot
       elevation={0}
+      selected={selected}
       onClick={() => onOpenFolder(folder.id)}
       onContextMenu={(e) => onContextMenu(folder, e)}
       onDragOver={onDragOver}
@@ -439,30 +504,51 @@ const FolderCardComponent = ({
         };
       }}
     >
-      <CompactCardHeader
-        avatar={
-          <FolderGlyphBadge aria-hidden="true">
-            <GoogleIcon name="folder" size={18} filled />
-          </FolderGlyphBadge>
-        }
-        action={
-          <CardActionsGroup>
-            <Tooltip arrow={true} title="文件夹操作">
-              <ActionIconButton>
-                <IconButton size="small" aria-label={`操作文件夹 ${folder.name}`} onClick={handleOpenMenu}>
-                  <GoogleIcon name="more_vert" size={20} />
-                </IconButton>
-              </ActionIconButton>
-            </Tooltip>
-          </CardActionsGroup>
-        }
-        title={<CardTitle>{folder.name}</CardTitle>}
-        subheader={
-          <CardMetaText variant="subtitle2">
-            {formatFolderSummary(count)}
-          </CardMetaText>
-        }
-      />
+      <Box sx={{ display: 'flex', alignItems: 'center', minWidth: 0 }}>
+        {onToggleSelected && (
+          <CardSelectBox onClick={(e) => e.stopPropagation()}>
+            <SelectCheckbox
+              checked={selected}
+              onChange={() => onToggleSelected(folder.id)}
+              size="small"
+              icon={<CheckBoxOutlineBlankRoundedIcon fontSize="small" />}
+              checkedIcon={<CheckBoxRoundedIcon fontSize="small" />}
+              slotProps={{
+                input: {
+                  'aria-label': `选择文件夹 ${folder.name}`,
+                },
+              }}
+            />
+          </CardSelectBox>
+        )}
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <CompactCardHeader
+            hasLeadingControl={Boolean(onToggleSelected)}
+            avatar={
+              <FolderGlyphBadge aria-hidden="true">
+                <GoogleIcon name="folder" size={18} filled />
+              </FolderGlyphBadge>
+            }
+            action={
+              <CardActionsGroup>
+                <Tooltip arrow={true} title="文件夹操作">
+                  <ActionIconButton>
+                    <IconButton size="small" aria-label={`操作文件夹 ${folder.name}`} onClick={handleOpenMenu}>
+                      <GoogleIcon name="more_vert" size={20} />
+                    </IconButton>
+                  </ActionIconButton>
+                </Tooltip>
+              </CardActionsGroup>
+            }
+            title={<CardTitle>{folder.name}</CardTitle>}
+            subheader={
+              <CardMetaText variant="subtitle2">
+                {formatFolderSummary(count)}
+              </CardMetaText>
+            }
+          />
+        </Box>
+      </Box>
     </MapCardRoot>
   );
 };

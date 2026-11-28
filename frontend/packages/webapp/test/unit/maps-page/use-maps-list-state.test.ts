@@ -17,7 +17,7 @@
  */
 
 import { act, renderHook } from '@testing-library/react';
-import { Label, MapInfo } from '../../../src/classes/client';
+import { Folder, Label, MapInfo } from '../../../src/classes/client';
 import type { Filter } from '../../../src/components/maps-page';
 import { useMapsListState } from '../../../src/components/maps-page/maps-list/useMapsListState';
 
@@ -197,5 +197,48 @@ describe('useMapsListState', () => {
     act(() => result.current.changeSort('lastOpenTime', 'desc'));
     expect(result.current.orderBy).toBe('lastOpenTime');
     expect(ids(result.current.pagedMaps)).toEqual([3, 1, 2]);
+  });
+
+  test('supports multi-selecting child folders and selectAll across folders and maps', () => {
+    const folders: Folder[] = [
+      { id: 1, name: '第一章', parentId: null },
+      { id: 2, name: '第二章', parentId: null },
+      { id: 3, name: '2.1 小节', parentId: 2 },
+    ];
+    const folderMaps = [
+      map(10, { folderId: null }),
+      map(11, { folderId: 2 }),
+    ];
+
+    const { result, rerender } = renderHook(
+      ({ filter, list, dirList }) => useMapsListState(filter, list, dirList),
+      {
+        initialProps: {
+          filter: { type: 'folder', folderId: null } as Filter,
+          list: folderMaps,
+          dirList: folders,
+        },
+      },
+    );
+
+    act(() => result.current.toggleFolderSelected(1));
+    act(() => result.current.toggleFolderSelected(2));
+    expect(result.current.selectedFolders).toEqual([1, 2]);
+    expect(result.current.isFolderSelected(1)).toBe(true);
+    expect(result.current.selected).toEqual([]);
+
+    // selectAll selects all visible child folders AND root maps
+    act(() => result.current.selectAll(true));
+    expect(new Set(result.current.selectedFolders)).toEqual(new Set([1, 2]));
+    expect(result.current.selected).toEqual([10]);
+
+    // Switching folder clears both map and folder selection
+    rerender({
+      filter: { type: 'folder', folderId: 2 },
+      list: folderMaps,
+      dirList: folders,
+    });
+    expect(result.current.selectedFolders).toEqual([]);
+    expect(result.current.selected).toEqual([]);
   });
 });

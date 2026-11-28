@@ -239,6 +239,7 @@ interface Client {
   fetchFolders?(): Promise<Folder[]>;
   createFolder?(name: string, parentId?: number | null): Promise<Folder>;
   updateFolder?(id: number, changes: { name?: string; parentId?: number | null }): Promise<Folder>;
+  moveFoldersToFolder?(folderIds: number[], parentId: number | null): Promise<void>;
   deleteFolder?(id: number): Promise<void>;
   moveMapsToFolder?(mapIds: number[], folderId: number | null): Promise<void>;
   fetchAccountInfo(): Promise<AccountInfo>;

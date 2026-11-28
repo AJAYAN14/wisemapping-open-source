@@ -1093,6 +1093,31 @@ const MapsPage = (): ReactElement => {
               onDropMapsToFolder={(mapIds, folderId) =>
                 moveMapsDropMutation.mutate({ mapIds, folderId })
               }
+              onBulkFoldersMoved={(result) => {
+                const targetName =
+                  result.targetFolderId === null
+                    ? '根目录（未分类）'
+                    : (folders.find((f) => f.id === result.targetFolderId)?.name ?? '目标文件夹');
+                const folderPart =
+                  result.movedFolders.length > 0 ? `${result.movedFolders.length} 个文件夹` : '';
+                const mapPart =
+                  result.movedMapsCount > 0 ? `${result.movedMapsCount} 份导图` : '';
+                const summary = [folderPart, mapPart].filter(Boolean).join('、');
+                if (summary) {
+                  setToast({
+                    open: true,
+                    severity: 'success',
+                    message: `已将 ${summary}移动到“${targetName}”`,
+                  });
+                }
+              }}
+              onBulkFoldersDeleted={(deletedIds) => {
+                setToast({
+                  open: true,
+                  severity: 'success',
+                  message: `已删除 ${deletedIds.length} 个文件夹，其内容已移回根目录`,
+                });
+              }}
               toolbarActions={toolbarActions}
             />
           </section>
@@ -1125,12 +1150,15 @@ const MapsPage = (): ReactElement => {
           folder={folderDialog.folder}
           folders={folders}
           onClose={() => setFolderDialog(undefined)}
-          onMoved={(moved) => {
-            setToast({
-              open: true,
-              severity: 'success',
-              message: `已调整文件夹“${moved.name}”的位置`,
-            });
+          onMoved={(result) => {
+            const moved = result.movedFolders[0];
+            if (moved) {
+              setToast({
+                open: true,
+                severity: 'success',
+                message: `已调整文件夹“${moved.name}”的位置`,
+              });
+            }
           }}
         />
       )}
@@ -1138,9 +1166,13 @@ const MapsPage = (): ReactElement => {
         <FolderDeleteDialog
           folder={folderDialog.folder}
           onClose={() => setFolderDialog(undefined)}
-          onDeleted={(deletedId) => {
-            if (filter.type === 'folder' && filter.folderId === deletedId) {
-              const deletedFolder = folders.find((f) => f.id === deletedId);
+          onDeleted={(deletedIds) => {
+            if (
+              filter.type === 'folder' &&
+              filter.folderId !== null &&
+              deletedIds.includes(filter.folderId)
+            ) {
+              const deletedFolder = folders.find((f) => f.id === filter.folderId);
               setFilter({ type: 'folder', folderId: deletedFolder?.parentId ?? null });
             }
           }}

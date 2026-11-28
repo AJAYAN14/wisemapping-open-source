@@ -669,6 +669,62 @@ export class InMemoryMindmapRepo implements MindmapRepository {
     return { ...entry.dto };
   }
 
+  async moveFoldersToFolder(
+    user: RepoUser,
+    folderIds: number[],
+    parentId: number | null,
+  ): Promise<void> {
+    const uniqueIds = Array.from(new Set(folderIds));
+    if (uniqueIds.length === 0) {
+      return;
+    }
+    const movingEntries = uniqueIds.map((id) => this.folders.get(id));
+    if (movingEntries.some((entry) => !entry || entry.ownerId !== user.uid)) {
+      throw new NotFoundOrForbiddenError('Folder could not be found.', 'FOLDER_NOT_FOUND');
+    }
+    const movingSet = new Set(uniqueIds);
+    if (parentId !== null) {
+      const parent = this.folders.get(parentId);
+      if (!parent || parent.ownerId !== user.uid) {
+        throw new NotFoundOrForbiddenError('Parent folder could not be found.', 'FOLDER_NOT_FOUND');
+      }
+      const visited = new Set<number>();
+      let cur: number | null = parentId;
+      while (cur !== null && !visited.has(cur)) {
+        if (movingSet.has(cur)) {
+          throw new RepoValidationError(
+            ['不能将文件夹移动到自身或其子文件夹下。'],
+            { parentId: '不能将文件夹移动到自身或其子文件夹下。' },
+            'FOLDER_CYCLE',
+          );
+        }
+        visited.add(cur);
+        const curEntry = this.folders.get(cur);
+        cur = curEntry?.ownerId === user.uid ? (curEntry.dto.parentId ?? null) : null;
+      }
+    }
+    const occupiedNames = new Set(
+      Array.from(this.folders.values())
+        .filter((f) => f.ownerId === user.uid && f.dto.parentId === parentId && !movingSet.has(f.dto.id))
+        .map((f) => f.dto.name),
+    );
+    for (const entry of movingEntries) {
+      if (occupiedNames.has(entry!.dto.name)) {
+        throw new RepoValidationError(
+          [`目标目录下已存在同名文件夹“${entry!.dto.name}”。`],
+          { name: `目标目录下已存在同名文件夹“${entry!.dto.name}”。` },
+          'DUPLICATE_FOLDER_NAME',
+        );
+      }
+      occupiedNames.add(entry!.dto.name);
+    }
+    const now = new Date().toISOString();
+    for (const entry of movingEntries) {
+      entry!.dto = { ...entry!.dto, parentId, updatedTime: now };
+    }
+    this.syncFolderPaths(user.uid);
+  }
+
   async deleteFolder(user: RepoUser, folderId: number): Promise<void> {
     const entry = this.folders.get(folderId);
     if (!entry || entry.ownerId !== user.uid) {

@@ -39,6 +39,11 @@ import { MAP_IDS_DRAG_MIME } from '../folderTree';
 import ActionChooser, { ActionType } from '../action-chooser';
 import ActionDispatcher from '../action-dispatcher';
 import {
+  FolderDeleteDialog,
+  FolderMoveDialog,
+  type FolderMoveResult,
+} from '../folder-dialogs';
+import {
   FolderActionMenu,
   FolderBreadcrumbsBar,
   FolderCard,
@@ -101,6 +106,8 @@ interface MapsListProps {
   onMoveFolder?: ((folder: Folder) => void) | undefined;
   onDeleteFolder?: ((folder: Folder) => void) | undefined;
   onDropMapsToFolder?: ((mapIds: number[], folderId: number | null) => void) | undefined;
+  onBulkFoldersMoved?: ((result: FolderMoveResult) => void) | undefined;
+  onBulkFoldersDeleted?: ((deletedIds: number[]) => void) | undefined;
   toolbarActions?: React.ReactNode;
 }
 
@@ -113,6 +120,8 @@ export const MapsList = ({
   onMoveFolder,
   onDeleteFolder,
   onDropMapsToFolder,
+  onBulkFoldersMoved,
+  onBulkFoldersDeleted,
   toolbarActions,
 }: MapsListProps): React.ReactElement => {
   const client = use(ClientContext);
@@ -170,6 +179,7 @@ export const MapsList = ({
     page,
     rowsPerPage,
     selected,
+    selectedFolders,
     childFolders,
     pagedFolders,
     filteredMaps,
@@ -181,9 +191,20 @@ export const MapsList = ({
     changeRowsPerPage,
     changeSearch,
     toggleSelected,
+    toggleFolderSelected,
     selectAll,
     clearSelection,
   } = useMapsListState(filter, maps, folders);
+
+  const totalSelectedCount = selected.length + selectedFolders.length;
+  const selectedFolderItems = useMemo(
+    () => folders.filter((folder) => selectedFolders.includes(folder.id)),
+    [folders, selectedFolders],
+  );
+  const selectedMapItems = useMemo(
+    () => maps.filter((map) => selected.includes(map.id)),
+    [maps, selected],
+  );
 
   const isFolderView = isFolderFilter(filter);
   const folderCounts = useMemo(
@@ -194,6 +215,9 @@ export const MapsList = ({
   const [rowMenu, setRowMenu] = useState<RowMenu | undefined>(undefined);
   const [folderMenu, setFolderMenu] = useState<FolderMenuState | null>(null);
   const [activeDialog, setActiveDialog] = useState<ActiveDialog | undefined>(undefined);
+  const [bulkFolderDialog, setBulkFolderDialog] = useState<'move' | 'delete' | undefined>(
+    undefined,
+  );
 
   // Every row gets these same functions: see MapItemHandlers.
   const { mutate: starMap } = useStarMap();
@@ -347,6 +371,9 @@ export const MapsList = ({
           key={`folder-${folder.id}`}
           folder={folder}
           count={folderCounts?.get(folder.id)}
+          selected={selectedFolders.includes(folder.id)}
+          hasAnySelected={totalSelectedCount > 0}
+          onToggleSelected={toggleFolderSelected}
           onOpenFolder={handleOpenFolder}
           onOpenMenu={handleOpenFolderMenu}
           onContextMenu={handleFolderContextMenu}
@@ -396,6 +423,9 @@ export const MapsList = ({
           key={`folder-${folder.id}`}
           folder={folder}
           count={folderCounts?.get(folder.id)}
+          selected={selectedFolders.includes(folder.id)}
+          hasAnySelected={totalSelectedCount > 0}
+          onToggleSelected={toggleFolderSelected}
           onOpenFolder={handleOpenFolder}
           onOpenMenu={handleOpenFolderMenu}
           onContextMenu={handleFolderContextMenu}
@@ -407,7 +437,7 @@ export const MapsList = ({
           key={map.id}
           map={map}
           selected={selected.includes(map.id)}
-          hasAnySelected={selected.length > 0}
+          hasAnySelected={totalSelectedCount > 0}
           timeField={timeField}
           showFolderPath={!isFolderView}
           onToggleSelected={toggleSelected}
@@ -424,8 +454,8 @@ export const MapsList = ({
   const table = (
     <ListTable size="small" stickyHeader>
       <MapsTableHead
-        numSelected={selected.length}
-        rowCount={filteredMaps.length}
+        numSelected={totalSelectedCount}
+        rowCount={childFolders.length + filteredMaps.length}
         order={order}
         orderBy={orderBy}
         onSelectAll={selectAll}
@@ -450,6 +480,9 @@ export const MapsList = ({
                 key={`folder-${folder.id}`}
                 folder={folder}
                 count={folderCounts?.get(folder.id)}
+                selected={selectedFolders.includes(folder.id)}
+                hasAnySelected={totalSelectedCount > 0}
+                onToggleSelected={toggleFolderSelected}
                 onOpenFolder={handleOpenFolder}
                 onOpenMenu={handleOpenFolderMenu}
                 onContextMenu={handleFolderContextMenu}
@@ -502,10 +535,24 @@ export const MapsList = ({
           totalCount={filteredMaps.length}
           allMapsCount={maps.length}
           foldersCount={folders.length}
-          selectedCount={selected.length}
-          onDeleteSelected={() => openBulkDialog('delete')}
+          selectedCount={totalSelectedCount}
+          selectedMapsCount={selected.length}
+          selectedFoldersCount={selectedFolders.length}
+          onDeleteSelected={() => {
+            if (selectedFolders.length > 0 && selected.length === 0) {
+              setBulkFolderDialog('delete');
+            } else if (selected.length > 0 && selectedFolders.length === 0) {
+              openBulkDialog('delete');
+            }
+          }}
           onLabelSelected={() => openBulkDialog('label')}
-          onMoveSelected={() => openBulkDialog('move-folder')}
+          onMoveSelected={() => {
+            if (selectedFolders.length > 0) {
+              setBulkFolderDialog('move');
+            } else {
+              openBulkDialog('move-folder');
+            }
+          }}
           onFilterChange={onFilterChange}
           onSearchChange={changeSearch}
           viewMode={viewMode}
@@ -581,6 +628,32 @@ export const MapsList = ({
         }}
         mapsId={activeDialog ? activeDialog.mapsId : []}
       />
+      {bulkFolderDialog === 'move' && selectedFolderItems.length > 0 && (
+        <FolderMoveDialog
+          foldersToMove={selectedFolderItems}
+          mapsToMove={selectedMapItems}
+          folders={folders}
+          onClose={(success) => {
+            setBulkFolderDialog(undefined);
+            if (success) {
+              clearSelection();
+            }
+          }}
+          onMoved={onBulkFoldersMoved}
+        />
+      )}
+      {bulkFolderDialog === 'delete' && selectedFolderItems.length > 0 && (
+        <FolderDeleteDialog
+          foldersToDelete={selectedFolderItems}
+          onClose={(success) => {
+            setBulkFolderDialog(undefined);
+            if (success) {
+              clearSelection();
+            }
+          }}
+          onDeleted={onBulkFoldersDeleted}
+        />
+      )}
     </ListRoot>
   );
 };

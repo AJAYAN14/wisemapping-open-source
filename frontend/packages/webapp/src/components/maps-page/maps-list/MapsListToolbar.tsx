@@ -63,6 +63,8 @@ interface MapsListToolbarProps {
   allMapsCount?: number | undefined;
   foldersCount?: number | undefined;
   selectedCount: number;
+  selectedMapsCount?: number | undefined;
+  selectedFoldersCount?: number | undefined;
   onDeleteSelected: () => void;
   onLabelSelected: () => void;
   onMoveSelected?: (() => void) | undefined;
@@ -97,6 +99,8 @@ export const MapsListToolbar = ({
   allMapsCount,
   foldersCount,
   selectedCount,
+  selectedMapsCount,
+  selectedFoldersCount,
   onDeleteSelected,
   onLabelSelected,
   onMoveSelected,
@@ -197,60 +201,80 @@ export const MapsListToolbar = ({
     return intl.formatMessage({ id: 'maps.nav-all', defaultMessage: 'All' });
   })();
 
+  const effectiveFoldersCount = selectedFoldersCount ?? 0;
+  const effectiveMapsCount =
+    selectedMapsCount ?? Math.max(0, selectedCount - effectiveFoldersCount);
+  const isFoldersOnly = effectiveFoldersCount > 0 && effectiveMapsCount === 0;
+  const isMixedSelection = effectiveFoldersCount > 0 && effectiveMapsCount > 0;
+
   return (
     <ListToolbar variant="dense">
       <ToolbarActions>
         {selectedCount > 0 ? (
           <>
-            <Tooltip
-              arrow={true}
-              title={intl.formatMessage({
-                id: 'map.delete-selected',
-                defaultMessage: 'Delete selected',
-              })}
-            >
-              <BulkActionButton
-                size="medium"
-                variant="text"
-                type="button"
-                disableElevation={true}
-                onClick={onDeleteSelected}
-                startIcon={<GoogleIcon name="delete" size={18} color="#EF4444" testId="DeleteRoundedIcon" />}
+            {!isMixedSelection && (
+              <Tooltip
+                arrow={true}
+                title={
+                  isFoldersOnly
+                    ? '删除选中文件夹'
+                    : intl.formatMessage({
+                        id: 'map.delete-selected',
+                        defaultMessage: 'Delete selected',
+                      })
+                }
               >
-                <span className="button-text">
-                  <FormattedMessage id="action.delete" defaultMessage="Delete" />
-                </span>
-              </BulkActionButton>
-            </Tooltip>
+                <BulkActionButton
+                  size="medium"
+                  variant="text"
+                  type="button"
+                  disableElevation={true}
+                  onClick={onDeleteSelected}
+                  startIcon={<GoogleIcon name="delete" size={18} color="#EF4444" testId="DeleteRoundedIcon" />}
+                >
+                  <span className="button-text">
+                    <FormattedMessage id="action.delete" defaultMessage="Delete" />
+                  </span>
+                </BulkActionButton>
+              </Tooltip>
+            )}
 
-            <Tooltip
-              arrow={true}
-              title={intl.formatMessage({
-                id: 'map.tooltip-add',
-                defaultMessage: 'Add label to selected',
-              })}
-            >
-              <BulkActionButton
-                size="medium"
-                variant="text"
-                type="button"
-                disableElevation={true}
-                startIcon={<GoogleIcon name="label" size={18} />}
-                onClick={onLabelSelected}
+            {effectiveFoldersCount === 0 && (
+              <Tooltip
+                arrow={true}
+                title={intl.formatMessage({
+                  id: 'map.tooltip-add',
+                  defaultMessage: 'Add label to selected',
+                })}
               >
-                <span className="button-text">
-                  <FormattedMessage id="action.label" defaultMessage="Add Label" />
-                </span>
-              </BulkActionButton>
-            </Tooltip>
+                <BulkActionButton
+                  size="medium"
+                  variant="text"
+                  type="button"
+                  disableElevation={true}
+                  startIcon={<GoogleIcon name="label" size={18} />}
+                  onClick={onLabelSelected}
+                >
+                  <span className="button-text">
+                    <FormattedMessage id="action.label" defaultMessage="Add Label" />
+                  </span>
+                </BulkActionButton>
+              </Tooltip>
+            )}
 
             {onMoveSelected && (
               <Tooltip
                 arrow={true}
-                title={intl.formatMessage({
-                  id: 'folder.tooltip-move',
-                  defaultMessage: '将选中导图移动到文件夹',
-                })}
+                title={
+                  isFoldersOnly
+                    ? '将选中文件夹移动到其他文件夹'
+                    : isMixedSelection
+                      ? '将选中项目移动到文件夹'
+                      : intl.formatMessage({
+                          id: 'folder.tooltip-move',
+                          defaultMessage: '将选中导图移动到文件夹',
+                        })
+                }
               >
                 <BulkActionButton
                   size="medium"

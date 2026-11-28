@@ -17,7 +17,7 @@
  */
 
 import { useState } from 'react';
-import { fireEvent, screen, within } from '@testing-library/react';
+import { fireEvent, screen, waitFor, within } from '@testing-library/react';
 import type { Folder, MapInfo } from '../../../src/classes/client';
 import type { Filter } from '../../../src/components/maps-page';
 import { MAP_IDS_DRAG_MIME } from '../../../src/components/maps-page/folderTree';
@@ -45,6 +45,7 @@ const makeMap = (overrides: Partial<MapInfo> & { id: number; title: string }): M
 const folders: Folder[] = [
   { id: 1, name: '第二章', parentId: null },
   { id: 2, name: '2.1 小节', parentId: 1 },
+  { id: 3, name: '目标文件夹', parentId: null },
 ];
 
 const maps: MapInfo[] = [
@@ -212,5 +213,118 @@ describe('Main workspace folder browser & segmented switcher', () => {
     fireEvent.dragOver(rootCrumb, { dataTransfer: backDragData });
     fireEvent.drop(rootCrumb, { dataTransfer: backDragData });
     expect(onDropMapsToFolder).toHaveBeenCalledWith([102], null);
+  });
+
+  test('multi-selects folders without opening them and moves them to another folder', async () => {
+    const nestedFolders: Folder[] = [
+      { id: 10, name: 'XMind', parentId: null },
+      { id: 11, name: '第一章', parentId: 10 },
+      { id: 12, name: '第二章', parentId: 10 },
+      { id: 13, name: '汇总目录', parentId: null },
+    ];
+    const moveFoldersToFolder = jest.fn().mockResolvedValue(undefined);
+    const client = {
+      fetchAllMaps: jest.fn().mockResolvedValue(maps),
+      updateStarred: jest.fn().mockResolvedValue(undefined),
+      moveFoldersToFolder,
+    };
+
+    const MultiHarness = () => {
+      const [filter, setFilter] = useState<Filter>({ type: 'folder', folderId: 10 });
+      return <MapsList filter={filter} folders={nestedFolders} onFilterChange={setFilter} />;
+    };
+
+    renderWithWrapper(<MultiHarness />, { client });
+
+    await screen.findByTestId('folder-row-11');
+
+    // Selecting folder checkboxes must NOT navigate into the folders.
+    fireEvent.click(screen.getByRole('checkbox', { name: '选择文件夹 第一章' }));
+    fireEvent.click(screen.getByRole('checkbox', { name: '选择文件夹 第二章' }));
+    expect(screen.getByTestId('folder-row-11')).toBeTruthy();
+    expect(screen.getByTestId('folder-row-12')).toBeTruthy();
+
+    // Folders-only selection hides "Add Label" and shows Move + Delete.
+    expect(screen.queryByRole('button', { name: 'Add label to selected' })).toBeNull();
+    expect(screen.getByRole('button', { name: '删除选中文件夹' })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: '将选中文件夹移动到其他文件夹' }));
+
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText(/已选择 2 个文件夹/)).toBeTruthy();
+
+    // Moving folders themselves are disabled as destinations to prevent cycles.
+    expect(
+      within(dialog).getByRole('option', { name: '第一章' }).getAttribute('aria-disabled'),
+    ).toBe('true');
+
+    fireEvent.click(within(dialog).getByRole('option', { name: '汇总目录' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: '移动到此处' }));
+
+    await waitFor(() => expect(moveFoldersToFolder).toHaveBeenCalledWith([11, 12], 13));
+  });
+
+  test('select-all in folder view selects both folders and maps and moves both', async () => {
+    const moveFoldersToFolder = jest.fn().mockResolvedValue(undefined);
+    const moveMapsToFolder = jest.fn().mockResolvedValue(undefined);
+    const client = {
+      fetchAllMaps: jest.fn().mockResolvedValue(maps),
+      updateStarred: jest.fn().mockResolvedValue(undefined),
+      moveFoldersToFolder,
+      moveMapsToFolder,
+    };
+
+    const MixedHarness = () => {
+      const [filter, setFilter] = useState<Filter>({ type: 'folder', folderId: null });
+      return <MapsList filter={filter} folders={folders} onFilterChange={setFilter} />;
+    };
+
+    renderWithWrapper(<MixedHarness />, { client });
+
+    await screen.findByTestId('folder-row-1');
+    const selectAllCheckbox = screen.getByRole('checkbox', { name: 'Select all' }) as HTMLInputElement;
+    fireEvent.click(selectAllCheckbox);
+    expect(selectAllCheckbox.checked).toBe(true);
+    expect(
+      (screen.getByRole('checkbox', { name: '选择文件夹 第二章' }) as HTMLInputElement).checked,
+    ).toBe(true);
+
+    // Mixed selection shows Move button and hides Delete/Add Label.
+    expect(screen.queryByRole('button', { name: 'Delete selected' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Add label to selected' })).toBeNull();
+
+    // Unselect 目标文件夹 (id=3) so we can move 第二章 + 根目录导图 into 目标文件夹.
+    fireEvent.click(screen.getByRole('checkbox', { name: '选择文件夹 目标文件夹' }));
+    expect(selectAllCheckbox.checked).toBe(false);
+    expect(selectAllCheckbox.getAttribute('data-indeterminate')).toBe('true');
+
+    fireEvent.click(screen.getByRole('button', { name: '将选中项目移动到文件夹' }));
+    const dialog = await screen.findByRole('dialog');
+    expect(within(dialog).getByText(/已选择 1 个文件夹、1 份导图/)).toBeTruthy();
+
+    fireEvent.click(within(dialog).getByRole('option', { name: '目标文件夹' }));
+    fireEvent.click(within(dialog).getByRole('button', { name: '移动到此处' }));
+
+    await waitFor(() => expect(moveFoldersToFolder).toHaveBeenCalledWith([1], 3));
+    await waitFor(() => expect(moveMapsToFolder).toHaveBeenCalledWith([101], 3));
+  });
+
+  test('supports folder checkboxes in grid view without opening the folder', async () => {
+    const client = {
+      fetchAllMaps: jest.fn().mockResolvedValue(maps),
+      updateStarred: jest.fn().mockResolvedValue(undefined),
+    };
+    renderWithWrapper(<Harness initialFilter={{ type: 'folder', folderId: null }} />, { client });
+
+    await screen.findByTestId('folder-row-1');
+    fireEvent.click(screen.getByRole('button', { name: '栅格视图' }));
+    expect(await screen.findByTestId('folder-grid-card-1')).toBeTruthy();
+
+    const folderCheckbox = screen.getByRole('checkbox', { name: '选择文件夹 第二章' }) as HTMLInputElement;
+    fireEvent.click(folderCheckbox);
+    expect(folderCheckbox.checked).toBe(true);
+    // Must stay at folder root rather than drilling into 第二章.
+    expect(screen.getByTestId('folder-grid-card-3')).toBeTruthy();
+    expect(screen.getByRole('button', { name: '将选中文件夹移动到其他文件夹' })).toBeTruthy();
   });
 });

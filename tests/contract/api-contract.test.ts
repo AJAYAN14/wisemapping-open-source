@@ -754,6 +754,88 @@ describe('API Contract Tests (/api/restful/*)', () => {
     ]);
   });
 
+  it('batch moves multiple folders into another folder with cycle & duplicate checks', async () => {
+    const createFolder = async (name: string, parentId: number | null = null): Promise<number> => {
+      const res = await handler(
+        new Request('http://localhost:8888/api/restful/folders', {
+          method: 'POST',
+          headers: authHeaders({ 'Content-Type': 'application/json' }),
+          body: JSON.stringify({ name, parentId }),
+        }),
+      );
+      expect(res.status).toBe(201);
+      return ((await res.json()) as { folder: { id: number } }).folder.id;
+    };
+
+    const sourceParentId = await createFolder('XMind');
+    const ch1Id = await createFolder('第一章', sourceParentId);
+    const ch2Id = await createFolder('第二章', sourceParentId);
+    const ch1SubId = await createFolder('1.1 小节', ch1Id);
+    const targetParentId = await createFolder('非标设计');
+
+    const mapRes = await handler(
+      new Request(`http://localhost:8888/api/restful/maps?title=轴承&folderId=${ch1SubId}`, {
+        method: 'POST',
+        headers: authHeaders(),
+      }),
+    );
+    expect(mapRes.status).toBe(201);
+
+    // Cycle check: cannot move ch1Id into its own descendant ch1SubId
+    const cycleRes = await handler(
+      new Request('http://localhost:8888/api/restful/folders/batch/parent', {
+        method: 'PUT',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ folderIds: [ch1Id, ch2Id], parentId: ch1SubId }),
+      }),
+    );
+    expect(cycleRes.status).toBe(400);
+
+    // Duplicate check: create a conflicting '第一章' under targetParentId first
+    const dupId = await createFolder('第一章', targetParentId);
+    const dupRes = await handler(
+      new Request('http://localhost:8888/api/restful/folders/batch/parent', {
+        method: 'PUT',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ folderIds: [ch1Id, ch2Id], parentId: targetParentId }),
+      }),
+    );
+    expect(dupRes.status).toBe(400);
+
+    // Ensure atomic rollback: ch2Id must still be under sourceParentId
+    const foldersBefore = ((await (
+      await handler(new Request('http://localhost:8888/api/restful/folders', { headers: authHeaders() }))
+    ).json()) as { folders: Array<{ id: number; parentId: number | null }> }).folders;
+    expect(foldersBefore.find((f) => f.id === ch2Id)?.parentId).toBe(sourceParentId);
+
+    // Remove conflict and batch move [ch1Id, ch2Id] into targetParentId
+    await handler(
+      new Request(`http://localhost:8888/api/restful/folders/${dupId}`, {
+        method: 'DELETE',
+        headers: authHeaders(),
+      }),
+    );
+    const moveRes = await handler(
+      new Request('http://localhost:8888/api/restful/folders/batch/parent', {
+        method: 'PUT',
+        headers: authHeaders({ 'Content-Type': 'application/json' }),
+        body: JSON.stringify({ folderIds: [ch1Id, ch2Id], parentId: targetParentId }),
+      }),
+    );
+    expect(moveRes.status).toBe(204);
+
+    const foldersAfter = ((await (
+      await handler(new Request('http://localhost:8888/api/restful/folders', { headers: authHeaders() }))
+    ).json()) as { folders: Array<{ id: number; parentId: number | null }> }).folders;
+    expect(foldersAfter.find((f) => f.id === ch1Id)?.parentId).toBe(targetParentId);
+    expect(foldersAfter.find((f) => f.id === ch2Id)?.parentId).toBe(targetParentId);
+
+    const mapsAfter = ((await (
+      await handler(new Request('http://localhost:8888/api/restful/maps', { headers: authHeaders() }))
+    ).json()) as { mindmapsInfo: Array<{ title: string; folderPath: string }> }).mindmapsInfo;
+    expect(mapsAfter.find((m) => m.title === '轴承')?.folderPath).toBe('非标设计/第一章/1.1 小节/');
+  });
+
   it('resolves map metadata by folderPath + title and rejects slashes in map titles', async () => {
     // Reject slash in map title on create
     const slashCreate = await handler(

@@ -849,6 +849,65 @@ class MockClient implements Client {
     return Promise.resolve({ ...target });
   }
 
+  moveFoldersToFolder(folderIds: number[], parentId: number | null): Promise<void> {
+    const uniqueIds = Array.from(new Set(folderIds));
+    if (uniqueIds.length === 0) {
+      return Promise.resolve();
+    }
+    const folders = loadMockFolders();
+    const byId = new Map(folders.map((f) => [f.id, f]));
+    const movingFolders = uniqueIds.map((id) => byId.get(id));
+    if (movingFolders.some((f) => !f)) {
+      return Promise.reject({ msg: 'Folder not found', status: 404 });
+    }
+    const movingSet = new Set(uniqueIds);
+    if (parentId !== null) {
+      if (!byId.has(parentId)) {
+        return Promise.reject({ msg: 'Parent folder not found', status: 404 });
+      }
+      const visited = new Set<number>();
+      let cur: number | null = parentId;
+      while (cur !== null && !visited.has(cur)) {
+        if (movingSet.has(cur)) {
+          return Promise.reject({
+            errorCode: 'FOLDER_CYCLE',
+            msg: '不能将文件夹移动到自身或其子文件夹下。',
+          });
+        }
+        visited.add(cur);
+        cur = byId.get(cur)?.parentId ?? null;
+      }
+    }
+    const occupiedNames = new Set(
+      folders
+        .filter((f) => (f.parentId ?? null) === parentId && !movingSet.has(f.id))
+        .map((f) => f.name),
+    );
+    for (const folder of movingFolders) {
+      if (occupiedNames.has(folder!.name)) {
+        return Promise.reject({
+          errorCode: 'DUPLICATE_FOLDER_NAME',
+          fields: { name: `目标目录下已存在同名文件夹“${folder!.name}”。` },
+          msg: `目标目录下已存在同名文件夹“${folder!.name}”。`,
+        });
+      }
+      occupiedNames.add(folder!.name);
+    }
+    const now = new Date().toISOString();
+    for (const folder of movingFolders) {
+      folder!.parentId = parentId;
+      folder!.updatedTime = now;
+    }
+    saveMockFolders(folders);
+
+    const maps = loadMockMaps().map((m) => ({
+      ...m,
+      folderPath: buildMockFolderPath(folders, m.folderId),
+    }));
+    saveMockMaps(maps);
+    return Promise.resolve();
+  }
+
   deleteFolder(id: number): Promise<void> {
     const folders = loadMockFolders();
     const target = folders.find((f) => f.id === id);

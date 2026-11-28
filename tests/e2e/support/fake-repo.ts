@@ -775,6 +775,56 @@ export class FakeStore {
     return { ...record };
   }
 
+  moveFoldersToFolder(
+    ownerId: string,
+    folderIds: number[],
+    parentId: number | null,
+  ): 'ok' | 'not_found' | 'parent_not_found' | 'cycle' {
+    const uniqueIds = Array.from(new Set(folderIds));
+    if (uniqueIds.length === 0) {
+      return 'ok';
+    }
+    const movingFolders = uniqueIds.map((id) => this.folders.get(id));
+    if (movingFolders.some((f) => !f || f.ownerId !== ownerId)) {
+      return 'not_found';
+    }
+    const movingSet = new Set(uniqueIds);
+    if (parentId !== null) {
+      const parent = this.folders.get(parentId);
+      if (!parent || parent.ownerId !== ownerId) {
+        return 'parent_not_found';
+      }
+      const visited = new Set<number>();
+      let cur: number | null = parentId;
+      while (cur !== null && !visited.has(cur)) {
+        if (movingSet.has(cur)) {
+          return 'cycle';
+        }
+        visited.add(cur);
+        const f = this.folders.get(cur);
+        cur = f && f.ownerId === ownerId ? f.parentId : null;
+      }
+    }
+    const occupiedNames = new Set(
+      Array.from(this.folders.values())
+        .filter((f) => f.ownerId === ownerId && f.parentId === parentId && !movingSet.has(f.id))
+        .map((f) => f.name),
+    );
+    for (const folder of movingFolders) {
+      if (occupiedNames.has(folder!.name)) {
+        throw new FakePgError('23505', folder!.name);
+      }
+      occupiedNames.add(folder!.name);
+    }
+    const now = new Date().toISOString();
+    for (const folder of movingFolders) {
+      folder!.parentId = parentId;
+      folder!.updatedTime = now;
+    }
+    this.syncFolderPaths(ownerId);
+    return 'ok';
+  }
+
   deleteFolder(ownerId: string, folderId: number): boolean {
     const record = this.folders.get(folderId);
     if (!record || record.ownerId !== ownerId) {
@@ -1458,6 +1508,38 @@ export function createFakeMindmapRepository(
           throw new errors.RepoValidationError(
             [],
             { name: '同级目录下已存在同名文件夹。' },
+            'DUPLICATE_FOLDER_NAME',
+          );
+        }
+        throw err;
+      }
+    },
+
+    async moveFoldersToFolder(
+      user: RepoUserLike,
+      folderIds: number[],
+      parentId: number | null,
+    ) {
+      try {
+        const res = store.moveFoldersToFolder(user.uid, folderIds, parentId);
+        if (res === 'not_found') {
+          throw new errors.NotFoundOrForbiddenError('Folder could not be found.', 'FOLDER_NOT_FOUND');
+        }
+        if (res === 'parent_not_found') {
+          throw new errors.NotFoundOrForbiddenError('Parent folder could not be found.', 'FOLDER_NOT_FOUND');
+        }
+        if (res === 'cycle') {
+          throw new errors.RepoValidationError(
+            ['不能将文件夹移动到自身或其子文件夹下。'],
+            { parentId: '不能将文件夹移动到自身或其子文件夹下。' },
+            'FOLDER_CYCLE',
+          );
+        }
+      } catch (err) {
+        if (err instanceof FakePgError && err.code === '23505') {
+          throw new errors.RepoValidationError(
+            [`目标目录下已存在同名文件夹“${err.message}”。`],
+            { name: `目标目录下已存在同名文件夹“${err.message}”。` },
             'DUPLICATE_FOLDER_NAME',
           );
         }

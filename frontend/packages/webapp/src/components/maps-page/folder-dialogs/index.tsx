@@ -21,22 +21,14 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import Alert from '@mui/material/Alert';
 import AlertTitle from '@mui/material/AlertTitle';
-import Box from '@mui/material/Box';
 import FormControl from '@mui/material/FormControl';
-import IconButton from '@mui/material/IconButton';
 import Typography from '@mui/material/Typography';
-import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
-import FolderOpenRoundedIcon from '@mui/icons-material/FolderOpenRounded';
-import FolderRoundedIcon from '@mui/icons-material/FolderRounded';
-import HomeRoundedIcon from '@mui/icons-material/HomeRounded';
-import KeyboardArrowDownRoundedIcon from '@mui/icons-material/KeyboardArrowDownRounded';
-import KeyboardArrowRightRoundedIcon from '@mui/icons-material/KeyboardArrowRightRounded';
 import BaseDialog from '../action-dispatcher/base-dialog';
 import Input from '../../form/input';
-import { ErrorInfo, FOLDER_NAME_MAX_LENGTH, Folder } from '../../../classes/client';
+import { ErrorInfo, FOLDER_NAME_MAX_LENGTH, Folder, MapInfo } from '../../../classes/client';
 import { ClientContext } from '../../../classes/provider/client-context';
-import { FolderTreeNode, buildFolderTree, getDescendantFolderIds } from '../folderTree';
-import { APPLE_FONT_STACK, appleColors, applePressMixin, isDarkTheme } from '../appleDesign';
+import { getDescendantFolderIds, getFolderBreadcrumbs } from '../folderTree';
+import { FolderTreePicker } from './FolderTreePicker';
 
 export type FolderCreateDialogProps = {
   parentId: number | null;
@@ -227,13 +219,15 @@ export const FolderRenameDialog = ({
 };
 
 export type FolderDeleteDialogProps = {
-  folder: Folder;
-  onClose: () => void;
-  onDeleted?: (deletedFolderId: number) => void;
+  folder?: Folder | undefined;
+  foldersToDelete?: Folder[] | undefined;
+  onClose: (success?: boolean) => void;
+  onDeleted?: ((deletedFolderIds: number[]) => void) | undefined;
 };
 
 export const FolderDeleteDialog = ({
   folder,
+  foldersToDelete,
   onClose,
   onDeleted,
 }: FolderDeleteDialogProps): React.ReactElement => {
@@ -242,31 +236,46 @@ export const FolderDeleteDialog = ({
   const queryClient = useQueryClient();
   const [error, setError] = useState<ErrorInfo>();
 
-  const mutation = useMutation<void, ErrorInfo>({
-    mutationFn: () => {
+  const targetFolders = useMemo(
+    () => (foldersToDelete && foldersToDelete.length > 0 ? foldersToDelete : folder ? [folder] : []),
+    [folder, foldersToDelete],
+  );
+  const isBatch = targetFolders.length > 1;
+
+  const mutation = useMutation<number[], ErrorInfo>({
+    mutationFn: async () => {
       if (!client.deleteFolder) {
         return Promise.reject({ msg: 'Delete folder is not supported.' });
       }
-      return client.deleteFolder(folder.id);
+      const deletedIds: number[] = [];
+      for (const item of targetFolders) {
+        await client.deleteFolder(item.id);
+        deletedIds.push(item.id);
+      }
+      return deletedIds;
     },
-    onSuccess: () => {
+    onSuccess: (deletedIds) => {
       queryClient.invalidateQueries({ queryKey: ['folders'] });
       queryClient.invalidateQueries({ queryKey: ['maps'] });
-      onDeleted?.(folder.id);
-      onClose();
+      onDeleted?.(deletedIds);
+      onClose(true);
     },
     onError: (err) => setError(err),
   });
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (targetFolders.length === 0) {
+      onClose(false);
+      return;
+    }
     setError(undefined);
     mutation.mutate();
   };
 
   return (
     <BaseDialog
-      onClose={onClose}
+      onClose={() => onClose(false)}
       onSubmit={handleSubmit}
       error={error}
       isLoading={mutation.isPending}
@@ -283,27 +292,41 @@ export const FolderDeleteDialog = ({
       <Alert severity="warning">
         <AlertTitle>
           <Typography component="span" sx={{ fontWeight: 'bold' }}>
-            {folder.name}
+            {isBatch ? `将删除 ${targetFolders.length} 个文件夹` : (targetFolders[0]?.name ?? '')}
           </Typography>
         </AlertTitle>
-        <FormattedMessage
-          id="folder.delete-description"
-          defaultMessage="删除后，该文件夹内的导图和子文件夹将自动移回根目录，不会删除导图本身。"
-        />
+        {isBatch ? (
+          '删除后，这些文件夹内的导图和子文件夹将自动移回根目录，不会删除导图本身。'
+        ) : (
+          <FormattedMessage
+            id="folder.delete-description"
+            defaultMessage="删除后，该文件夹内的导图和子文件夹将自动移回根目录，不会删除导图本身。"
+          />
+        )}
       </Alert>
     </BaseDialog>
   );
 };
 
+export type FolderMoveResult = {
+  targetFolderId: number | null;
+  movedFolders: Folder[];
+  movedMapsCount: number;
+};
+
 export type FolderMoveDialogProps = {
-  folder: Folder;
+  folder?: Folder | undefined;
+  foldersToMove?: Folder[] | undefined;
+  mapsToMove?: MapInfo[] | undefined;
   folders: Folder[];
-  onClose: () => void;
-  onMoved?: (folder: Folder) => void;
+  onClose: (success?: boolean) => void;
+  onMoved?: ((result: FolderMoveResult) => void) | undefined;
 };
 
 export const FolderMoveDialog = ({
   folder,
+  foldersToMove,
+  mapsToMove,
   folders,
   onClose,
   onMoved,
@@ -311,203 +334,166 @@ export const FolderMoveDialog = ({
   const intl = useIntl();
   const client = use(ClientContext);
   const queryClient = useQueryClient();
-  const [selectedParentId, setSelectedParentId] = useState<number | null>(folder.parentId ?? null);
-  const [expandedIds, setExpandedIds] = useState<Set<number>>(() => new Set());
+
+  const targetFolders = useMemo(
+    () => (foldersToMove && foldersToMove.length > 0 ? foldersToMove : folder ? [folder] : []),
+    [folder, foldersToMove],
+  );
+  const targetMaps = useMemo(() => mapsToMove ?? [], [mapsToMove]);
+
+  const disabledIds = useMemo(() => {
+    const disabled = new Set<number>();
+    for (const item of targetFolders) {
+      for (const descendantId of getDescendantFolderIds(folders, item.id)) {
+        disabled.add(descendantId);
+      }
+    }
+    return disabled;
+  }, [folders, targetFolders]);
+
+  const initialParentId = useMemo(() => {
+    const parentCandidates = new Set<number | null>([
+      ...targetFolders.map((item) => item.parentId ?? null),
+      ...targetMaps.map((item) => item.folderId ?? null),
+    ]);
+    if (parentCandidates.size === 1) {
+      const onlyParent = Array.from(parentCandidates)[0] ?? null;
+      if (onlyParent === null || !disabledIds.has(onlyParent)) {
+        return onlyParent;
+      }
+    }
+    return null;
+  }, [targetFolders, targetMaps, disabledIds]);
+
+  const initialExpandedIds = useMemo(() => {
+    if (initialParentId === null) {
+      return new Set<number>();
+    }
+    const chain = getFolderBreadcrumbs(folders, initialParentId);
+    return new Set(chain.map((item) => item.id));
+  }, [folders, initialParentId]);
+
+  const [selectedParentId, setSelectedParentId] = useState<number | null>(initialParentId);
+  const [inlineCreatedFolders, setInlineCreatedFolders] = useState<Folder[]>([]);
+  const [pickerLoading, setPickerLoading] = useState(false);
   const [error, setError] = useState<ErrorInfo>();
 
-  const disabledIds = useMemo(
-    () => getDescendantFolderIds(folders, folder.id),
-    [folders, folder.id],
-  );
-  const tree = useMemo(() => buildFolderTree(folders), [folders]);
+  const mergedFolders = useMemo(() => {
+    if (inlineCreatedFolders.length === 0) {
+      return folders;
+    }
+    const existingIds = new Set(folders.map((item) => item.id));
+    const extras = inlineCreatedFolders.filter((item) => !existingIds.has(item.id));
+    return extras.length > 0 ? [...folders, ...extras] : folders;
+  }, [folders, inlineCreatedFolders]);
 
-  const mutation = useMutation<Folder, ErrorInfo, number | null>({
-    mutationFn: (parentId) => {
-      if (!client.updateFolder) {
-        return Promise.reject({ msg: 'Move folder is not supported.' });
+  const mutation = useMutation<FolderMoveResult, ErrorInfo, number | null>({
+    mutationFn: async (parentId) => {
+      const foldersNeedMove = targetFolders.filter(
+        (item) => (item.parentId ?? null) !== parentId,
+      );
+      const mapsNeedMove = targetMaps.filter((item) => (item.folderId ?? null) !== parentId);
+
+      if (foldersNeedMove.length > 0) {
+        const folderIds = foldersNeedMove.map((item) => item.id);
+        if (client.moveFoldersToFolder) {
+          await client.moveFoldersToFolder(folderIds, parentId);
+        } else if (client.updateFolder) {
+          for (const item of foldersNeedMove) {
+            await client.updateFolder(item.id, { parentId });
+          }
+        } else {
+          return Promise.reject({ msg: 'Move folder is not supported.' });
+        }
       }
-      return client.updateFolder(folder.id, { parentId });
+
+      if (mapsNeedMove.length > 0) {
+        if (!client.moveMapsToFolder) {
+          return Promise.reject({ msg: 'Move to folder is not supported.' });
+        }
+        await client.moveMapsToFolder(
+          mapsNeedMove.map((item) => item.id),
+          parentId,
+        );
+      }
+
+      return {
+        targetFolderId: parentId,
+        movedFolders: foldersNeedMove,
+        movedMapsCount: mapsNeedMove.length,
+      };
     },
-    onSuccess: (updated) => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['folders'] });
       queryClient.invalidateQueries({ queryKey: ['maps'] });
-      onMoved?.(updated);
-      onClose();
+      onMoved?.(result);
+      onClose(true);
     },
     onError: (err) => setError(err),
   });
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (selectedParentId === (folder.parentId ?? null)) {
-      onClose();
+    const hasChanges =
+      targetFolders.some((item) => (item.parentId ?? null) !== selectedParentId) ||
+      targetMaps.some((item) => (item.folderId ?? null) !== selectedParentId);
+    if (!hasChanges) {
+      onClose(false);
       return;
     }
     setError(undefined);
     mutation.mutate(selectedParentId);
   };
 
-  const renderNode = (node: FolderTreeNode): React.ReactNode => {
-    const { folder: item, children, depth } = node;
-    const isDisabled = disabledIds.has(item.id);
-    const isSelected = selectedParentId === item.id;
-    const isExpanded = expandedIds.has(item.id);
-    const hasChildren = children.length > 0;
-
-    return (
-      <React.Fragment key={item.id}>
-        <Box
-          role="option"
-          aria-selected={isSelected}
-          aria-disabled={isDisabled}
-          onClick={() => {
-            if (!isDisabled) {
-              setSelectedParentId(item.id);
-              setError(undefined);
-            }
-          }}
-          sx={(theme) => {
-            const c = appleColors(isDarkTheme(theme));
-            return {
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              pl: `${10 + depth * 18}px`,
-              pr: '10px',
-              py: '7px',
-              borderRadius: '10px',
-              cursor: isDisabled ? 'not-allowed' : 'pointer',
-              opacity: isDisabled ? 0.45 : 1,
-              fontFamily: APPLE_FONT_STACK,
-              fontSize: '0.88rem',
-              fontWeight: isSelected ? 700 : 600,
-              color: isSelected ? c.amberText : c.textPrimary,
-              backgroundColor: isSelected ? c.amberSoft : 'transparent',
-              ...(isDisabled ? {} : applePressMixin),
-              '&:hover': isDisabled
-                ? {}
-                : {
-                    backgroundColor: isSelected ? c.amberSoftHover : c.hoverFill,
-                  },
-            };
-          }}
-        >
-          {hasChildren ? (
-            <IconButton
-              size="small"
-              onClick={(e) => {
-                e.stopPropagation();
-                setExpandedIds((prev) => {
-                  const next = new Set(prev);
-                  if (next.has(item.id)) next.delete(item.id);
-                  else next.add(item.id);
-                  return next;
-                });
-              }}
-              sx={{ p: '2px', color: 'inherit' }}
-            >
-              {isExpanded ? (
-                <KeyboardArrowDownRoundedIcon sx={{ fontSize: 18 }} />
-              ) : (
-                <KeyboardArrowRightRoundedIcon sx={{ fontSize: 18 }} />
-              )}
-            </IconButton>
-          ) : (
-            <Box sx={{ width: 22, flexShrink: 0 }} />
-          )}
-          {isSelected || isExpanded ? (
-            <FolderOpenRoundedIcon sx={{ fontSize: 18, color: isSelected ? 'inherit' : '#F59E0B', flexShrink: 0 }} />
-          ) : (
-            <FolderRoundedIcon sx={{ fontSize: 18, color: '#F59E0B', opacity: 0.85, flexShrink: 0 }} />
-          )}
-          <Typography
-            noWrap
-            sx={{ flex: 1, fontFamily: APPLE_FONT_STACK, fontSize: '0.88rem', fontWeight: 'inherit' }}
-          >
-            {item.name}
-          </Typography>
-          {isSelected && <CheckRoundedIcon sx={{ fontSize: 18, flexShrink: 0 }} />}
-        </Box>
-        {hasChildren && isExpanded && children.map(renderNode)}
-      </React.Fragment>
-    );
-  };
+  const description = useMemo(() => {
+    if (targetFolders.length === 1 && targetMaps.length === 0) {
+      return `选择“${targetFolders[0]!.name}”的新上级目录，或先在下方新建文件夹。`;
+    }
+    if (targetFolders.length > 1 && targetMaps.length === 0) {
+      return `已选择 ${targetFolders.length} 个文件夹，选择目标文件夹，或先在下方新建文件夹。`;
+    }
+    if (targetFolders.length > 0 && targetMaps.length > 0) {
+      return `已选择 ${targetFolders.length} 个文件夹、${targetMaps.length} 份导图，选择目标文件夹，或先在下方新建文件夹。`;
+    }
+    return '选择目标文件夹，或先在下方新建文件夹。';
+  }, [targetFolders, targetMaps.length]);
 
   return (
     <BaseDialog
-      onClose={onClose}
+      onClose={() => onClose(false)}
       onSubmit={handleSubmit}
       error={error}
-      isLoading={mutation.isPending}
+      isLoading={mutation.isPending || pickerLoading}
       title={intl.formatMessage({
         id: 'folder.move-folder-title',
         defaultMessage: '调整文件夹位置',
       })}
-      description={`选择“${folder.name}”的新上级目录。`}
+      description={description}
       submitButton={intl.formatMessage({
         id: 'folder.move-button',
         defaultMessage: '移动到此处',
       })}
       maxWidth="xs"
     >
-      <Box
-        role="listbox"
-        sx={(theme) => {
-          const c = appleColors(isDarkTheme(theme));
-          return {
-            maxHeight: 260,
-            overflowY: 'auto',
-            p: 0.75,
-            borderRadius: '14px',
-            border: `1px solid ${c.hairlineStrong}`,
-            backgroundColor: c.canvas,
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '2px',
-          };
-        }}
-      >
-        <Box
-          role="option"
-          aria-selected={selectedParentId === null}
-          onClick={() => {
-            setSelectedParentId(null);
-            setError(undefined);
-          }}
-          sx={(theme) => {
-            const c = appleColors(isDarkTheme(theme));
-            const isSelected = selectedParentId === null;
-            return {
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              px: '10px',
-              py: '8px',
-              borderRadius: '10px',
-              cursor: 'pointer',
-              fontFamily: APPLE_FONT_STACK,
-              fontSize: '0.88rem',
-              fontWeight: isSelected ? 700 : 600,
-              color: isSelected ? c.amberText : c.textPrimary,
-              backgroundColor: isSelected ? c.amberSoft : 'transparent',
-              ...applePressMixin,
-              '&:hover': {
-                backgroundColor: isSelected ? c.amberSoftHover : c.hoverFill,
-              },
-            };
-          }}
-        >
-          <HomeRoundedIcon sx={{ fontSize: 18, flexShrink: 0 }} />
-          <Typography
-            noWrap
-            sx={{ flex: 1, fontFamily: APPLE_FONT_STACK, fontSize: '0.88rem', fontWeight: 'inherit' }}
-          >
-            <FormattedMessage id="folder.root" defaultMessage="根目录（未分类）" />
-          </Typography>
-          {selectedParentId === null && <CheckRoundedIcon sx={{ fontSize: 18, flexShrink: 0 }} />}
-        </Box>
-        {tree.map(renderNode)}
-      </Box>
+      <FolderTreePicker
+        folders={mergedFolders}
+        selectedFolderId={selectedParentId}
+        onSelectFolder={setSelectedParentId}
+        disabledIds={disabledIds}
+        initialExpandedIds={initialExpandedIds}
+        allowInlineCreate
+        ariaLabel={intl.formatMessage({
+          id: 'folder.move-folder-title',
+          defaultMessage: '调整文件夹位置',
+        })}
+        onError={setError}
+        onLoadingChange={setPickerLoading}
+        onFolderCreated={(created) =>
+          setInlineCreatedFolders((prev) =>
+            prev.some((item) => item.id === created.id) ? prev : [...prev, created],
+          )
+        }
+      />
     </BaseDialog>
   );
 };
