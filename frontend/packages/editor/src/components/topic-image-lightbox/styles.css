@@ -92,6 +92,10 @@
   flex-shrink: 0;
 }
 
+.topic-image-lightbox__close-btn {
+  flex-shrink: 0;
+}
+
 .topic-image-lightbox__divider {
   width: 1px;
   height: 18px;
@@ -242,11 +246,29 @@
 @media (max-width: 640px) {
   .topic-image-lightbox__toolbar {
     padding: 8px 10px;
-    gap: 8px;
+    gap: 6px;
+  }
+
+  .topic-image-lightbox__actions {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .topic-image-lightbox__actions::-webkit-scrollbar {
+    display: none;
   }
 
   .topic-image-lightbox__dimensions,
   .topic-image-lightbox__divider {
+    display: none;
+  }
+}
+
+@media (max-width: 520px) {
+  .topic-image-lightbox__meta-group {
     display: none;
   }
 }

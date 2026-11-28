@@ -49,9 +49,11 @@ const ensureBrowserPolyfills = () => {
   if (typeof window.PointerEvent === 'undefined') {
     class MockPointerEvent extends MouseEvent {
       pointerId: number;
+      pointerType: string;
       constructor(type: string, params: PointerEventInit = {}) {
         super(type, params);
         this.pointerId = params.pointerId ?? 1;
+        this.pointerType = params.pointerType ?? 'mouse';
       }
     }
     window.PointerEvent = MockPointerEvent as unknown as typeof PointerEvent;
@@ -86,10 +88,11 @@ describe('TopicImageLightbox', () => {
 
   it('computes fit and initial scales cleanly including rotated bounds', () => {
     expect(clampZoom(10)).toBe(8);
-    expect(clampZoom(0.05)).toBe(0.25);
+    expect(clampZoom(0.01)).toBe(0.05);
     expect(computeFitScale(0, 600, 300, 148, 0)).toBe(1);
     expect(computeFitScale(1048, 748, 2000, 1000, 0)).toBe(0.5);
     expect(computeFitScale(1048, 748, 1000, 2000, 90)).toBe(0.5);
+    expect(computeFitScale(390, 700, 2000, 2000, 0)).toBe(0.183);
     expect(computeInitialScale(0.5)).toBe(0.5);
     expect(computeInitialScale(2.5)).toBe(1);
   });
@@ -183,13 +186,13 @@ describe('TopicImageLightbox', () => {
     const canvas = img.parentElement as HTMLElement;
     expect(canvas.style.transform).not.toContain('scale(1)');
 
-    for (let i = 0; i < 12; i += 1) {
+    for (let i = 0; i < 20; i += 1) {
       fireEvent.wheel(stage, { deltaY: 120, clientX: 500, clientY: 350 });
     }
-    expect(screen.getByText('25%')).toBeTruthy();
+    expect(screen.getByText('5%')).toBeTruthy();
     // Cover keyboard '-' no-op when already at MIN_ZOOM
     fireEvent.keyDown(dialog, { key: '-' });
-    expect(screen.getByText('25%')).toBeTruthy();
+    expect(screen.getByText('5%')).toBeTruthy();
 
     // Double-click zooms in when below/at base, then resets on second double-click
     fireEvent.doubleClick(img, { clientX: 500, clientY: 350 });
@@ -234,6 +237,48 @@ describe('TopicImageLightbox', () => {
     fireEvent.pointerDown(stage, { button: 0, pointerId: 2, clientX: 20, clientY: 120 });
     fireEvent.pointerUp(stage, { pointerId: 2, clientX: 20, clientY: 120 });
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('fits large images below 25% on narrow mobile viewports and supports two-finger pinch zoom', () => {
+    const onClose = jest.fn();
+    render(
+      <TopicImageLightbox
+        preview={{ url: 'https://example.com/large-mobile.avif', title: '手机大图' }}
+        onClose={onClose}
+      />,
+    );
+
+    const img = screen.getByAltText('手机大图') as HTMLImageElement;
+    const dialog = img.closest('dialog') as HTMLDialogElement;
+    const stage = img.closest('.topic-image-lightbox__stage') as HTMLElement;
+    mockRect(dialog, 0, 0, 390, 752);
+    mockRect(stage, 0, 52, 390, 700);
+
+    Object.defineProperty(img, 'naturalWidth', { configurable: true, value: 2000 });
+    Object.defineProperty(img, 'naturalHeight', { configurable: true, value: 2000 });
+    fireEvent.load(img);
+
+    // 390 - 24 = 366 / 2000 = 0.183 -> 18% (not stuck at 25%), and zoom-out button remains enabled
+    expect(screen.getByText('18%')).toBeTruthy();
+    const zoomOutBtn = screen.getByRole('button', { name: '缩小' }) as HTMLButtonElement;
+    expect(zoomOutBtn.disabled).toBe(false);
+
+    // Two-finger pinch out (100px -> 200px) doubles scale (~37%) without closing
+    fireEvent.pointerDown(stage, { pointerType: 'touch', button: 0, pointerId: 1, clientX: 145, clientY: 400 });
+    fireEvent.pointerDown(stage, { pointerType: 'touch', button: 0, pointerId: 2, clientX: 245, clientY: 400 });
+    fireEvent.pointerMove(stage, { pointerType: 'touch', pointerId: 1, clientX: 95, clientY: 400 });
+    fireEvent.pointerMove(stage, { pointerType: 'touch', pointerId: 2, clientX: 295, clientY: 400 });
+    expect(screen.getByText('37%')).toBeTruthy();
+
+    // Pinch in (200px -> 50px) shrinks below initial fit scale (down to ~9%)
+    fireEvent.pointerMove(stage, { pointerType: 'touch', pointerId: 1, clientX: 170, clientY: 400 });
+    fireEvent.pointerMove(stage, { pointerType: 'touch', pointerId: 2, clientX: 220, clientY: 400 });
+    expect(screen.getByText('9%')).toBeTruthy();
+
+    // Lift both fingers: should not light-dismiss
+    fireEvent.pointerUp(stage, { pointerType: 'touch', pointerId: 2, clientX: 220, clientY: 400 });
+    fireEvent.pointerUp(stage, { pointerType: 'touch', pointerId: 1, clientX: 170, clientY: 400 });
+    expect(onClose).not.toHaveBeenCalled();
   });
 
   it('supports outside click fallback when closedBy is unavailable and direct close fallback when dialog is not open', () => {

@@ -70,12 +70,27 @@ type DragSession = {
   moved: boolean;
 };
 
-const MIN_ZOOM = 0.25;
+type PinchSession = {
+  initialDistance: number;
+  startScale: number;
+  startOffsetX: number;
+  startOffsetY: number;
+  startMidX: number;
+  startMidY: number;
+};
+
+type PointerPoint = {
+  clientX: number;
+  clientY: number;
+};
+
+const MIN_ZOOM = 0.05;
 const MAX_ZOOM = 8;
 const BUTTON_ZOOM_FACTOR = 1.25;
 const PAN_STEP_PX = 48;
 const DRAG_THRESHOLD_PX = 4;
 const STAGE_PADDING_PX = 48;
+const COMPACT_STAGE_PADDING_PX = 24;
 
 const INITIAL_VIEW: ViewState = {
   scale: 1,
@@ -84,8 +99,8 @@ const INITIAL_VIEW: ViewState = {
   rotation: 0,
 };
 
-export const clampZoom = (value: number): number =>
-  Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, Number(value.toFixed(4))));
+export const clampZoom = (value: number, minZoom = MIN_ZOOM): number =>
+  Math.min(MAX_ZOOM, Math.max(minZoom, Number(value.toFixed(4))));
 
 export const computeFitScale = (
   stageWidth: number,
@@ -101,9 +116,11 @@ export const computeFitScale = (
   const swapped = normalizedRot === 90 || normalizedRot === 270;
   const effW = swapped ? imageHeight : imageWidth;
   const effH = swapped ? imageWidth : imageHeight;
-  const availW = Math.max(stageWidth - STAGE_PADDING_PX, 120);
-  const availH = Math.max(stageHeight - STAGE_PADDING_PX, 120);
-  return clampZoom(Math.min(availW / effW, availH / effH));
+  const padding = stageWidth < 520 || stageHeight < 520 ? COMPACT_STAGE_PADDING_PX : STAGE_PADDING_PX;
+  const availW = Math.max(stageWidth - padding, 120);
+  const availH = Math.max(stageHeight - padding, 120);
+  const rawFit = Math.min(availW / effW, availH / effH);
+  return clampZoom(rawFit, Math.min(MIN_ZOOM, Math.max(0.01, rawFit)));
 };
 
 export const computeInitialScale = (fitScale: number): number =>
@@ -145,13 +162,26 @@ const TopicImageLightboxContent = ({
   const stageRef = useRef<HTMLDivElement | null>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
   const dragRef = useRef<DragSession | null>(null);
+  const pinchRef = useRef<PinchSession | null>(null);
+  const activePointersRef = useRef<Map<number, PointerPoint>>(new Map());
+  const hadMultiTouchRef = useRef(false);
 
   const [view, setView] = useState<ViewState>(INITIAL_VIEW);
+  const viewRef = useRef<ViewState>(INITIAL_VIEW);
+  const minZoomRef = useRef<number>(MIN_ZOOM);
   const [naturalSize, setNaturalSize] = useState<NaturalSize | null>(null);
   const [checkerBg, setCheckerBg] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [copiedRecently, setCopiedRecently] = useState(false);
   const copyTimerRef = useRef<number | null>(null);
+
+  const updateView = useCallback((updater: ViewState | ((prev: ViewState) => ViewState)) => {
+    setView((prev) => {
+      const next = typeof updater === 'function' ? updater(prev) : updater;
+      viewRef.current = next;
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -212,8 +242,8 @@ const TopicImageLightboxContent = ({
   const zoomAtStagePoint = useCallback(
     (targetScale: number, clientX?: number, clientY?: number) => {
       const stage = stageRef.current;
-      const nextScale = clampZoom(targetScale);
-      setView((prev) => {
+      const nextScale = clampZoom(targetScale, minZoomRef.current);
+      updateView((prev) => {
         if (nextScale === prev.scale) {
           return prev;
         }
@@ -225,7 +255,7 @@ const TopicImageLightboxContent = ({
         return { ...prev, scale: nextScale };
       });
     },
-    [],
+    [updateView],
   );
 
   useEffect(() => {
@@ -235,8 +265,8 @@ const TopicImageLightboxContent = ({
       event.stopPropagation();
       const clampedDelta = Math.max(-120, Math.min(120, event.deltaY));
       const factor = Math.exp(-clampedDelta * 0.0025);
-      setView((prev) => {
-        const nextScale = clampZoom(prev.scale * factor);
+      updateView((prev) => {
+        const nextScale = clampZoom(prev.scale * factor, minZoomRef.current);
         if (nextScale === prev.scale) {
           return prev;
         }
@@ -254,43 +284,43 @@ const TopicImageLightboxContent = ({
     return () => {
       stage.removeEventListener('wheel', handleWheel);
     };
-  }, []);
+  }, [updateView]);
 
   const handleZoomIn = () => zoomAtStagePoint(view.scale * BUTTON_ZOOM_FACTOR);
   const handleZoomOut = () => zoomAtStagePoint(view.scale / BUTTON_ZOOM_FACTOR);
 
   const handleFit = useCallback(() => {
-    setView((prev) => ({
+    updateView((prev) => ({
       ...prev,
       scale: getFitScaleFor(naturalSize, prev.rotation),
       offsetX: 0,
       offsetY: 0,
     }));
-  }, [getFitScaleFor, naturalSize]);
+  }, [getFitScaleFor, naturalSize, updateView]);
 
   const handleActualSize = useCallback(() => {
-    setView((prev) => ({
+    updateView((prev) => ({
       ...prev,
       scale: 1,
       offsetX: 0,
       offsetY: 0,
     }));
-  }, []);
+  }, [updateView]);
 
   const handleReset = useCallback(() => {
     const fit = getFitScaleFor(naturalSize, 0);
-    setView({
+    updateView({
       scale: computeInitialScale(fit),
       offsetX: 0,
       offsetY: 0,
       rotation: 0,
     });
-  }, [getFitScaleFor, naturalSize]);
+  }, [getFitScaleFor, naturalSize, updateView]);
 
   const handleToggleZoomBadge = () => {
     const fit = getFitScaleFor(naturalSize, view.rotation);
     const isNearOne = Math.abs(view.scale - 1) < 0.02;
-    setView((prev) => ({
+    updateView((prev) => ({
       ...prev,
       scale: isNearOne ? fit : 1,
       offsetX: 0,
@@ -300,7 +330,7 @@ const TopicImageLightboxContent = ({
 
   const handleRotate = useCallback(
     (deltaDeg = 90) => {
-      setView((prev) => {
+      updateView((prev) => {
         const nextRotation = (prev.rotation + deltaDeg + 360) % 360;
         return {
           ...prev,
@@ -310,7 +340,7 @@ const TopicImageLightboxContent = ({
         };
       });
     },
-    [],
+    [updateView],
   );
 
   const handleImageLoad = (event: React.SyntheticEvent<HTMLImageElement>) => {
@@ -319,7 +349,8 @@ const TopicImageLightboxContent = ({
       const size = { width: img.naturalWidth, height: img.naturalHeight };
       setNaturalSize(size);
       const fit = getFitScaleFor(size, 0);
-      setView({
+      minZoomRef.current = Math.min(MIN_ZOOM, fit);
+      updateView({
         scale: computeInitialScale(fit),
         offsetX: 0,
         offsetY: 0,
@@ -333,10 +364,10 @@ const TopicImageLightboxContent = ({
     const fit = getFitScaleFor(naturalSize, view.rotation);
     const baseScale = computeInitialScale(fit);
     if (view.scale <= baseScale + 0.05) {
-      const targetScale = clampZoom(Math.max(2, baseScale * 2));
+      const targetScale = clampZoom(Math.max(2, baseScale * 2), minZoomRef.current);
       zoomAtStagePoint(targetScale, event.clientX, event.clientY);
     } else {
-      setView((prev) => ({ ...prev, scale: baseScale, offsetX: 0, offsetY: 0 }));
+      updateView((prev) => ({ ...prev, scale: baseScale, offsetX: 0, offsetY: 0 }));
     }
   };
 
@@ -361,26 +392,88 @@ const TopicImageLightboxContent = ({
   );
 
   const handleStagePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
-    if (event.button !== 0) {
+    if (event.pointerType !== 'touch' && event.button !== 0) {
       return;
     }
+
+    const pointers = activePointersRef.current;
+    pointers.set(event.pointerId, { clientX: event.clientX, clientY: event.clientY });
+    event.currentTarget.setPointerCapture?.(event.pointerId);
+
+    if (pointers.size >= 2) {
+      hadMultiTouchRef.current = true;
+      dragRef.current = null;
+      const pts = Array.from(pointers.values());
+      const p1 = pts[0]!;
+      const p2 = pts[1]!;
+      const dist = Math.hypot(p2.clientX - p1.clientX, p2.clientY - p1.clientY);
+      const current = viewRef.current;
+      pinchRef.current = {
+        initialDistance: Math.max(dist, 1),
+        startScale: current.scale,
+        startOffsetX: current.offsetX,
+        startOffsetY: current.offsetY,
+        startMidX: (p1.clientX + p2.clientX) / 2,
+        startMidY: (p1.clientY + p2.clientY) / 2,
+      };
+      setIsDragging(true);
+      return;
+    }
+
+    hadMultiTouchRef.current = false;
     const target = event.target as HTMLElement;
     const startedOnImage = target === imgRef.current;
-    const canPan = startedOnImage || isPannable(view);
+    const current = viewRef.current;
+    const canPan = startedOnImage || isPannable(current);
     dragRef.current = {
       pointerId: event.pointerId,
       startX: event.clientX,
       startY: event.clientY,
-      startOffsetX: view.offsetX,
-      startOffsetY: view.offsetY,
+      startOffsetX: current.offsetX,
+      startOffsetY: current.offsetY,
       startedOnImage,
       canPan,
       moved: false,
     };
-    event.currentTarget.setPointerCapture?.(event.pointerId);
   };
 
   const handleStagePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const pointers = activePointersRef.current;
+    if (!pointers.has(event.pointerId)) {
+      return;
+    }
+    pointers.set(event.pointerId, { clientX: event.clientX, clientY: event.clientY });
+
+    const pinch = pinchRef.current;
+    if (pointers.size >= 2 && pinch) {
+      const pts = Array.from(pointers.values());
+      const p1 = pts[0]!;
+      const p2 = pts[1]!;
+      const dist = Math.hypot(p2.clientX - p1.clientX, p2.clientY - p1.clientY);
+      const midX = (p1.clientX + p2.clientX) / 2;
+      const midY = (p1.clientY + p2.clientY) / 2;
+      const nextScale = clampZoom(
+        pinch.startScale * (Math.max(dist, 1) / pinch.initialDistance),
+        minZoomRef.current,
+      );
+      const rect = stageRef.current?.getBoundingClientRect();
+      updateView((prev) => {
+        if (!rect || rect.width <= 0 || rect.height <= 0 || pinch.startScale <= 0) {
+          return { ...prev, scale: nextScale };
+        }
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const ratio = nextScale / pinch.startScale;
+        return {
+          ...prev,
+          scale: nextScale,
+          offsetX: midX - centerX - (pinch.startMidX - centerX - pinch.startOffsetX) * ratio,
+          offsetY: midY - centerY - (pinch.startMidY - centerY - pinch.startOffsetY) * ratio,
+        };
+      });
+      return;
+    }
+
     const session = dragRef.current;
     if (!session || session.pointerId !== event.pointerId || !session.canPan) {
       return;
@@ -392,7 +485,7 @@ const TopicImageLightboxContent = ({
       setIsDragging(true);
     }
     if (session.moved) {
-      setView((prev) => ({
+      updateView((prev) => ({
         ...prev,
         offsetX: session.startOffsetX + dx,
         offsetY: session.startOffsetY + dy,
@@ -401,15 +494,60 @@ const TopicImageLightboxContent = ({
   };
 
   const handleStagePointerEnd = (event: ReactPointerEvent<HTMLDivElement>) => {
+    const pointers = activePointersRef.current;
+    if (!pointers.has(event.pointerId)) {
+      return;
+    }
+    pointers.delete(event.pointerId);
+    event.currentTarget.releasePointerCapture?.(event.pointerId);
+
+    if (pinchRef.current) {
+      if (pointers.size >= 2) {
+        const pts = Array.from(pointers.values());
+        const p1 = pts[0]!;
+        const p2 = pts[1]!;
+        const current = viewRef.current;
+        pinchRef.current = {
+          initialDistance: Math.max(Math.hypot(p2.clientX - p1.clientX, p2.clientY - p1.clientY), 1),
+          startScale: current.scale,
+          startOffsetX: current.offsetX,
+          startOffsetY: current.offsetY,
+          startMidX: (p1.clientX + p2.clientX) / 2,
+          startMidY: (p1.clientY + p2.clientY) / 2,
+        };
+        return;
+      }
+
+      pinchRef.current = null;
+      if (pointers.size === 1) {
+        const [remId, remPt] = Array.from(pointers.entries())[0]!;
+        const current = viewRef.current;
+        dragRef.current = {
+          pointerId: remId,
+          startX: remPt.clientX,
+          startY: remPt.clientY,
+          startOffsetX: current.offsetX,
+          startOffsetY: current.offsetY,
+          startedOnImage: true,
+          canPan: true,
+          moved: true,
+        };
+        return;
+      }
+
+      dragRef.current = null;
+      setIsDragging(false);
+      return;
+    }
+
     const session = dragRef.current;
     if (!session || session.pointerId !== event.pointerId) {
       return;
     }
     dragRef.current = null;
     setIsDragging(false);
-    event.currentTarget.releasePointerCapture?.(event.pointerId);
 
-    if (!session.moved && !session.startedOnImage) {
+    if (!session.moved && !session.startedOnImage && !hadMultiTouchRef.current) {
       requestClose();
     }
   };
@@ -432,16 +570,16 @@ const TopicImageLightboxContent = ({
       handleRotate(event.shiftKey ? -90 : 90);
     } else if (event.key === 'ArrowLeft') {
       event.preventDefault();
-      setView((prev) => ({ ...prev, offsetX: prev.offsetX + PAN_STEP_PX }));
+      updateView((prev) => ({ ...prev, offsetX: prev.offsetX + PAN_STEP_PX }));
     } else if (event.key === 'ArrowRight') {
       event.preventDefault();
-      setView((prev) => ({ ...prev, offsetX: prev.offsetX - PAN_STEP_PX }));
+      updateView((prev) => ({ ...prev, offsetX: prev.offsetX - PAN_STEP_PX }));
     } else if (event.key === 'ArrowUp') {
       event.preventDefault();
-      setView((prev) => ({ ...prev, offsetY: prev.offsetY + PAN_STEP_PX }));
+      updateView((prev) => ({ ...prev, offsetY: prev.offsetY + PAN_STEP_PX }));
     } else if (event.key === 'ArrowDown') {
       event.preventDefault();
-      setView((prev) => ({ ...prev, offsetY: prev.offsetY - PAN_STEP_PX }));
+      updateView((prev) => ({ ...prev, offsetY: prev.offsetY - PAN_STEP_PX }));
     }
   };
 
@@ -476,6 +614,8 @@ const TopicImageLightboxContent = ({
   };
 
   const fitScale = getFitScaleFor(naturalSize, view.rotation);
+  const minZoom = Math.min(MIN_ZOOM, fitScale);
+  minZoomRef.current = minZoom;
   const initialScale = computeInitialScale(fitScale);
   const isAtDefault =
     Math.abs(view.scale - initialScale) < 0.01 &&
@@ -517,7 +657,7 @@ const TopicImageLightboxContent = ({
                 className="topic-image-lightbox__btn"
                 aria-label="缩小"
                 onClick={handleZoomOut}
-                disabled={view.scale <= MIN_ZOOM}
+                disabled={view.scale <= minZoom}
               >
                 <ZoomOutRoundedIcon fontSize="small" aria-hidden="true" />
               </button>
@@ -641,19 +781,19 @@ const TopicImageLightboxContent = ({
               </a>
             </Tooltip>
           )}
-
-          <Tooltip title="关闭 (Esc)">
-            <button
-              type="button"
-              className="topic-image-lightbox__btn"
-              aria-label="关闭"
-              autoFocus
-              onClick={requestClose}
-            >
-              <CloseRoundedIcon fontSize="small" aria-hidden="true" />
-            </button>
-          </Tooltip>
         </div>
+
+        <Tooltip title="关闭 (Esc)">
+          <button
+            type="button"
+            className="topic-image-lightbox__btn topic-image-lightbox__close-btn"
+            aria-label="关闭"
+            autoFocus
+            onClick={requestClose}
+          >
+            <CloseRoundedIcon fontSize="small" aria-hidden="true" />
+          </button>
+        </Tooltip>
       </header>
 
       <div
