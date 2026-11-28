@@ -30,6 +30,7 @@ import Exporter, { type ExportFileResult } from './components/export/Exporter';
 import MDExporter from './components/export/MDExporter';
 import XMindExporter from './components/export/XMindExporter';
 import { sanitizeExportFileName } from './components/export/support/ImageAssetCollector';
+import { extractSubtreeMindmap } from './components/export/support/SubtreeMindmapBuilder';
 import Importer from './components/import/Importer';
 import ImportError from './components/import/ImportError';
 import DesignerKeyboard from './components/DesignerKeyboard';
@@ -101,6 +102,7 @@ export {
   MDExporter,
   XMindExporter,
   sanitizeExportFileName,
+  extractSubtreeMindmap,
   SvgImageIcon,
   Importer,
   ImportError,

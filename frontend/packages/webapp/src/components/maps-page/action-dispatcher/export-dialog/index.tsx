@@ -21,7 +21,12 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import Radio from '@mui/material/Radio';
 import AccountTreeRoundedIcon from '@mui/icons-material/AccountTreeRounded';
 import DescriptionRoundedIcon from '@mui/icons-material/DescriptionRounded';
-import { Designer, TextExporterFactory, sanitizeExportFileName } from '@wisemapping/editor';
+import {
+  Designer,
+  TextExporterFactory,
+  extractSubtreeMindmap,
+  sanitizeExportFileName,
+} from '@wisemapping/editor';
 import BaseDialog from '../base-dialog';
 import {
   FormatBadge,
@@ -31,24 +36,65 @@ import {
   FormatDescription,
   FormatIconBox,
   FormatTitle,
+  ScopeButton,
+  ScopeLabel,
+  ScopeSection,
+  ScopeSegment,
 } from './styled';
 import { fetchMindmap } from '../../../editor-page/PersistenceManagerUtils';
 import { useFetchMapMetadata } from '../../../../classes/middleware';
 import type { ErrorInfo } from '../../../../classes/client';
 
 type ExportFormat = 'xmind' | 'md';
+type ExportScope = 'topic' | 'map';
 
 type ExportDialogProps = {
   mapId: number;
   /** The designer of the editor the dialog was opened from; none from the map list. */
   designer?: Designer | undefined;
+  /** Specific non-central topic ID requested via context menu, if any. */
+  exportTopicId?: number | undefined;
   onClose: (success?: boolean) => void;
 };
 
-const ExportDialog = ({ mapId, onClose, designer }: ExportDialogProps): React.ReactElement => {
+const ExportDialog = ({
+  mapId,
+  onClose,
+  designer,
+  exportTopicId,
+}: ExportDialogProps): React.ReactElement => {
   const intl = useIntl();
   const { data: mapMetadata } = useFetchMapMetadata(mapId);
 
+  const selectedTopicModel = React.useMemo(() => {
+    if (!designer) {
+      return undefined;
+    }
+    if (exportTopicId !== undefined) {
+      const targetNode = designer.getMindmap?.()?.findNodeById?.(exportTopicId);
+      return targetNode && targetNode.getType() !== 'CentralTopic' ? targetNode : undefined;
+    }
+    const selectedTopics = designer.getModel?.()?.filterSelectedTopics?.();
+    if (!selectedTopics || selectedTopics.length !== 1) {
+      return undefined;
+    }
+    const [selected] = selectedTopics;
+    if (!selected || selected.isCentralTopic()) {
+      return undefined;
+    }
+    return selected.getModel();
+  }, [designer, exportTopicId]);
+
+  const selectedTopicTitle = React.useMemo(() => {
+    if (!selectedTopicModel) {
+      return '';
+    }
+    return selectedTopicModel.getPlainText().trim() || selectedTopicModel.getText()?.trim() || '';
+  }, [selectedTopicModel]);
+
+  const [exportScope, setExportScope] = React.useState<ExportScope>(() =>
+    selectedTopicModel ? 'topic' : 'map',
+  );
   const [exportFormat, setExportFormat] = React.useState<ExportFormat>('xmind');
   const [isExporting, setIsExporting] = React.useState<boolean>(false);
   const [error, setError] = React.useState<ErrorInfo | undefined>(undefined);
@@ -71,8 +117,14 @@ const ExportDialog = ({ mapId, onClose, designer }: ExportDialogProps): React.Re
     setError(undefined);
 
     try {
-      const mindmap = designer !== undefined ? designer.getMindmap() : await fetchMindmap(mapId);
-      const rawTitle = mapMetadata?.title ?? mindmap.getId() ?? 'mindmap';
+      const fullMindmap = designer !== undefined ? designer.getMindmap() : await fetchMindmap(mapId);
+      const useTopicScope = exportScope === 'topic' && selectedTopicModel !== undefined;
+      const mindmap = useTopicScope
+        ? extractSubtreeMindmap(fullMindmap, selectedTopicModel)
+        : fullMindmap;
+      const rawTitle = useTopicScope
+        ? selectedTopicTitle || mapMetadata?.title || fullMindmap.getId() || 'mindmap'
+        : (mapMetadata?.title ?? fullMindmap.getId() ?? 'mindmap');
       const baseFileName = sanitizeExportFileName(rawTitle, 'mindmap');
       const exporter = TextExporterFactory.create(exportFormat, mindmap, baseFileName);
       const { blob, extension } = await exporter.exportFile();
@@ -121,6 +173,58 @@ const ExportDialog = ({ mapId, onClose, designer }: ExportDialogProps): React.Re
         isLoading={isExporting}
         error={error}
       >
+        {selectedTopicModel && (
+          <ScopeSection>
+            <ScopeLabel>
+              <FormattedMessage id="export.scope.label" defaultMessage="Export scope" />
+            </ScopeLabel>
+            <ScopeSegment role="group" aria-label={intl.formatMessage({ id: 'export.scope.label', defaultMessage: 'Export scope' })}>
+              <ScopeButton
+                type="button"
+                selected={exportScope === 'topic'}
+                aria-pressed={exportScope === 'topic'}
+                disabled={isExporting}
+                title={
+                  selectedTopicTitle
+                    ? intl.formatMessage(
+                        {
+                          id: 'export.scope.topic',
+                          defaultMessage: 'Selected topic "{title}" & branches',
+                        },
+                        { title: selectedTopicTitle },
+                      )
+                    : intl.formatMessage({
+                        id: 'export.scope.topic-untitled',
+                        defaultMessage: 'Selected topic & branches',
+                      })
+                }
+                onClick={() => setExportScope('topic')}
+              >
+                {selectedTopicTitle
+                  ? intl.formatMessage(
+                      {
+                        id: 'export.scope.topic',
+                        defaultMessage: 'Selected topic "{title}" & branches',
+                      },
+                      { title: selectedTopicTitle },
+                    )
+                  : intl.formatMessage({
+                      id: 'export.scope.topic-untitled',
+                      defaultMessage: 'Selected topic & branches',
+                    })}
+              </ScopeButton>
+              <ScopeButton
+                type="button"
+                selected={exportScope === 'map'}
+                aria-pressed={exportScope === 'map'}
+                disabled={isExporting}
+                onClick={() => setExportScope('map')}
+              >
+                <FormattedMessage id="export.scope.map" defaultMessage="Entire mindmap" />
+              </ScopeButton>
+            </ScopeSegment>
+          </ScopeSection>
+        )}
         <FormatCardList
           name="export-format"
           value={exportFormat}

@@ -173,6 +173,18 @@
   "export.format.xmind.title": {
     "defaultMessage": "XMind 思维导图"
   },
+  "export.scope.label": {
+    "defaultMessage": "导出范围"
+  },
+  "export.scope.map": {
+    "defaultMessage": "整张导图"
+  },
+  "export.scope.topic": {
+    "defaultMessage": "选中主题「{title}」及分支"
+  },
+  "export.scope.topic-untitled": {
+    "defaultMessage": "选中主题及分支"
+  },
   "export.title": {
     "defaultMessage": "导出"
   },

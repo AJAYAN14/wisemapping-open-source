@@ -76,6 +76,7 @@ const Notifier = styled('div')`
 
 type EditorProps = {
   onAction: (action: ToolbarActionType) => void;
+  onExportTopic?: ((topicId: number) => void) | undefined;
   config: EditorConfiguration;
   accountConfiguration?: React.ReactElement;
   themeVariantStorage: ThemeVariantStorage; // Theme variant storage for persistence (mandatory)
@@ -84,6 +85,7 @@ type EditorProps = {
 const EditorContent = ({
   config,
   onAction,
+  onExportTopic,
   accountConfiguration,
   themeVariantStorage,
 }: EditorProps): ReactElement => {
@@ -361,6 +363,17 @@ const EditorContent = ({
                 $notify(err instanceof Error ? err.message : '下载图片失败');
               }
             }}
+            onExportBranch={
+              capability.isHidden('export')
+                ? undefined
+                : (topicId) => {
+                    if (onExportTopic) {
+                      onExportTopic(topicId);
+                    } else {
+                      onAction('export');
+                    }
+                  }
+            }
             onPreviewImage={(preview) => setImagePreview(preview)}
           />
 

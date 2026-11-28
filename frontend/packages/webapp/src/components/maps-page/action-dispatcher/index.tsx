@@ -51,6 +51,8 @@ type ActionDialogProps = {
   pageMode?: PageModeType;
   /** The designer of the editor the action comes from, if any. */
   designer?: Designer | undefined;
+  /** Specific topic ID to export as a standalone branch when triggered from a topic context menu. */
+  exportTopicId?: number | undefined;
   /** From the editor: saves its pending changes and stops it saving before a revert. */
   beforeRevert?: () => Promise<void>;
 };
@@ -61,6 +63,7 @@ const ActionDispatcher = ({
   folderId,
   onClose,
   designer,
+  exportTopicId,
   beforeRevert,
 }: ActionDialogProps): React.ReactElement => {
   const client = use(ClientContext);
@@ -123,7 +126,12 @@ const ActionDispatcher = ({
         <HistoryDialog onClose={handleOnClose} mapId={mapId} beforeRevert={beforeRevert} />
       )}
       {action === 'export' && singleMap && (
-        <ExportDialog onClose={handleOnClose} mapId={mapId} designer={designer} />
+        <ExportDialog
+          onClose={handleOnClose}
+          mapId={mapId}
+          designer={designer}
+          exportTopicId={exportTopicId}
+        />
       )}
       {action === 'label' && <LabelDialog onClose={handleOnClose} mapsId={mapsId} />}
       {action === 'move-folder' && <MoveFolderDialog onClose={handleOnClose} mapsId={mapsId} />}

@@ -29,11 +29,17 @@ const mockExporter = { exportFile: () => mockExportFile() };
 const mockCreateTextExporter = jest.fn(
   (_type: string, _mindmap: unknown, _mapName?: string) => mockExporter,
 );
+const mockExtractSubtreeMindmap = jest.fn((sourceMindmap: unknown, rootTopic: unknown) => ({
+  subtreeOf: rootTopic,
+  sourceMindmap,
+}));
 jest.mock('@wisemapping/editor', () => ({
   TextExporterFactory: {
     create: (type: string, mindmap: unknown, mapName?: string) =>
       mockCreateTextExporter(type, mindmap, mapName),
   },
+  extractSubtreeMindmap: (sourceMindmap: unknown, rootTopic: unknown) =>
+    mockExtractSubtreeMindmap(sourceMindmap, rootTopic),
   sanitizeExportFileName: (name: string | undefined, fallback = 'mindmap') =>
     (name ?? '').trim().replace(/[\\/:*?"<>|]/g, '_') || fallback,
 }));
@@ -184,5 +190,111 @@ describe('ExportDialog', () => {
     await waitFor(() => expect(screen.getByText('图片下载失败 (HTTP 404)')).toBeTruthy());
     expect(onClose).not.toHaveBeenCalled();
     consoleError.mockRestore();
+  });
+
+  test('exports only the selected non-central topic subtree by default', async () => {
+    const topicNode = {
+      getType: () => 'MainTopic',
+      getPlainText: () => '核心分支',
+      getText: () => '核心分支',
+    };
+    const own = fakeDesigner('own map', 'classic');
+    (own.designer as unknown as { getModel: unknown }).getModel = () => ({
+      filterSelectedTopics: () => [
+        {
+          isCentralTopic: () => false,
+          getModel: () => topicNode,
+        },
+      ],
+    });
+    const downloads: string[] = [];
+    const click = jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      downloads.push(this.download);
+    });
+    const onClose = jest.fn();
+
+    renderWithProviders(<ExportDialog mapId={1} designer={own.designer} onClose={onClose} />, {
+      client,
+    });
+
+    const topicScopeBtn = screen.getByRole('button', { name: /核心分支/ });
+    const mapScopeBtn = screen.getByRole('button', { name: 'Entire mindmap' });
+    expect(topicScopeBtn.getAttribute('aria-pressed')).toBe('true');
+    expect(mapScopeBtn.getAttribute('aria-pressed')).toBe('false');
+
+    submit();
+
+    await waitFor(() => expect(downloads).toEqual(['核心分支.xmind']));
+    expect(mockExtractSubtreeMindmap).toHaveBeenCalledWith(own.mindmap, topicNode);
+    expect(defined(mockCreateTextExporter.mock.calls[0])[1]).toEqual({
+      subtreeOf: topicNode,
+      sourceMindmap: own.mindmap,
+    });
+    expect(defined(mockCreateTextExporter.mock.calls[0])[2]).toBe('核心分支');
+    expect(onClose).toHaveBeenCalledWith(true);
+    click.mockRestore();
+  });
+
+  test('allows switching from selected topic scope to entire mindmap', async () => {
+    const topicNode = {
+      getType: () => 'MainTopic',
+      getPlainText: () => '核心分支',
+      getText: () => '核心分支',
+    };
+    const own = fakeDesigner('own map', 'classic');
+    (own.designer as unknown as { getModel: unknown }).getModel = () => ({
+      filterSelectedTopics: () => [
+        {
+          isCentralTopic: () => false,
+          getModel: () => topicNode,
+        },
+      ],
+    });
+    const onClose = jest.fn();
+
+    renderWithProviders(<ExportDialog mapId={1} designer={own.designer} onClose={onClose} />, {
+      client,
+    });
+
+    const mapScopeBtn = screen.getByRole('button', { name: 'Entire mindmap' });
+    fireEvent.click(mapScopeBtn);
+    expect(mapScopeBtn.getAttribute('aria-pressed')).toBe('true');
+    submit();
+
+    await waitFor(() => expect(mockCreateTextExporter).toHaveBeenCalled());
+    expect(mockExtractSubtreeMindmap).not.toHaveBeenCalled();
+    expect(defined(mockCreateTextExporter.mock.calls[0])[1]).toBe(own.mindmap);
+    expect(onClose).toHaveBeenCalledWith(true);
+  });
+
+  test('exports the targeted branch when exportTopicId is provided', async () => {
+    const topicNode = {
+      getType: () => 'MainTopic',
+      getPlainText: () => '子主题 A',
+      getText: () => '子主题 A',
+    };
+    const own = fakeDesigner('own map', 'classic');
+    (own.mindmap as unknown as { findNodeById: unknown }).findNodeById = jest.fn((id: number) =>
+      id === 99 ? topicNode : undefined,
+    );
+    const downloads: string[] = [];
+    const click = jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      downloads.push(this.download);
+    });
+
+    renderWithProviders(
+      <ExportDialog mapId={1} designer={own.designer} exportTopicId={99} onClose={jest.fn()} />,
+      { client },
+    );
+
+    submit();
+
+    await waitFor(() => expect(downloads).toEqual(['子主题 A.xmind']));
+    expect(mockExtractSubtreeMindmap).toHaveBeenCalledWith(own.mindmap, topicNode);
+    click.mockRestore();
   });
 });

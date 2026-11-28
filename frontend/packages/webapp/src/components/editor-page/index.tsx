@@ -208,6 +208,7 @@ const LoadedEditorPage = ({
   editorMetadata,
 }: EditorPropsType & { mapId: number; editorMetadata: EditorMetadata }): React.ReactElement => {
   const [activeDialog, setActiveDialog] = useState<ActionType>();
+  const [exportTopicId, setExportTopicId] = useState<number | undefined>(undefined);
   const [sessionExpired, setSessionExpired] = useState<boolean>(false);
   const [versionConflict, setVersionConflict] = useState<boolean>(false);
   const mapInfoRef = useRef<MapInfoImpl | undefined>(undefined);
@@ -453,7 +454,14 @@ const LoadedEditorPage = ({
       <VersionConflictDialog open={versionConflict} />
       <Editor
         config={editorConfig}
-        onAction={setActiveDialog}
+        onAction={(action) => {
+          setExportTopicId(undefined);
+          setActiveDialog(action);
+        }}
+        onExportTopic={(topicId) => {
+          setExportTopicId(topicId);
+          setActiveDialog('export');
+        }}
         themeVariantStorage={themeVariantStorage}
       />
       {openPerfRecord && (
@@ -496,9 +504,13 @@ const LoadedEditorPage = ({
         <Suspense fallback={<></>}>
           <ActionDispatcher
             action={activeDialog}
-            onClose={() => setActiveDialog(undefined)}
+            onClose={() => {
+              setActiveDialog(undefined);
+              setExportTopicId(undefined);
+            }}
             mapsId={[mapId]}
             pageMode={pageMode}
+            exportTopicId={exportTopicId}
             designer={
               editorConfig.model?.isMapLoadded() ? editorConfig.model.getDesigner() : undefined
             }

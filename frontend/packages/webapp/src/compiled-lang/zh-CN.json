@@ -378,6 +378,38 @@
       "value": "XMind 思维导图"
     }
   ],
+  "export.scope.label": [
+    {
+      "type": 0,
+      "value": "导出范围"
+    }
+  ],
+  "export.scope.map": [
+    {
+      "type": 0,
+      "value": "整张导图"
+    }
+  ],
+  "export.scope.topic": [
+    {
+      "type": 0,
+      "value": "选中主题「"
+    },
+    {
+      "type": 1,
+      "value": "title"
+    },
+    {
+      "type": 0,
+      "value": "」及分支"
+    }
+  ],
+  "export.scope.topic-untitled": [
+    {
+      "type": 0,
+      "value": "选中主题及分支"
+    }
+  ],
   "export.title": [
     {
       "type": 0,

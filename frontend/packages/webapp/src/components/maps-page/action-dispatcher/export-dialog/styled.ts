@@ -122,3 +122,68 @@ export const FormatDescription = styled('div')(({ theme }) => {
     color: c.textSecondary,
   };
 });
+
+export const ScopeSection = styled(Box)({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '6px',
+  marginBottom: '14px',
+});
+
+export const ScopeLabel = styled('div')(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    fontSize: '12.5px',
+    fontWeight: 600,
+    fontFamily: APPLE_FONT_STACK,
+    color: c.textSecondary,
+  };
+});
+
+export const ScopeSegment = styled('div')(({ theme }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    display: 'grid',
+    gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
+    gap: '4px',
+    padding: '4px',
+    borderRadius: '12px',
+    backgroundColor: c.hoverFill,
+    border: `1px solid ${c.hairline}`,
+  };
+});
+
+export const ScopeButton = styled('button', {
+  shouldForwardProp: (prop) => prop !== 'selected',
+})<{ selected: boolean }>(({ theme, selected }) => {
+  const c = appleColors(isDarkTheme(theme));
+  return {
+    appearance: 'none',
+    border: `1px solid ${selected ? c.amber : 'transparent'}`,
+    borderRadius: '9px',
+    padding: '7px 10px',
+    minWidth: 0,
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    whiteSpace: 'nowrap',
+    cursor: 'pointer',
+    fontFamily: APPLE_FONT_STACK,
+    fontSize: '13px',
+    fontWeight: selected ? 600 : 500,
+    color: selected ? c.amberText : c.textSecondary,
+    backgroundColor: selected ? c.surface : 'transparent',
+    boxShadow: selected ? c.shadowSubtle : 'none',
+    transition: 'background-color 140ms ease, color 140ms ease, border-color 140ms ease',
+    '&:hover:not(:disabled)': {
+      color: selected ? c.amberText : c.textPrimary,
+    },
+    '&:focus-visible': {
+      outline: `2px solid ${c.amber}`,
+      outlineOffset: '1px',
+    },
+    '&:disabled': {
+      opacity: 0.6,
+      cursor: 'not-allowed',
+    },
+  };
+});

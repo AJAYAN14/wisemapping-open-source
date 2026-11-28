@@ -29,6 +29,7 @@ import DownloadRoundedIcon from '@mui/icons-material/DownloadRounded';
 import EditRoundedIcon from '@mui/icons-material/EditRounded';
 import FitScreenRoundedIcon from '@mui/icons-material/FitScreenRounded';
 import ImageOutlinedIcon from '@mui/icons-material/ImageOutlined';
+import IosShareRoundedIcon from '@mui/icons-material/IosShareRounded';
 import LibraryAddRoundedIcon from '@mui/icons-material/LibraryAddRounded';
 import TextFieldsRoundedIcon from '@mui/icons-material/TextFieldsRounded';
 import UnfoldLessRoundedIcon from '@mui/icons-material/UnfoldLessRounded';
@@ -44,6 +45,7 @@ export type ContextMenuActionId =
   | 'copyImage'
   | 'copyText'
   | 'downloadImage'
+  | 'exportBranch'
   | 'pasteAsChild'
   | 'toggleBranch'
   | 'delete'
@@ -63,7 +65,14 @@ export type ContextMenuEntry =
       destructive?: boolean;
     };
 
-export const buildContextMenuEntries = (event: ContextMenuEvent): ContextMenuEntry[] => {
+export type ContextMenuBuildOptions = {
+  canExport?: boolean;
+};
+
+export const buildContextMenuEntries = (
+  event: ContextMenuEvent,
+  options: ContextMenuBuildOptions = {},
+): ContextMenuEntry[] => {
   if (event.target === 'canvas') {
     const entries: ContextMenuEntry[] = [];
     if (!event.readOnly) {
@@ -113,6 +122,14 @@ export const buildContextMenuEntries = (event: ContextMenuEvent): ContextMenuEnt
   if (event.hasImage && event.imageUrl) {
     entries.push({ kind: 'item', id: 'downloadImage', label: '下载图片' });
   }
+  const canExport = options.canExport ?? true;
+  if (canExport && !event.isCentral && event.selectedCount <= 1) {
+    entries.push({
+      kind: 'item',
+      id: 'exportBranch',
+      label: event.hasChildren ? '导出该主题及分支' : '导出该主题',
+    });
+  }
 
   if (!event.readOnly) {
     entries.push({ kind: 'divider', key: 'div-edit' });
@@ -158,6 +175,8 @@ const renderMenuIcon = (id: ContextMenuActionId, isCollapsed?: boolean): ReactEl
       return <TextFieldsRoundedIcon fontSize="small" />;
     case 'downloadImage':
       return <DownloadRoundedIcon fontSize="small" />;
+    case 'exportBranch':
+      return <IosShareRoundedIcon fontSize="small" />;
     case 'pasteAsChild':
     case 'paste':
       return <ContentPasteRoundedIcon fontSize="small" />;
@@ -188,6 +207,7 @@ type MindmapContextMenuProps = {
   onCopyImage: (imageUrl: string) => Promise<void> | void;
   onCopyText: (text: string) => Promise<void> | void;
   onDownloadImage: (imageUrl: string, title?: string) => Promise<void> | void;
+  onExportBranch?: ((topicId: number) => void) | undefined;
   onPreviewImage: (preview: ImagePreviewEvent) => void;
 };
 
@@ -199,11 +219,13 @@ const MindmapContextMenu = ({
   onCopyImage,
   onCopyText,
   onDownloadImage,
+  onExportBranch,
   onPreviewImage,
 }: MindmapContextMenuProps): ReactElement | null => {
   const entries = useMemo(
-    () => (contextMenu ? buildContextMenuEntries(contextMenu) : []),
-    [contextMenu],
+    () =>
+      contextMenu ? buildContextMenuEntries(contextMenu, { canExport: Boolean(onExportBranch) }) : [],
+    [contextMenu, onExportBranch],
   );
 
   if (!contextMenu) {
@@ -263,6 +285,9 @@ const MindmapContextMenu = ({
         if (current.imageUrl) {
           void onDownloadImage(current.imageUrl, current.text || undefined);
         }
+        break;
+      case 'exportBranch':
+        onExportBranch?.(current.topicId);
         break;
       case 'pasteAsChild':
         void designer?.pasteClipboardAsChild(current.topicId);

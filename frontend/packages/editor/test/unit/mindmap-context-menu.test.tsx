@@ -56,6 +56,7 @@ describe('buildContextMenuEntries', () => {
       'copyImage',
       'copyText',
       'downloadImage',
+      'exportBranch',
       'pasteAsChild',
       'toggleBranch',
       'delete',
@@ -80,10 +81,10 @@ describe('buildContextMenuEntries', () => {
       .filter((entry) => entry.kind === 'item')
       .map((entry) => (entry.kind === 'item' ? entry.id : ''));
 
-    expect(ids).toEqual(['edit', 'copyTopic', 'copyText', 'pasteAsChild', 'delete']);
+    expect(ids).toEqual(['edit', 'copyTopic', 'copyText', 'exportBranch', 'pasteAsChild', 'delete']);
   });
 
-  it('hides copyTopic and delete for a single central topic while keeping image/text copy', () => {
+  it('hides copyTopic, exportBranch, and delete for a single central topic while keeping image/text copy', () => {
     const ids = buildContextMenuEntries({
       ...baseTopic,
       isCentral: true,
@@ -93,10 +94,26 @@ describe('buildContextMenuEntries', () => {
       .map((entry) => (entry.kind === 'item' ? entry.id : ''));
 
     expect(ids).not.toContain('copyTopic');
+    expect(ids).not.toContain('exportBranch');
     expect(ids).not.toContain('delete');
     expect(ids).toContain('copyImage');
     expect(ids).toContain('copyText');
     expect(ids).toContain('downloadImage');
+  });
+
+  it('hides exportBranch when multiple topics are selected or canExport is false', () => {
+    const multiIds = buildContextMenuEntries({
+      ...baseTopic,
+      selectedCount: 2,
+    })
+      .filter((entry) => entry.kind === 'item')
+      .map((entry) => (entry.kind === 'item' ? entry.id : ''));
+    expect(multiIds).not.toContain('exportBranch');
+
+    const disabledExportIds = buildContextMenuEntries(baseTopic, { canExport: false })
+      .filter((entry) => entry.kind === 'item')
+      .map((entry) => (entry.kind === 'item' ? entry.id : ''));
+    expect(disabledExportIds).not.toContain('exportBranch');
   });
 
   it('shows only non-mutating actions in read-only mode', () => {
@@ -107,7 +124,14 @@ describe('buildContextMenuEntries', () => {
       .filter((entry) => entry.kind === 'item')
       .map((entry) => (entry.kind === 'item' ? entry.id : ''));
 
-    expect(ids).toEqual(['previewImage', 'copyTopic', 'copyImage', 'copyText', 'downloadImage']);
+    expect(ids).toEqual([
+      'previewImage',
+      'copyTopic',
+      'copyImage',
+      'copyText',
+      'downloadImage',
+      'exportBranch',
+    ]);
   });
 
   it('disables copyText when topic text is blank', () => {
@@ -156,6 +180,7 @@ describe('MindmapContextMenu component', () => {
     const onCopyImage = jest.fn();
     const onCopyText = jest.fn();
     const onDownloadImage = jest.fn();
+    const onExportBranch = jest.fn();
     const onPreviewImage = jest.fn();
 
     const event: ContextMenuEvent = {
@@ -184,6 +209,7 @@ describe('MindmapContextMenu component', () => {
         onCopyImage={onCopyImage}
         onCopyText={onCopyText}
         onDownloadImage={onDownloadImage}
+        onExportBranch={onExportBranch}
         onPreviewImage={onPreviewImage}
       />,
     );
@@ -201,9 +227,13 @@ describe('MindmapContextMenu component', () => {
         onCopyImage={onCopyImage}
         onCopyText={onCopyText}
         onDownloadImage={onDownloadImage}
+        onExportBranch={onExportBranch}
         onPreviewImage={onPreviewImage}
       />,
     );
+
+    fireEvent.click(screen.getByText('导出该主题及分支'));
+    expect(onExportBranch).toHaveBeenCalledWith(42);
 
     fireEvent.click(screen.getByText('复制主题'));
     expect(onCopyTopic).toHaveBeenCalledTimes(1);
