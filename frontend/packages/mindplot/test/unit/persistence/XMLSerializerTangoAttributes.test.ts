@@ -78,6 +78,21 @@ describe('XMLSerializerTango topic attributes', () => {
     expect(saved.getAttribute('image')).toBe('80,40:https://x/y.png');
   });
 
+  it('saves and loads an image on a default-shape topic without a shape attribute', () => {
+    const mindmap = load(map('<topic id="2" text="DefaultShape"/>'));
+    const topic = mindmap.findNodeById(2)!;
+    topic.setImageUrl('https://x/pasted.avif');
+    topic.setImageSize(150, 100);
+
+    const saved = save(mindmap).querySelector('topic[id="2"]')!;
+    expect(saved.hasAttribute('shape')).toBe(false);
+    expect(saved.getAttribute('image')).toBe('150,100:https://x/pasted.avif');
+
+    const reloaded = roundTrip(mindmap).findNodeById(2)!;
+    expect(reloaded.getImageUrl()).toBe('https://x/pasted.avif');
+    expect(reloaded.getImageSize()).toEqual({ width: 150, height: 100 });
+  });
+
   it('saves and loads the border style', () => {
     const mindmap = load(map('<topic id="2" text="B" brStyle="dotted"/>'));
     expect(mindmap.findNodeById(2)!.getBorderStyle()).toBe('dotted');

@@ -516,23 +516,23 @@ class XMLSerializerTango implements XMLMindmapSerializer {
       } else {
         console.warn(`Unknown shape '${shape}' for topic ${topic.getId()}, ignoring it.`);
       }
+    }
 
-      // Is an image ?
-      const image = domElem.getAttribute('image');
-      if (image) {
-        const colonIdx = image.indexOf(':');
-        const size = colonIdx > -1 ? image.substring(0, colonIdx) : '';
-        const url = colonIdx > -1 ? image.substring(colonIdx + 1) : image;
-        topic.setImageUrl(url);
+    // Is an image ?
+    const image = domElem.getAttribute('image');
+    if (image) {
+      const colonIdx = image.indexOf(':');
+      const size = colonIdx > -1 ? image.substring(0, colonIdx) : '';
+      const url = colonIdx > -1 ? image.substring(colonIdx + 1) : image;
+      topic.setImageUrl(url);
 
-        const split = size.split(',');
-        const width = Number.parseInt(split[0] ?? '', 10);
-        const height = Number.parseInt(split[1] ?? '', 10);
-        if (Number.isFinite(width) && Number.isFinite(height)) {
-          topic.setImageSize(width, height);
-        } else {
-          topic.setImageSize(130, 90);
-        }
+      const split = size.split(',');
+      const width = Number.parseInt(split[0] ?? '', 10);
+      const height = Number.parseInt(split[1] ?? '', 10);
+      if (Number.isFinite(width) && Number.isFinite(height)) {
+        topic.setImageSize(width, height);
+      } else {
+        topic.setImageSize(130, 90);
       }
     }
     // Deserialize image emoji as a separate attribute (feature)
