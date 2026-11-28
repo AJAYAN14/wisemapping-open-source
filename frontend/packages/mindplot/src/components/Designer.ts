@@ -105,12 +105,38 @@ export type DeleteConfirmEvent = {
   confirm: () => void;
 };
 
+/** The payload of 'contextMenu': ask the host editor to render a custom context menu. */
+export type ContextMenuEvent =
+  | {
+      target: 'topic';
+      clientX: number;
+      clientY: number;
+      topicId: number;
+      text: string;
+      isCentral: boolean;
+      hasImage: boolean;
+      imageUrl?: string;
+      imageWidth?: number;
+      imageHeight?: number;
+      hasChildren: boolean;
+      isCollapsed: boolean;
+      readOnly: boolean;
+      selectedCount: number;
+    }
+  | {
+      target: 'canvas';
+      clientX: number;
+      clientY: number;
+      readOnly: boolean;
+    };
+
 /** The events a designer fires to its host (the editor) and their payloads. */
 export type DesignerEvents = {
   modelUpdate: ModelUpdateEvent;
   featureEdit: FeatureEditEvent;
   imagePreview: ImagePreviewEvent;
   deleteConfirm: DeleteConfirmEvent;
+  contextMenu: ContextMenuEvent;
   onfocus: void;
   onblur: void;
   loadSuccess: void;
@@ -157,6 +183,8 @@ class Designer extends EventDispispatcher<DesignerEvents> {
   private _autoPanOnFocusListener: ((nodeModel: NodeModel) => void) | undefined;
 
   private _wheelListener: ((event: WheelEvent) => void) | undefined;
+
+  private _contextMenuListener: ((event: MouseEvent) => void) | undefined;
 
   // Re-lays out the map once a web font finishes loading (see _registerFontLoadRelayout).
   private _fontLoadListener: (() => void) | undefined;
@@ -242,6 +270,7 @@ class Designer extends EventDispispatcher<DesignerEvents> {
       this._dragManager = this._buildDragManager(this._canvas);
     }
     this._registerWheelEvents();
+    this._registerContextMenuEvents();
     this._registerFontLoadRelayout();
 
     this._relPivot = new RelationshipPivot(this._canvas, this);
@@ -332,6 +361,24 @@ class Designer extends EventDispispatcher<DesignerEvents> {
       }
     };
     this.getContainer().addEventListener('wheel', this._wheelListener, { passive: false });
+  }
+
+  private _registerContextMenuEvents(): void {
+    this._contextMenuListener = (event: MouseEvent) => {
+      if (this.listenerCount('contextMenu') === 0) {
+        return;
+      }
+      const target = event.target as HTMLElement | null;
+      if (
+        target &&
+        (target.tagName === 'TEXTAREA' || target.tagName === 'INPUT' || target.isContentEditable)
+      ) {
+        return;
+      }
+      event.preventDefault();
+      this.openCanvasContextMenu(event.clientX, event.clientY);
+    };
+    this.getContainer().addEventListener('contextmenu', this._contextMenuListener);
   }
 
   getActionDispatcher(): StandaloneActionDispatcher {
@@ -1573,6 +1620,61 @@ class Designer extends EventDispispatcher<DesignerEvents> {
     this._relPivot.dispose();
   }
 
+  editTopicById(topicId: number): boolean {
+    if (this.isReadOnly()) {
+      return false;
+    }
+    const topic = this.getModel()
+      .getTopics()
+      .find((candidate) => candidate.getId() === topicId);
+    if (!topic) {
+      return false;
+    }
+    if (!topic.isOnFocus()) {
+      this.selectOnClick(topic, true, new MouseEvent('mousedown'));
+    }
+    this._topicEventDispatcher.show(topic);
+    return true;
+  }
+
+  openTopicContextMenu(topic: Topic, clientX: number, clientY: number): void {
+    if (this.listenerCount('contextMenu') === 0) {
+      return;
+    }
+    if (!this.isReadOnly() && !topic.isOnFocus()) {
+      this.selectOnClick(topic, true, new MouseEvent('mousedown'));
+    }
+    const imageUrl = topic.getImageUrl()?.trim() || undefined;
+    const size = topic.getImageSize();
+    this.fireEvent('contextMenu', {
+      target: 'topic',
+      clientX,
+      clientY,
+      topicId: topic.getId(),
+      text: topic.getText() ?? '',
+      isCentral: topic.isCentralTopic(),
+      hasImage: Boolean(imageUrl),
+      ...(imageUrl ? { imageUrl } : {}),
+      ...(size ? { imageWidth: size.width, imageHeight: size.height } : {}),
+      hasChildren: topic.getChildren().length > 0,
+      isCollapsed: topic.areChildrenShrunken(),
+      readOnly: this.isReadOnly(),
+      selectedCount: this.getModel().countSelectedTopics(),
+    });
+  }
+
+  openCanvasContextMenu(clientX: number, clientY: number): void {
+    if (this.listenerCount('contextMenu') === 0) {
+      return;
+    }
+    this.fireEvent('contextMenu', {
+      target: 'canvas',
+      clientX,
+      clientY,
+      readOnly: this.isReadOnly(),
+    });
+  }
+
   editSelectedTopic(): boolean {
     if (this.isReadOnly()) {
       return false;
@@ -2173,6 +2275,11 @@ class Designer extends EventDispispatcher<DesignerEvents> {
     if (this._wheelListener) {
       this.getContainer().removeEventListener('wheel', this._wheelListener);
       this._wheelListener = undefined;
+    }
+
+    if (this._contextMenuListener) {
+      this.getContainer().removeEventListener('contextmenu', this._contextMenuListener);
+      this._contextMenuListener = undefined;
     }
 
     if (this._fontLoadListener) {

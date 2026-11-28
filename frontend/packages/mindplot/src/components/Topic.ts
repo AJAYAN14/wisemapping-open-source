@@ -23,7 +23,7 @@ import type {
   ElementPeer,
 } from '@wisemapping/web2d';
 import { $assert } from './util/assert';
-import { hasShortcutModifier } from './util/platform';
+import { hasShortcutModifier, isContextMenuPress } from './util/platform';
 import { isShrinkConnectorTouch, markObjectTouch } from './util/objectTouch';
 
 import type { NodeOption } from './NodeGraph';
@@ -805,6 +805,9 @@ abstract class Topic extends NodeGraph {
     // Focus events ...
     elem.addEvent('mousedown', (event: Event) => {
       const mouseEvent = event as MouseEvent;
+      if (mouseEvent.button === 2 || isContextMenuPress(mouseEvent)) {
+        return;
+      }
       if (me.isEmulatedMouseSuppressed()) {
         mouseEvent.stopImmediatePropagation?.();
         mouseEvent.stopPropagation();
@@ -831,6 +834,17 @@ abstract class Topic extends NodeGraph {
       const eventDispatcher = me._getTopicEventDispatcher();
       eventDispatcher?.process('clicknode', me);
       mouseEvent.stopPropagation();
+    });
+
+    elem.addEvent('contextmenu', (event: Event) => {
+      const mouseEvent = event as MouseEvent;
+      const designer = me.getDesigner();
+      if (!designer || !me.isMouseEventsEnabled() || designer.listenerCount('contextMenu') === 0) {
+        return;
+      }
+      mouseEvent.preventDefault();
+      mouseEvent.stopPropagation();
+      designer.openTopicContextMenu(me, mouseEvent.clientX, mouseEvent.clientY);
     });
     // A tap selects through the mousedown the browser emulates for it, which the handler above
     // keeps from the canvas. The touch itself still reaches it, to pan on a swipe, while a

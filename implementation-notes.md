@@ -6,6 +6,19 @@
 
 ---
 
+## Latest Fixes (v6.1.4)
+
+- **Custom Mindmap & Topic Context Menu (`Designer.ts`, `Topic.ts`, `HTMLTopicSelected.ts`, `mindmap-context-menu/index.tsx`, `topicImageClipboard.ts`, `topic-image-lightbox/index.tsx`)**:
+  - Replaced the native browser context menu on topics and canvas background with a custom theme-aware MUI menu (`Designer` `contextMenu` event bridging Shadow DOM to host React `EditorContent`).
+  - Preserved native `contextmenu` inside `<textarea>` / `<input>` / `[contenteditable]` so inline text editing cut/copy/paste continues to work natively, and preserved multi-selection on right-click (`button === 2` / `isContextMenuPress`).
+  - Added a touch/mobile-only `···` pill button (`_moreActionsButton` centered above the selected topic in `HTMLTopicSelected.ts`) instead of hijacking `Topic.ts`'s existing 420ms long-press-to-edit gesture.
+  - Added PNG clipboard transcoding (`ClipboardItem({ 'image/png': pngPromise })` invoked synchronously inside user gesture for Safari/iOS WebKit compatibility) and safe image download helpers shared by the context menu and `TopicImageLightbox`.
+
+## Previous Fixes (v6.1.3)
+
+- **Natural Chinese Numeral Sorting (`nameSort.ts`, `folderTree.ts`, `maps-list/model.ts`)**:
+  - Added structural Chinese numeral parsing/normalization (`第二章` → `第2章`, `（十）` → `（10）`, `附录一` → `附录1`) without mutating idiomatic words (`统一`, `万一`, `三角形`), shared across the sidebar folder tree, Move-to-folder picker, and maps/folders list.
+
 ## Latest Fixes (v6.0.39)
 
 - **Map List Row Hierarchy (`MapRow.tsx`)**: Placed `TitleLink` above `MapFolderPathBadge` (`mb={0}` with `mt={0.25}`), matching `MapGridCard` and `MapCard` so users scan map titles before secondary directory metadata.

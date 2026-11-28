@@ -19,12 +19,18 @@
 import React, { ReactElement, useMemo, useRef, useState } from 'react';
 
 import { IntlProvider, FormattedMessage } from 'react-intl';
-import { $notify, DeleteConfirmEvent, ImagePreviewEvent } from '@wisemapping/mindplot';
+import { $notify, ContextMenuEvent, DeleteConfirmEvent, ImagePreviewEvent } from '@wisemapping/mindplot';
 import {
   blobToDataUrl,
   compressTopicImage,
   replaceFilenameExtension,
 } from '../utils/imageAssetUtils';
+import {
+  copyImageToClipboard,
+  copyTextToClipboard,
+  downloadTopicImage,
+} from '../utils/topicImageClipboard';
+import MindmapContextMenu from './mindmap-context-menu';
 import TopicImageLightbox from './topic-image-lightbox';
 import ConfirmDeleteDialog from './confirm-delete-dialog';
 
@@ -87,8 +93,9 @@ const EditorContent = ({
   const { mode: internalMode } = useTheme();
   const [imagePreview, setImagePreview] = useState<ImagePreviewEvent | null>(null);
   const [pendingDelete, setPendingDelete] = useState<DeleteConfirmEvent | null>(null);
+  const [contextMenu, setContextMenu] = useState<ContextMenuEvent | null>(null);
 
-  // Subscribe to designer image preview requests (both edit zoom badge and read-only image click)
+  // Subscribe to designer image preview, delete confirmation, and custom context menu requests
   React.useEffect(() => {
     if (!designer) {
       return undefined;
@@ -99,11 +106,16 @@ const EditorContent = ({
     const handleDeleteConfirm = (payload: DeleteConfirmEvent) => {
       setPendingDelete(payload);
     };
+    const handleContextMenu = (payload: ContextMenuEvent) => {
+      setContextMenu(payload);
+    };
     designer.addEvent('imagePreview', handleImagePreview);
     designer.addEvent('deleteConfirm', handleDeleteConfirm);
+    designer.addEvent('contextMenu', handleContextMenu);
     return () => {
       designer.removeEvent('imagePreview', handleImagePreview);
       designer.removeEvent('deleteConfirm', handleDeleteConfirm);
+      designer.removeEvent('contextMenu', handleContextMenu);
     };
   }, [designer]);
 
@@ -316,6 +328,41 @@ const EditorContent = ({
           <Notifier id="headerNotifier" />
 
           <TopicImageLightbox preview={imagePreview} onClose={() => setImagePreview(null)} />
+
+          <MindmapContextMenu
+            contextMenu={contextMenu}
+            designer={designer}
+            onClose={() => setContextMenu(null)}
+            onCopyTopic={async () => {
+              if (!designer) return;
+              await designer.copyToClipboard();
+              $notify('已复制主题（含图片与内容）');
+            }}
+            onCopyImage={async (imageUrl) => {
+              try {
+                await copyImageToClipboard(imageUrl);
+                $notify('已复制图片到剪贴板');
+              } catch (err) {
+                $notify(err instanceof Error ? err.message : '复制图片失败');
+              }
+            }}
+            onCopyText={async (text) => {
+              try {
+                await copyTextToClipboard(text);
+                $notify('已复制主题内容');
+              } catch (err) {
+                $notify(err instanceof Error ? err.message : '复制内容失败');
+              }
+            }}
+            onDownloadImage={async (imageUrl, title) => {
+              try {
+                await downloadTopicImage(imageUrl, title);
+              } catch (err) {
+                $notify(err instanceof Error ? err.message : '下载图片失败');
+              }
+            }}
+            onPreviewImage={(preview) => setImagePreview(preview)}
+          />
 
           <ConfirmDeleteDialog
             open={Boolean(pendingDelete)}

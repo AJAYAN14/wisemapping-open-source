@@ -27,7 +27,10 @@ import {
   useState,
 } from 'react';
 import Tooltip from '@mui/material/Tooltip';
+import CheckRoundedIcon from '@mui/icons-material/CheckRounded';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
+import ContentCopyRoundedIcon from '@mui/icons-material/ContentCopyRounded';
+import DownloadRoundedIcon from '@mui/icons-material/DownloadRounded';
 import FitScreenRoundedIcon from '@mui/icons-material/FitScreenRounded';
 import GridOnRoundedIcon from '@mui/icons-material/GridOnRounded';
 import OpenInNewRoundedIcon from '@mui/icons-material/OpenInNewRounded';
@@ -35,7 +38,8 @@ import RestartAltRoundedIcon from '@mui/icons-material/RestartAltRounded';
 import RotateRightRoundedIcon from '@mui/icons-material/RotateRightRounded';
 import ZoomInRoundedIcon from '@mui/icons-material/ZoomInRounded';
 import ZoomOutRoundedIcon from '@mui/icons-material/ZoomOutRounded';
-import type { ImagePreviewEvent } from '@wisemapping/mindplot';
+import { $notify, ImagePreviewEvent } from '@wisemapping/mindplot';
+import { copyImageToClipboard, downloadTopicImage } from '../../utils/topicImageClipboard';
 import './styles.css';
 
 type TopicImageLightboxProps = {
@@ -146,6 +150,16 @@ const TopicImageLightboxContent = ({
   const [naturalSize, setNaturalSize] = useState<NaturalSize | null>(null);
   const [checkerBg, setCheckerBg] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [copiedRecently, setCopiedRecently] = useState(false);
+  const copyTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current !== null) {
+        window.clearTimeout(copyTimerRef.current);
+      }
+    };
+  }, []);
 
   const requestClose = useCallback(() => {
     const dialog = dialogRef.current;
@@ -438,6 +452,29 @@ const TopicImageLightboxContent = ({
     onClose();
   };
 
+  const handleCopyImage = () => {
+    void copyImageToClipboard(preview.url)
+      .then(() => {
+        setCopiedRecently(true);
+        if (copyTimerRef.current !== null) {
+          window.clearTimeout(copyTimerRef.current);
+        }
+        copyTimerRef.current = window.setTimeout(() => {
+          setCopiedRecently(false);
+        }, 1800);
+        $notify('已复制图片到剪贴板');
+      })
+      .catch((err) => {
+        $notify(err instanceof Error ? err.message : '复制图片失败');
+      });
+  };
+
+  const handleDownloadImage = () => {
+    void downloadTopicImage(preview.url, preview.title).catch((err) => {
+      $notify(err instanceof Error ? err.message : '下载图片失败');
+    });
+  };
+
   const fitScale = getFitScaleFor(naturalSize, view.rotation);
   const initialScale = computeInitialScale(fitScale);
   const isAtDefault =
@@ -562,6 +599,32 @@ const TopicImageLightboxContent = ({
               onClick={() => setCheckerBg((prev) => !prev)}
             >
               <GridOnRoundedIcon fontSize="small" aria-hidden="true" />
+            </button>
+          </Tooltip>
+
+          <Tooltip title={copiedRecently ? '已复制图片' : '复制图片'}>
+            <button
+              type="button"
+              className={`topic-image-lightbox__btn ${copiedRecently ? 'topic-image-lightbox__btn--active' : ''}`}
+              aria-label="复制图片"
+              onClick={handleCopyImage}
+            >
+              {copiedRecently ? (
+                <CheckRoundedIcon fontSize="small" aria-hidden="true" />
+              ) : (
+                <ContentCopyRoundedIcon fontSize="small" aria-hidden="true" />
+              )}
+            </button>
+          </Tooltip>
+
+          <Tooltip title="下载图片">
+            <button
+              type="button"
+              className="topic-image-lightbox__btn"
+              aria-label="下载图片"
+              onClick={handleDownloadImage}
+            >
+              <DownloadRoundedIcon fontSize="small" aria-hidden="true" />
             </button>
           </Tooltip>
 

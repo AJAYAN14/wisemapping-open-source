@@ -70,6 +70,7 @@ export type {
 
 export type { default as LayoutEventBusType, LayoutEvents } from './components/LayoutEventBusType';
 export type {
+  ContextMenuEvent,
   DeleteConfirmEvent,
   DesignerEvents,
   FeatureEditEvent,

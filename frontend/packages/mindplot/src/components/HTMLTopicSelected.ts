@@ -50,12 +50,14 @@ const ensureSelectionStyles = (container: HTMLElement): void => {
   style.id = SELECTION_STYLE_ID;
   style.textContent = `
     .wise-topic-selection-pill,
-    .wise-topic-image-preview {
+    .wise-topic-image-preview,
+    .wise-topic-more-actions {
       appearance: none;
       -webkit-appearance: none;
     }
     .wise-topic-selection-pill::after,
-    .wise-topic-image-preview::after {
+    .wise-topic-image-preview::after,
+    .wise-topic-more-actions::after {
       content: "";
       position: absolute;
       left: 50%;
@@ -68,19 +70,22 @@ const ensureSelectionStyles = (container: HTMLElement): void => {
     }
     @media (pointer: coarse) {
       .wise-topic-selection-pill::after,
-      .wise-topic-image-preview::after {
+      .wise-topic-image-preview::after,
+      .wise-topic-more-actions::after {
         min-width: calc(44px / var(--wise-pill-scale, 1));
         min-height: calc(44px / var(--wise-pill-scale, 1));
       }
     }
     .wise-topic-selection-pill:focus-visible,
-    .wise-topic-image-preview:focus-visible {
+    .wise-topic-image-preview:focus-visible,
+    .wise-topic-more-actions:focus-visible {
       outline: 2px solid #0284c7;
       outline-offset: 2px;
     }
     @media (prefers-reduced-motion: reduce) {
       .wise-topic-selection-pill,
-      .wise-topic-image-preview {
+      .wise-topic-image-preview,
+      .wise-topic-more-actions {
         transition: none !important;
       }
     }
@@ -90,11 +95,13 @@ const ensureSelectionStyles = (container: HTMLElement): void => {
         outline-offset: 1px;
       }
       .wise-topic-selection-pill,
-      .wise-topic-image-preview {
+      .wise-topic-image-preview,
+      .wise-topic-more-actions {
         border-color: ButtonText !important;
       }
       .wise-topic-selection-pill:focus-visible,
-      .wise-topic-image-preview:focus-visible {
+      .wise-topic-image-preview:focus-visible,
+      .wise-topic-more-actions:focus-visible {
         outline: 2px solid Highlight;
       }
     }
@@ -194,6 +201,8 @@ class HTMLTopicSelected {
   private _bottomPlus: ActionPillElement | undefined;
 
   private _imagePreviewButton: HTMLButtonElement | undefined;
+
+  private _moreActionsButton: ActionPillElement | undefined;
 
   private _screenManager: ScreenManager;
 
@@ -460,6 +469,10 @@ class HTMLTopicSelected {
     if (this._bottomPlus) {
       this.applyPillColors(this._bottomPlus, pillPalette);
     }
+    if (this._moreActionsButton) {
+      this.applyPillColors(this._moreActionsButton, pillPalette);
+      this._moreActionsButton.style.color = pillPalette.labelColor;
+    }
 
     return true;
   }
@@ -568,6 +581,7 @@ class HTMLTopicSelected {
     this.ensurePlusButtons();
     this.updatePlusButtons(geometry, hasChildren, metrics.visualScale);
     this.updateImagePreviewButton(geometry, hasImage, metrics.visualScale);
+    this.updateMoreActionsButton(geometry, metrics.visualScale);
   }
 
   private applyOverlayFrame(
@@ -661,6 +675,27 @@ class HTMLTopicSelected {
     svg.appendChild(handle);
     svg.appendChild(plusH);
     svg.appendChild(plusV);
+    return svg;
+  }
+
+  private createMoreActionsIcon(size = 16): SVGElement {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('aria-hidden', 'true');
+    svg.setAttribute('focusable', 'false');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('width', String(size));
+    svg.setAttribute('height', String(size));
+    svg.setAttribute('fill', 'currentColor');
+    svg.style.display = 'block';
+    svg.style.pointerEvents = 'none';
+
+    for (const cx of [5, 12, 19]) {
+      const dot = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+      dot.setAttribute('cx', String(cx));
+      dot.setAttribute('cy', '12');
+      dot.setAttribute('r', '2');
+      svg.appendChild(dot);
+    }
     return svg;
   }
 
@@ -959,6 +994,10 @@ class HTMLTopicSelected {
         this._imagePreviewButton.style.display = 'none';
         this._imagePreviewButton.style.pointerEvents = 'none';
       }
+      if (this._moreActionsButton) {
+        this._moreActionsButton.style.display = 'none';
+        this._moreActionsButton.style.pointerEvents = 'none';
+      }
       return;
     }
 
@@ -978,6 +1017,87 @@ class HTMLTopicSelected {
     this._imagePreviewButton.style.transform = `${scalePrefix}translate(-100%, 0)`;
     this._imagePreviewButton.style.display = 'flex';
     this._imagePreviewButton.style.pointerEvents = 'auto';
+  }
+
+  private ensureMoreActionsButton(): void {
+    if (this._moreActionsButton && !this._moreActionsButton.parentElement) {
+      this._moreActionsButton = undefined;
+    }
+    if (this._moreActionsButton) {
+      return;
+    }
+    const button = document.createElement('button') as ActionPillElement;
+    button.type = 'button';
+    button.className = 'wise-topic-more-actions';
+    button.appendChild(this.createMoreActionsIcon(16));
+    button.style.position = 'absolute';
+    button.style.left = '0px';
+    button.style.top = '0px';
+    button.style.width = '34px';
+    button.style.height = '28px';
+    button.style.borderRadius = '9999px';
+    button.style.border = '1px solid rgba(15, 23, 42, 0.12)';
+    button.style.display = 'none';
+    button.style.alignItems = 'center';
+    button.style.justifyContent = 'center';
+    button.style.padding = '0';
+    button.style.margin = '0';
+    button.style.pointerEvents = 'auto';
+    button.style.cursor = 'pointer';
+    button.style.userSelect = 'none';
+    button.style.zIndex = CANVAS_AFFORDANCE_Z_INDEX;
+    button.style.backdropFilter = 'blur(8px)';
+    button.style.setProperty('-webkit-backdrop-filter', 'blur(8px)');
+    button.style.transition = 'background-color 0.16s ease, border-color 0.16s ease';
+    button.style.transformOrigin = '0 0';
+    button.style.transform = 'translate(-50%, -100%)';
+    button.setAttribute('title', '更多操作');
+    button.setAttribute('aria-label', '更多操作');
+
+    this.addPlusButtonHandlers(button, () => {
+      this.withTopic((topic) => {
+        const rect = button.getBoundingClientRect();
+        const anchorX = rect.left + rect.width / 2;
+        const anchorY = rect.bottom + 6;
+        topic.getDesigner()?.openTopicContextMenu(topic, anchorX, anchorY);
+      });
+    });
+
+    this.ensurePillsContainer().appendChild(button);
+    this._moreActionsButton = button;
+    this.updateColors();
+  }
+
+  private updateMoreActionsButton(
+    geometry: OverlayGeometry,
+    visualScale = this.getVisualScale(),
+  ): void {
+    const canOpenMenu =
+      isTouchOrMobileDevice() &&
+      (this.withTopic((topic) => (topic.getDesigner()?.listenerCount('contextMenu') ?? 0) > 0) ??
+        false);
+
+    if (!canOpenMenu) {
+      if (this._moreActionsButton) {
+        this._moreActionsButton.style.display = 'none';
+        this._moreActionsButton.style.pointerEvents = 'none';
+      }
+      return;
+    }
+
+    this.ensureMoreActionsButton();
+    if (!this._moreActionsButton) {
+      return;
+    }
+
+    const buttonScale = this.getPillScale(visualScale, true);
+    const scalePrefix = buttonScale === 1 ? '' : `scale(${buttonScale}) `;
+    this._moreActionsButton.style.setProperty('--wise-pill-scale', String(buttonScale));
+    this._moreActionsButton.style.left = `${geometry.topicCenterX}px`;
+    this._moreActionsButton.style.top = `${geometry.topicTop - 10 * buttonScale}px`;
+    this._moreActionsButton.style.transform = `${scalePrefix}translate(-50%, -100%)`;
+    this._moreActionsButton.style.display = 'inline-flex';
+    this._moreActionsButton.style.pointerEvents = 'auto';
   }
 
   /**
@@ -1091,6 +1211,7 @@ class HTMLTopicSelected {
       [this._rightPlus, 'blur(8px)'],
       [this._bottomPlus, 'blur(8px)'],
       [this._imagePreviewButton, 'blur(6px)'],
+      [this._moreActionsButton, 'blur(8px)'],
     ];
     for (const [pill, blur] of pills) {
       if (!pill) continue;
@@ -1133,6 +1254,10 @@ class HTMLTopicSelected {
       if (this._imagePreviewButton) {
         this._imagePreviewButton.style.display = 'none';
         this._imagePreviewButton.style.pointerEvents = 'none';
+      }
+      if (this._moreActionsButton) {
+        this._moreActionsButton.style.display = 'none';
+        this._moreActionsButton.style.pointerEvents = 'none';
       }
     }
   }
@@ -1290,6 +1415,10 @@ class HTMLTopicSelected {
       this._imagePreviewButton.parentElement.removeChild(this._imagePreviewButton);
     }
 
+    if (this._moreActionsButton && this._moreActionsButton.parentElement) {
+      this._moreActionsButton.parentElement.removeChild(this._moreActionsButton);
+    }
+
     if (this._pillsContainer && this._pillsContainer.parentElement) {
       this._pillsContainer.parentElement.removeChild(this._pillsContainer);
     }
@@ -1299,6 +1428,7 @@ class HTMLTopicSelected {
     this._rightPlus = undefined;
     this._bottomPlus = undefined;
     this._imagePreviewButton = undefined;
+    this._moreActionsButton = undefined;
   }
 
   /**
