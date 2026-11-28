@@ -260,6 +260,9 @@ describe('TopicImageLightbox', () => {
 
     // 390 - 24 = 366 / 2000 = 0.183 -> 18% (not stuck at 25%), and zoom-out button remains enabled
     expect(screen.getByText('18%')).toBeTruthy();
+    expect(img.style.width).toBe('366px');
+    expect(img.style.height).toBe('366px');
+    expect((img.parentElement as HTMLElement).style.transform).toContain('scale(1)');
     const zoomOutBtn = screen.getByRole('button', { name: '缩小' }) as HTMLButtonElement;
     expect(zoomOutBtn.disabled).toBe(false);
 

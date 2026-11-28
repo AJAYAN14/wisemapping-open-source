@@ -41,7 +41,6 @@
 
 .topic-image-lightbox::backdrop {
   background-color: rgba(0, 0, 0, 0.72);
-  backdrop-filter: blur(6px);
   overflow: hidden;
   overscroll-behavior: contain;
 }
@@ -178,7 +177,6 @@
   align-items: center;
   justify-content: center;
   transform-origin: center center;
-  will-change: transform;
 }
 
 @media (prefers-reduced-motion: no-preference) {

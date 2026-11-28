@@ -170,6 +170,7 @@ const TopicImageLightboxContent = ({
   const viewRef = useRef<ViewState>(INITIAL_VIEW);
   const minZoomRef = useRef<number>(MIN_ZOOM);
   const [naturalSize, setNaturalSize] = useState<NaturalSize | null>(null);
+  const [baseScale, setBaseScale] = useState<number>(1);
   const [checkerBg, setCheckerBg] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [copiedRecently, setCopiedRecently] = useState(false);
@@ -349,9 +350,11 @@ const TopicImageLightboxContent = ({
       const size = { width: img.naturalWidth, height: img.naturalHeight };
       setNaturalSize(size);
       const fit = getFitScaleFor(size, 0);
+      const initial = computeInitialScale(fit);
       minZoomRef.current = Math.min(MIN_ZOOM, fit);
+      setBaseScale(initial);
       updateView({
-        scale: computeInitialScale(fit),
+        scale: initial,
         offsetX: 0,
         offsetY: 0,
         rotation: 0,
@@ -627,6 +630,9 @@ const TopicImageLightboxContent = ({
   const pannable = isPannable(view);
   const zoomPercent = Math.round(view.scale * 100);
   const titleText = preview.title || '主题配图';
+  const visualScale = baseScale > 0 ? view.scale / baseScale : view.scale;
+  const displayWidth = naturalSize ? Math.max(1, Math.round(naturalSize.width * baseScale)) : undefined;
+  const displayHeight = naturalSize ? Math.max(1, Math.round(naturalSize.height * baseScale)) : undefined;
 
   return (
     <dialog
@@ -818,7 +824,7 @@ const TopicImageLightboxContent = ({
             .filter(Boolean)
             .join(' ')}
           style={{
-            transform: `translate3d(${view.offsetX}px, ${view.offsetY}px, 0) scale(${view.scale}) rotate(${view.rotation}deg)`,
+            transform: `translate3d(${view.offsetX}px, ${view.offsetY}px, 0) scale(${visualScale}) rotate(${view.rotation}deg)`,
           }}
         >
           <img
@@ -836,8 +842,8 @@ const TopicImageLightboxContent = ({
               .filter(Boolean)
               .join(' ')}
             style={
-              naturalSize
-                ? { width: `${naturalSize.width}px`, height: `${naturalSize.height}px` }
+              displayWidth && displayHeight
+                ? { width: `${displayWidth}px`, height: `${displayHeight}px` }
                 : undefined
             }
           />
