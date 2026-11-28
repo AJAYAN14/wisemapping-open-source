@@ -18,6 +18,7 @@
 
 import Client, { Folder, Label, MapInfo } from '../../../classes/client';
 import type { Filter, FolderFilter, LabelFilter } from '..';
+import { compareDisplayNames } from '../nameSort';
 
 /**
  * The pure part of the map list: sorting, filtering and the label change. No React here, so it
@@ -31,7 +32,7 @@ const descendingComparator = <T>(a: T, b: T, orderBy: keyof T): number => {
   const aVal = a[orderBy];
   const bVal = b[orderBy];
   if (typeof aVal === 'string' && typeof bVal === 'string') {
-    return bVal.localeCompare(aVal, 'zh-Hans-CN', { numeric: true, sensitivity: 'base' });
+    return compareDisplayNames(bVal, aVal);
   }
   if (bVal < aVal) {
     return -1;
@@ -131,10 +132,7 @@ export const getChildFolders = (
 
   const direction = orderBy === 'title' && order === 'desc' ? -1 : 1;
   return [...matching].sort(
-    (a, b) =>
-      direction *
-        a.name.localeCompare(b.name, 'zh-Hans-CN', { numeric: true, sensitivity: 'base' }) ||
-      a.id - b.id,
+    (a, b) => direction * compareDisplayNames(a.name, b.name) || a.id - b.id,
   );
 };
 

@@ -17,6 +17,7 @@
  */
 
 import type { Folder } from '../../classes/client';
+import { compareDisplayNames } from './nameSort';
 
 export const MAP_IDS_DRAG_MIME = 'application/x-wisemapping-map-ids';
 
@@ -42,7 +43,7 @@ export function buildFolderTree(folders: Folder[]): FolderTreeNode[] {
   }
 
   for (const siblings of byParent.values()) {
-    siblings.sort((a, b) => a.name.localeCompare(b.name, 'zh-Hans') || a.id - b.id);
+    siblings.sort((a, b) => compareDisplayNames(a.name, b.name) || a.id - b.id);
   }
 
   const visited = new Set<number>();

@@ -17,6 +17,7 @@
  */
 
 import { Folder, Label, MapInfo } from '../../../src/classes/client';
+import { buildFolderTree } from '../../../src/components/maps-page/folderTree';
 import {
   getChildFolders,
   getComparator,
@@ -25,6 +26,11 @@ import {
   mapsFilter,
   stableSort,
 } from '../../../src/components/maps-page/maps-list/model';
+import {
+  compareDisplayNames,
+  normalizeChineseNumeralsForSort,
+  parseChineseNumeral,
+} from '../../../src/components/maps-page/nameSort';
 
 const label = (id: number): Label => ({ id, title: `label ${id}`, color: '#fff' });
 
@@ -175,5 +181,112 @@ describe('getChildFolders and getFolderDirectItemCounts', () => {
     expect(counts.get(2)).toEqual({ subfolderCount: 1, mapCount: 2, totalCount: 3 });
     expect(counts.get(1)).toEqual({ subfolderCount: 0, mapCount: 0, totalCount: 0 });
     expect(counts.get(3)).toEqual({ subfolderCount: 0, mapCount: 1, totalCount: 1 });
+  });
+});
+
+describe('Chinese numeral natural name sorting', () => {
+  const folder = (id: number, name: string, parentId: number | null = null): Folder => ({
+    id,
+    name,
+    parentId,
+  });
+
+  test('parses valid Chinese numerals and rejects malformed combinations', () => {
+    expect(parseChineseNumeral('零')).toBe(0);
+    expect(parseChineseNumeral('〇')).toBe(0);
+    expect(parseChineseNumeral('一')).toBe(1);
+    expect(parseChineseNumeral('十')).toBe(10);
+    expect(parseChineseNumeral('十一')).toBe(11);
+    expect(parseChineseNumeral('二十三')).toBe(23);
+    expect(parseChineseNumeral('一百零五')).toBe(105);
+    expect(parseChineseNumeral('二〇二六')).toBe(2026);
+    expect(parseChineseNumeral('万一')).toBeNull();
+    expect(parseChineseNumeral('百')).toBeNull();
+    expect(parseChineseNumeral('十十')).toBeNull();
+    expect(parseChineseNumeral('一二')).toBeNull();
+  });
+
+  test('sorts Chinese chapter folders naturally in both directions and in the sidebar tree', () => {
+    const chapters: Folder[] = [
+      folder(1, '附录'),
+      folder(2, '第五章、常用传动元件的选型'),
+      folder(3, '第三章、常用电机的选型与应用'),
+      folder(4, '第七章、输送机构设计选型'),
+      folder(5, '第六章、FA零部件选型'),
+      folder(6, '第二章、非标机械设计基础'),
+      folder(7, '第八章、常用附件选型'),
+      folder(8, '第十章、综合案例'),
+      folder(9, '第十二章、扩展专题'),
+    ];
+
+    expect(getChildFolders(chapters, null, '', 'asc', 'title').map((f) => f.name)).toEqual([
+      '第二章、非标机械设计基础',
+      '第三章、常用电机的选型与应用',
+      '第五章、常用传动元件的选型',
+      '第六章、FA零部件选型',
+      '第七章、输送机构设计选型',
+      '第八章、常用附件选型',
+      '第十章、综合案例',
+      '第十二章、扩展专题',
+      '附录',
+    ]);
+
+    expect(getChildFolders(chapters, null, '', 'desc', 'title').map((f) => f.name)).toEqual([
+      '附录',
+      '第十二章、扩展专题',
+      '第十章、综合案例',
+      '第八章、常用附件选型',
+      '第七章、输送机构设计选型',
+      '第六章、FA零部件选型',
+      '第五章、常用传动元件的选型',
+      '第三章、常用电机的选型与应用',
+      '第二章、非标机械设计基础',
+    ]);
+
+    expect(buildFolderTree(chapters).map((node) => node.folder.name)).toEqual([
+      '第二章、非标机械设计基础',
+      '第三章、常用电机的选型与应用',
+      '第五章、常用传动元件的选型',
+      '第六章、FA零部件选型',
+      '第七章、输送机构设计选型',
+      '第八章、常用附件选型',
+      '第十章、综合案例',
+      '第十二章、扩展专题',
+      '附录',
+    ]);
+  });
+
+  test('sorts delimited, parenthesized, and suffixed Chinese numerals naturally for map titles', () => {
+    const maps = [
+      map({ id: 1, title: '十、总结' }),
+      map({ id: 2, title: '二、方案' }),
+      map({ id: 3, title: '一、背景' }),
+      map({ id: 4, title: '（十）附注' }),
+      map({ id: 5, title: '（二）细节' }),
+      map({ id: 6, title: '（一）总览' }),
+      map({ id: 7, title: '附录十' }),
+      map({ id: 8, title: '附录二' }),
+      map({ id: 9, title: '附录一' }),
+    ];
+
+    expect(stableSort(maps, getComparator('asc', 'title')).map((m) => m.title)).toEqual([
+      '（一）总览',
+      '（二）细节',
+      '（十）附注',
+      '一、背景',
+      '二、方案',
+      '十、总结',
+      '附录一',
+      '附录二',
+      '附录十',
+    ]);
+  });
+
+  test('leaves ordinary Chinese words untouched so pinyin grouping stays intact', () => {
+    expect(normalizeChineseNumeralsForSort('统一')).toBe('统一');
+    expect(normalizeChineseNumeralsForSort('万一')).toBe('万一');
+    expect(normalizeChineseNumeralsForSort('三角形')).toBe('三角形');
+    expect(compareDisplayNames('统一', '统战')).toBeLessThan(0);
+    expect(compareDisplayNames('统一', '统一标准')).toBeLessThan(0);
   });
 });
